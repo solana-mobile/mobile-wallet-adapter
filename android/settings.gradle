@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2022 Solana Labs, Inc.
+ */
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "mobile-wallet-adapter"
+include ':common'
+include ':walletlib'
+include ':clientlib'
+include ':fakewallet'
+include ':fakedapp'

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Labs, Inc.
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_authorize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="@string/label_authorize" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_reauthorize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_authorize"
+        android:text="@string/label_reauthorize" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_deauthorize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_reauthorize"
+        android:text="@string/label_deauthorize" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_x1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_deauthorize"
+        android:text="@string/label_sign_x1" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_x3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_x1"
+        android:text="@string/label_sign_x3" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_authorize_sign"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_x3"
+        android:text="@string/label_authorize_sign" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

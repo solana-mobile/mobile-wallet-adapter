@@ -1,0 +1,18 @@
+<!--
+  ~ Copyright (c) 2022 Solana Labs, Inc.
+  -->
+
+<resources>
+    <string name="app_name">Fake Wallet app</string>
+
+    <!-- Main activity strings -->
+    <string name="label_hello_world">I\'m a wallet!</string>
+
+    <!-- Authorize dapp fragment strings -->
+    <string name="label_authorize_dapp">Authorize dapp</string>
+    <string name="label_authorize">Authorize</string>
+    <string name="label_decline">Decline</string>
+
+    <!-- Sign transaction fragment strings -->
+    <string name="label_sign_transaction">Sign transaction(s)</string>
+</resources>

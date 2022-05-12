@@ -1,0 +1,14 @@
+<!--
+  ~ Copyright (c) 2022 Solana Labs, Inc.
+  -->
+
+<resources>
+    <string name="app_name">Fake dApp</string>
+
+    <string name="label_authorize">Authorize</string>
+    <string name="label_reauthorize">Reauthorize</string>
+    <string name="label_deauthorize">Deauthorize</string>
+    <string name="label_sign_x1">Sign x1</string>
+    <string name="label_sign_x3">Sign x3</string>
+    <string name="label_authorize_sign">Combined authorize and sign x1</string>
+</resources>
