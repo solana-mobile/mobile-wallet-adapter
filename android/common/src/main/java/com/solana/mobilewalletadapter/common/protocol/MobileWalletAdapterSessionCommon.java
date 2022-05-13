@@ -21,6 +21,7 @@ import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jose.crypto.DirectEncrypter;
+import com.nimbusds.jose.crypto.impl.ConcatKDF;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
@@ -272,14 +273,18 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             Log.v(TAG, "Updating cached encryption method to " + encryptionMethod);
             mCachedEncryptionMethod = encryptionMethod;
 
-            // TODO: implement Concat-KDF here? Or some other KDF.
-            final byte[] secret;
-            if (encryptionMethod == EncryptionMethod.A128GCM) {
-                secret = Arrays.copyOfRange(mECDHSecret, 0, 16);
-            } else {
-                secret = mECDHSecret;
+            try {
+                mCachedEncryptionKey = new ConcatKDF("SHA-256").deriveKey(
+                        new SecretKeySpec(mECDHSecret, "AES"),
+                        encryptionMethod.cekBitLength(),
+                        encryptionMethod.getName().getBytes(StandardCharsets.UTF_8),
+                        null,
+                        null,
+                        ConcatKDF.encodeIntData(encryptionMethod.cekBitLength()),
+                        null);
+            } catch (JOSEException e) {
+                throw new UnsupportedOperationException("ConcatKDF key derivation failed", e);
             }
-            mCachedEncryptionKey = new SecretKeySpec(secret, "AES");
         }
     }
 
