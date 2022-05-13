@@ -10,6 +10,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
@@ -46,21 +47,21 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         final JSONObject authorize;
         try {
             final JSONObject identity = new JSONObject();
-            identity.put("uri", identityUri);
-            identity.put("icon", iconUri);
-            identity.put("name", identityName);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
             final JSONArray privMethods = new JSONArray();
             for (PrivilegedMethod pm : privilegedMethods) {
                 privMethods.put(pm.methodName);
             }
             authorize = new JSONObject();
-            authorize.put("identity", identity);
-            authorize.put("privileged_methods", privMethods);
+            authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
+            authorize.put(ProtocolContract.PARAMETER_PRIVILEGED_METHODS, privMethods);
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
 
-        return new AuthorizeFuture(methodCall("authorize", authorize, TIMEOUT_MS));
+        return new AuthorizeFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, TIMEOUT_MS));
     }
 
     public AuthorizeResult authorize(@Nullable Uri identityUri,
@@ -142,11 +143,14 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public static class AuthorizeResult {
         @NonNull
         public final String authToken;
+        @NonNull
+        public final String publicKey;
         @Nullable
         public final Uri walletUriBase;
 
-        public AuthorizeResult(@NonNull String authToken, @Nullable Uri walletUriBase) {
+        public AuthorizeResult(@NonNull String authToken, @NonNull String publicKey, @Nullable Uri walletUriBase) {
             this.authToken = authToken;
+            this.publicKey = publicKey;
             this.walletUriBase = walletUriBase;
         }
     }
@@ -168,14 +172,23 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
             final String authToken;
             try {
-                authToken = jo.getString("auth_token");
+                authToken = jo.getString(ProtocolContract.RESULT_AUTH_TOKEN);
             } catch (JSONException e) {
                 throw new JsonRpc20InvalidResponseException("expected an auth_token");
             }
 
-            final String walletUriBaseStr = jo.optString("wallet_uri_base");
+            final String publicKey;
+            try {
+                publicKey = jo.getString(ProtocolContract.RESULT_PUBLIC_KEY);
+            } catch (JSONException e) {
+                throw new JsonRpc20InvalidResponseException("expected a public key");
+            }
 
-            return new AuthorizeResult(authToken, Uri.parse(walletUriBaseStr));
+            final String walletUriBaseStr = jo.has(ProtocolContract.RESULT_WALLET_URI_BASE) ?
+                    jo.optString(ProtocolContract.RESULT_WALLET_URI_BASE) : null;
+
+            return new AuthorizeResult(authToken, publicKey,
+                    (walletUriBaseStr != null) ? Uri.parse(walletUriBaseStr) : null);
         }
 
         @Override
