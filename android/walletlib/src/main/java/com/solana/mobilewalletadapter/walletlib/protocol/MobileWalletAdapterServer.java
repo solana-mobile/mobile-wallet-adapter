@@ -29,12 +29,6 @@ import java.util.concurrent.ExecutionException;
 public class MobileWalletAdapterServer extends JsonRpc20Server {
     private static final String TAG = MobileWalletAdapterServer.class.getSimpleName();
 
-    private static final int ERROR_REAUTHORIZE = -1;
-    private static final int ERROR_AUTHORIZATION_FAILED = -2;
-    private static final int ERROR_INVALID_TRANSACTION = -3;
-    private static final int ERROR_NOT_SIGNED = -4;
-    private static final int ERROR_ATTEST_ORIGIN_ANDROID = -100;
-
     @NonNull
     private final Handler mHandler;
     @NonNull
@@ -50,7 +44,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                @NonNull String method,
                                @Nullable Object params) {
         try {
-            if ("authorize".equals(method)) {
+            if (ProtocolContract.METHOD_AUTHORIZE.equals(method)) {
                 handleAuthorize(id, params);
             }
         } catch (IOException e) {
@@ -66,22 +60,25 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final JSONObject o = (JSONObject) params;
 
-        final JSONObject ident = o.optJSONObject("identity");
+        final JSONObject ident = o.optJSONObject(ProtocolContract.PARAMETER_IDENTITY);
         final Uri identityUri;
         final Uri iconUri;
         final String identityName;
         if (ident != null) {
-            identityUri = ident.has("uri") ? Uri.parse(ident.optString("uri")) : null;
+            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
+                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
             if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
                 return;
             }
-            iconUri = ident.has("icon") ? Uri.parse(ident.optString("icon")) : null;
+            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
+                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
             if (iconUri != null && !iconUri.isRelative()) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
                 return;
             }
-            identityName = ident.has("name") ? ident.optString("name") : null;
+            identityName = ident.has(ProtocolContract.PARAMETER_IDENTITY_NAME) ?
+                    ident.optString(ProtocolContract.PARAMETER_IDENTITY_NAME) : null;
             if (identityName != null && identityName.isEmpty()) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.name must be a non-empty string", null);
                 return;
@@ -92,7 +89,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             identityName = null;
         }
 
-        final JSONArray pm = o.optJSONArray("privileged_methods");
+        final JSONArray pm = o.optJSONArray(ProtocolContract.PARAMETER_PRIVILEGED_METHODS);
         final int numPrivilegedMethods = (pm != null) ? pm.length() : 0;
         if (numPrivilegedMethods == 0) {
             handleRpcError(id, ERROR_INVALID_PARAMS, "privileged_methods must be a non-empty array of method names", null);
@@ -131,15 +128,15 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorize request", null);
                 return;
             } else if (!result.authorized) {
-                handleRpcError(request.id, ERROR_AUTHORIZATION_FAILED, "Authorization declined", null);
+                handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "Authorization declined", null);
                 return;
             }
 
             final JSONObject o = new JSONObject();
             try {
-                // TODO: generate real auth token
-                o.put("auth_token", "42");
-                o.put("wallet_uri_base", result.walletUriBase); // OK if null
+                o.put(ProtocolContract.RESULT_AUTH_TOKEN, "42"); // TODO: generate real auth token
+                o.put(ProtocolContract.RESULT_PUBLIC_KEY, "4242424242"); // TODO: real public key
+                o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
                 Log.e(TAG, "Failed preparing authorize response", e);
                 return;

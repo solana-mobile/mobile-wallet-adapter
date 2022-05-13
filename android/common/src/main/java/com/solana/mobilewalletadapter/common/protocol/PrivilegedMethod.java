@@ -7,8 +7,12 @@ package com.solana.mobilewalletadapter.common.protocol;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.ProtocolContract;
+
 public enum PrivilegedMethod {
-    SignTransaction("sign_transaction");
+    SignTransaction(ProtocolContract.METHOD_SIGN_TRANSACTION),
+    SignAndSendTransaction(ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTION),
+    SignMessage(ProtocolContract.METHOD_SIGN_MESSAGE);
 
     @NonNull
     public final String methodName;
