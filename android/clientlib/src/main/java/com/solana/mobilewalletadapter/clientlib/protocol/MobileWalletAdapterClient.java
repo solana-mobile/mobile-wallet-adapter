@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
-import com.solana.mobilewalletadapter.common.util.NotifyOnCompletionFuture;
+import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,8 +35,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public AuthorizeFuture authorizeAsync(@Nullable Uri identityUri,
                                           @Nullable Uri iconUri,
                                           @Nullable String identityName,
-                                          @NonNull Set<PrivilegedMethod> privilegedMethods,
-                                          @Nullable NotifyOnCompletionFuture.FutureCompletionNotifier<Object> onCompletion)
+                                          @NonNull Set<PrivilegedMethod> privilegedMethods)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -61,7 +60,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
 
-        return new AuthorizeFuture(methodCall("authorize", authorize, onCompletion, TIMEOUT_MS));
+        return new AuthorizeFuture(methodCall("authorize", authorize, TIMEOUT_MS));
     }
 
     public AuthorizeResult authorize(@Nullable Uri identityUri,
@@ -69,8 +68,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                      @Nullable String identityName,
                                      @NonNull Set<PrivilegedMethod> privilegedMethods)
             throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final AuthorizeFuture future = authorizeAsync(identityUri, iconUri, identityName,
-                privilegedMethods, null);
+        final AuthorizeFuture future = authorizeAsync(identityUri, iconUri, identityName, privilegedMethods);
         try {
             return future.get();
         } catch (ExecutionException e) {
@@ -93,32 +91,32 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         return new RuntimeException("Failed during sync wait for a JSON-RPC 2.0 response", cause);
     }
 
-    private static abstract class JsonRpc20ClientResultFuture<T> implements Future<T> {
+    private static abstract class JsonRpc20MethodResultFuture<T> implements Future<T> {
         @NonNull
-        private final Future<Object> mJsonRpc20ClientFuture;
+        protected final NotifyOnCompleteFuture<Object> mMethodCallFuture;
 
-        private JsonRpc20ClientResultFuture(@NonNull Future<Object> jsonRpc20ClientFuture) {
-            mJsonRpc20ClientFuture = jsonRpc20ClientFuture;
+        private JsonRpc20MethodResultFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+            mMethodCallFuture = methodCallFuture;
         }
 
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
-            return mJsonRpc20ClientFuture.cancel(mayInterruptIfRunning);
+            return mMethodCallFuture.cancel(mayInterruptIfRunning);
         }
 
         @Override
         public boolean isCancelled() {
-            return mJsonRpc20ClientFuture.isCancelled();
+            return mMethodCallFuture.isCancelled();
         }
 
         @Override
         public boolean isDone() {
-            return mJsonRpc20ClientFuture.isDone();
+            return mMethodCallFuture.isDone();
         }
 
         @Override
         public T get() throws ExecutionException, InterruptedException {
-            final Object o = mJsonRpc20ClientFuture.get();
+            final Object o = mMethodCallFuture.get();
             try {
                 return processResult(o);
             } catch (JsonRpc20InvalidResponseException e) {
@@ -129,7 +127,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @Override
         public T get(long timeout, TimeUnit unit)
                 throws ExecutionException, InterruptedException, TimeoutException {
-            final Object o = mJsonRpc20ClientFuture.get(timeout, unit);
+            final Object o = mMethodCallFuture.get(timeout, unit);
             try {
                 return processResult(o);
             } catch (JsonRpc20InvalidResponseException e) {
@@ -154,9 +152,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     public static class AuthorizeFuture
-            extends JsonRpc20ClientResultFuture<AuthorizeResult> {
-        private AuthorizeFuture(@NonNull Future<Object> jsonRpc20ClientFuture) {
-            super(jsonRpc20ClientFuture);
+            extends JsonRpc20MethodResultFuture<AuthorizeResult>
+            implements NotifyOnCompleteFuture<AuthorizeResult> {
+        private AuthorizeFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+            super(methodCallFuture);
         }
 
         @Override
@@ -177,6 +176,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final String walletUriBaseStr = jo.optString("wallet_uri_base");
 
             return new AuthorizeResult(authToken, Uri.parse(walletUriBaseStr));
+        }
+
+        @Override
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<AuthorizeResult>> cb) {
+            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
     }
 }

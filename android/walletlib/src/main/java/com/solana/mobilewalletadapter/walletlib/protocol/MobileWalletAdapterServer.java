@@ -13,8 +13,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
-import com.solana.mobilewalletadapter.common.util.NotifyOnCompletionFuture;
+import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -106,12 +108,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             }
         }
 
-        final AuthorizeRequest request = new AuthorizeRequest(mHandler, this::onAuthorizeComplete, id, identityUri, iconUri, identityName, privilegedMethods);
+        final AuthorizeRequest request = new AuthorizeRequest(mHandler, id, identityUri, iconUri, identityName, privilegedMethods);
+        request.notifyOnComplete(this::onAuthorizeComplete);
         mMethodHandlers.authorize(request);
     }
 
-    private void onAuthorizeComplete(@NonNull NotifyOnCompletionFuture<AuthorizeResult> future) {
-        final RequestFuture<AuthorizeResult> request = (RequestFuture<AuthorizeResult>) future;
+    private void onAuthorizeComplete(@NonNull NotifyOnCompleteFuture<AuthorizeResult> future) {
+        final AuthorizeRequest request = (AuthorizeRequest) future;
 
         try {
             final AuthorizeResult result;
@@ -148,14 +151,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
-    private static abstract class RequestFuture<T> extends NotifyOnCompletionFuture<T> {
+    private static abstract class RequestFuture<T> extends NotifyingCompletableFuture<T> {
         @Nullable
         public final Object id;
 
         public RequestFuture(@NonNull Handler handler,
-                             @Nullable FutureCompletionNotifier<T> onCompletionNotifier,
                              @Nullable Object id) {
-            super(handler, onCompletionNotifier);
+            super(handler);
             this.id = id;
         }
     }
@@ -171,13 +173,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final Set<PrivilegedMethod> privilegedMethods;
 
         private AuthorizeRequest(@NonNull Handler handler,
-                                 @Nullable FutureCompletionNotifier<AuthorizeResult> onCompletionNotifier,
                                  @Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @Nullable String identityName,
                                  @NonNull Set<PrivilegedMethod> privilegedMethods) {
-            super(handler, onCompletionNotifier, id);
+            super(handler, id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
