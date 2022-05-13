@@ -15,7 +15,8 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MessageSender;
-import com.solana.mobilewalletadapter.common.util.NotifyOnCompletionFuture;
+import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,7 +30,6 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 public class JsonRpc20Client implements MessageReceiver {
@@ -38,7 +38,7 @@ public class JsonRpc20Client implements MessageReceiver {
     private final Handler mHandler;
 
     private int mNextMessageId = 1;
-    private JsonRpc20Future mOutstandingRequest;
+    private MethodCallResultFuture mOutstandingRequest;
     private MessageSender mSender;
     private Timer mTimer;
 
@@ -48,10 +48,9 @@ public class JsonRpc20Client implements MessageReceiver {
 
     // Throws UnsupportedOperationException
     @NonNull
-    public Future<Object> methodCall(@NonNull String method,
-                                     @Nullable Object params,
-                                     @Nullable NotifyOnCompletionFuture.FutureCompletionNotifier<Object> onCompletion,
-                                     @IntRange(from = 0) int timeoutMs)
+    public NotifyOnCompleteFuture<Object> methodCall(@NonNull String method,
+                                                     @Nullable Object params,
+                                                     @IntRange(from = 0) int timeoutMs)
             throws IOException {
         if (method.isEmpty()) {
             throw new IllegalArgumentException("method cannot be empty");
@@ -74,7 +73,7 @@ public class JsonRpc20Client implements MessageReceiver {
             throw new IllegalArgumentException("Error preparing JSON-RPC 2.0 message", e);
         }
 
-        final JsonRpc20Future future;
+        final MethodCallResultFuture future;
         synchronized (this) {
             if (mSender == null) {
                 throw new IOException("JSON-RPC 2.0 client is disconnected");
@@ -84,7 +83,7 @@ public class JsonRpc20Client implements MessageReceiver {
 
             mSender.send(o.toString().getBytes(StandardCharsets.UTF_8));
 
-            future = new JsonRpc20Future(id, onCompletion);
+            future = new MethodCallResultFuture(id);
             mOutstandingRequest = future;
 
             if (timeoutMs > 0) {
@@ -186,7 +185,7 @@ public class JsonRpc20Client implements MessageReceiver {
             Log.w(TAG, "Request id=" + id + " could not be interpreted as an int, aborting");
             return;
         }
-        final JsonRpc20Future r;
+        final MethodCallResultFuture r;
         synchronized (this) {
             if (mOutstandingRequest != null && mOutstandingRequest.mId == idAsInt) {
                 r = mOutstandingRequest;
@@ -250,12 +249,11 @@ public class JsonRpc20Client implements MessageReceiver {
         return utf8Dec.decode(bb).toString();
     }
 
-    private class JsonRpc20Future extends NotifyOnCompletionFuture<Object> {
+    private class MethodCallResultFuture extends NotifyingCompletableFuture<Object> {
         private final int mId;
 
-        public JsonRpc20Future(int id,
-                               @NonNull FutureCompletionNotifier<Object> onCompletionNotifier) {
-            super(mHandler, onCompletionNotifier);
+        public MethodCallResultFuture(int id) {
+            super(mHandler);
             mId = id;
         }
 
@@ -273,9 +271,9 @@ public class JsonRpc20Client implements MessageReceiver {
 
     private class PendingRequestTimeoutTask extends TimerTask {
         @NonNull
-        private final JsonRpc20Future mFuture;
+        private final MethodCallResultFuture mFuture;
 
-        public PendingRequestTimeoutTask(@NonNull JsonRpc20Future future) {
+        public PendingRequestTimeoutTask(@NonNull MethodCallResultFuture future) {
             mFuture = future;
         }
 

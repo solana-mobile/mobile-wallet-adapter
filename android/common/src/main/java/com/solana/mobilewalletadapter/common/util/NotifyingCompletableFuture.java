@@ -6,28 +6,26 @@ package com.solana.mobilewalletadapter.common.util;
 
 import android.os.Handler;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class NotifyOnCompletionFuture<T> implements Future<T> {
+public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> {
     private final Handler mHandler;
-    private final FutureCompletionNotifier<T> mFutureCompletionNotifier;
 
     private boolean mIsCancelled;
     private boolean mIsComplete;
     private T mResult;
     private Exception mException;
+    private OnCompleteCallback<? super NotifyOnCompleteFuture<T>> mOnCompleteCallback;
 
-    public NotifyOnCompletionFuture(@NonNull Handler handler,
-                                    @Nullable FutureCompletionNotifier<T> futureCompletionNotifier) {
+    public NotifyingCompletableFuture(@NonNull Handler handler) {
         mHandler = handler;
-        mFutureCompletionNotifier = futureCompletionNotifier;
     }
 
     public boolean complete(@Nullable T result) {
@@ -38,9 +36,9 @@ public class NotifyOnCompletionFuture<T> implements Future<T> {
             mIsComplete = true;
             mResult = result;
             notifyAll();
+            dispatchOnCompletionNotification();
         }
 
-        dispatchOnCompletionNotification();
         return true;
     }
 
@@ -52,9 +50,9 @@ public class NotifyOnCompletionFuture<T> implements Future<T> {
             mIsComplete = true;
             mException = ex;
             notifyAll();
+            dispatchOnCompletionNotification();
         }
 
-        dispatchOnCompletionNotification();
         return true;
     }
 
@@ -68,9 +66,9 @@ public class NotifyOnCompletionFuture<T> implements Future<T> {
             mIsCancelled = true;
             mException = new CancellationException();
             notifyAll();
+            dispatchOnCompletionNotification();
         }
 
-        dispatchOnCompletionNotification();
         return true;
     }
 
@@ -127,13 +125,33 @@ public class NotifyOnCompletionFuture<T> implements Future<T> {
         }
     }
 
-    private void dispatchOnCompletionNotification() {
-        if (mFutureCompletionNotifier != null) {
-            mHandler.post(() -> mFutureCompletionNotifier.onComplete(this));
+    @Override
+    public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<T>> cb) {
+        final boolean completeImmediately;
+        synchronized (this) {
+            if (mOnCompleteCallback != null) {
+                throw new UnsupportedOperationException("Only a single completion callback may be registered");
+            }
+
+            if (mIsComplete) {
+                completeImmediately = true;
+            } else {
+                completeImmediately = false;
+                mOnCompleteCallback = cb;
+            }
+        }
+
+        if (completeImmediately) {
+            mHandler.post(() -> cb.onComplete(this));
         }
     }
 
-    public interface FutureCompletionNotifier<T> {
-        void onComplete(@NonNull NotifyOnCompletionFuture<T> future);
+    @GuardedBy("this")
+    private void dispatchOnCompletionNotification() {
+        if (mOnCompleteCallback != null) {
+            final OnCompleteCallback<? super NotifyOnCompleteFuture<T>> cb = mOnCompleteCallback;
+            mOnCompleteCallback = null;
+            mHandler.post(() -> cb.onComplete(this));
+        }
     }
 }

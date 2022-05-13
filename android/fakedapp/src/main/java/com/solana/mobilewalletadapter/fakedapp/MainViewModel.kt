@@ -13,12 +13,14 @@ import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
+import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import java.io.IOException
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -27,15 +29,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun authorize(sender: StartActivityForResultSender) {
         localAssociateAndExecute(sender) { client ->
             try {
-                val result = client.authorize(
-                    Uri.parse("https://solana.com"),
+                val sem = Semaphore(1, 1);
+                val future = client.authorizeAsync(Uri.parse("https://solana.com"),
                     Uri.parse("favicon.ico"),
                     "Solana",
                     setOf(PrivilegedMethod.SignTransaction)
                 )
-                Log.d(TAG, "authToken=${result.authToken}, walletUriBase=${result.walletUriBase}")
+                future.notifyOnComplete { sem.release() }
+                val result = try {
+                    future.get()
+                } catch (e: ExecutionException) {
+                    throw e.cause!!
+                }
+                Log.d(TAG, "Authorized: authToken=${result.authToken}, walletUriBase=${result.walletUriBase}")
             } catch (e: IOException) {
                 Log.e(TAG, "IO error while sending authorize", e)
+            } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+                if (e.code == ProtocolContract.ERROR_AUTHORIZATION_FAILED) {
+                    Log.e(TAG, "Not authorized: ${e.message}");
+                } else {
+                    Log.e(TAG, "Remote exception for authorize: ${e.message}", e);
+                }
             } catch (e: JsonRpc20Client.JsonRpc20Exception) {
                 Log.e(TAG, "JSON-RPC client exception for authorize", e)
             } catch (e: TimeoutException) {
