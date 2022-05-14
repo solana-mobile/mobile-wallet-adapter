@@ -41,7 +41,6 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPublicKey;
 import java.text.ParseException;
-import java.util.Arrays;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;

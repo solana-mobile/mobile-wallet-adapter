@@ -314,5 +314,16 @@ public class JsonRpc20Client implements MessageReceiver {
         public boolean isReservedError() {
             return code >= SERVER_RESERVED_ERROR_MIN && code <= SERVER_RESERVED_ERROR_MAX;
         }
+
+        @NonNull
+        @Override
+        public String getMessage() {
+            String message = super.getMessage();
+            if (message == null) {
+                return Integer.toString(code);
+            } else {
+                return code + "/" + message;
+            }
+        }
     }
 }

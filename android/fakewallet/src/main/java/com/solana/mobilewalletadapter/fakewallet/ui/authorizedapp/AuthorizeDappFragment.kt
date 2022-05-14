@@ -55,7 +55,7 @@ class AuthorizeDappFragment : Fragment() {
                                     request.request.iconUri!!.encodedPath
                                 )
                                 Glide.with(this@AuthorizeDappFragment).load(uri)
-                                    .into(viewBinding.imageIcon);
+                                    .into(viewBinding.imageIcon)
                             }
                             viewBinding.textName.text = request.request.identityName ?: "<no name>"
                             viewBinding.textUri.text = request.request.identityUri?.toString() ?: "<no URI>"
