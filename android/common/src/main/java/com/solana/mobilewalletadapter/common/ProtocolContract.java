@@ -84,5 +84,7 @@ public class ProtocolContract {
     public static final String COMMITMENT_CONFIRMED = "confirmed";
     public static final String COMMITMENT_FINALIZED = "finalized";
 
+    public static final int TRANSACTION_MAX_SIZE_BYTES = 1232;
+
     private ProtocolContract() {}
 }

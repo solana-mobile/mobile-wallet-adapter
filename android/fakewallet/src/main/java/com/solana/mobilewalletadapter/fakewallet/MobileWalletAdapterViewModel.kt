@@ -87,21 +87,70 @@ class MobileWalletAdapterViewModel : ViewModel() {
         request: MobileWalletAdapterServiceRequest.AuthorizeDapp,
         authorized: Boolean
     ) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+
+        if (authorized) {
+            request.request.complete(
+                MobileWalletAdapterServer.AuthorizeResult(
+                    Uri.parse(WALLET_BASE_URI)
+                )
+            )
+        } else {
+            request.request.completeWithDecline()
+        }
+    }
+
+    fun signTransactionSimulateSign(request: MobileWalletAdapterServiceRequest.SignTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        val signedTransactions = Array(request.request.transactions.size) { i ->
+            request.request.transactions[i].clone().also { it[0] = i.toByte() }
+        }
+        request.request.complete(MobileWalletAdapterServer.SignTransactionResult(signedTransactions))
+    }
+
+    fun signTransactionDeclined(request: MobileWalletAdapterServiceRequest.SignTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithDecline()
+    }
+
+    fun signTransactionSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithReauthorizationRequired()
+    }
+
+    fun signTransactionSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithAuthTokenNotValid()
+    }
+
+    fun signTransactionSimulateInvalidTransaction(request: MobileWalletAdapterServiceRequest.SignTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        val valid = BooleanArray(request.request.transactions.size) { i -> i != 0 }
+        request.request.completeWithInvalidTransactions(valid)
+    }
+
+    private fun rejectStaleRequest(request: MobileWalletAdapterServiceRequest): Boolean {
         if (!_mobileWalletAdapterServiceEvents.compareAndSet(
                 request,
                 MobileWalletAdapterServiceRequest.None
             )
         ) {
-            Log.w(TAG, "Ignoring stale AuthorizeDapp result")
-            return
+            Log.w(TAG, "Ignoring stale request")
+            return true
         }
-
-        request.request.complete(
-            MobileWalletAdapterServer.AuthorizeResult(
-                authorized,
-                Uri.parse(WALLET_BASE_URI)
-            )
-        )
+        return false
     }
 
     private inner class MobileWalletAdapterScenarioCallbacks : Scenario.Callbacks {
@@ -128,6 +177,12 @@ class MobileWalletAdapterViewModel : ViewModel() {
                 _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.AuthorizeDapp(request))
             }
         }
+
+        override fun signTransaction(request: MobileWalletAdapterServer.SignTransactionRequest) {
+            viewModelScope.launch {
+                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SignTransaction(request))
+            }
+        }
     }
 
     enum class AssocationType {
@@ -138,7 +193,8 @@ class MobileWalletAdapterViewModel : ViewModel() {
         object None : MobileWalletAdapterServiceRequest
         data class AuthorizeDapp(val request: MobileWalletAdapterServer.AuthorizeRequest) :
             MobileWalletAdapterServiceRequest
-        class SignTransaction : MobileWalletAdapterServiceRequest
+        class SignTransaction(val request: MobileWalletAdapterServer.SignTransactionRequest) :
+            MobileWalletAdapterServiceRequest
         class SessionTerminated : MobileWalletAdapterServiceRequest
     }
 

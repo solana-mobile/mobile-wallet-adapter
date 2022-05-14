@@ -16,52 +16,137 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenari
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import java.io.IOException
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
+import kotlin.random.Random
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState = _uiState.asStateFlow()
+
     private val mobileWalletAdapterClientMutex = Mutex()
 
     suspend fun authorize(sender: StartActivityForResultSender) {
         localAssociateAndExecute(sender) { client ->
-            try {
-                val sem = Semaphore(1, 1);
-                val future = client.authorizeAsync(Uri.parse("https://solana.com"),
-                    Uri.parse("favicon.ico"),
-                    "Solana",
-                    setOf(PrivilegedMethod.SignTransaction)
-                )
-                future.notifyOnComplete { sem.release() }
-                val result = try {
-                    future.get()
-                } catch (e: ExecutionException) {
-                    throw e.cause!!
-                }
-                Log.d(TAG, "Authorized: authToken=${result.authToken}, walletUriBase=${result.walletUriBase}")
-            } catch (e: IOException) {
-                Log.e(TAG, "IO error while sending authorize", e)
-            } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
-                if (e.code == ProtocolContract.ERROR_AUTHORIZATION_FAILED) {
-                    Log.e(TAG, "Not authorized: ${e.message}");
-                } else {
-                    Log.e(TAG, "Remote exception for authorize: ${e.message}", e);
-                }
-            } catch (e: JsonRpc20Client.JsonRpc20Exception) {
-                Log.e(TAG, "JSON-RPC client exception for authorize", e)
-            } catch (e: TimeoutException) {
-                Log.e(TAG, "Timed out while waiting for authorize result", e)
+            doAuthorize(client)
+        }
+    }
+
+    suspend fun signX1(sender: StartActivityForResultSender) {
+        sign(sender, 1)
+    }
+
+    suspend fun signX3(sender: StartActivityForResultSender) {
+        sign(sender, 3)
+    }
+
+    private suspend fun sign(sender: StartActivityForResultSender, numTransactions: Int) {
+        val transactions = Array(numTransactions) {
+            Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
+        }
+
+        localAssociateAndExecute(sender) { client ->
+            doSign(client, transactions)
+        }
+    }
+
+    suspend fun authorizeAndSign(sender: StartActivityForResultSender) {
+        val transactions = Array(1) {
+            Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
+        }
+
+        localAssociateAndExecute(sender) { client ->
+            val authorized = doAuthorize(client)
+            if (authorized) {
+                doSign(client, transactions)
             }
+        }
+    }
+
+    private suspend fun doAuthorize(client: MobileWalletAdapterClient): Boolean {
+        var authorized = false
+        try {
+            val sem = Semaphore(1, 1)
+            // TODO: defer actual send to IO thread
+            val future = client.authorizeAsync(Uri.parse("https://solana.com"),
+                Uri.parse("favicon.ico"),
+                "Solana",
+                setOf(PrivilegedMethod.SignTransaction)
+            )
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            val result = try {
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Authorized: authToken=${result.authToken}, publicKey=${result.publicKey}, walletUriBase=${result.walletUriBase}")
+            _uiState.update { it.copy(authToken = result.authToken) }
+            authorized = true
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending authorize", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            when (e.code) {
+                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Not authorized: ${e.message}")
+                else -> Log.e(TAG, "Remote exception for authorize: ${e.message}", e)
+            }
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for authorize", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for authorize result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "Authorization request was cancelled", e)
+        }
+
+        return authorized
+    }
+
+    private suspend fun doSign(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
+        try {
+            val sem = Semaphore(1, 1)
+            val future = client.signTransactionAsync(uiState.value.authToken!!, transactions)
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            val result = try {
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Signed: $result")
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending sign_transaction", e)
+        } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
+            Log.e(TAG, "Transaction payload invalid: ${e.validTransactions}", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            when (e.code) {
+                ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
+                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
+                ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
+                else -> Log.e(TAG, "Remote exception for authorize: ${e.message}", e)
+            }
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for authorize", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for authorize result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "Authorization request was cancelled", e)
         }
     }
 
     private suspend fun localAssociateAndExecute(
         sender: StartActivityForResultSender,
         uriPrefix: Uri? = null,
-        action: (MobileWalletAdapterClient) -> Unit
+        action: suspend (MobileWalletAdapterClient) -> Unit
     ) {
         withContext(Dispatchers.IO) {
             mobileWalletAdapterClientMutex.withLock {
@@ -116,6 +201,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     interface StartActivityForResultSender {
         fun startActivityForResult(intent: Intent)
+    }
+
+    data class UiState(
+        val authToken: String? = null
+    ) {
+        val hasAuthToken: Boolean get() = (authToken != null)
     }
 
     companion object {
