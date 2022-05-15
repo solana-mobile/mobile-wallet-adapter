@@ -8,7 +8,9 @@
     <string name="label_authorize">Authorize</string>
     <string name="label_reauthorize">Reauthorize</string>
     <string name="label_deauthorize">Deauthorize</string>
-    <string name="label_sign_x1">Sign x1</string>
-    <string name="label_sign_x3">Sign x3</string>
-    <string name="label_authorize_sign">Combined authorize and sign x1</string>
+    <string name="label_sign_txn_x1">Sign txn x1</string>
+    <string name="label_sign_txn_x3">Sign txn x3</string>
+    <string name="label_authorize_sign_txn">Combined authorize and sign txn x1</string>
+    <string name="label_sign_msg_x1">Sign msg x1</string>
+    <string name="label_sign_msg_x3">Sign msg x3</string>
 </resources>

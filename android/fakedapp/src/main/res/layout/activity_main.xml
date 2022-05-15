@@ -32,24 +32,38 @@
         android:text="@string/label_deauthorize" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_sign_x1"
+        android:id="@+id/btn_sign_txn_x1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_deauthorize"
-        android:text="@string/label_sign_x1" />
+        android:text="@string/label_sign_txn_x1" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_sign_x3"
+        android:id="@+id/btn_sign_txn_x3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/btn_sign_x1"
-        android:text="@string/label_sign_x3" />
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_txn_x1"
+        android:text="@string/label_sign_txn_x3" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_authorize_sign"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/btn_sign_x3"
-        android:text="@string/label_authorize_sign" />
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_txn_x3"
+        android:text="@string/label_authorize_sign_txn" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_msg_x1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_authorize_sign"
+        android:text="@string/label_sign_msg_x1" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_msg_x3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_msg_x1"
+        android:text="@string/label_sign_msg_x3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

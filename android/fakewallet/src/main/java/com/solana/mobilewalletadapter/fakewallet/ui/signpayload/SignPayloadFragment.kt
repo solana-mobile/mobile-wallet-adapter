@@ -2,7 +2,7 @@
  * Copyright (c) 2022 Solana Labs, Inc.
  */
 
-package com.solana.mobilewalletadapter.fakewallet.ui.signtransaction
+package com.solana.mobilewalletadapter.fakewallet.ui.signpayload
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -16,21 +16,21 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
-import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentSignTransactionBinding
-import kotlinx.coroutines.flow.collect
+import com.solana.mobilewalletadapter.fakewallet.R
+import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentSignPayloadBinding
 import kotlinx.coroutines.launch
 
-class SignTransactionFragment : Fragment() {
+class SignPayloadFragment : Fragment() {
     private val activityViewModel: MobileWalletAdapterViewModel by activityViewModels()
-    private lateinit var viewBinding: FragmentSignTransactionBinding
+    private lateinit var viewBinding: FragmentSignPayloadBinding
 
-    private var signTransaction: MobileWalletAdapterServiceRequest.SignTransaction? = null
+    private var signPayload: MobileWalletAdapterServiceRequest.SignPayload? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewBinding = FragmentSignTransactionBinding.inflate(layoutInflater, container, false)
+        viewBinding = FragmentSignPayloadBinding.inflate(layoutInflater, container, false)
         return viewBinding.root
     }
 
@@ -41,14 +41,22 @@ class SignTransactionFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 activityViewModel.mobileWalletAdapterServiceEvents.collect { request ->
                     when (request) {
-                        is MobileWalletAdapterServiceRequest.SignTransaction -> {
-                            this@SignTransactionFragment.signTransaction = request
+                        is MobileWalletAdapterServiceRequest.SignPayload -> {
+                            this@SignPayloadFragment.signPayload = request
+
+                            val res =
+                                if (request is MobileWalletAdapterServiceRequest.SignTransaction) {
+                                    R.string.label_sign_transaction
+                                } else {
+                                    R.string.label_sign_message
+                                }
+                            viewBinding.textSignPayloads.setText(res)
                             viewBinding.textNumTransactions.text =
-                                request.request.transactions.size.toString()
+                                request.request.payloads.size.toString()
                         }
                         else -> {
-                            this@SignTransactionFragment.signTransaction = null
-                            findNavController().navigate(SignTransactionFragmentDirections.actionSignTransactionComplete())
+                            this@SignPayloadFragment.signPayload = null
+                            findNavController().navigate(SignPayloadFragmentDirections.actionSignPayloadComplete())
                         }
                     }
                 }
@@ -56,23 +64,23 @@ class SignTransactionFragment : Fragment() {
         }
 
         viewBinding.btnAuthorize.setOnClickListener {
-            activityViewModel.signTransactionSimulateSign(signTransaction!!)
+            activityViewModel.signPayloadSimulateSign(signPayload!!)
         }
 
         viewBinding.btnDecline.setOnClickListener {
-            activityViewModel.signTransactionDeclined(signTransaction!!)
+            activityViewModel.signPayloadDeclined(signPayload!!)
         }
 
         viewBinding.btnSimulateReauthorize.setOnClickListener {
-            activityViewModel.signTransactionSimulateReauthorizationRequired(signTransaction!!)
+            activityViewModel.signPayloadSimulateReauthorizationRequired(signPayload!!)
         }
 
         viewBinding.btnSimulateAuthorizationFailed.setOnClickListener {
-            activityViewModel.signTransactionSimulateAuthTokenInvalid(signTransaction!!)
+            activityViewModel.signPayloadSimulateAuthTokenInvalid(signPayload!!)
         }
 
         viewBinding.btnSimulateInvalidPayload.setOnClickListener {
-            activityViewModel.signTransactionSimulateInvalidTransaction(signTransaction!!)
+            activityViewModel.signPayloadSimulateInvalidPayload(signPayload!!)
         }
     }
 }

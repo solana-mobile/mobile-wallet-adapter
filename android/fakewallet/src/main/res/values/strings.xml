@@ -13,6 +13,7 @@
 
     <!-- Sign transaction fragment strings -->
     <string name="label_sign_transaction">Sign transaction(s)</string>
+    <string name="label_sign_message">Sign message(s)</string>
     <string name="label_num_txns">Num payloads:</string>
     <string name="label_simulate_reauthorize">Simulate reauthorization req\'d</string>
     <string name="label_simulate_authorization_failed">Simulate auth token invalid</string>

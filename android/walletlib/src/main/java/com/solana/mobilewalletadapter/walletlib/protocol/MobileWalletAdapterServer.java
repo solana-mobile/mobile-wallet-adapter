@@ -39,7 +39,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     public interface MethodHandlers {
         void authorize(@NonNull AuthorizeRequest request);
-        void signTransaction(@NonNull SignTransactionRequest request);
+        void signTransaction(@NonNull SignPayloadRequest request);
+        void signMessage(@NonNull SignPayloadRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull Looper ioLooper, @NonNull MethodHandlers methodHandlers) {
@@ -52,13 +53,20 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                @NonNull String method,
                                @Nullable Object params) {
         try {
-            if (ProtocolContract.METHOD_AUTHORIZE.equals(method)) {
-                handleAuthorize(id, params);
-            } else if (ProtocolContract.METHOD_SIGN_TRANSACTION.equals(method)) {
-                handleSignTransaction(id, params);
-            } else {
-                handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" + method +
-                        "' not available", null);
+            switch (method) {
+                case ProtocolContract.METHOD_AUTHORIZE:
+                    handleAuthorize(id, params);
+                    break;
+                case ProtocolContract.METHOD_SIGN_TRANSACTION:
+                    handleSignTransaction(id, params);
+                    break;
+                case ProtocolContract.METHOD_SIGN_MESSAGE:
+                    handleSignMessage(id, params);
+                    break;
+                default:
+                    handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
+                            method + "' not available", null);
+                    break;
             }
         } catch (IOException e) {
             Log.e(TAG, "Failed sending response for id=" + id, e);
@@ -221,83 +229,138 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     // =============================================================================================
-    // sign_transaction
+    // sign_* common
     // =============================================================================================
 
-    private void handleSignTransaction(@Nullable Object id, @Nullable Object params) throws IOException {
+    public static class SignPayloadRequest extends RequestFuture<SignPayloadResult> {
+        @NonNull
+        @Size(min = 1)
+        public final byte[][] payloads;
+
+        private SignPayloadRequest(@NonNull Handler handler,
+                                   @Nullable Object id,
+                                   @NonNull @Size(min = 1) byte[][] payloads) {
+            super(handler, id);
+            this.payloads = payloads;
+        }
+
+        @Override
+        public boolean complete(@Nullable SignPayloadResult result) {
+            if (result == null) {
+                throw new IllegalArgumentException("A non-null result must be provided");
+            } else if (result.signedPayloads.length != payloads.length) {
+                throw new IllegalArgumentException("Number of signed transactions does not match the number of requested signatures");
+            }
+
+            return super.complete(result);
+        }
+
+        public boolean completeWithDecline() {
+            return completeExceptionally(new RequestDeclinedException("sign request declined"));
+        }
+
+        public boolean completeWithReauthorizationRequired() {
+            return completeExceptionally(new ReauthorizationRequiredException("auth_token requires reauthorization"));
+        }
+
+        public boolean completeWithAuthTokenNotValid() {
+            return completeExceptionally(new AuthTokenNotValidException("auth_token not valid for signing of this payload"));
+        }
+
+        public boolean completeWithInvalidPayloads(@NonNull @Size(min = 1) boolean[] valid) {
+            if (valid.length != payloads.length) {
+                throw new IllegalArgumentException("Number of valid payload entries does not match the number of requested signatures");
+            }
+            return completeExceptionally(new InvalidPayloadException("One or more invalid payloads provided", valid));
+        }
+    }
+
+    public static class SignPayloadResult {
+        @NonNull
+        @Size(min = 1)
+        public final byte[][] signedPayloads;
+
+        public SignPayloadResult(@NonNull @Size(min = 1) byte[][] signedPayloads) {
+            this.signedPayloads = signedPayloads;
+        }
+    }
+
+    @Nullable
+    private SignPayloadRequest parseSignPayloadRequest(@Nullable Object id, @Nullable Object params)
+            throws IOException {
         if (!(params instanceof JSONObject)) {
             handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
-            return;
+            return null;
         }
 
         final JSONObject o = (JSONObject) params;
 
-        final JSONArray transactionsArray = o.optJSONArray(ProtocolContract.PARAMETER_PAYLOADS);
-        if (transactionsArray == null) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "request must contain an array of transaction paylods", null);
-            return;
+        final JSONArray payloadsArray = o.optJSONArray(ProtocolContract.PARAMETER_PAYLOADS);
+        if (payloadsArray == null) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "request must contain an array of payloads to sign", null);
+            return null;
         }
-        final int numTransactions = transactionsArray.length();
-        if (numTransactions == 0) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "request must contain at least one transaction payload", null);
-            return;
+        final int numPayloads = payloadsArray.length();
+        if (numPayloads == 0) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "request must contain at least one payload to sign", null);
+            return null;
         }
 
-        final byte[][] transactions = new byte[numTransactions][];
-        for (int i = 0; i < numTransactions; i++) {
-            final String transaction = transactionsArray.optString(i);
-            if (transaction.isEmpty()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "transactions cannot be empty", null);
-                return;
+        final byte[][] payloads = new byte[numPayloads][];
+        for (int i = 0; i < numPayloads; i++) {
+            final String payload = payloadsArray.optString(i);
+            if (payload.isEmpty()) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "payloads cannot be empty", null);
+                return null;
             }
-            transactions[i] = Base64.decode(transaction, Base64.URL_SAFE);
+            payloads[i] = Base64.decode(payload, Base64.URL_SAFE);
         }
 
         @SuppressLint("Range")
-        final SignTransactionRequest request = new SignTransactionRequest(mHandler, id, transactions);
-        request.notifyOnComplete(this::onSignTransactionComplete);
-        mMethodHandlers.signTransaction(request);
+        final SignPayloadRequest request = new SignPayloadRequest(mHandler, id, payloads);
+        return request;
     }
 
-    private void onSignTransactionComplete(@NonNull NotifyOnCompleteFuture<SignTransactionResult> future) {
-        final SignTransactionRequest request = (SignTransactionRequest) future;
+    private void onSignPayloadComplete(@NonNull NotifyOnCompleteFuture<SignPayloadResult> future) {
+        final SignPayloadRequest request = (SignPayloadRequest) future;
 
         try {
-            final SignTransactionResult result;
+            final SignPayloadResult result;
             try {
                 result = request.get();
             } catch (ExecutionException e) {
                 final Throwable cause = e.getCause();
                 if (cause instanceof RequestDeclinedException) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_NOT_SIGNED, "sign_transaction request declined", null);
+                    handleRpcError(request.id, ProtocolContract.ERROR_NOT_SIGNED, "sign request declined", null);
                 } else if (cause instanceof ReauthorizationRequiredException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_REAUTHORIZE, "auth_token requires reauthorization", null);
                 } else if (cause instanceof AuthTokenNotValidException) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "auth_token not valid for sign_transaction", null);
+                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "auth_token not valid for signing", null);
                 } else if (cause instanceof InvalidPayloadException) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_INVALID_PAYLOAD, "payload invalid for sign_transaction",
+                    handleRpcError(request.id, ProtocolContract.ERROR_INVALID_PAYLOAD, "payload invalid for signing",
                             createInvalidPayloadData(((InvalidPayloadException) cause).valid));
                 } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign_transaction request", null);
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
                 }
                 return;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Should never occur!");
             }
 
-            assert(result != null); // checked in SignTransactionRequest.complete()
-            assert(result.signedTransactions.length == request.transactions.length); // checked in SignTransactionRequest.complete()
+            assert(result != null); // checked in SignPayloadRequest.complete()
+            assert(result.signedPayloads.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
             final JSONObject o = new JSONObject();
             try {
-                final JSONArray signedTransactions = new JSONArray();
-                for (byte[] st : result.signedTransactions) {
-                    final String stb64 = Base64.encodeToString(st, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
-                    signedTransactions.put(stb64);
+                final JSONArray signedPayloads = new JSONArray();
+                for (byte[] sp : result.signedPayloads) {
+                    final String spb64 = Base64.encodeToString(sp,
+                            Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+                    signedPayloads.put(spb64);
                 }
-                o.put(ProtocolContract.RESULT_SIGNED_PAYLOADS, signedTransactions);
+                o.put(ProtocolContract.RESULT_SIGNED_PAYLOADS, signedPayloads);
             } catch (JSONException e) {
-                Log.e(TAG, "Failed preparing sign_transaction response", e);
+                Log.e(TAG, "Failed preparing sign response", e);
                 return;
             }
 
@@ -324,56 +387,29 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         return o.toString();
     }
 
-    public static class SignTransactionRequest extends RequestFuture<SignTransactionResult> {
-        @NonNull
-        @Size(min = 1)
-        public final byte[][] transactions;
+    // =============================================================================================
+    // sign_transaction
+    // =============================================================================================
 
-        private SignTransactionRequest(@NonNull Handler handler,
-                                 @Nullable Object id,
-                                 @NonNull @Size(min = 1) byte[][] transactions) {
-            super(handler, id);
-            this.transactions = transactions;
-        }
-
-        @Override
-        public boolean complete(@Nullable SignTransactionResult result) {
-            if (result == null) {
-                throw new IllegalArgumentException("A non-null result must be provided");
-            } else if (result.signedTransactions.length != transactions.length) {
-                throw new IllegalArgumentException("Number of signed transactions does not match the number of requested signatures");
-            }
-
-            return super.complete(result);
-        }
-
-        public boolean completeWithDecline() {
-            return completeExceptionally(new RequestDeclinedException("sign_transaction request declined"));
-        }
-
-        public boolean completeWithReauthorizationRequired() {
-            return completeExceptionally(new ReauthorizationRequiredException("auth_token requires reauthorization"));
-        }
-
-        public boolean completeWithAuthTokenNotValid() {
-            return completeExceptionally(new AuthTokenNotValidException("auth_token not valid for sign_transaction"));
-        }
-
-        public boolean completeWithInvalidTransactions(@NonNull @Size(min = 1) boolean[] valid) {
-            if (valid.length != transactions.length) {
-                throw new IllegalArgumentException("Number of valid transaction entries does not match the number of requested signatures");
-            }
-            return completeExceptionally(new InvalidPayloadException("One or more invalid transactions provided to sign_transaction", valid));
+    private void handleSignTransaction(@Nullable Object id, @Nullable Object params)
+            throws IOException {
+        final SignPayloadRequest request = parseSignPayloadRequest(id, params);
+        if (request != null) {
+            request.notifyOnComplete(this::onSignPayloadComplete);
+            mMethodHandlers.signTransaction(request);
         }
     }
 
-    public static class SignTransactionResult {
-        @NonNull
-        @Size(min = 1)
-        public final byte[][] signedTransactions;
+    // =============================================================================================
+    // sign_message
+    // =============================================================================================
 
-        public SignTransactionResult(@NonNull @Size(min = 1) byte[][] signedTransactions) {
-            this.signedTransactions = signedTransactions;
+    private void handleSignMessage(@Nullable Object id, @Nullable Object params)
+            throws IOException {
+        final SignPayloadRequest request = parseSignPayloadRequest(id, params);
+        if (request != null) {
+            request.notifyOnComplete(this::onSignPayloadComplete);
+            mMethodHandlers.signMessage(request);
         }
     }
 

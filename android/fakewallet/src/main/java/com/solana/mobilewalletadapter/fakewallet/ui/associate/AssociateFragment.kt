@@ -43,8 +43,8 @@ class AssociateFragment : Fragment() {
                             Unit
                         is MobileWalletAdapterServiceRequest.AuthorizeDapp ->
                             findNavController().navigate(AssociateFragmentDirections.actionAuthorizeDapp())
-                        is MobileWalletAdapterServiceRequest.SignTransaction ->
-                            findNavController().navigate(AssociateFragmentDirections.actionSignTransaction())
+                        is MobileWalletAdapterServiceRequest.SignPayload ->
+                            findNavController().navigate(AssociateFragmentDirections.actionSignPayload())
                         is MobileWalletAdapterServiceRequest.SessionTerminated ->
                             Unit
                     }
