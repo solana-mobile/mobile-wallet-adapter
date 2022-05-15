@@ -20,8 +20,8 @@
             app:popUpTo="@id/fragment_associate"
             app:popUpToInclusive="true" />
         <action
-            android:id="@+id/action_sign_transaction"
-            app:destination="@id/fragment_sign_transaction"
+            android:id="@+id/action_sign_payload"
+            app:destination="@id/fragment_sign_payload"
             app:popUpTo="@id/fragment_associate"
             app:popUpToInclusive="true" />
     </fragment>
@@ -39,12 +39,12 @@
     </fragment>
 
     <fragment
-        android:id="@+id/fragment_sign_transaction"
-        android:name="com.solana.mobilewalletadapter.fakewallet.ui.signtransaction.SignTransactionFragment"
-        android:label="fragment_sign_transaction"
-        tools:layout="@layout/fragment_sign_transaction">
+        android:id="@+id/fragment_sign_payload"
+        android:name="com.solana.mobilewalletadapter.fakewallet.ui.signpayload.SignPayloadFragment"
+        android:label="fragment_sign_payload"
+        tools:layout="@layout/fragment_sign_payload">
         <action
-            android:id="@+id/action_sign_transaction_complete"
+            android:id="@+id/action_sign_payload_complete"
             app:destination="@id/nav_mobile_wallet_adapter"
             app:popUpTo="@id/nav_mobile_wallet_adapter"
             app:popUpToInclusive="true" />

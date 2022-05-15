@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class MobileWalletAdapterClient extends JsonRpc20Client {
-    private static final int TIMEOUT_MS = 90000;
+    private static final int TIMEOUT_MS = 90000; // TODO: should this timeout be configurable?
 
     public MobileWalletAdapterClient(@NonNull Looper mainLooper) {
         super(mainLooper);
@@ -242,82 +242,67 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     // =============================================================================================
-    // sign_transaction
+    // sign_* common
     // =============================================================================================
 
     @NonNull
-    public SignTransactionFuture signTransactionAsync(@NonNull String authToken,
-                                                      @NonNull @Size(min = 1) byte[][] transactions)
+    private NotifyOnCompleteFuture<Object> signPayloadAsync(@NonNull String method,
+                                                            @NonNull String authToken,
+                                                            @NonNull @Size(min = 1) byte[][] payloads)
             throws IOException {
         if (authToken.isEmpty()) {
             throw new IllegalArgumentException("authToken cannot be empty");
         }
-        for (byte[] t : transactions) {
-            if (t == null || t.length == 0) {
-                throw new IllegalArgumentException("transactions must not contain null or empty transactions");
+        for (byte[] p : payloads) {
+            if (p == null || p.length == 0) {
+                throw new IllegalArgumentException("payloads must be null or empty");
             }
         }
 
-        final JSONObject signTransaction;
+        final JSONObject signPayloads;
         try {
-            final JSONArray payloads = new JSONArray();
-            for (byte[] t : transactions) {
-                final String tb64 = Base64
-                        .encodeToString(t, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-                payloads.put(tb64);
+            final JSONArray payloadArr = new JSONArray();
+            for (byte[] p : payloads) {
+                final String pb64 = Base64
+                        .encodeToString(p, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+                payloadArr.put(pb64);
             }
 
-            signTransaction = new JSONObject();
-            signTransaction.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
-            signTransaction.put(ProtocolContract.PARAMETER_PAYLOADS, payloads);
+            signPayloads = new JSONObject();
+            signPayloads.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
+            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
         } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create sign_transaction JSON params", e);
+            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
         }
 
-        return new SignTransactionFuture(
-                methodCall(ProtocolContract.METHOD_SIGN_TRANSACTION, signTransaction, TIMEOUT_MS),
-                transactions.length);
+        return methodCall(method, signPayloads, TIMEOUT_MS);
     }
 
-    @NonNull
-    public SignTransactionResult signTransaction(@NonNull String authToken,
-                                                 @NonNull @Size(min = 1) byte[][] transactions)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final SignTransactionFuture future = signTransactionAsync(authToken, transactions);
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for authorize response", e);
-        }
-    }
-
-    public static class SignTransactionResult {
+    public static class SignPayloadResult {
         @NonNull
         @Size(min = 1)
-        public final byte[][] signedTransactions;
+        public final byte[][] signedPayloads;
 
-        public SignTransactionResult(@NonNull @Size(min = 1) byte[][] signedTransactions) {
-            this.signedTransactions = signedTransactions;
+        public SignPayloadResult(@NonNull @Size(min = 1) byte[][] signedPayloads) {
+            this.signedPayloads = signedPayloads;
         }
     }
 
-    public static class SignTransactionFuture
-            extends JsonRpc20MethodResultFuture<SignTransactionResult>
-            implements NotifyOnCompleteFuture<SignTransactionResult> {
+    public static class SignPayloadFuture
+            extends JsonRpc20MethodResultFuture<SignPayloadResult>
+            implements NotifyOnCompleteFuture<SignPayloadResult> {
         @IntRange(from = 1)
         private final int mExpectedNumSignedPayloads;
 
-        private SignTransactionFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
-                                      @IntRange(from = 1) int expectedNumSignedPayloads) {
+        private SignPayloadFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
+                                  @IntRange(from = 1) int expectedNumSignedPayloads) {
             super(methodCallFuture);
             mExpectedNumSignedPayloads = expectedNumSignedPayloads;
         }
 
         @NonNull
         @Override
-        protected SignTransactionResult processResult(@Nullable Object o)
+        protected SignPayloadResult processResult(@Nullable Object o)
                 throws JsonRpc20InvalidResponseException {
             if (!(o instanceof JSONObject)) {
                 throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
@@ -335,7 +320,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final int numSignedPayloads = signed.length();
             if (numSignedPayloads != mExpectedNumSignedPayloads) {
                 throw new JsonRpc20InvalidResponseException("Response expected to contain " +
-                        mExpectedNumSignedPayloads + " signed transactions; actual=" +
+                        mExpectedNumSignedPayloads + " signed payloads; actual=" +
                         numSignedPayloads);
             }
 
@@ -351,7 +336,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
 
             @SuppressLint("Range")
-            final SignTransactionResult result = new SignTransactionResult(signedPayloads);
+            final SignPayloadResult result = new SignPayloadResult(signedPayloads);
             return result;
         }
 
@@ -370,26 +355,22 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         @Override
-        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignTransactionResult>> cb) {
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignPayloadResult>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
     }
 
-    // =============================================================================================
-    // Common exceptions
-    // =============================================================================================
-
     public static class InvalidPayloadException extends JsonRpc20RemoteException {
         @NonNull
         @Size(min = 1)
-        public final boolean[] validTransactions;
+        public final boolean[] validPayloads;
 
         private InvalidPayloadException(@NonNull String message,
                                         @Nullable String data,
                                         @IntRange(from = 1) int expectedNumSignedPayloads)
                 throws JsonRpc20InvalidResponseException {
             super(ProtocolContract.ERROR_INVALID_PAYLOAD, message, data);
-            this.validTransactions = processData(data, expectedNumSignedPayloads);
+            this.validPayloads = processData(data, expectedNumSignedPayloads);
         }
 
         @NonNull
@@ -424,6 +405,60 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
 
             return valid;
+        }
+    }
+
+    // =============================================================================================
+    // sign_transaction
+    // =============================================================================================
+
+    @NonNull
+    public SignPayloadFuture signTransactionAsync(@NonNull String authToken,
+                                                  @NonNull @Size(min = 1) byte[][] transactions)
+            throws IOException {
+        return new SignPayloadFuture(
+                signPayloadAsync(ProtocolContract.METHOD_SIGN_TRANSACTION, authToken, transactions),
+                transactions.length);
+    }
+
+    @NonNull
+    public SignPayloadResult signTransaction(@NonNull String authToken,
+                                             @NonNull @Size(min = 1) byte[][] transactions)
+            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+        final SignPayloadFuture future = signTransactionAsync(authToken, transactions);
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            throw unpackExecutionException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for sign_transaction response", e);
+        }
+    }
+
+    // =============================================================================================
+    // sign_message
+    // =============================================================================================
+
+    @NonNull
+    public SignPayloadFuture signMessageAsync(@NonNull String authToken,
+                                              @NonNull @Size(min = 1) byte[][] messages)
+            throws IOException {
+        return new SignPayloadFuture(
+                signPayloadAsync(ProtocolContract.METHOD_SIGN_MESSAGE, authToken, messages),
+                messages.length);
+    }
+
+    @NonNull
+    public SignPayloadResult signMessage(@NonNull String authToken,
+                                         @NonNull @Size(min = 1) byte[][] messages)
+            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+        final SignPayloadFuture future = signMessageAsync(authToken, messages);
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            throw unpackExecutionException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for sign_message response", e);
         }
     }
 }

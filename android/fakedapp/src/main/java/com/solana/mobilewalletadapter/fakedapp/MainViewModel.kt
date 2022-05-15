@@ -40,25 +40,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun signX1(sender: StartActivityForResultSender) {
-        sign(sender, 1)
-    }
-
-    suspend fun signX3(sender: StartActivityForResultSender) {
-        sign(sender, 3)
-    }
-
-    private suspend fun sign(sender: StartActivityForResultSender, numTransactions: Int) {
+    suspend fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
         val transactions = Array(numTransactions) {
             Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
         }
 
         localAssociateAndExecute(sender) { client ->
-            doSign(client, transactions)
+            doSignTransaction(client, transactions)
         }
     }
 
-    suspend fun authorizeAndSign(sender: StartActivityForResultSender) {
+    suspend fun authorizeAndSignTransaction(sender: StartActivityForResultSender) {
         val transactions = Array(1) {
             Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
         }
@@ -66,8 +58,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         localAssociateAndExecute(sender) { client ->
             val authorized = doAuthorize(client)
             if (authorized) {
-                doSign(client, transactions)
+                doSignTransaction(client, transactions)
             }
+        }
+    }
+
+    suspend fun signMessage(sender: StartActivityForResultSender, numMessages: Int) {
+        val messages = Array(numMessages) {
+            Random.nextBytes(16384)
+        }
+
+        localAssociateAndExecute(sender) { client ->
+            doSignMessage(client, messages)
         }
     }
 
@@ -104,13 +106,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: TimeoutException) {
             Log.e(TAG, "Timed out while waiting for authorize result", e)
         } catch (e: CancellationException) {
-            Log.e(TAG, "Authorization request was cancelled", e)
+            Log.e(TAG, "authorize request was cancelled", e)
         }
 
         return authorized
     }
 
-    private suspend fun doSign(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
+    private suspend fun doSignTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
         try {
             val sem = Semaphore(1, 1)
             val future = client.signTransactionAsync(uiState.value.authToken!!, transactions)
@@ -122,11 +124,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: ExecutionException) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
-            Log.d(TAG, "Signed: $result")
+            Log.d(TAG, "Signed transaction(s): $result")
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_transaction", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
-            Log.e(TAG, "Transaction payload invalid: ${e.validTransactions}", e)
+            Log.e(TAG, "Transaction payload invalid: ${e.validPayloads}", e)
         } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
             when (e.code) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
@@ -135,11 +137,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 else -> Log.e(TAG, "Remote exception for authorize: ${e.message}", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
-            Log.e(TAG, "JSON-RPC client exception for authorize", e)
+            Log.e(TAG, "JSON-RPC client exception for sign_transaction", e)
         } catch (e: TimeoutException) {
-            Log.e(TAG, "Timed out while waiting for authorize result", e)
+            Log.e(TAG, "Timed out while waiting for sign_transaction result", e)
         } catch (e: CancellationException) {
-            Log.e(TAG, "Authorization request was cancelled", e)
+            Log.e(TAG, "sign_transaction request was cancelled", e)
+        }
+    }
+
+    private suspend fun doSignMessage(client: MobileWalletAdapterClient, messages: Array<ByteArray>) {
+        try {
+            val sem = Semaphore(1, 1)
+            val future = client.signMessageAsync(uiState.value.authToken!!, messages)
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            val result = try {
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Signed message(s): $result")
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending sign_message", e)
+        } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
+            Log.e(TAG, "Message payload invalid: ${e.validPayloads}", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            when (e.code) {
+                ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
+                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
+                ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
+                else -> Log.e(TAG, "Remote exception for sign_message: ${e.message}", e)
+            }
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for sign_message", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for sign_message result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "sign_message request was cancelled", e)
         }
     }
 

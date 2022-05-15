@@ -13,7 +13,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -28,10 +27,12 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.uiState.collect { uiState ->
-                    viewBinding.btnReauthorize.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnDeauthorize.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignX1.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignX3.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnReauthorize.isEnabled = false
+                    viewBinding.btnDeauthorize.isEnabled = false
+                    viewBinding.btnSignTxnX1.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignTxnX3.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignMsgX1.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignMsgX3.isEnabled = uiState.hasAuthToken
                 }
             }
         }
@@ -48,16 +49,24 @@ class MainActivity : AppCompatActivity() {
             TODO("Implement")
         }
 
-        viewBinding.btnSignX1.setOnClickListener {
-            lifecycleScope.launch { viewModel.signX1(intentSender) }
+        viewBinding.btnSignTxnX1.setOnClickListener {
+            lifecycleScope.launch { viewModel.signTransaction(intentSender, 1) }
         }
 
-        viewBinding.btnSignX3.setOnClickListener {
-            lifecycleScope.launch { viewModel.signX3(intentSender) }
+        viewBinding.btnSignTxnX3.setOnClickListener {
+            lifecycleScope.launch { viewModel.signTransaction(intentSender, 3) }
         }
 
         viewBinding.btnAuthorizeSign.setOnClickListener {
-            lifecycleScope.launch { viewModel.authorizeAndSign(intentSender) }
+            lifecycleScope.launch { viewModel.authorizeAndSignTransaction(intentSender) }
+        }
+
+        viewBinding.btnSignMsgX1.setOnClickListener {
+            lifecycleScope.launch { viewModel.signMessage(intentSender, 1) }
+        }
+
+        viewBinding.btnSignMsgX3.setOnClickListener {
+            lifecycleScope.launch { viewModel.signMessage(intentSender, 3) }
         }
     }
 
