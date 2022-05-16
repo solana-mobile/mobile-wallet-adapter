@@ -66,4 +66,18 @@
         app:layout_constraintTop_toBottomOf="@id/btn_sign_msg_x1"
         android:text="@string/label_sign_msg_x3" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_and_send_txn_x1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_msg_x3"
+        android:text="@string/label_sign_and_send_txn_x1" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_and_send_txn_x3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_and_send_txn_x1"
+        android:text="@string/label_sign_and_send_txn_x3" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

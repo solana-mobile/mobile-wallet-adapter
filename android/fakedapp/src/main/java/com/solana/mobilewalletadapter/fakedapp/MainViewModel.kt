@@ -14,6 +14,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,6 +74,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun signAndSendTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
+        val messages = Array(numTransactions) {
+            Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
+        }
+
+        localAssociateAndExecute(sender) { client ->
+            doSignAndSendTransaction(client, messages)
+        }
+    }
+
     private suspend fun doAuthorize(client: MobileWalletAdapterClient): Boolean {
         var authorized = false
         try {
@@ -91,15 +102,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: ExecutionException) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
-            Log.d(TAG, "Authorized: authToken=${result.authToken}, publicKey=${result.publicKey}, walletUriBase=${result.walletUriBase}")
+            Log.d(TAG, "Authorized: $result")
             _uiState.update { it.copy(authToken = result.authToken) }
             authorized = true
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending authorize", e)
         } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
             when (e.code) {
-                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Not authorized: ${e.message}")
-                else -> Log.e(TAG, "Remote exception for authorize: ${e.message}", e)
+                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Not authorized", e)
+                else -> Log.e(TAG, "Remote exception for authorize", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
             Log.e(TAG, "JSON-RPC client exception for authorize", e)
@@ -128,13 +139,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_transaction", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
-            Log.e(TAG, "Transaction payload invalid: ${e.validPayloads}", e)
+            Log.e(TAG, "Transaction payload invalid", e)
         } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
             when (e.code) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
                 ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
                 ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
-                else -> Log.e(TAG, "Remote exception for authorize: ${e.message}", e)
+                else -> Log.e(TAG, "Remote exception for authorize", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
             Log.e(TAG, "JSON-RPC client exception for sign_transaction", e)
@@ -161,13 +172,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_message", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
-            Log.e(TAG, "Message payload invalid: ${e.validPayloads}", e)
+            Log.e(TAG, "Message payload invalid", e)
         } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
             when (e.code) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
                 ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
                 ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
-                else -> Log.e(TAG, "Remote exception for sign_message: ${e.message}", e)
+                else -> Log.e(TAG, "Remote exception for sign_message", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
             Log.e(TAG, "JSON-RPC client exception for sign_message", e)
@@ -175,6 +186,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Log.e(TAG, "Timed out while waiting for sign_message result", e)
         } catch (e: CancellationException) {
             Log.e(TAG, "sign_message request was cancelled", e)
+        }
+    }
+
+    private suspend fun doSignAndSendTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
+        try {
+            val sem = Semaphore(1, 1)
+            val future = client.signAndSendTransactionAsync(uiState.value.authToken!!, transactions,
+                CommitmentLevel.Confirmed)
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            val result = try {
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Signatures: $result")
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending sign_and_send_transaction", e)
+        } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
+            Log.e(TAG, "Transaction payload invalid", e)
+        } catch (e: MobileWalletAdapterClient.NotCommittedException) {
+            Log.e(TAG, "Commitment not reached for all transactions", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            when (e.code) {
+                ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
+                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
+                ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
+                else -> Log.e(TAG, "Remote exception for authorize", e)
+            }
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for sign_transaction", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for sign_transaction result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "sign_transaction request was cancelled", e)
         }
     }
 
