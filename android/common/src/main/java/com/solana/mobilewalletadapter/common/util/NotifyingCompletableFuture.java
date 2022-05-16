@@ -93,6 +93,7 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
             while (!mIsComplete) {
                 wait();
             }
+            // TODO: should throw CancellationException if cancelled
             if (mException != null) {
                 throw new ExecutionException(mException);
             }
@@ -153,5 +154,23 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
             mOnCompleteCallback = null;
             mHandler.post(() -> cb.onComplete(this));
         }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        final String s;
+        if (mIsCancelled) {
+            s = "NotifyingCompletableFuture{CANCELLED}";
+        } else if (mIsComplete) {
+            if (mResult != null) {
+                s = "NotifyingCompletableFuture{COMPLETE, mResult=" + mResult + '}';
+            } else {
+                s = "NotifyingCompletableFuture{EXCEPTION, mException=" + mException + '}';
+            }
+        } else {
+            s = "NotifyingCompletableFuture{NOT_COMPLETE}";
+        }
+        return s;
     }
 }

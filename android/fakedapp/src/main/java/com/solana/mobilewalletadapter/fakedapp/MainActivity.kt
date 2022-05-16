@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity() {
                     viewBinding.btnSignTxnX3.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignMsgX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignMsgX3.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignAndSendTxnX1.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignAndSendTxnX3.isEnabled = uiState.hasAuthToken
                 }
             }
         }
@@ -67,6 +69,14 @@ class MainActivity : AppCompatActivity() {
 
         viewBinding.btnSignMsgX3.setOnClickListener {
             lifecycleScope.launch { viewModel.signMessage(intentSender, 3) }
+        }
+
+        viewBinding.btnSignAndSendTxnX1.setOnClickListener {
+            lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 1) }
+        }
+
+        viewBinding.btnSignAndSendTxnX3.setOnClickListener {
+            lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 3) }
         }
     }
 
