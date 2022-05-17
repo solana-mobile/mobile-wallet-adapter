@@ -39,14 +39,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     public static RuntimeException unpackExecutionException(@NonNull ExecutionException e)
-            throws JsonRpc20Exception, TimeoutException, CancellationException {
+            throws JsonRpc20Exception, TimeoutException {
         final Throwable cause = e.getCause();
         if (cause instanceof JsonRpc20Exception) {
             throw (JsonRpc20Exception) cause;
         } else if (cause instanceof TimeoutException) {
             throw (TimeoutException) cause;
-        } else if (cause instanceof CancellationException) {
-            throw (CancellationException) cause;
         }
         return new RuntimeException("Unknown exception while waiting for a JSON-RPC 2.0 response", cause);
     }
@@ -75,7 +73,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         @Override
-        public T get() throws ExecutionException, InterruptedException {
+        public T get() throws ExecutionException, CancellationException, InterruptedException {
             final Object o;
             try {
                 o = mMethodCallFuture.get();
@@ -98,7 +96,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         @Override
         public T get(long timeout, TimeUnit unit)
-                throws ExecutionException, InterruptedException, TimeoutException {
+                throws ExecutionException, CancellationException, InterruptedException, TimeoutException {
             final Object o;
             try {
                 o = mMethodCallFuture.get(timeout, unit);

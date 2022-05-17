@@ -64,7 +64,6 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
             }
             mIsComplete = true;
             mIsCancelled = true;
-            mException = new CancellationException();
             notifyAll();
             dispatchOnCompletionNotification();
         }
@@ -88,13 +87,14 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
 
     @Nullable
     @Override
-    public T get() throws ExecutionException, InterruptedException {
+    public T get() throws ExecutionException, CancellationException, InterruptedException {
         synchronized (this) {
             while (!mIsComplete) {
                 wait();
             }
-            // TODO: should throw CancellationException if cancelled
-            if (mException != null) {
+            if (mIsCancelled) {
+                throw new CancellationException();
+            } else if (mException != null) {
                 throw new ExecutionException(mException);
             }
             return mResult;
@@ -104,7 +104,7 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
     @Nullable
     @Override
     public T get(long timeout, TimeUnit unit)
-            throws ExecutionException, InterruptedException, TimeoutException {
+            throws ExecutionException, CancellationException, InterruptedException, TimeoutException {
         if (unit == null) {
             throw new IllegalArgumentException("Invalid time unit specified");
         }
@@ -119,6 +119,8 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
 
             if (!mIsComplete) {
                 throw new TimeoutException();
+            } else if (mIsCancelled) {
+                throw new CancellationException();
             } else if (mException != null) {
                 throw new ExecutionException(mException);
             }
