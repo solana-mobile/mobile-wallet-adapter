@@ -34,7 +34,7 @@
         <action
             android:id="@+id/action_authorize_dapp_complete"
             app:destination="@id/nav_mobile_wallet_adapter"
-            app:popUpTo="@id/nav_mobile_wallet_adapter"
+            app:popUpTo="@id/fragment_authorize_dapp"
             app:popUpToInclusive="true" />
     </fragment>
 
@@ -46,7 +46,24 @@
         <action
             android:id="@+id/action_sign_payload_complete"
             app:destination="@id/nav_mobile_wallet_adapter"
-            app:popUpTo="@id/nav_mobile_wallet_adapter"
+            app:popUpTo="@id/fragment_sign_payload"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_send_transaction"
+            app:destination="@id/fragment_send_transaction"
+            app:popUpTo="@id/fragment_sign_payload"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_send_transaction"
+        android:name="com.solana.mobilewalletadapter.fakewallet.ui.sendtransaction.SendTransactionFragment"
+        android:label="fragment_send_transaction"
+        tools:layout="@layout/fragment_send_transaction">
+        <action
+            android:id="@+id/action_send_transaction_complete"
+            app:destination="@id/nav_mobile_wallet_adapter"
+            app:popUpTo="@id/fragment_send_transaction"
             app:popUpToInclusive="true" />
     </fragment>
 </navigation>

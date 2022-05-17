@@ -11,13 +11,19 @@
     <!-- Authorize dapp fragment strings -->
     <string name="label_authorize_dapp">Authorize dapp</string>
 
-    <!-- Sign transaction fragment strings -->
+    <!-- Sign Payload fragment strings -->
     <string name="label_sign_transaction">Sign transaction(s)</string>
     <string name="label_sign_message">Sign message(s)</string>
     <string name="label_num_txns">Num payloads:</string>
     <string name="label_simulate_reauthorize">Simulate reauthorization req\'d</string>
     <string name="label_simulate_authorization_failed">Simulate auth token invalid</string>
     <string name="label_simulate_invalid_payload">Simulate first payload invalid</string>
+
+    <!-- Send Transaction fragment strings -->
+    <string name="label_send_transaction">Sending transaction(s)</string>
+    <string name="label_desired_commitment">Commitment:</string>
+    <string name="label_simulate_commitment_reached">Simulate commitment achieved</string>
+    <string name="label_simulate_commitment_not_reached">Simulate commitment not achieved</string>
 
     <!-- Common strings -->
     <string name="label_authorize">Authorize</string>

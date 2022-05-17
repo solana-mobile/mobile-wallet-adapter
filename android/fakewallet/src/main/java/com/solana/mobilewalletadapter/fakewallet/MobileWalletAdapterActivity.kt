@@ -12,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MobileWalletAdapterActivity : AppCompatActivity() {

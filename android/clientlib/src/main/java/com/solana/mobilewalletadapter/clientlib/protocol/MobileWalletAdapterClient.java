@@ -4,10 +4,8 @@
 
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
-import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Looper;
-import android.util.Base64;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -17,6 +15,7 @@ import androidx.annotation.Size;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
+import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
 import org.json.JSONArray;
@@ -277,16 +276,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
-        final JSONObject signPayloads;
+        final JSONArray payloadArr = JsonPack.packByteArraysToBase64UrlArray(payloads);
+        final JSONObject signPayloads = new JSONObject();
         try {
-            final JSONArray payloadArr = new JSONArray();
-            for (byte[] p : payloads) {
-                final String pb64 = Base64
-                        .encodeToString(p, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-                payloadArr.put(pb64);
-            }
-
-            signPayloads = new JSONObject();
             signPayloads.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
             signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
         } catch (JSONException e) {
@@ -298,7 +290,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
     @NonNull
     @Size(min = 1)
-    @SuppressLint("Range")
     private static byte[][] unpackResponsePayloadArray(@NonNull JSONObject jo,
                                                        @NonNull String paramName,
                                                        @IntRange(from = 1) int numExpectedPayloads)
@@ -317,15 +308,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     numExpectedPayloads + " entries; actual=" + numPayloads);
         }
 
-        final byte[][] payloads = new byte[numPayloads][];
-        for (int i = 0; i < numPayloads; i++) {
-            final String s;
-            try {
-                s = arr.getString(i);
-            } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException(paramName + " entries must be Strings");
-            }
-            payloads[i] = Base64.decode(s, Base64.URL_SAFE);
+        final byte[][] payloads;
+        try {
+            payloads = JsonPack.unpackBase64UrlArrayToByteArrays(arr);
+        } catch (JSONException e) {
+            throw new JsonRpc20InvalidResponseException(paramName + " must be an array of base64url-encoded Strings");
         }
 
         return payloads;
@@ -351,13 +338,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     numExpectedBooleans + " entries; actual=" + numValid);
         }
 
-        final boolean[] valid = new boolean[numValid];
-        for (int i = 0; i < numValid; i++) {
-            try {
-                valid[i] = arr.getBoolean(i);
-            } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException(paramName + " entries must be Booleans");
-            }
+        final boolean[] valid;
+        try {
+            valid = JsonPack.unpackBooleans(arr);
+        } catch (JSONException e) {
+            throw new JsonRpc20InvalidResponseException(paramName + " must be an array of Booleans");
         }
 
         return valid;
@@ -527,16 +512,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
-        final JSONObject signAndSendTransaction;
+        final JSONArray payloadArr = JsonPack.packByteArraysToBase64UrlArray(transactions);
+        final JSONObject signAndSendTransaction = new JSONObject();
         try {
-            final JSONArray payloadArr = new JSONArray();
-            for (byte[] t : transactions) {
-                final String pb64 = Base64
-                        .encodeToString(t, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-                payloadArr.put(pb64);
-            }
-
-            signAndSendTransaction = new JSONObject();
             signAndSendTransaction.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
             signAndSendTransaction.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
             signAndSendTransaction.put(ProtocolContract.PARAMETER_COMMITMENT,
