@@ -230,53 +230,51 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         uriPrefix: Uri? = null,
         action: suspend (MobileWalletAdapterClient) -> Unit
     ) {
-        withContext(Dispatchers.IO) {
-            mobileWalletAdapterClientMutex.withLock {
-                val semConnectedOrFailed = Semaphore(1, 1)
-                val semTerminated = Semaphore(1, 1)
-                var mobileWalletAdapterClient: MobileWalletAdapterClient? = null
-                val scenarioCallbacks = object : Scenario.Callbacks {
-                    override fun onScenarioReady(client: MobileWalletAdapterClient) {
-                        mobileWalletAdapterClient = client
-                        semConnectedOrFailed.release()
-                    }
-
-                    override fun onScenarioError() = semConnectedOrFailed.release()
-                    override fun onScenarioComplete() = semConnectedOrFailed.release()
-                    override fun onScenarioTeardownComplete() = semTerminated.release()
+        mobileWalletAdapterClientMutex.withLock {
+            val semConnectedOrFailed = Semaphore(1, 1)
+            val semTerminated = Semaphore(1, 1)
+            var mobileWalletAdapterClient: MobileWalletAdapterClient? = null
+            val scenarioCallbacks = object : Scenario.Callbacks {
+                override fun onScenarioReady(client: MobileWalletAdapterClient) {
+                    mobileWalletAdapterClient = client
+                    semConnectedOrFailed.release()
                 }
 
-                val localAssociation = LocalAssociationScenario(
-                    getApplication<Application>().mainLooper,
-                    scenarioCallbacks,
-                    uriPrefix
-                )
-                sender.startActivityForResult(localAssociation.createAssociationIntent())
+                override fun onScenarioError() = semConnectedOrFailed.release()
+                override fun onScenarioComplete() = semConnectedOrFailed.release()
+                override fun onScenarioTeardownComplete() = semTerminated.release()
+            }
 
-                localAssociation.start()
-                try {
-                    withTimeout(ASSOCIATION_TIMEOUT_MS) {
-                        semConnectedOrFailed.acquire()
-                    }
-                } catch (e: TimeoutCancellationException) {
-                    Log.e(TAG, "Timed out waiting for local association to be ready", e)
-                    // Let garbage collection deal with cleanup; if we timed out starting, we might
-                    // hang if we attempt to close.
-                    return@withLock
+            val localAssociation = LocalAssociationScenario(
+                getApplication<Application>().mainLooper,
+                scenarioCallbacks,
+                uriPrefix
+            )
+            sender.startActivityForResult(localAssociation.createAssociationIntent())
+
+            localAssociation.start()
+            try {
+                withTimeout(ASSOCIATION_TIMEOUT_MS) {
+                    semConnectedOrFailed.acquire()
                 }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "Timed out waiting for local association to be ready", e)
+                // Let garbage collection deal with cleanup; if we timed out starting, we might
+                // hang if we attempt to close.
+                return@withLock
+            }
 
-                mobileWalletAdapterClient?.let { client -> action(client) }
-                    ?: Log.e(TAG, "Local association not ready; skip requested action")
+            mobileWalletAdapterClient?.let { client -> action(client) }
+                ?: Log.e(TAG, "Local association not ready; skip requested action")
 
-                localAssociation.close()
-                try {
-                    withTimeout(ASSOCIATION_TIMEOUT_MS) {
-                        semTerminated.acquire()
-                    }
-                } catch (e: TimeoutCancellationException) {
-                    Log.e(TAG, "Timed out waiting for local association to close", e)
-                    return@withLock
+            localAssociation.close()
+            try {
+                withTimeout(ASSOCIATION_TIMEOUT_MS) {
+                    semTerminated.acquire()
                 }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "Timed out waiting for local association to close", e)
+                return@withLock
             }
         }
     }

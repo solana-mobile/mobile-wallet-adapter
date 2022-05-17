@@ -4,8 +4,6 @@
 
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
@@ -35,16 +33,10 @@ import java.util.concurrent.TimeoutException;
 public class JsonRpc20Client implements MessageReceiver {
     private static final String TAG = JsonRpc20Client.class.getSimpleName();
 
-    private final Handler mHandler;
-
     private int mNextMessageId = 1;
     private MethodCallResultFuture mOutstandingRequest;
     private MessageSender mSender;
     private Timer mTimer;
-
-    public JsonRpc20Client(@NonNull Looper mainLooper) {
-        mHandler = new Handler(mainLooper);
-    }
 
     // Throws UnsupportedOperationException
     @NonNull
@@ -253,7 +245,6 @@ public class JsonRpc20Client implements MessageReceiver {
         private final int mId;
 
         public MethodCallResultFuture(int id) {
-            super(mHandler);
             mId = id;
         }
 
