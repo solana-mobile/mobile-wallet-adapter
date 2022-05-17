@@ -88,7 +88,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         var authorized = false
         try {
             val sem = Semaphore(1, 1)
-            // TODO: defer actual send to IO thread
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
             val future = client.authorizeAsync(Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
                 "Solana",
@@ -126,6 +128,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doSignTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
         try {
             val sem = Semaphore(1, 1)
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
             val future = client.signTransactionAsync(uiState.value.authToken!!, transactions)
             future.notifyOnComplete { sem.release() }
             sem.acquire()
@@ -159,6 +164,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doSignMessage(client: MobileWalletAdapterClient, messages: Array<ByteArray>) {
         try {
             val sem = Semaphore(1, 1)
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
             val future = client.signMessageAsync(uiState.value.authToken!!, messages)
             future.notifyOnComplete { sem.release() }
             sem.acquire()
@@ -192,6 +200,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doSignAndSendTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
         try {
             val sem = Semaphore(1, 1)
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
             val future = client.signAndSendTransactionAsync(uiState.value.authToken!!, transactions,
                 CommitmentLevel.Confirmed)
             future.notifyOnComplete { sem.release() }
