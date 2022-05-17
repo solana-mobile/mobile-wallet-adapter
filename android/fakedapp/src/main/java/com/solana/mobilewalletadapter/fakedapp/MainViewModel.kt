@@ -258,6 +258,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val localAssociation = LocalAssociationScenario(
                 getApplication<Application>().mainLooper,
+                Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
                 scenarioCallbacks,
                 uriPrefix
             )

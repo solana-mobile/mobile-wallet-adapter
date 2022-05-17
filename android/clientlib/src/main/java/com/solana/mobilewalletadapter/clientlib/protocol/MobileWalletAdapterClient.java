@@ -31,7 +31,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class MobileWalletAdapterClient extends JsonRpc20Client {
-    private static final int TIMEOUT_MS = 90000; // TODO: should this timeout be configurable?
+    @IntRange(from = 0)
+    private final int mClientTimeoutMs;
+
+    public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs) {
+        mClientTimeoutMs = clientTimeoutMs;
+    }
 
     public static RuntimeException unpackExecutionException(@NonNull ExecutionException e)
             throws JsonRpc20Exception, TimeoutException {
@@ -161,7 +166,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
 
-        return new AuthorizeFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, TIMEOUT_MS));
+        return new AuthorizeFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
     }
 
     @NonNull
@@ -278,7 +283,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
         }
 
-        return methodCall(method, signPayloads, TIMEOUT_MS);
+        return methodCall(method, signPayloads, mClientTimeoutMs);
     }
 
     @NonNull
@@ -518,7 +523,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         return new SignAndSendTransactionFuture(
                 methodCall(ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTION,
-                        signAndSendTransaction,TIMEOUT_MS),
+                        signAndSendTransaction, mClientTimeoutMs),
                 transactions.length);
     }
 

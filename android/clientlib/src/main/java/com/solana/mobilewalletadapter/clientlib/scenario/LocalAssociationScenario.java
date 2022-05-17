@@ -10,10 +10,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
 import com.solana.mobilewalletadapter.common.AssociationContract;
@@ -42,16 +42,12 @@ public class LocalAssociationScenario extends Scenario {
     private int mConnectionAttempts = 0;
     private MobileWalletAdapterSession mMobileWalletAdapterSession;
     private MobileWalletAdapterWebSocket mMobileWalletAdapterWebSocket;
-    private MobileWalletAdapterClient mMobileWalletAdapterClient;
-
-    public LocalAssociationScenario(@NonNull Looper looper, @Nullable Callbacks callbacks) {
-        this(looper, callbacks, null);
-    }
 
     public LocalAssociationScenario(@NonNull Looper looper,
+                                    @IntRange(from = 0) int clientTimeoutMs,
                                     @Nullable Callbacks callbacks,
                                     @Nullable Uri endpointSpecificUriPrefix) {
-        super(callbacks);
+        super(clientTimeoutMs, callbacks);
 
         if (endpointSpecificUriPrefix != null && (!endpointSpecificUriPrefix.isAbsolute() ||
                 !endpointSpecificUriPrefix.isHierarchical())) {
@@ -71,7 +67,6 @@ public class LocalAssociationScenario extends Scenario {
             throw new UnsupportedOperationException("Failed assembling a LocalAssociation URI", e);
         }
 
-        mMobileWalletAdapterClient = new MobileWalletAdapterClient();
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
                 mSessionStateCallbacks,
@@ -240,7 +235,6 @@ public class LocalAssociationScenario extends Scenario {
     private void destroyResources() {
         mMobileWalletAdapterSession = null;
         mMobileWalletAdapterWebSocket = null;
-        mMobileWalletAdapterClient = null;
     }
 
     private final MobileWalletAdapterWebSocket.StateCallbacks mWebSocketStateCallbacks = new MobileWalletAdapterWebSocket.StateCallbacks() {
