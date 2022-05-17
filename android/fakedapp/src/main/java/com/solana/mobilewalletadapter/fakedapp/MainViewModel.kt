@@ -217,11 +217,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 else -> Log.e(TAG, "Remote exception for authorize", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
-            Log.e(TAG, "JSON-RPC client exception for sign_transaction", e)
+            Log.e(TAG, "JSON-RPC client exception for sign_and_send_transaction", e)
         } catch (e: TimeoutException) {
-            Log.e(TAG, "Timed out while waiting for sign_transaction result", e)
+            Log.e(TAG, "Timed out while waiting for sign_and_send_transaction result", e)
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_transaction request was cancelled", e)
+            Log.e(TAG, "sign_and_send_transaction request was cancelled", e)
         }
     }
 
