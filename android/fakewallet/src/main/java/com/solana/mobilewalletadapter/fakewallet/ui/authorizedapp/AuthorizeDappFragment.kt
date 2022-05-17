@@ -20,7 +20,6 @@ import com.bumptech.glide.Glide
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAuthorizeDappBinding
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class AuthorizeDappFragment : Fragment() {

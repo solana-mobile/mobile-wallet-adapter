@@ -17,7 +17,6 @@ import androidx.navigation.fragment.findNavController
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAssociateBinding
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class AssociateFragment : Fragment() {
@@ -43,7 +42,8 @@ class AssociateFragment : Fragment() {
                             Unit
                         is MobileWalletAdapterServiceRequest.AuthorizeDapp ->
                             findNavController().navigate(AssociateFragmentDirections.actionAuthorizeDapp())
-                        is MobileWalletAdapterServiceRequest.SignPayload ->
+                        is MobileWalletAdapterServiceRequest.SignPayload,
+                        is MobileWalletAdapterServiceRequest.SignAndSendTransaction->
                             findNavController().navigate(AssociateFragmentDirections.actionSignPayload())
                         is MobileWalletAdapterServiceRequest.SessionTerminated ->
                             Unit
