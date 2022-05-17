@@ -5,7 +5,6 @@
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
 import android.net.Uri;
-import android.os.Looper;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -33,10 +32,6 @@ import java.util.concurrent.TimeoutException;
 
 public class MobileWalletAdapterClient extends JsonRpc20Client {
     private static final int TIMEOUT_MS = 90000; // TODO: should this timeout be configurable?
-
-    public MobileWalletAdapterClient(@NonNull Looper mainLooper) {
-        super(mainLooper);
-    }
 
     public static RuntimeException unpackExecutionException(@NonNull ExecutionException e)
             throws JsonRpc20Exception, TimeoutException {

@@ -4,9 +4,6 @@
 
 package com.solana.mobilewalletadapter.common.util;
 
-import android.os.Handler;
-
-import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -16,17 +13,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> {
-    private final Handler mHandler;
-
     private boolean mIsCancelled;
     private boolean mIsComplete;
     private T mResult;
     private Exception mException;
     private OnCompleteCallback<? super NotifyOnCompleteFuture<T>> mOnCompleteCallback;
-
-    public NotifyingCompletableFuture(@NonNull Handler handler) {
-        mHandler = handler;
-    }
 
     public boolean complete(@Nullable T result) {
         synchronized (this) {
@@ -36,9 +27,8 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
             mIsComplete = true;
             mResult = result;
             notifyAll();
-            dispatchOnCompletionNotification();
         }
-
+        dispatchOnCompletionNotification();
         return true;
     }
 
@@ -50,9 +40,8 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
             mIsComplete = true;
             mException = ex;
             notifyAll();
-            dispatchOnCompletionNotification();
         }
-
+        dispatchOnCompletionNotification();
         return true;
     }
 
@@ -65,9 +54,8 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
             mIsComplete = true;
             mIsCancelled = true;
             notifyAll();
-            dispatchOnCompletionNotification();
         }
-
+        dispatchOnCompletionNotification();
         return true;
     }
 
@@ -145,17 +133,20 @@ public class NotifyingCompletableFuture<T> implements NotifyOnCompleteFuture<T> 
         }
 
         if (completeImmediately) {
-            mHandler.post(() -> cb.onComplete(this));
+            cb.onComplete(this);
         }
     }
 
-    @GuardedBy("this")
     private void dispatchOnCompletionNotification() {
-        if (mOnCompleteCallback != null) {
-            final OnCompleteCallback<? super NotifyOnCompleteFuture<T>> cb = mOnCompleteCallback;
+        final OnCompleteCallback<? super NotifyOnCompleteFuture<T>> cb;
+        synchronized (this) {
+            cb = mOnCompleteCallback;
+            if (cb == null) {
+                return;
+            }
             mOnCompleteCallback = null;
-            mHandler.post(() -> cb.onComplete(this));
         }
+        cb.onComplete(this);
     }
 
     @NonNull

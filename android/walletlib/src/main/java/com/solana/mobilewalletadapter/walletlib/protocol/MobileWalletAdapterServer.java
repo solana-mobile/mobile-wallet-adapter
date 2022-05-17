@@ -81,9 +81,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Nullable
         public final Object id;
 
-        public RequestFuture(@NonNull Handler handler,
-                             @Nullable Object id) {
-            super(handler);
+        public RequestFuture(@Nullable Object id) {
             this.id = id;
         }
     }
@@ -145,8 +143,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             }
         }
 
-        final AuthorizeRequest request = new AuthorizeRequest(mHandler, id, identityUri, iconUri, identityName, privilegedMethods);
-        request.notifyOnComplete(this::onAuthorizeComplete);
+        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName, privilegedMethods);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizeComplete(f)));
         mMethodHandlers.authorize(request);
     }
 
@@ -196,13 +194,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final Set<PrivilegedMethod> privilegedMethods;
 
-        private AuthorizeRequest(@NonNull Handler handler,
-                                 @Nullable Object id,
+        private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @Nullable String identityName,
                                  @NonNull Set<PrivilegedMethod> privilegedMethods) {
-            super(handler, id);
+            super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
@@ -256,11 +253,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Size(min = 1)
         public final byte[][] payloads;
 
-        private SignRequest(@NonNull Handler handler,
-                            @Nullable Object id,
+        private SignRequest(@Nullable Object id,
                             @NonNull String authToken,
                             @NonNull @Size(min = 1) byte[][] payloads) {
-            super(handler, id);
+            super(id);
             this.authToken = authToken;
             this.payloads = payloads;
         }
@@ -317,12 +313,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final Type type;
 
-        protected SignPayloadRequest(@NonNull Handler handler,
-                                     @Nullable Object id,
+        protected SignPayloadRequest(@Nullable Object id,
                                      @NonNull Type type,
                                      @NonNull String authToken,
                                      @NonNull byte[][] payloads) {
-            super(handler, id, authToken, payloads);
+            super(id, authToken, payloads);
             this.type = type;
         }
 
@@ -404,8 +399,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final SignPayloadRequest request = new SignPayloadRequest(mHandler, id, type, authToken, payloads);
-        request.notifyOnComplete(this::onSignPayloadComplete);
+        final SignPayloadRequest request = new SignPayloadRequest(id, type, authToken, payloads);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadComplete(f)));
         mMethodHandlers.signPayload(request);
     }
 
@@ -474,12 +469,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final CommitmentLevel commitmentLevel;
 
-        private SignAndSendTransactionRequest(@NonNull Handler handler,
-                                              @Nullable Object id,
+        private SignAndSendTransactionRequest(@Nullable Object id,
                                               @NonNull String authToken,
                                               @NonNull @Size(min = 1) byte[][] transactions,
                                               @NonNull CommitmentLevel commitmentLevel) {
-            super(handler, id, authToken, transactions);
+            super(id, authToken, transactions);
             this.commitmentLevel = commitmentLevel;
         }
 
@@ -556,8 +550,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         final SignAndSendTransactionRequest request = new SignAndSendTransactionRequest(
-                mHandler, id, authToken, payloads, commitmentLevel);
-        request.notifyOnComplete(this::onSignAndSendTransactionComplete);
+                id, authToken, payloads, commitmentLevel);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionComplete(f)));
         mMethodHandlers.signAndSendTransaction(request);
     }
 

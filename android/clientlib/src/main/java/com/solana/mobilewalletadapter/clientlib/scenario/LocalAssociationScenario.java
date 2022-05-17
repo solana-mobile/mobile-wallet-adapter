@@ -44,11 +44,11 @@ public class LocalAssociationScenario extends Scenario {
     private MobileWalletAdapterWebSocket mMobileWalletAdapterWebSocket;
     private MobileWalletAdapterClient mMobileWalletAdapterClient;
 
-    public LocalAssociationScenario(@NonNull Looper mainLooper, @Nullable Callbacks callbacks) {
-        this(mainLooper, callbacks, null);
+    public LocalAssociationScenario(@NonNull Looper looper, @Nullable Callbacks callbacks) {
+        this(looper, callbacks, null);
     }
 
-    public LocalAssociationScenario(@NonNull Looper mainLooper,
+    public LocalAssociationScenario(@NonNull Looper looper,
                                     @Nullable Callbacks callbacks,
                                     @Nullable Uri endpointSpecificUriPrefix) {
         super(callbacks);
@@ -58,7 +58,7 @@ public class LocalAssociationScenario extends Scenario {
             throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute and hierarchical");
         }
 
-        mHandler = new Handler(mainLooper);
+        mHandler = new Handler(looper);
         mEndpointSpecificUriPrefix = endpointSpecificUriPrefix;
         mPort = new Random().nextInt(WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MAX -
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN + 1) +
@@ -71,7 +71,7 @@ public class LocalAssociationScenario extends Scenario {
             throw new UnsupportedOperationException("Failed assembling a LocalAssociation URI", e);
         }
 
-        mMobileWalletAdapterClient = new MobileWalletAdapterClient(mainLooper);
+        mMobileWalletAdapterClient = new MobileWalletAdapterClient();
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
                 mSessionStateCallbacks,
