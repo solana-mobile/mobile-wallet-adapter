@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.uiState.collect { uiState ->
-                    viewBinding.btnReauthorize.isEnabled = false
-                    viewBinding.btnDeauthorize.isEnabled = false
+                    viewBinding.btnReauthorize.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnDeauthorize.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX3.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignMsgX1.isEnabled = uiState.hasAuthToken
@@ -44,11 +44,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.btnReauthorize.setOnClickListener {
-            TODO("Implement")
+            lifecycleScope.launch { viewModel.reauthorize(intentSender) }
         }
 
         viewBinding.btnDeauthorize.setOnClickListener {
-            TODO("Implement")
+            lifecycleScope.launch { viewModel.deauthorize(intentSender) }
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {
