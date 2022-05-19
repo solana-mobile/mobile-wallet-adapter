@@ -47,11 +47,11 @@ class AuthorizeDappFragment : Fragment() {
                             this@AuthorizeDappFragment.request = request
 
                             if (request.request.identityUri?.isAbsolute == true &&
-                                request.request.iconUri?.isHierarchical == true
+                                request.request.iconRelativeUri?.isHierarchical == true
                             ) {
                                 val uri = Uri.withAppendedPath(
                                     request.request.identityUri!!,
-                                    request.request.iconUri!!.encodedPath
+                                    request.request.iconRelativeUri!!.encodedPath
                                 )
                                 Glide.with(this@AuthorizeDappFragment).load(uri)
                                     .into(viewBinding.imageIcon)

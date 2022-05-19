@@ -4,10 +4,12 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
-import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
+import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalMobileWalletAdapterWebSocketServer;
 
 import java.io.IOException;
@@ -20,11 +22,12 @@ public class LocalWebSocketServerScenario extends Scenario {
     private final LocalMobileWalletAdapterWebSocketServer mWebSocketServer;
     private State mState = State.NOT_STARTED;
 
-    public LocalWebSocketServerScenario(@NonNull Callbacks callbacks,
-                                        @NonNull MobileWalletAdapterServer.MethodHandlers methodHandlers,
+    public LocalWebSocketServerScenario(@NonNull Context context,
+                                        @NonNull AuthIssuerConfig authIssuerConfig,
+                                        @NonNull Callbacks callbacks,
                                         @NonNull String associationToken,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
-        super(callbacks, methodHandlers, associationToken);
+        super(context, authIssuerConfig, callbacks, associationToken);
         this.port = port;
         this.mWebSocketServer = new LocalMobileWalletAdapterWebSocketServer(this);
     }
@@ -37,9 +40,9 @@ public class LocalWebSocketServerScenario extends Scenario {
         mState = State.RUNNING;
         try {
             mWebSocketServer.init();
-            mHandler.post(mCallbacks::onScenarioReady);
+            mIoHandler.post(mCallbacks::onScenarioReady);
         } catch (IOException e) {
-            mHandler.post(mCallbacks::onScenarioError);
+            mIoHandler.post(mCallbacks::onScenarioError);
         }
     }
 
@@ -49,9 +52,9 @@ public class LocalWebSocketServerScenario extends Scenario {
             return;
         }
         mState = State.CLOSED;
-        mHandler.post(mCallbacks::onScenarioComplete);
+        mIoHandler.post(mCallbacks::onScenarioComplete);
         mWebSocketServer.close(); // this will close all MobileWalletAdapterSessions
-        mHandler.post(mCallbacks::onScenarioTeardownComplete);
+        mIoHandler.post(mCallbacks::onScenarioTeardownComplete);
     }
 
     private enum State {

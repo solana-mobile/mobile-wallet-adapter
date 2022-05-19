@@ -94,7 +94,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val future = client.authorizeAsync(Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
                 "Solana",
-                setOf(PrivilegedMethod.SignTransaction)
+                setOf(PrivilegedMethod.SignTransaction, PrivilegedMethod.SignMessage,
+                    PrivilegedMethod.SignAndSendTransaction)
             )
             future.notifyOnComplete { sem.release() }
             sem.acquire()

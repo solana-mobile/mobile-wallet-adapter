@@ -18,7 +18,6 @@ import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentSignPayloadBinding
-import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer
 import kotlinx.coroutines.launch
 
 class SignPayloadFragment : Fragment() {
@@ -42,7 +41,7 @@ class SignPayloadFragment : Fragment() {
                     when (request) {
                         is MobileWalletAdapterServiceRequest.SignPayload -> {
                             val res =
-                                if (request.request.type == MobileWalletAdapterServer.SignPayloadRequest.Type.Transaction) {
+                                if (request is MobileWalletAdapterServiceRequest.SignTransaction) {
                                     R.string.label_sign_transaction
                                 } else {
                                     R.string.label_sign_message

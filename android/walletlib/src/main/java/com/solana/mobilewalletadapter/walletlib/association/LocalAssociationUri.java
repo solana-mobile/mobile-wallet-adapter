@@ -4,13 +4,14 @@
 
 package com.solana.mobilewalletadapter.walletlib.association;
 
+import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
-import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
+import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.LocalWebSocketServerScenario;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
@@ -33,9 +34,10 @@ public class LocalAssociationUri extends AssociationUri {
 
     @NonNull
     @Override
-    public LocalWebSocketServerScenario createScenario(@NonNull Scenario.Callbacks callbacks,
-                                                       @NonNull MobileWalletAdapterServer.MethodHandlers methodHandlers) {
-        return new LocalWebSocketServerScenario(callbacks, methodHandlers,
+    public LocalWebSocketServerScenario createScenario(@NonNull Context context,
+                                                       @NonNull AuthIssuerConfig authIssuerConfig,
+                                                       @NonNull Scenario.Callbacks callbacks) {
+        return new LocalWebSocketServerScenario(context, authIssuerConfig, callbacks,
                 associationToken, port);
     }
 
