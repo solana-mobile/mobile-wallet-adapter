@@ -96,7 +96,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         generateSessionECDHSecret(theirPublicKey);
 
         // Send a response to allow the counterparty to perform ECDH as well
-        final String response = createHelloRsp((ECPublicKey) ourPublicKey);
+        final String response = createHelloRsp(ourPublicKey);
         try {
             mMessageSender.send(response.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {

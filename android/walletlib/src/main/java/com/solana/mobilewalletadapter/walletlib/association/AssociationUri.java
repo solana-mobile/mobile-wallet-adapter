@@ -4,13 +4,14 @@
 
 package com.solana.mobilewalletadapter.walletlib.association;
 
+import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.AssociationContract;
-import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
+import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
 public abstract class AssociationUri {
@@ -33,8 +34,9 @@ public abstract class AssociationUri {
     }
 
     @NonNull
-    public abstract Scenario createScenario(@NonNull Scenario.Callbacks callbacks,
-                                            @NonNull MobileWalletAdapterServer.MethodHandlers methodHandlers);
+    public abstract Scenario createScenario(@NonNull Context context,
+                                            @NonNull AuthIssuerConfig authIssuerConfig,
+                                            @NonNull Scenario.Callbacks callbacks);
 
     @NonNull
     private static String parseAssociationToken(@NonNull Uri uri) {

@@ -141,6 +141,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "privileged_methods contains unknown method name '" + methodName + "'", null);
                 return;
             }
+            privilegedMethods.add(method);
         }
 
         final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName, privilegedMethods);
@@ -171,8 +172,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
             final JSONObject o = new JSONObject();
             try {
-                o.put(ProtocolContract.RESULT_AUTH_TOKEN, "42"); // TODO: generate real auth token
-                o.put(ProtocolContract.RESULT_PUBLIC_KEY, "4242424242"); // TODO: real public key
+                o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
+                o.put(ProtocolContract.RESULT_PUBLIC_KEY, result.publicKey);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
                 throw new RuntimeException("Failed preparing authorize response", e);
@@ -214,10 +215,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return super.complete(result);
         }
 
-        public boolean completeWithDecline() {
-            return completeExceptionally(new RequestDeclinedException("authorize request declined"));
-        }
-
         @NonNull
         @Override
         public String toString() {
@@ -233,11 +230,31 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     public static class AuthorizeResult {
+        @NonNull
+        public final String authToken;
+
+        @NonNull
+        public final String publicKey;
+
         @Nullable
         public final Uri walletUriBase;
 
-        public AuthorizeResult(@Nullable Uri walletUriBase) {
+        public AuthorizeResult(@NonNull String authToken,
+                               @NonNull String publicKey,
+                               @Nullable Uri walletUriBase) {
+            this.authToken = authToken;
+            this.publicKey = publicKey;
             this.walletUriBase = walletUriBase;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "AuthorizeResult{" +
+                    "authToken=<REDACTED>" +
+                    ", publicKey='" + publicKey + '\'' +
+                    ", walletUriBase=" + walletUriBase +
+                    '}';
         }
     }
 
@@ -272,23 +289,15 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return super.complete(result);
         }
 
-        public boolean completeWithDecline() {
-            return completeExceptionally(new RequestDeclinedException("sign request declined"));
-        }
-
-        public boolean completeWithReauthorizationRequired() {
-            return completeExceptionally(new ReauthorizationRequiredException("auth_token requires reauthorization"));
-        }
-
-        public boolean completeWithAuthTokenNotValid() {
-            return completeExceptionally(new AuthTokenNotValidException("auth_token not valid for signing of this payload"));
-        }
-
-        public boolean completeWithInvalidPayloads(@NonNull @Size(min = 1) boolean[] valid) {
-            if (valid.length != payloads.length) {
-                throw new IllegalArgumentException("Number of valid payload entries does not match the number of requested signatures");
+        @Override
+        public boolean completeExceptionally(@NonNull Exception ex) {
+            if (ex instanceof InvalidPayloadException) {
+                final InvalidPayloadException ipe = (InvalidPayloadException) ex;
+                if (ipe.valid.length != payloads.length) {
+                    throw new IllegalArgumentException("Number of valid payload entries does not match the number of payloads to sign");
+                }
             }
-            return completeExceptionally(new InvalidPayloadException("One or more invalid payloads provided", valid));
+            return super.completeExceptionally(ex);
         }
 
         @NonNull
@@ -477,14 +486,17 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.commitmentLevel = commitmentLevel;
         }
 
-        public boolean completeWithNotCommitted(@NonNull @Size(min = 1) byte[][] signatures,
-                                                @NonNull @Size(min = 1) boolean[] committed) {
-            if (signatures.length != payloads.length) {
-                throw new IllegalArgumentException("Number of signatures does not match the number of transactions");
-            } else if (committed.length != payloads.length) {
-                throw new IllegalArgumentException("Number of committed values does not match the number of transactions");
+        @Override
+        public boolean completeExceptionally(@NonNull Exception ex) {
+            if (ex instanceof NotCommittedException) {
+                final NotCommittedException nce = (NotCommittedException) ex;
+                if (nce.signatures.length != payloads.length) {
+                    throw new IllegalArgumentException("Number of signatures does not match the number of payloads");
+                } else if (nce.committed.length != payloads.length) {
+                    throw new IllegalArgumentException("Number of committed values does not match the number of payloads");
+                }
             }
-            return completeExceptionally(new NotCommittedException("One or more transactions did not reach the requested commitment level", signatures, committed));
+            return super.completeExceptionally(ex);
         }
 
         @NonNull
@@ -623,29 +635,29 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     // Common exceptions
     // =============================================================================================
 
-    private static abstract class MobileWalletAdapterServerException extends Exception {
-        MobileWalletAdapterServerException(@NonNull String m) { super(m); }
+    public static abstract class MobileWalletAdapterServerException extends Exception {
+        protected MobileWalletAdapterServerException(@NonNull String m) { super(m); }
     }
 
-    private static class RequestDeclinedException extends MobileWalletAdapterServerException {
-        RequestDeclinedException(@NonNull String m) { super(m); }
+    public static class RequestDeclinedException extends MobileWalletAdapterServerException {
+        public RequestDeclinedException(@NonNull String m) { super(m); }
     }
 
-    private static class ReauthorizationRequiredException extends MobileWalletAdapterServerException {
+    public static class ReauthorizationRequiredException extends MobileWalletAdapterServerException {
         public ReauthorizationRequiredException(@NonNull String m) { super(m); }
     }
 
-    private static class AuthTokenNotValidException extends MobileWalletAdapterServerException {
+    public static class AuthTokenNotValidException extends MobileWalletAdapterServerException {
         public AuthTokenNotValidException(@NonNull String m) { super (m); }
     }
 
-    private static class InvalidPayloadException extends MobileWalletAdapterServerException {
+    public static class InvalidPayloadException extends MobileWalletAdapterServerException {
         @NonNull
         @Size(min = 1)
         public final boolean[] valid;
 
-        private InvalidPayloadException(@NonNull String m,
-                                        @NonNull @Size(min = 1) boolean[] valid) {
+        public InvalidPayloadException(@NonNull String m,
+                                       @NonNull @Size(min = 1) boolean[] valid) {
             super(m);
             this.valid = valid;
         }
@@ -657,7 +669,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
-    private static class NotCommittedException extends MobileWalletAdapterServerException {
+    public static class NotCommittedException extends MobileWalletAdapterServerException {
         @NonNull
         @Size(min = 1)
         public final byte[][] signatures;
@@ -666,9 +678,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Size(min = 1)
         public final boolean[] committed;
 
-        private NotCommittedException(@NonNull String m,
-                                      @NonNull @Size(min = 1) byte[][] signatures,
-                                      @NonNull @Size(min = 1) boolean[] committed) {
+        public NotCommittedException(@NonNull String m,
+                                     @NonNull @Size(min = 1) byte[][] signatures,
+                                     @NonNull @Size(min = 1) boolean[] committed) {
             super(m);
             this.signatures = signatures;
             this.committed = committed;
