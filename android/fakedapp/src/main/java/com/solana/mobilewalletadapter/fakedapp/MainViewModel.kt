@@ -41,6 +41,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun reauthorize(sender: StartActivityForResultSender) {
+        localAssociateAndExecute(sender) { client ->
+            doReauthorize(client)
+        }
+    }
+
+    suspend fun deauthorize(sender: StartActivityForResultSender) {
+        localAssociateAndExecute(sender) { client ->
+            doDeauthorize(client)
+        }
+    }
+
     suspend fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
         val transactions = Array(numTransactions) {
             Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
@@ -91,7 +103,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
             // which occurs when the client is not connected
             @Suppress("BlockingMethodInNonBlockingContext")
-            val future = client.authorizeAsync(Uri.parse("https://solana.com"),
+            val future = client.authorizeAsync(
+                Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
                 "Solana",
                 setOf(PrivilegedMethod.SignTransaction, PrivilegedMethod.SignMessage,
@@ -100,6 +113,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
+                // Note: this call won't block, since we've received the completion notification
                 @Suppress("BlockingMethodInNonBlockingContext")
                 future.get()
             } catch (e: ExecutionException) {
@@ -126,6 +140,87 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return authorized
     }
 
+    private suspend fun doReauthorize(client: MobileWalletAdapterClient): Boolean {
+        var reauthorized = false
+        try {
+            val sem = Semaphore(1, 1)
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
+            val future = client.reauthorizeAsync(
+                Uri.parse("https://solana.com"),
+                Uri.parse("favicon.ico"),
+                "Solana",
+                _uiState.value.authToken!!
+            )
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            val result = try {
+                // Note: this call won't block, since we've received the completion notification
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Reauthorized: $result")
+            _uiState.update { it.copy(authToken = result.authToken) }
+            reauthorized = true
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending reauthorize", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            when (e.code) {
+                ProtocolContract.ERROR_AUTHORIZATION_FAILED -> {
+                    Log.e(TAG, "Not reauthorized", e)
+                    _uiState.update { it.copy(authToken = null) }
+                }
+                else -> Log.e(TAG, "Remote exception for reauthorize", e)
+            }
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for reauthorize", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for reauthorize result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "reauthorize request was cancelled", e)
+        }
+
+        return reauthorized
+    }
+
+    private suspend fun doDeauthorize(client: MobileWalletAdapterClient): Boolean {
+        var deauthorized = false
+        try {
+            val sem = Semaphore(1, 1)
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
+            val future = client.deauthorizeAsync(_uiState.value.authToken!!)
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            try {
+                // Note: this call won't block, since we've received the completion notification
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Deauthorized")
+            _uiState.update { it.copy(authToken = null) }
+            deauthorized = true
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending deauthorize", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            Log.e(TAG, "Remote exception for deauthorize", e)
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for deauthorize", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for deauthorize result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "deauthorize request was cancelled", e)
+        }
+
+        return deauthorized
+    }
+
     private suspend fun doSignTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
         try {
             val sem = Semaphore(1, 1)
@@ -136,6 +231,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
+                // Note: this call won't block, since we've received the completion notification
                 @Suppress("BlockingMethodInNonBlockingContext")
                 future.get()
             } catch (e: ExecutionException) {
@@ -172,6 +268,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
+                // Note: this call won't block, since we've received the completion notification
                 @Suppress("BlockingMethodInNonBlockingContext")
                 future.get()
             } catch (e: ExecutionException) {
@@ -209,6 +306,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
+                // Note: this call won't block, since we've received the completion notification
                 @Suppress("BlockingMethodInNonBlockingContext")
                 future.get()
             } catch (e: ExecutionException) {

@@ -193,9 +193,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @Nullable
         public final Uri walletUriBase;
 
-        public AuthorizeResult(@NonNull String authToken,
-                               @NonNull String publicKey,
-                               @Nullable Uri walletUriBase) {
+        private AuthorizeResult(@NonNull String authToken,
+                                @NonNull String publicKey,
+                                @Nullable Uri walletUriBase) {
             this.authToken = authToken;
             this.publicKey = publicKey;
             this.walletUriBase = walletUriBase;
@@ -252,6 +252,152 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         @Override
         public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<AuthorizeResult>> cb) {
+            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
+        }
+    }
+
+    // =============================================================================================
+    // reauthorize
+    // =============================================================================================
+
+    @NonNull
+    public ReauthorizeFuture reauthorizeAsync(@Nullable Uri identityUri,
+                                              @Nullable Uri iconUri,
+                                              @Nullable String identityName,
+                                              @NonNull String authToken)
+            throws IOException {
+        if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
+            throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
+        } else if (iconUri != null && !iconUri.isRelative()) {
+            throw new IllegalArgumentException("If non-null, iconRelativeUri must be a relative Uri");
+        }
+
+        final JSONObject reauthorize;
+        try {
+            final JSONObject identity = new JSONObject();
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
+            reauthorize = new JSONObject();
+            reauthorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
+            reauthorize.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create reauthorize JSON params", e);
+        }
+
+        return new ReauthorizeFuture(methodCall(ProtocolContract.METHOD_REAUTHORIZE, reauthorize, mClientTimeoutMs));
+    }
+
+    @NonNull
+    public ReauthorizeResult reauthorize(@Nullable Uri identityUri,
+                                         @Nullable Uri iconUri,
+                                         @Nullable String identityName,
+                                         @NonNull String authToken)
+            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+        final ReauthorizeFuture future = reauthorizeAsync(identityUri, iconUri, identityName, authToken);
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            throw unpackExecutionException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for reauthorize response", e);
+        }
+    }
+
+    public static class ReauthorizeResult {
+        @NonNull
+        public final String authToken;
+
+        private ReauthorizeResult(@NonNull String authToken) {
+            this.authToken = authToken;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "ReauthorizeResult{authToken='<REDACTED>'}";
+        }
+    }
+
+    public static class ReauthorizeFuture
+            extends JsonRpc20MethodResultFuture<ReauthorizeResult>
+            implements NotifyOnCompleteFuture<ReauthorizeResult> {
+        private ReauthorizeFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+            super(methodCallFuture);
+        }
+
+        @NonNull
+        @Override
+        protected ReauthorizeResult processResult(@Nullable Object o)
+                throws JsonRpc20InvalidResponseException {
+            if (!(o instanceof JSONObject)) {
+                throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
+            }
+
+            final JSONObject jo = (JSONObject) o;
+
+            final String authToken;
+            try {
+                authToken = jo.getString(ProtocolContract.RESULT_AUTH_TOKEN);
+            } catch (JSONException e) {
+                throw new JsonRpc20InvalidResponseException("expected an auth_token");
+            }
+
+            return new ReauthorizeResult(authToken);
+        }
+
+        @Override
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<ReauthorizeResult>> cb) {
+            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
+        }
+    }
+
+    // =============================================================================================
+    // deauthorize
+    // =============================================================================================
+
+    @NonNull
+    public DeauthorizeFuture deauthorizeAsync(@NonNull String authToken)
+            throws IOException {
+        final JSONObject deauthorize;
+        try {
+            deauthorize = new JSONObject();
+            deauthorize.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create deauthorize JSON params", e);
+        }
+
+        return new DeauthorizeFuture(methodCall(ProtocolContract.METHOD_DEAUTHORIZE, deauthorize, mClientTimeoutMs));
+    }
+
+    public void deauthorize(@NonNull String authToken)
+            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+        final DeauthorizeFuture future = deauthorizeAsync(authToken);
+        try {
+            future.get();
+        } catch (ExecutionException e) {
+            throw unpackExecutionException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for deauthorize response", e);
+        }
+    }
+
+    public static class DeauthorizeFuture
+            extends JsonRpc20MethodResultFuture<Object>
+            implements NotifyOnCompleteFuture<Object> {
+        private DeauthorizeFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+            super(methodCallFuture);
+        }
+
+        @NonNull
+        @Override
+        protected Object processResult(@Nullable Object o)
+                throws JsonRpc20InvalidResponseException {
+            return new Object();
+        }
+
+        @Override
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<Object>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
     }
