@@ -236,7 +236,7 @@ public class AuthRepository {
             }
         }
 
-        // Revoke this authorization if it is either from the future, or too old to be reissued
+        // Revoke this authorization if it is either from the future, or too old to be reissuable
         if (revokeNonReissuableAuthRecord(authRecord)) {
             return null;
         }
@@ -383,7 +383,7 @@ public class AuthRepository {
         final SQLiteDatabase db = ensureStarted();
 
         final long now = System.currentTimeMillis();
-        final long authRecordAgeMs = authRecord.issued - now;
+        final long authRecordAgeMs = now - authRecord.issued;
         final AuthRecord reissued;
         if (revokeNonReissuableAuthRecord(authRecord)) {
             reissued = null;

@@ -40,6 +40,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     public interface MethodHandlers {
         void authorize(@NonNull AuthorizeRequest request);
+        void reauthorize(@NonNull ReauthorizeRequest request);
+        void deauthorize(@NonNull DeauthorizeRequest request);
         void signPayload(@NonNull SignPayloadRequest request);
         void signAndSendTransaction(@NonNull SignAndSendTransactionRequest request);
     }
@@ -57,6 +59,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             switch (method) {
                 case ProtocolContract.METHOD_AUTHORIZE:
                     handleAuthorize(id, params);
+                    break;
+                case ProtocolContract.METHOD_REAUTHORIZE:
+                    handleReauthorize(id, params);
+                    break;
+                case ProtocolContract.METHOD_DEAUTHORIZE:
+                    handleDeauthorize(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_TRANSACTION:
                     handleSignPayload(id, params, SignPayloadRequest.Type.Transaction);
@@ -254,6 +262,214 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     "authToken=<REDACTED>" +
                     ", publicKey='" + publicKey + '\'' +
                     ", walletUriBase=" + walletUriBase +
+                    '}';
+        }
+    }
+
+    // =============================================================================================
+    // reauthorize
+    // =============================================================================================
+
+    private void handleReauthorize(@Nullable Object id, @Nullable Object params) throws IOException {
+        if (!(params instanceof JSONObject)) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
+            return;
+        }
+
+        final JSONObject o = (JSONObject) params;
+
+        final JSONObject ident = o.optJSONObject(ProtocolContract.PARAMETER_IDENTITY);
+        final Uri identityUri;
+        final Uri iconUri;
+        final String identityName;
+        if (ident != null) {
+            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
+                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
+            if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
+                return;
+            }
+            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
+                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
+            if (iconUri != null && !iconUri.isRelative()) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
+                return;
+            }
+            identityName = ident.has(ProtocolContract.PARAMETER_IDENTITY_NAME) ?
+                    ident.optString(ProtocolContract.PARAMETER_IDENTITY_NAME) : null;
+            if (identityName != null && identityName.isEmpty()) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.name must be a non-empty string", null);
+                return;
+            }
+        } else {
+            identityUri = null;
+            iconUri = null;
+            identityName = null;
+        }
+
+        final String authToken = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
+        if (authToken.isEmpty()) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "auth_token must be a non-empty string", null);
+            return;
+        }
+
+        final ReauthorizeRequest request = new ReauthorizeRequest(id, identityUri, iconUri, identityName, authToken);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onReauthorizeComplete(f)));
+        mMethodHandlers.reauthorize(request);
+    }
+
+    private void onReauthorizeComplete(@NonNull NotifyOnCompleteFuture<ReauthorizeResult> future) {
+        final ReauthorizeRequest request = (ReauthorizeRequest) future;
+
+        try {
+            final ReauthorizeResult result;
+            try {
+                result = request.get();
+            } catch (ExecutionException e) {
+                final Throwable cause = e.getCause();
+                if (cause instanceof RequestDeclinedException) {
+                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "reauthorize request failed", null);
+                } else {
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing reauthorize request", null);
+                }
+                return;
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Should never occur!");
+            }
+
+            assert(result != null); // checked in ReauthorizeRequest.complete()
+
+            final JSONObject o = new JSONObject();
+            try {
+                o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
+            } catch (JSONException e) {
+                throw new RuntimeException("Failed preparing reauthorize response", e);
+            }
+
+            handleRpcResult(request.id, o);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed sending response for id=" + request.id, e);
+        }
+    }
+
+    public static class ReauthorizeRequest extends RequestFuture<ReauthorizeResult> {
+        @Nullable
+        public final Uri identityUri;
+        @Nullable
+        public final Uri iconUri;
+        @Nullable
+        public final String identityName;
+        @NonNull
+        public final String authToken;
+
+        private ReauthorizeRequest(@Nullable Object id,
+                                   @Nullable Uri identityUri,
+                                   @Nullable Uri iconUri,
+                                   @Nullable String identityName,
+                                   @NonNull String authToken) {
+            super(id);
+            this.identityUri = identityUri;
+            this.iconUri = iconUri;
+            this.identityName = identityName;
+            this.authToken = authToken;
+        }
+
+        @Override
+        public boolean complete(@Nullable ReauthorizeResult result) {
+            if (result == null) {
+                throw new IllegalArgumentException("A non-null result must be provided");
+            }
+            return super.complete(result);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "ReauthorizeRequest{" +
+                    "id=" + id +
+                    ", identityUri=" + identityUri +
+                    ", iconUri=" + iconUri +
+                    ", identityName='" + identityName + '\'' +
+                    ", authToken=<REDACTED>" +
+                    '/' + super.toString() +
+                    '}';
+        }
+    }
+
+    public static class ReauthorizeResult {
+        @NonNull
+        public final String authToken;
+
+        public ReauthorizeResult(@NonNull String authToken) {
+            this.authToken = authToken;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "ReauthorizeResult{authToken=<REDACTED>}";
+        }
+    }
+
+    // =============================================================================================
+    // deauthorize
+    // =============================================================================================
+
+    private void handleDeauthorize(@Nullable Object id, @Nullable Object params) throws IOException {
+        if (!(params instanceof JSONObject)) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
+            return;
+        }
+
+        final JSONObject o = (JSONObject) params;
+
+        final String authToken = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
+        if (authToken.isEmpty()) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "auth_token must be a non-empty string", null);
+            return;
+        }
+
+        final DeauthorizeRequest request = new DeauthorizeRequest(id, authToken);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onDeauthorizeComplete(f)));
+        mMethodHandlers.deauthorize(request);
+    }
+
+    private void onDeauthorizeComplete(@NonNull NotifyOnCompleteFuture<Object> future) {
+        final DeauthorizeRequest request = (DeauthorizeRequest) future;
+
+        try {
+            try {
+                request.get();
+            } catch (ExecutionException e) {
+                handleRpcError(request.id, ERROR_INTERNAL, "Error while processing deauthorize request", null);
+                return;
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Should never occur!");
+            }
+
+            handleRpcResult(request.id, new JSONObject());
+        } catch (IOException e) {
+            Log.e(TAG, "Failed sending response for id=" + request.id, e);
+        }
+    }
+
+    public static class DeauthorizeRequest extends RequestFuture<Object> {
+        @NonNull
+        public final String authToken;
+
+        private DeauthorizeRequest(@Nullable Object id,
+                                   @NonNull String authToken) {
+            super(id);
+            this.authToken = authToken;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "DeauthorizeRequest{" +
+                    "id=" + id +
+                    ", authToken=<REDACTED>" +
+                    '/' + super.toString() +
                     '}';
         }
     }

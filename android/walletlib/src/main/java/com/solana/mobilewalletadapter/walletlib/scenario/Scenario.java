@@ -113,6 +113,37 @@ public abstract class Scenario {
         }
 
         @Override
+        public void reauthorize(@NonNull MobileWalletAdapterServer.ReauthorizeRequest request) {
+            final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
+            if (authRecord == null) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.AuthTokenNotValidException(
+                                "auth_token not valid for this request")));
+                return;
+            }
+
+            final AuthRecord reissuedAuthRecord = mAuthRepository.reissue(authRecord);
+            if (reissuedAuthRecord == null) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.RequestDeclinedException(
+                                "auth_token not valid for reissue")));
+                return;
+            }
+
+            mIoHandler.post(() -> request.complete(new MobileWalletAdapterServer.ReauthorizeResult(
+                    mAuthRepository.toAuthToken(reissuedAuthRecord))));
+        }
+
+        @Override
+        public void deauthorize(@NonNull MobileWalletAdapterServer.DeauthorizeRequest request) {
+            final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
+            if (authRecord != null) {
+                mAuthRepository.revoke(authRecord);
+            }
+            mIoHandler.post(() -> request.complete(null));
+        }
+
+        @Override
         public void signPayload(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
             final PrivilegedMethod method;
             final Runnable r;
@@ -132,7 +163,7 @@ public abstract class Scenario {
             final MobileWalletAdapterServer.MobileWalletAdapterServerException ex =
                     validateAuthTokenForPrivilegedMethod(request.authToken, method);
             if (ex != null) {
-                request.completeExceptionally(ex);
+                mIoHandler.post(() -> request.completeExceptionally(ex));
             } else {
                 mIoHandler.post(r);
             }
@@ -145,7 +176,7 @@ public abstract class Scenario {
                     validateAuthTokenForPrivilegedMethod(request.authToken,
                             PrivilegedMethod.SignAndSendTransaction);
             if (ex != null) {
-                request.completeExceptionally(ex);
+                mIoHandler.post(() -> request.completeExceptionally(ex));
             } else {
                 mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionRequest(
                         new SignAndSendTransactionRequest(request)));
