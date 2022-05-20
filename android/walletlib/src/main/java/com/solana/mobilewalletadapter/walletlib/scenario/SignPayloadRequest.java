@@ -6,7 +6,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public abstract class SignPayloadRequest {
+public abstract class SignPayloadRequest extends ScenarioRequest {
     @NonNull
     protected final MobileWalletAdapterServer.SignPayloadRequest mRequest;
 
@@ -15,6 +15,7 @@ public abstract class SignPayloadRequest {
 
     protected SignPayloadRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
                                  @NonNull String publicKey) {
+        super(request);
         mRequest = request;
         mPublicKey = publicKey;
     }

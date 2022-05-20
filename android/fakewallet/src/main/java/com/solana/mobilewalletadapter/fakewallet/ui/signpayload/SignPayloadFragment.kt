@@ -102,7 +102,14 @@ class SignPayloadFragment : Fragment() {
                             }
                         }
                         else -> {
-                            findNavController().navigate(SignPayloadFragmentDirections.actionSignPayloadComplete())
+                            // If several events are emitted back-to-back (e.g. during session
+                            // teardown), this fragment may not have had a chance to transition
+                            // lifecycle states. Only navigate if we believe we are still here.
+                            findNavController().let { nc ->
+                                if (nc.currentDestination?.id == R.id.fragment_sign_payload) {
+                                    nc.navigate(SignPayloadFragmentDirections.actionSignPayloadComplete())
+                                }
+                            }
                         }
                     }
                 }

@@ -19,6 +19,7 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
+import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAuthorizeDappBinding
 import kotlinx.coroutines.launch
 
@@ -61,7 +62,14 @@ class AuthorizeDappFragment : Fragment() {
                         }
                         else -> {
                             this@AuthorizeDappFragment.request = null
-                            findNavController().navigate(AuthorizeDappFragmentDirections.actionAuthorizeDappComplete())
+                            // If several events are emitted back-to-back (e.g. during session
+                            // teardown), this fragment may not have had a chance to transition
+                            // lifecycle states. Only navigate if we believe we are still here.
+                            findNavController().let { nc ->
+                                if (nc.currentDestination?.id == R.id.fragment_authorize_dapp) {
+                                    nc.navigate(AuthorizeDappFragmentDirections.actionAuthorizeDappComplete())
+                                }
+                            }
                         }
                     }
                 }

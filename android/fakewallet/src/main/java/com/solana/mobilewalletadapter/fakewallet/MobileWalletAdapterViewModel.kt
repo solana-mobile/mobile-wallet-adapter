@@ -19,6 +19,7 @@ import com.solana.mobilewalletadapter.walletlib.scenario.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
 import java.lang.RuntimeException
 
@@ -200,10 +201,20 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         replacement: MobileWalletAdapterServiceRequest = MobileWalletAdapterServiceRequest.None
     ): Boolean {
         if (!_mobileWalletAdapterServiceEvents.compareAndSet(request, replacement)) {
-            Log.w(TAG, "Ignoring stale request")
+            Log.w(TAG, "Discarding stale request")
+            if (request is MobileWalletAdapterServiceRequest.MobileWalletAdapterRemoteRequest) {
+                request.request.cancel()
+            }
             return true
         }
         return false
+    }
+
+    private fun replaceCurrentRequest(request: MobileWalletAdapterServiceRequest) {
+        val oldRequest = _mobileWalletAdapterServiceEvents.getAndUpdate { request }
+        if (oldRequest is MobileWalletAdapterServiceRequest.MobileWalletAdapterRemoteRequest) {
+            oldRequest.request.cancel()
+        }
     }
 
     private inner class MobileWalletAdapterScenarioCallbacks : Scenario.Callbacks {
@@ -212,38 +223,40 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         override fun onScenarioServingComplete() {
             viewModelScope.launch(Dispatchers.Main) {
                 scenario?.close()
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.None)
+                replaceCurrentRequest(MobileWalletAdapterServiceRequest.None)
             }
         }
         override fun onScenarioComplete() = Unit
         override fun onScenarioError() = Unit
         override fun onScenarioTeardownComplete() {
             viewModelScope.launch {
+                // No need to cancel any outstanding request; the scenario is torn down, and so
+                // cancelling a request that originated from it isn't actionable
                 _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionTerminated)
             }
         }
 
         override fun onAuthorizeRequest(request: AuthorizeRequest) {
             viewModelScope.launch {
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.AuthorizeDapp(request))
+                replaceCurrentRequest(MobileWalletAdapterServiceRequest.AuthorizeDapp(request))
             }
         }
 
         override fun onSignTransactionRequest(request: SignTransactionRequest) {
             viewModelScope.launch {
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SignTransaction(request))
+                replaceCurrentRequest(MobileWalletAdapterServiceRequest.SignTransaction(request))
             }
         }
 
         override fun onSignMessageRequest(request: SignMessageRequest) {
             viewModelScope.launch {
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SignMessage(request))
+                replaceCurrentRequest(MobileWalletAdapterServiceRequest.SignMessage(request))
             }
         }
 
         override fun onSignAndSendTransactionRequest(request: SignAndSendTransactionRequest) {
             viewModelScope.launch {
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SignAndSendTransaction(request))
+                replaceCurrentRequest(MobileWalletAdapterServiceRequest.SignAndSendTransaction(request))
             }
         }
     }
@@ -254,15 +267,18 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     sealed interface MobileWalletAdapterServiceRequest {
         object None : MobileWalletAdapterServiceRequest
-        data class AuthorizeDapp(val request: AuthorizeRequest) : MobileWalletAdapterServiceRequest
-        sealed class SignPayload(val request: SignPayloadRequest) : MobileWalletAdapterServiceRequest
+        object SessionTerminated : MobileWalletAdapterServiceRequest
+
+        sealed class MobileWalletAdapterRemoteRequest(open val request: ScenarioRequest) : MobileWalletAdapterServiceRequest
+        data class AuthorizeDapp(override val request: AuthorizeRequest) : MobileWalletAdapterRemoteRequest(request)
+        sealed class SignPayload(override val request: SignPayloadRequest) : MobileWalletAdapterRemoteRequest(request)
         class SignTransaction(request: SignTransactionRequest) : SignPayload(request)
         class SignMessage(request: SignMessageRequest) : SignPayload(request)
         data class SignAndSendTransaction(
-            val request: SignAndSendTransactionRequest,
+            override val request: SignAndSendTransactionRequest,
             val signatures: Array<ByteArray>? = null
-        ) : MobileWalletAdapterServiceRequest
-        object SessionTerminated : MobileWalletAdapterServiceRequest
+        ) : MobileWalletAdapterRemoteRequest(request)
+
     }
 
     companion object {

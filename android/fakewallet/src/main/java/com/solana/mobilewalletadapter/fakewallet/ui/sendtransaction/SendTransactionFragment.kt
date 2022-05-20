@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
+import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentSendTransactionBinding
 import kotlinx.coroutines.launch
 
@@ -41,7 +42,14 @@ class SendTransactionFragment : Fragment() {
                         }
                         else -> {
                             this@SendTransactionFragment.request = null
-                            findNavController().navigate(SendTransactionFragmentDirections.actionSendTransactionComplete())
+                            // If several events are emitted back-to-back (e.g. during session
+                            // teardown), this fragment may not have had a chance to transition
+                            // lifecycle states. Only navigate if we believe we are still here.
+                            findNavController().let { nc ->
+                                if (nc.currentDestination?.id == R.id.fragment_send_transaction) {
+                                    nc.navigate(SendTransactionFragmentDirections.actionSendTransactionComplete())
+                                }
+                            }
                         }
                     }
                 }
