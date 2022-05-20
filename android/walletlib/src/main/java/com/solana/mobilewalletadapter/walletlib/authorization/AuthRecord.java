@@ -24,8 +24,18 @@ public class AuthRecord {
     @IntRange(from = 0)
     public final long expires;
 
+    @NonNull
+    public final String publicKey;
+
+    @NonNull
+    /*package*/ final int publicKeyId;
+
+    private boolean mRevoked;
+
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
+                           @NonNull String publicKey,
+                           @IntRange(from = 1) int publicKeyId,
                            @NonNull Set<PrivilegedMethod> privilegedMethods,
                            @IntRange(from = 0) long issued,
                            @IntRange(from = 0) long expires) {
@@ -33,6 +43,8 @@ public class AuthRecord {
         // other components within this package.
         this.id = id;
         this.identity = identity;
+        this.publicKey = publicKey;
+        this.publicKeyId = publicKeyId;
         this.privilegedMethods = privilegedMethods;
         this.issued = issued;
         this.expires = expires;
@@ -44,7 +56,21 @@ public class AuthRecord {
     }
 
     public boolean isAuthorized(@NonNull PrivilegedMethod privilegedMethod) {
-        return privilegedMethods.contains(privilegedMethod);
+        synchronized (this) {
+            return !mRevoked && privilegedMethods.contains(privilegedMethod);
+        }
+    }
+
+    /*package*/ void setRevoked() {
+        synchronized (this) {
+            mRevoked = true;
+        }
+    }
+
+    public boolean isRevoked() {
+        synchronized (this) {
+            return mRevoked;
+        }
     }
 
     @Override
@@ -66,9 +92,11 @@ public class AuthRecord {
         return "AuthRecord{" +
                 "id=" + id +
                 ", identity=" + identity +
+                ", publicKey='" + publicKey + '\'' +
                 ", privilegedMethods=" + privilegedMethods +
                 ", issued=" + issued +
                 ", expires=" + expires +
+                ", mRevoked=" + mRevoked +
                 '}';
     }
 }

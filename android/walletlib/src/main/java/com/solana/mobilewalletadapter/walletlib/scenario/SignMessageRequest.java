@@ -5,8 +5,9 @@ import androidx.annotation.NonNull;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
 public class SignMessageRequest extends SignPayloadRequest {
-    /*package*/ SignMessageRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
-        super(request);
+    /*package*/ SignMessageRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
+                                   @NonNull String publicKey) {
+        super(request, publicKey);
         if (request.type != MobileWalletAdapterServer.SignPayloadRequest.Type.Message) {
             throw new IllegalArgumentException("request should be a Message");
         }

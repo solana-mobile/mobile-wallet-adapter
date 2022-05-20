@@ -10,8 +10,18 @@ public abstract class SignPayloadRequest {
     @NonNull
     protected final MobileWalletAdapterServer.SignPayloadRequest mRequest;
 
-    protected SignPayloadRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
+    @NonNull
+    protected final String mPublicKey;
+
+    protected SignPayloadRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
+                                 @NonNull String publicKey) {
         mRequest = request;
+        mPublicKey = publicKey;
+    }
+
+    @NonNull
+    public String getPublicKey() {
+        return mPublicKey;
     }
 
     @NonNull

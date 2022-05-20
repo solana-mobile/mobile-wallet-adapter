@@ -22,6 +22,12 @@ import androidx.annotation.NonNull;
     /*package*/ static final String COLUMN_AUTHORIZATIONS_ID = "id"; // type: int
     /*package*/ static final String COLUMN_AUTHORIZATIONS_IDENTITY_ID = "identity_id"; // type: long
     /*package*/ static final String COLUMN_AUTHORIZATIONS_ISSUED = "issued"; // type: long
+    /*package*/ static final String COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS = "privileged_methods"; // type: int
+    /*package*/ static final String COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID = "public_key_id"; // type: long
+
+    /*package*/ static final String TABLE_PUBLIC_KEYS = "public_keys";
+    /*package*/ static final String COLUMN_PUBLIC_KEYS_ID = "id";
+    /*package*/ static final String COLUMN_PUBLIC_KEYS_BASE58 = "public_key_base58";
 
     private static final String CREATE_TABLE_IDENTITIES =
             "CREATE TABLE " + TABLE_IDENTITIES + " (" +
@@ -34,8 +40,14 @@ import androidx.annotation.NonNull;
     private static final String CREATE_TABLE_AUTHORIZATIONS =
             "CREATE TABLE " + TABLE_AUTHORIZATIONS + " (" +
                     COLUMN_AUTHORIZATIONS_ID + " INTEGER NOT NULL PRIMARY KEY," +
-                    COLUMN_AUTHORIZATIONS_IDENTITY_ID + " BIGINT NOT NULL," +
-                    COLUMN_AUTHORIZATIONS_ISSUED + " BIGINT NOT NULL)";
+                    COLUMN_AUTHORIZATIONS_IDENTITY_ID + " INTEGER NOT NULL," +
+                    COLUMN_AUTHORIZATIONS_ISSUED + " INTEGER NOT NULL," +
+                    COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS + " INTEGER NOT NULL," +
+                    COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID + " INTEGER NOT NULL)";
+    private static final String CREATE_TABLE_PUBLIC_KEYS =
+            "CREATE TABLE " + TABLE_PUBLIC_KEYS + " (" +
+                    COLUMN_PUBLIC_KEYS_ID + " INTEGER NOT NULL PRIMARY KEY," +
+                    COLUMN_PUBLIC_KEYS_BASE58 + " TEXT NOT NULL)";
 
     AuthDatabase(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         super(context, getDatabaseName(authIssuerConfig), null, DATABASE_SCHEMA_VERSION);
@@ -50,6 +62,7 @@ import androidx.annotation.NonNull;
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_IDENTITIES);
         db.execSQL(CREATE_TABLE_AUTHORIZATIONS);
+        db.execSQL(CREATE_TABLE_PUBLIC_KEYS);
     }
 
     @Override

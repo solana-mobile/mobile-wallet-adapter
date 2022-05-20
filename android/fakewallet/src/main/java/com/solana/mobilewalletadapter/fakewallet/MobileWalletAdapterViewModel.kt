@@ -107,6 +107,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         val signedPayloads = Array(request.request.payloads.size) { i ->
             request.request.payloads[i].clone().also { it[0] = i.toByte() }
         }
+        Log.d(TAG, "Simulating signing for ${request.request.publicKey}")
         request.request.completeWithSignedPayloads(signedPayloads)
     }
 
@@ -143,6 +144,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         val signatures = Array(request.request.payloads.size) { i ->
             ByteArray(64) { i.toByte() }
         }
+        Log.d(TAG, "Simulating signing for ${request.request.publicKey}")
         val requestWithSignatures = request.copy(signatures = signatures)
         if (rejectStaleRequest(request, requestWithSignatures)) {
             return

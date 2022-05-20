@@ -11,9 +11,19 @@ public class SignAndSendTransactionRequest {
     @NonNull
     private final MobileWalletAdapterServer.SignAndSendTransactionRequest mRequest;
 
+    @NonNull
+    protected final String mPublicKey;
+
     /*package*/ SignAndSendTransactionRequest(
-            @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request) {
+            @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request,
+            @NonNull String publicKey) {
         mRequest = request;
+        mPublicKey = publicKey;
+    }
+
+    @NonNull
+    public String getPublicKey() {
+        return mPublicKey;
     }
 
     @NonNull
