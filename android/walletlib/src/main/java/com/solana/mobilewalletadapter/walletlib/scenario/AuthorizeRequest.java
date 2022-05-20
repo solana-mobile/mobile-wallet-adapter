@@ -14,7 +14,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 
 import java.util.Set;
 
-public class AuthorizeRequest {
+public class AuthorizeRequest extends ScenarioRequest {
     private static final String TAG = AuthorizeRequest.class.getSimpleName();
 
     @NonNull
@@ -29,6 +29,7 @@ public class AuthorizeRequest {
     /*package*/ AuthorizeRequest(@NonNull Handler ioHandler,
                                  @NonNull AuthRepository authRepository,
                                  @NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
+        super(request);
         mIoHandler = ioHandler;
         mAuthRepository = authRepository;
         mRequest = request;

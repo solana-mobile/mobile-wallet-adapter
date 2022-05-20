@@ -7,7 +7,7 @@ import androidx.annotation.VisibleForTesting;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public class SignAndSendTransactionRequest {
+public class SignAndSendTransactionRequest extends ScenarioRequest {
     @NonNull
     private final MobileWalletAdapterServer.SignAndSendTransactionRequest mRequest;
 
@@ -17,6 +17,7 @@ public class SignAndSendTransactionRequest {
     /*package*/ SignAndSendTransactionRequest(
             @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request,
             @NonNull String publicKey) {
+        super(request);
         mRequest = request;
         mPublicKey = publicKey;
     }

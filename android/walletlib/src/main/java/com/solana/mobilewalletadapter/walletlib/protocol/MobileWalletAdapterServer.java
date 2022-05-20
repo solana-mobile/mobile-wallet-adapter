@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public class MobileWalletAdapterServer extends JsonRpc20Server {
@@ -171,6 +172,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorize request", null);
                 }
+                return;
+            } catch (CancellationException e) {
+                // Treat cancellation as a declined request
+                handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request declined", null);
                 return;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Should never occur!");
@@ -333,6 +338,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing reauthorize request", null);
                 }
                 return;
+            } catch (CancellationException e) {
+                // Treat cancellation as a declined request
+                handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "reauthorize request failed", null);
+                return;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Should never occur!");
             }
@@ -440,7 +449,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         try {
             try {
                 request.get();
-            } catch (ExecutionException e) {
+            } catch (ExecutionException | CancellationException e) {
                 handleRpcError(request.id, ERROR_INTERNAL, "Error while processing deauthorize request", null);
                 return;
             } catch (InterruptedException e) {
@@ -651,6 +660,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
                 }
                 return;
+            } catch (CancellationException e) {
+                // Treat cancellation as a declined request
+                handleRpcError(request.id, ProtocolContract.ERROR_NOT_SIGNED, "sign request declined", null);
+                return;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Should never occur!");
             }
@@ -809,6 +822,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
                 }
+                return;
+            } catch (CancellationException e) {
+                // Treat cancellation as a declined request
+                handleRpcError(request.id, ProtocolContract.ERROR_NOT_SIGNED, "sign request declined", null);
                 return;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Should never occur!");
