@@ -168,7 +168,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         }
 
         final ECKey ecKey = jwk.toECKey();
-        Log.d(TAG, "Received public key " + ecKey.getX() + "/" + ecKey.getY());
+        Log.v(TAG, "Received public key " + ecKey.getX() + "/" + ecKey.getY());
 
         try {
             return ecKey.toECPublicKey();

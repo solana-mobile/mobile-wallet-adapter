@@ -391,8 +391,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         @NonNull
         @Override
-        protected Object processResult(@Nullable Object o)
-                throws JsonRpc20InvalidResponseException {
+        protected Object processResult(@Nullable Object o) {
             return new Object();
         }
 

@@ -16,14 +16,13 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.crypto.DirectDecrypter;
-import com.nimbusds.jose.crypto.DirectEncrypter;
-import com.nimbusds.jwt.EncryptedJWT;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 
 import java.io.IOException;
@@ -38,7 +37,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -56,7 +54,6 @@ public class AuthRepository {
 
     // N.B. These bitmask values represent a contract for the JWTs produced by this class. Changing
     // existing values will break compatibility with issued tokens.
-    private static final String PRIVILEGED_METHOD_CLAIM = "prm";
     private static final int PRIVILEGED_METHOD_SIGN_TRANSACTION = 1;
     private static final int PRIVILEGED_METHOD_SIGN_MESSAGE = 2;
     private static final int PRIVILEGED_METHOD_SIGN_AND_SEND_TRANSACTION = 4;
@@ -142,11 +139,11 @@ public class AuthRepository {
     public synchronized AuthRecord fromAuthToken(@NonNull String authToken) {
         final SQLiteDatabase db = ensureStarted();
 
-        final EncryptedJWT jwt;
+        final SignedJWT jwt;
         try {
-            jwt = EncryptedJWT.parse(authToken);
+            jwt = SignedJWT.parse(authToken);
         } catch (ParseException e) {
-            Log.w(TAG, "AuthToken could not be parsed as a JWE-wrapped JWT", e);
+            Log.w(TAG, "AuthToken could not be parsed as a JWS-wrapped JWT", e);
             return null;
         }
 
@@ -188,13 +185,18 @@ public class AuthRepository {
                     Uri.parse(iconRelativeUri), keyCiphertext, keyIV);
         }
 
-        // Decrypt the JWT
-        final SecretKeySpec secretKey = decryptAES128SecretKey(
+        // Verify the MAC on the JWT
+        final SecretKeySpec identityKey = decryptHmacSha256SecretKey(
                 identityRecord.secretKeyCiphertext, identityRecord.secretKeyIV);
+        final boolean verified;
         try {
-            jwt.decrypt(new DirectDecrypter(secretKey));
+            verified = jwt.verify(new MACVerifier(identityKey));
         } catch (JOSEException e) {
-            Log.w(TAG, "Failed decrypting JWT; it does not belong to this identity", e);
+            Log.w(TAG, "Failed verifying JWT; it does not belong to this identity", e);
+            return null;
+        }
+        if (!verified) {
+            Log.w(TAG, "JWT signature is incorrect; not accepting auth token");
             return null;
         }
 
@@ -206,34 +208,33 @@ public class AuthRepository {
             Log.w(TAG, "Failed decoding JWT payload as a claims set", e);
             return null;
         }
-        final long issued = claims.getIssueTime().getTime();
-        final ArraySet<PrivilegedMethod> privilegedMethods;
-        try {
-            privilegedMethods = bitmaskToPrivilegedMethods(claims.getIntegerClaim(PRIVILEGED_METHOD_CLAIM));
-        } catch (ParseException | IllegalArgumentException e) {
-            Log.w(TAG, "Failed processing the privileged methods claim in the JWT", e);
-            return null;
-        }
-        final AuthRecord authRecord = new AuthRecord(
-                Integer.parseInt(claims.getJWTID(), 10),
-                identityRecord,
-                privilegedMethods,
-                issued,
-                issued + mAuthIssuerConfig.authorizationValidityMs);
-
-        // Check that this authorization hasn't been revoked or purged
-        try (final Cursor c = db.query(AuthDatabase.TABLE_AUTHORIZATIONS,
-                new String[] { AuthDatabase.COLUMN_AUTHORIZATIONS_ID },
-                AuthDatabase.COLUMN_AUTHORIZATIONS_ID + "=?",
-                new String[] { Integer.toString(authRecord.id) },
-                null,
-                null,
-                null,
-                "1")) {
+        final String authorizationId = claims.getJWTID();
+        final AuthRecord authRecord;
+        try (final Cursor c = db.rawQuery("SELECT " +
+                AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_BASE58 +
+                " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
+                " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
+                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
+                " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID + "=?",
+                new String[] { authorizationId })) {
             if (!c.moveToNext()) {
                 Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
                 return null;
             }
+
+            final int id = c.getInt(0);
+            final int privilegedMethodsBitmask = c.getInt(1);
+            final long issued = c.getLong(2);
+            final int publicKeyId = c.getInt(3);
+            final String publicKey = c.getString(4);
+            authRecord = new AuthRecord(id, identityRecord, publicKey, publicKeyId,
+                    bitmaskToPrivilegedMethods(privilegedMethodsBitmask), issued,
+                    issued + mAuthIssuerConfig.authorizationValidityMs);
         }
 
         // Revoke this authorization if it is either from the future, or too old to be reissuable
@@ -248,26 +249,30 @@ public class AuthRepository {
 
     @NonNull
     public synchronized String toAuthToken(@NonNull AuthRecord authRecord) {
+        assert(!authRecord.isRevoked());
+        if (authRecord.isRevoked()) {
+            // Don't fail here if asserts are not enabled. Returning an invalid auth token is better
+            // than crashing the app.
+            Log.e(TAG, "Issuing auth record for revoked auth token");
+        }
+
         // To create an AuthRecord requires that the DB have been previously opened; we can thus
         // rely on mSecretKey being initialized and valid.
-        final SecretKeySpec identityKey = decryptAES128SecretKey(
+        final SecretKeySpec identityKey = decryptHmacSha256SecretKey(
                 authRecord.identity.secretKeyCiphertext, authRecord.identity.secretKeyIV);
 
-        final int privilegedMethodsMask = privilegedMethodsToBitmask(authRecord.privilegedMethods);
         final JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .jwtID(Integer.toString(authRecord.id))
-                .claim(PRIVILEGED_METHOD_CLAIM, privilegedMethodsMask)
-                .issueTime(new Date(authRecord.issued))
                 .build();
-        final JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A128GCM)
+        final JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
                 .contentType(getJWTContentType())
                 .keyID(Integer.toString(authRecord.identity.id))
                 .build();
-        final EncryptedJWT jwt = new EncryptedJWT(header, claims);
+        final SignedJWT jwt = new SignedJWT(header, claims);
         try {
-            jwt.encrypt(new DirectEncrypter(identityKey));
+            jwt.sign(new MACSigner(identityKey));
         } catch (JOSEException e) {
-            throw new RuntimeException("Error encrypting JWT", e);
+            throw new RuntimeException("Error signing JWT", e);
         }
 
         Log.v(TAG, "Returning auth token for AuthRecord: " + authRecord);
@@ -306,9 +311,11 @@ public class AuthRepository {
     public synchronized AuthRecord issue(@NonNull String name,
                                          @NonNull Uri uri,
                                          @NonNull Uri relativeIconUri,
+                                         @NonNull String publicKey,
                                          @NonNull Set<PrivilegedMethod> privilegedMethods) {
         final SQLiteDatabase db = ensureStarted();
 
+        // First, try and look up a matching identity
         int identityId = -1;
         byte[] identityKeyCiphertext = null;
         byte[] identityKeyIV = null;
@@ -330,10 +337,11 @@ public class AuthRepository {
             }
         }
 
+        // If no matching identity exists, create one
         if (identityId == -1) {
             Log.d(TAG, "Creating IdentityRecord for " + name + '/' + uri + '/' + relativeIconUri);
 
-            final Pair<byte[], byte[]> p = createEncryptedAES128SecretKey();
+            final Pair<byte[], byte[]> p = createEncryptedHmacSha256SecretKey();
             identityKeyCiphertext = p.first;
             identityKeyIV = p.second;
 
@@ -349,11 +357,35 @@ public class AuthRepository {
         final IdentityRecord identityRecord = new IdentityRecord(identityId, name, uri,
                 relativeIconUri, identityKeyCiphertext, identityKeyIV);
 
+        // Next, try and look up the public key
+        int publicKeyId = -1;
+        try (final Cursor c = db.query(AuthDatabase.TABLE_PUBLIC_KEYS,
+                new String[] { AuthDatabase.COLUMN_PUBLIC_KEYS_ID },
+                AuthDatabase.COLUMN_PUBLIC_KEYS_BASE58 + "=?",
+                new String[] { publicKey },
+                null,
+                null,
+                null)) {
+            if (c.moveToNext()) {
+                publicKeyId = c.getInt(0);
+            }
+        }
+
+        // If no matching public key exists, create one
+        if (publicKeyId == -1) {
+            final ContentValues publicKeyContentValues = new ContentValues(1);
+            publicKeyContentValues.put(AuthDatabase.COLUMN_PUBLIC_KEYS_BASE58, publicKey);
+            publicKeyId = (int) db.insert(AuthDatabase.TABLE_PUBLIC_KEYS, null, publicKeyContentValues);
+        }
+
         final long now = System.currentTimeMillis();
 
-        final ContentValues authContentValues = new ContentValues(2);
+        final ContentValues authContentValues = new ContentValues(4);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.id);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
+        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS,
+                privilegedMethodsToBitmask(privilegedMethods));
+        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
         final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, authContentValues);
 
         // If needed, purge oldest entries for this identity
@@ -374,30 +406,39 @@ public class AuthRepository {
         // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
         // thus know that the identity remains referenced; no need to purge unused identities.
 
-        return new AuthRecord(id, identityRecord, privilegedMethods,
-                now, now + mAuthIssuerConfig.authorizationValidityMs);
+        return new AuthRecord(id, identityRecord, publicKey, publicKeyId, privilegedMethods, now,
+                now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
     @Nullable
     public synchronized AuthRecord reissue(@NonNull AuthRecord authRecord) {
         final SQLiteDatabase db = ensureStarted();
+        assert(!authRecord.isRevoked());
 
         final long now = System.currentTimeMillis();
         final long authRecordAgeMs = now - authRecord.issued;
         final AuthRecord reissued;
-        if (revokeNonReissuableAuthRecord(authRecord)) {
+        if (authRecord.isRevoked()) {
+            Log.e(TAG, "Attempt to reissue a revoked auth record: " + authRecord);
+            reissued = null;
+        } else if (revokeNonReissuableAuthRecord(authRecord)) {
             reissued = null;
         } else if (authRecordAgeMs < mAuthIssuerConfig.reauthorizationNopDurationMs) {
             Log.d(TAG, "AuthRecord still valid; reissuing same AuthRecord: " + authRecord);
             reissued = authRecord;
         } else {
-            final ContentValues reissueContentValues = new ContentValues(2);
+            final ContentValues reissueContentValues = new ContentValues(4);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.id);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
+            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS,
+                    privilegedMethodsToBitmask(authRecord.privilegedMethods));
+            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
             final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, reissueContentValues);
             final ArraySet<PrivilegedMethod> privilegedMethods = new ArraySet<>(authRecord.privilegedMethods.size());
             privilegedMethods.addAll(authRecord.privilegedMethods);
-            reissued = new AuthRecord(id, authRecord.identity, privilegedMethods, now, now + mAuthIssuerConfig.authorizationValidityMs);
+            reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
+                    authRecord.publicKeyId, privilegedMethods, now,
+                    now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);
             // Note: reissue is net-neutral on the number of authorizations per identity, so there's
@@ -411,6 +452,7 @@ public class AuthRepository {
         final SQLiteDatabase db = ensureStarted();
 
         Log.d(TAG, "Revoking AuthRecord " + authRecord);
+        authRecord.setRevoked();
 
         final SQLiteStatement deleteAuthorizations = db
                 .compileStatement(
@@ -419,15 +461,9 @@ public class AuthRepository {
         deleteAuthorizations.bindLong(1, authRecord.id);
         final int deleteCount = deleteAuthorizations.executeUpdateDelete();
 
-        if (deleteCount != 0) {
-            // There may now be unreferenced identities; if so, delete them
-            final SQLiteStatement deleteUnreferencedIdentities = db.compileStatement(
-                    "DELETE FROM " + AuthDatabase.TABLE_IDENTITIES +
-                            " WHERE " + AuthDatabase.COLUMN_IDENTITIES_ID + " NOT IN " +
-                            "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
-                            " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
-            deleteUnreferencedIdentities.executeUpdateDelete();
-        }
+        // There may now be unreferenced identities and public keys; if so, delete them
+        deleteUnreferencedIdentities(db);
+        deleteUnreferencedPublicKeys(db);
 
         return (deleteCount != 0);
     }
@@ -449,7 +485,30 @@ public class AuthRepository {
         deleteIdentity.bindLong(1, identityRecord.id);
         final int deleteCount = deleteIdentity.executeUpdateDelete();
 
+        // There may now be unreferenced public keys; if so, delete them
+        deleteUnreferencedPublicKeys(db);
+
         return (deleteCount != 0);
+    }
+
+    @GuardedBy("this")
+    private void deleteUnreferencedIdentities(@NonNull SQLiteDatabase db) {
+        final SQLiteStatement deleteUnreferencedIdentities = db.compileStatement(
+                "DELETE FROM " + AuthDatabase.TABLE_IDENTITIES +
+                        " WHERE " + AuthDatabase.COLUMN_IDENTITIES_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
+                        " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
+        deleteUnreferencedIdentities.executeUpdateDelete();
+    }
+
+    @GuardedBy("this")
+    private void deleteUnreferencedPublicKeys(@NonNull SQLiteDatabase db) {
+        final SQLiteStatement deleteUnreferencedPublicKeys = db.compileStatement(
+                "DELETE FROM " + AuthDatabase.TABLE_PUBLIC_KEYS +
+                        " WHERE " + AuthDatabase.COLUMN_PUBLIC_KEYS_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
+        deleteUnreferencedPublicKeys.executeUpdateDelete();
     }
 
     @NonNull
@@ -486,16 +545,49 @@ public class AuthRepository {
     }
 
     @NonNull
+    public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord) {
+        final SQLiteDatabase db = ensureStarted();
+
+        final ArrayList<AuthRecord> authorizations = new ArrayList<>();
+        try (final Cursor c = db.rawQuery("SELECT " +
+                AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_BASE58 +
+                " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
+                " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
+                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
+                " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
+                new String[] { Integer.toString(identityRecord.id) })) {
+            while (c.moveToNext()) {
+                final int id = c.getInt(0);
+                final int privilegedMethodsBitmask = c.getInt(1);
+                final long issued = c.getLong(2);
+                final int publicKeyId = c.getInt(3);
+                final String publicKey = c.getString(4);
+                // Note: values should never be null, but protect against bugs and corruption
+                final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey,
+                        publicKeyId, bitmaskToPrivilegedMethods(privilegedMethodsBitmask), issued,
+                        issued + mAuthIssuerConfig.authorizationValidityMs);
+                authorizations.add(authRecord);
+            }
+        }
+        return authorizations;
+    }
+
+    @NonNull
     @GuardedBy("this")
-    private Pair<byte[], byte[]> createEncryptedAES128SecretKey() {
+    private Pair<byte[], byte[]> createEncryptedHmacSha256SecretKey() {
         final SecureRandom sr = new SecureRandom();
-        final byte[] aes128KeyBytes = new byte[16];
-        sr.nextBytes(aes128KeyBytes);
+        final byte[] hmacSHA256KeyBytes = new byte[32];
+        sr.nextBytes(hmacSHA256KeyBytes);
 
         try {
             final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, mSecretKey, sr);
-            final byte[] ciphertext = cipher.doFinal(aes128KeyBytes);
+            final byte[] ciphertext = cipher.doFinal(hmacSHA256KeyBytes);
             final byte[] iv = cipher.getIV();
             return new Pair<>(ciphertext, iv);
         } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException |
@@ -506,14 +598,14 @@ public class AuthRepository {
 
     @NonNull
     @GuardedBy("this")
-    private SecretKeySpec decryptAES128SecretKey(@NonNull byte[] keyCiphertext,
-                                                 @NonNull byte[] keyIV) {
+    private SecretKeySpec decryptHmacSha256SecretKey(@NonNull byte[] keyCiphertext,
+                                                     @NonNull byte[] keyIV) {
         try {
             final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, keyIV);
             cipher.init(Cipher.DECRYPT_MODE, mSecretKey, gcmParameterSpec);
             final byte[] keyBytes = cipher.doFinal(keyCiphertext);
-            return new SecretKeySpec(keyBytes, KeyProperties.KEY_ALGORITHM_AES);
+            return new SecretKeySpec(keyBytes, "HmacSHA256");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException |
                 InvalidAlgorithmParameterException |  InvalidKeyException | BadPaddingException e) {
             throw new RuntimeException("Error while decrypting identity key", e);

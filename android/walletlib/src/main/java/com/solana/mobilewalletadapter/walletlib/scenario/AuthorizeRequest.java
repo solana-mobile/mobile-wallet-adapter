@@ -64,7 +64,7 @@ public class AuthorizeRequest {
         final Uri uri = mRequest.identityUri != null ? mRequest.identityUri : Uri.EMPTY;
         final Uri relativeIconUri = mRequest.iconUri != null ? mRequest.iconUri : Uri.EMPTY;
         final AuthRecord authRecord = mAuthRepository.issue(
-                name, uri, relativeIconUri, mRequest.privilegedMethods);
+                name, uri, relativeIconUri, publicKey, mRequest.privilegedMethods);
         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
 
         final String authToken = mAuthRepository.toAuthToken(authRecord);

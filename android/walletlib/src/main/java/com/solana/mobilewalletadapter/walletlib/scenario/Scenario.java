@@ -10,7 +10,6 @@ import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
@@ -130,8 +129,16 @@ public abstract class Scenario {
                 return;
             }
 
-            mIoHandler.post(() -> request.complete(new MobileWalletAdapterServer.ReauthorizeResult(
-                    mAuthRepository.toAuthToken(reissuedAuthRecord))));
+            final String authToken;
+            if (reissuedAuthRecord == authRecord) {
+                // Reissued same auth record; don't regenerate the token
+                authToken = request.authToken;
+            } else {
+                authToken = mAuthRepository.toAuthToken(reissuedAuthRecord);
+            }
+
+            mIoHandler.post(() -> request.complete(
+                    new MobileWalletAdapterServer.ReauthorizeResult(authToken)));
         }
 
         @Override
@@ -146,56 +153,68 @@ public abstract class Scenario {
         @Override
         public void signPayload(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
             final PrivilegedMethod method;
-            final Runnable r;
+
             switch (request.type) {
                 case Transaction:
                     method = PrivilegedMethod.SignTransaction;
-                    r = () -> mCallbacks.onSignTransactionRequest(new SignTransactionRequest(request));
                     break;
                 case Message:
                     method = PrivilegedMethod.SignMessage;
-                    r = () -> mCallbacks.onSignMessageRequest(new SignMessageRequest(request));
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown payload type");
             }
 
-            final MobileWalletAdapterServer.MobileWalletAdapterServerException ex =
-                    validateAuthTokenForPrivilegedMethod(request.authToken, method);
-            if (ex != null) {
-                mIoHandler.post(() -> request.completeExceptionally(ex));
-            } else {
-                mIoHandler.post(r);
+            final String publicKey;
+            try {
+                publicKey = authTokenToPublicKey(request.authToken, method);
+            } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
+                mIoHandler.post(() -> request.completeExceptionally(e));
+                return;
             }
+
+            final Runnable r;
+            switch (request.type) {
+                case Transaction:
+                    r = () -> mCallbacks.onSignTransactionRequest(new SignTransactionRequest(request, publicKey));
+                    break;
+                case Message:
+                    r = () -> mCallbacks.onSignMessageRequest(new SignMessageRequest(request, publicKey));
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown payload type");
+            }
+            mIoHandler.post(r);
         }
 
         @Override
         public void signAndSendTransaction(
                 @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request) {
-            final MobileWalletAdapterServer.MobileWalletAdapterServerException ex =
-                    validateAuthTokenForPrivilegedMethod(request.authToken,
-                            PrivilegedMethod.SignAndSendTransaction);
-            if (ex != null) {
-                mIoHandler.post(() -> request.completeExceptionally(ex));
-            } else {
-                mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionRequest(
-                        new SignAndSendTransactionRequest(request)));
+            final String publicKey;
+            try {
+                publicKey = authTokenToPublicKey(request.authToken, PrivilegedMethod.SignAndSendTransaction);
+            } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
+                mIoHandler.post(() -> request.completeExceptionally(e));
+                return;
             }
+
+            mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionRequest(
+                    new SignAndSendTransactionRequest(request, publicKey)));
         }
 
-        @Nullable
-        private MobileWalletAdapterServer.MobileWalletAdapterServerException validateAuthTokenForPrivilegedMethod(
-                @NonNull String authToken, @NonNull PrivilegedMethod privilegedMethod) {
+        @NonNull
+        private String authTokenToPublicKey(@NonNull String authToken,
+                                            @NonNull PrivilegedMethod privilegedMethod)
+                throws MobileWalletAdapterServer.MobileWalletAdapterServerException{
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(authToken);
-            final MobileWalletAdapterServer.MobileWalletAdapterServerException ex;
+
             if (authRecord == null || !authRecord.isAuthorized(privilegedMethod)) {
-                ex = new MobileWalletAdapterServer.AuthTokenNotValidException("auth_token not valid for this request");
+                throw new MobileWalletAdapterServer.AuthTokenNotValidException("auth_token not valid for this request");
             } else if (authRecord.isExpired()) {
-                ex = new MobileWalletAdapterServer.ReauthorizationRequiredException("auth_token requires reauthorization");
-            } else {
-                ex = null;
+                throw new MobileWalletAdapterServer.ReauthorizationRequiredException("auth_token requires reauthorization");
             }
-            return ex;
+
+            return authRecord.publicKey;
         }
     };
 
