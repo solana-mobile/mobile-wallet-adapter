@@ -4,21 +4,12 @@
 
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.KeyOperation;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
@@ -29,14 +20,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.ECPrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.ECPublicKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
     private static final String TAG = MobileWalletAdapterSession.class.getSimpleName();
@@ -55,12 +44,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
     @NonNull
     public String encodeAssociationToken() {
-        try {
-            return encodeECP256PublicKeyToBase64(KeyFactory.getInstance("EC")
-                    .getKeySpec(mAssociationKey.getPublic(), ECPublicKeySpec.class));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new UnsupportedOperationException("Error converting association public key to keyspec", e);
-        }
+        return encodeECP256PublicKeyToBase64((ECPublicKey) mAssociationKey.getPublic());
     }
 
     @Override
@@ -78,21 +62,30 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private static String createHelloReq(@NonNull KeyPair associationKeyPair,
                                          @NonNull ECPublicKey ourPublicKey) {
+        final String ourPublicKeyBase64 = encodeECP256PublicKeyToBase64(ourPublicKey);
+
+        final byte[] sig;
         try {
-            final JSONObject o = new JSONObject();
+            final Signature ecdsaSignature = Signature.getInstance("ECDSA");
+            ecdsaSignature.initSign(associationKeyPair.getPrivate());
+            ecdsaSignature.update(ourPublicKeyBase64.getBytes(StandardCharsets.UTF_8));
+            sig = ecdsaSignature.sign();
+        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+            throw new UnsupportedOperationException("Failed signing public key payload");
+        }
+
+        final String sigBase64 = Base64.encodeToString(sig,
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+
+        final JSONObject o = new JSONObject();
+        try {
             o.put(ProtocolContract.HELLO_MESSAGE_TYPE, ProtocolContract.HELLO_REQ_MESSAGE);
-            final JWK jwk = createJWKForECP256(ourPublicKey, KeyOperation.DERIVE_KEY);
-            final JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256);
-            final JWSObject jws = new JWSObject(jwsHeader,
-                    new Payload(jwk.toJSONString().getBytes(StandardCharsets.UTF_8)));
-            final JWSSigner jwsSigner =
-                    new ECDSASigner((ECPrivateKey) associationKeyPair.getPrivate());
-            jws.sign(jwsSigner);
-            o.put(ProtocolContract.HELLO_REQ_PUBLIC_KEY, jws.serialize());
-            return o.toString();
-        } catch (JOSEException | JSONException e) {
+            o.put(ProtocolContract.HELLO_REQ_PUBLIC_KEY, encodeECP256PublicKeyToBase64(ourPublicKey));
+            o.put(ProtocolContract.HELLO_REQ_PUBLIC_KEY_SIGNATURE, sigBase64);
+        } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed building HELLO_RSP", e);
         }
+        return o.toString();
     }
 
     @Override
@@ -116,8 +109,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
             throw new SessionMessageException("Failed decoding session establishment message", e);
         }
 
-        // Parse string as HELLO_RSP JSON with a JWK payload, and check for expected fields
-        final JWK jwk;
+        // Parse string as HELLO_RSP JSON with an encoded public key payload
+        final String qw;
         try {
             final JSONObject o = new JSONObject(s);
             final String m = o.getString(ProtocolContract.HELLO_MESSAGE_TYPE);
@@ -125,25 +118,20 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
                 throw new SessionMessageException("Unexpected message name: actual=" + m +
                         ", expected=" + ProtocolContract.HELLO_RSP_MESSAGE);
             }
-            jwk = JWK.parse(o.getString(ProtocolContract.HELLO_RSP_PUBLIC_KEY));
+            qw = o.getString(ProtocolContract.HELLO_RSP_PUBLIC_KEY);
         } catch (JSONException e) {
             throw new SessionMessageException("Failed interpreting message as HELLO_RSP: " + s, e);
-        } catch (ParseException e) {
-            throw new SessionMessageException("Failed parsing JWT from HELLO_RSP", e);
         }
 
-        // Verify JWK meets protocol specification
-        if (!isJWKSuitableForP256ECDH(jwk)) {
-            throw new SessionMessageException("JWK payload is not valid for ECDH");
-        }
-
-        final ECKey ecKey = jwk.toECKey();
-        Log.v(TAG, "Received public key " + ecKey.getX() + "/" + ecKey.getY());
-
+        final ECPublicKey otherPublicKey;
         try {
-            return ecKey.toECPublicKey();
-        } catch (JOSEException e) {
-            throw new SessionMessageException("JWK is invalid", e);
+            otherPublicKey = decodeECP256PublicKeyFromBase64(qw);
+        } catch (UnsupportedOperationException e) {
+            throw new SessionMessageException("Failed creating EC public key for qw", e);
         }
+
+        Log.v(TAG, "Received public key " + otherPublicKey.getW().getAffineX() + "/" +
+                otherPublicKey.getW().getAffineY());
+        return otherPublicKey;
     }
 }

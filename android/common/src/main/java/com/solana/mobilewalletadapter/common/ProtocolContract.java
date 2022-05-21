@@ -8,10 +8,11 @@ public class ProtocolContract {
     public static final String HELLO_MESSAGE_TYPE = "m"; // type: String
 
     public static final String HELLO_REQ_MESSAGE = "HELLO_REQ";
-    public static final String HELLO_REQ_PUBLIC_KEY = "qd"; // type: JWS
+    public static final String HELLO_REQ_PUBLIC_KEY = "qd"; // // type: String (base64url-encoded EC P-256 public key)
+    public static final String HELLO_REQ_PUBLIC_KEY_SIGNATURE = "sig"; // type: String (base64-encoded ECDSA signature of qd)
 
     public static final String HELLO_RSP_MESSAGE = "HELLO_RSP";
-    public static final String HELLO_RSP_PUBLIC_KEY = "qw"; // type: JWK
+    public static final String HELLO_RSP_PUBLIC_KEY = "qw"; // type: String (base64url-encoded EC P-256 public key)
 
     public static final String METHOD_AUTHORIZE = "authorize";
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY

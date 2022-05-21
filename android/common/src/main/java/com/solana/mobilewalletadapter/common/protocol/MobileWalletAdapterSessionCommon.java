@@ -9,7 +9,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.collection.ArraySet;
 
 import com.nimbusds.jose.CompressionAlgorithm;
 import com.nimbusds.jose.EncryptionMethod;
@@ -24,10 +23,6 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jose.crypto.impl.ConcatKDF;
 import com.nimbusds.jose.jwk.Curve;
-import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.KeyOperation;
-import com.nimbusds.jose.jwk.KeyType;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -39,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -47,6 +43,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -347,8 +344,8 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     }
 
     @NonNull
-    protected static String encodeECP256PublicKeyToBase64(@NonNull ECPublicKeySpec ecPublicKeySpec) {
-        final ECPoint w = ecPublicKeySpec.getW();
+    protected static String encodeECP256PublicKeyToBase64(@NonNull ECPublicKey ecPublicKey) {
+        final ECPoint w = ecPublicKey.getW();
         // NOTE: either x or y could be 33 bytes long, due to BigInteger always including a sign bit
         // in the output. Discard it; we are only interested in the unsigned magnitude.
         final byte[] x = w.getAffineX().toByteArray();
@@ -364,8 +361,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     }
 
     @NonNull
-    protected static ECPublicKeySpec decodeECP256PublicKeyFromBase64(@NonNull String ecPublicKeyBase64)
-            throws NoSuchAlgorithmException, InvalidParameterSpecException {
+    protected static ECPublicKey decodeECP256PublicKeyFromBase64(@NonNull String ecPublicKeyBase64) {
         final byte[] encodedPublicKey = Base64.decode(ecPublicKeyBase64, Base64.URL_SAFE);
         if (encodedPublicKey.length != 65 || encodedPublicKey[0] != 0x04) {
             throw new IllegalArgumentException("input is not a base64-encoded EC P-256 public key");
@@ -374,32 +370,15 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         final byte[] x = Arrays.copyOfRange(encodedPublicKey, 1, 33);
         final byte[] y = Arrays.copyOfRange(encodedPublicKey, 33, 65);
         final ECPoint w = new ECPoint(new BigInteger(1, x), new BigInteger(1, y));
-        final AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
-        algParams.init(new ECGenParameterSpec("secp256r1"));
-        return new ECPublicKeySpec(w, algParams.getParameterSpec(ECParameterSpec.class));
-    }
-
-    @NonNull
-    protected static JWK createJWKForECP256(@NonNull ECPublicKey publicKey,
-                                            @NonNull KeyOperation op) {
-        final ArraySet<KeyOperation> keyOp = new ArraySet<>(1);
-        keyOp.add(op);
         try {
-            return new ECKey.Builder(com.nimbusds.jose.jwk.Curve.P_256, publicKey)
-                    .keyOperations(keyOp)
-                    .build();
-        } catch (IllegalStateException e) {
-            throw new IllegalArgumentException("publicKey must be a valid EC P-256 public key", e);
+            final AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
+            algParams.init(new ECGenParameterSpec("secp256r1"));
+            final ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(w,
+                    algParams.getParameterSpec(ECParameterSpec.class));
+            return (ECPublicKey) KeyFactory.getInstance("EC").generatePublic(ecPublicKeySpec);
+        } catch (NoSuchAlgorithmException | InvalidParameterSpecException | InvalidKeySpecException e) {
+            throw new UnsupportedOperationException("Error decoding EC P-256 public key", e);
         }
-    }
-
-    protected static boolean isJWKSuitableForP256ECDH(@NonNull JWK jwk) {
-        return (jwk.getKeyType() == KeyType.EC &&
-                jwk.getKeyOperations() != null &&
-                jwk.getKeyOperations().size() == 1 &&
-                jwk.getKeyOperations().contains(KeyOperation.DERIVE_KEY) &&
-                jwk.toECKey().getCurve() == Curve.P_256 &&
-                !jwk.isPrivate());
     }
 
     @NonNull
