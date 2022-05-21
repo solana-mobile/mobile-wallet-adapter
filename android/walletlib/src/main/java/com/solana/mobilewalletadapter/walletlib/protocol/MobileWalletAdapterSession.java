@@ -37,9 +37,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     public MobileWalletAdapterSession(@NonNull Scenario scenario,
                                       @NonNull MessageReceiver decryptedPayloadReceiver,
-                                      @Nullable StateCallbacks stateCallbacks,
-                                      @Nullable PayloadEncryptionMethod payloadEncryptionMethod) {
-        super(decryptedPayloadReceiver, stateCallbacks, payloadEncryptionMethod);
+                                      @Nullable StateCallbacks stateCallbacks) {
+        super(decryptedPayloadReceiver, stateCallbacks);
         mScenario = scenario;
         mAssociationPublicKey = decodeECP256PublicKeyFromBase64(scenario.associationToken);
     }
