@@ -64,8 +64,7 @@ public abstract class Scenario {
                 this,
                 new MobileWalletAdapterServer(mIoLooper, mMethodHandlers),
                 mSessionStateCallbacks,
-                null, // use whatever the client specifies
-                false);
+                null); // use whatever the client specifies
     }
 
     public abstract void start();

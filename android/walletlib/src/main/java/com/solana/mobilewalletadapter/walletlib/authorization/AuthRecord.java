@@ -27,7 +27,6 @@ public class AuthRecord {
     @NonNull
     public final String publicKey;
 
-    @NonNull
     /*package*/ final int publicKeyId;
 
     private boolean mRevoked;

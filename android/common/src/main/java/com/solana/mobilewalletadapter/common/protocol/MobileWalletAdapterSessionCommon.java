@@ -58,7 +58,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     private final MessageReceiver mDecryptedPayloadReceiver;
     private final StateCallbacks mStateCallbacks;
     private final EncryptionMethod mPayloadEncryptionMethod;
-    private final boolean mDeflatePayload;
 
     protected MessageSender mMessageSender;
     @NonNull
@@ -70,12 +69,10 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     protected MobileWalletAdapterSessionCommon(@NonNull MessageReceiver decryptedPayloadReceiver,
                                                @Nullable StateCallbacks stateCallbacks,
-                                               @Nullable PayloadEncryptionMethod payloadEncryptionMethod,
-                                               boolean deflatePayload) {
+                                               @Nullable PayloadEncryptionMethod payloadEncryptionMethod) {
         mDecryptedPayloadReceiver = decryptedPayloadReceiver;
         mStateCallbacks = stateCallbacks;
         mPayloadEncryptionMethod = convertPayloadEncryptionMethodType(payloadEncryptionMethod);
-        mDeflatePayload = deflatePayload;
     }
 
     @Nullable
@@ -194,8 +191,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
                 throw new IOException("Cannot send in " + mState);
             }
 
-            encryptedPayload = encryptSessionPayload(message, mPayloadEncryptionMethod,
-                    mDeflatePayload);
+            encryptedPayload = encryptSessionPayload(message, mPayloadEncryptionMethod);
         }
 
         // Don't hold lock when calling into sender; it could lead to lock-ordering deadlocks.
@@ -204,8 +200,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     @NonNull
     protected byte[] encryptSessionPayload(@NonNull byte[] payload,
-                                           @Nullable EncryptionMethod encryptionMethod,
-                                           boolean deflate) {
+                                           @Nullable EncryptionMethod encryptionMethod) {
         if (mECDHSecret == null) {
             throw new IllegalStateException("Cannot decrypt, no ECDH session secret has been established");
         }
@@ -218,7 +213,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         }
 
         final JWEHeader jweHeader = new JWEHeader.Builder(JWEAlgorithm.DIR, encryptionMethod)
-                .compressionAlgorithm(deflate ? CompressionAlgorithm.DEF : null)
                 .build();
 
         final JWEObject jwe = new JWEObject(jweHeader, new Payload(payload));

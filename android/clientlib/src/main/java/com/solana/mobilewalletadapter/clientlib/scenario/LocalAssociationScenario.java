@@ -70,8 +70,7 @@ public class LocalAssociationScenario extends Scenario {
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
                 mSessionStateCallbacks,
-                MobileWalletAdapterSessionCommon.PayloadEncryptionMethod.AES128_GCM,
-                false);
+                MobileWalletAdapterSessionCommon.PayloadEncryptionMethod.AES128_GCM);
 
         Log.v(TAG, "Creating local association scenario for " + mWebSocketUri);
     }
