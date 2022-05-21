@@ -53,6 +53,7 @@ public class MobileWalletAdapterWebSocket implements MessageSender {
         mConnectTimeoutMs = connectTimeoutMs;
     }
 
+    // TODO: use post to move mMessageReceiver calls into a known context
     private final WebSocketListener mListener = new WebSocketAdapter() {
         @Override
         public void onConnected(WebSocket websocket, Map<String, List<String>> headers)
