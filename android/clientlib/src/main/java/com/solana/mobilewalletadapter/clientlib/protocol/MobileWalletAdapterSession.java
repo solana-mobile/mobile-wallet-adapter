@@ -34,9 +34,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     private final KeyPair mAssociationKey;
 
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
-                                      @Nullable StateCallbacks stateCallbacks,
-                                      @Nullable PayloadEncryptionMethod payloadEncryptionMethod) {
-        super(decryptedPayloadReceiver, stateCallbacks, payloadEncryptionMethod);
+                                      @Nullable StateCallbacks stateCallbacks) {
+        super(decryptedPayloadReceiver, stateCallbacks);
         mAssociationKey = generateECP256KeyPair();
     }
 

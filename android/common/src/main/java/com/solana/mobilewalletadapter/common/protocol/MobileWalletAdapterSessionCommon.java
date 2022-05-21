@@ -57,39 +57,17 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     @NonNull
     private final MessageReceiver mDecryptedPayloadReceiver;
     private final StateCallbacks mStateCallbacks;
-    private final EncryptionMethod mPayloadEncryptionMethod;
 
     protected MessageSender mMessageSender;
     @NonNull
     private State mState = State.WAITING_FOR_CONNECTION;
     private KeyPair mECDHKeypair;
-    private byte[] mECDHSecret;
-    private EncryptionMethod mCachedEncryptionMethod;
     private SecretKey mCachedEncryptionKey;
 
     protected MobileWalletAdapterSessionCommon(@NonNull MessageReceiver decryptedPayloadReceiver,
-                                               @Nullable StateCallbacks stateCallbacks,
-                                               @Nullable PayloadEncryptionMethod payloadEncryptionMethod) {
+                                               @Nullable StateCallbacks stateCallbacks) {
         mDecryptedPayloadReceiver = decryptedPayloadReceiver;
         mStateCallbacks = stateCallbacks;
-        mPayloadEncryptionMethod = convertPayloadEncryptionMethodType(payloadEncryptionMethod);
-    }
-
-    @Nullable
-    private static EncryptionMethod convertPayloadEncryptionMethodType(
-            @Nullable PayloadEncryptionMethod payloadEncryptionMethod) {
-        if (payloadEncryptionMethod == null) {
-            return null;
-        }
-
-        switch (payloadEncryptionMethod) {
-            case AES128_GCM:
-                return EncryptionMethod.A128GCM;
-            case AES256_GCM:
-                return EncryptionMethod.A256GCM;
-            default:
-                throw new IllegalStateException("Missing switch case");
-        }
     }
 
     @Override
@@ -135,8 +113,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         mState = State.CLOSED;
         mMessageSender = null;
         mECDHKeypair = null;
-        mECDHSecret = null;
-        mCachedEncryptionMethod = null;
         mCachedEncryptionKey = null;
         mDecryptedPayloadReceiver.receiverDisconnected();
     }
@@ -191,7 +167,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
                 throw new IOException("Cannot send in " + mState);
             }
 
-            encryptedPayload = encryptSessionPayload(message, mPayloadEncryptionMethod);
+            encryptedPayload = encryptSessionPayload(message);
         }
 
         // Don't hold lock when calling into sender; it could lead to lock-ordering deadlocks.
@@ -199,25 +175,15 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     }
 
     @NonNull
-    protected byte[] encryptSessionPayload(@NonNull byte[] payload,
-                                           @Nullable EncryptionMethod encryptionMethod) {
-        if (mECDHSecret == null) {
-            throw new IllegalStateException("Cannot decrypt, no ECDH session secret has been established");
+    protected byte[] encryptSessionPayload(@NonNull byte[] payload) {
+        if (mCachedEncryptionKey == null) {
+            throw new IllegalStateException("Cannot decrypt, no session key has been established");
         }
 
-        if (encryptionMethod == null) {
-            encryptionMethod = mCachedEncryptionMethod;
-            if (encryptionMethod == null) {
-                encryptionMethod = EncryptionMethod.A128GCM;
-            }
-        }
-
-        final JWEHeader jweHeader = new JWEHeader.Builder(JWEAlgorithm.DIR, encryptionMethod)
+        final JWEHeader jweHeader = new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A128GCM)
                 .build();
 
         final JWEObject jwe = new JWEObject(jweHeader, new Payload(payload));
-
-        updateCachedEncryptionKey(encryptionMethod);
 
         try {
             final JWEEncrypter jweEncrypter = new DirectEncrypter(mCachedEncryptionKey);
@@ -231,8 +197,8 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     @NonNull
     protected byte[] decryptSessionPayload(@NonNull byte[] payload) throws SessionMessageException {
-        if (mECDHSecret == null) {
-            throw new IllegalStateException("Cannot decrypt, no ECDH session secret has been established");
+        if (mCachedEncryptionKey == null) {
+            throw new IllegalStateException("Cannot decrypt, no session key has been established");
         }
 
         final JWEObject jwe;
@@ -254,8 +220,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             throw new SessionMessageException("JWE encrypted message wrapper parameters are incorrect");
         }
 
-        updateCachedEncryptionKey(jweHeader.getEncryptionMethod());
-
         try {
             final JWEDecrypter jweDecrypter = new DirectDecrypter(mCachedEncryptionKey);
             jwe.decrypt(jweDecrypter);
@@ -266,23 +230,19 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         return jwe.getPayload().toBytes();
     }
 
-    private void updateCachedEncryptionKey(@NonNull EncryptionMethod encryptionMethod) {
-        if (mCachedEncryptionMethod != encryptionMethod) {
-            Log.v(TAG, "Updating cached encryption method to " + encryptionMethod);
-            mCachedEncryptionMethod = encryptionMethod;
-
-            try {
-                mCachedEncryptionKey = new ConcatKDF("SHA-256").deriveKey(
-                        new SecretKeySpec(mECDHSecret, "AES"),
-                        encryptionMethod.cekBitLength(),
-                        encryptionMethod.getName().getBytes(StandardCharsets.UTF_8),
-                        null,
-                        null,
-                        ConcatKDF.encodeIntData(encryptionMethod.cekBitLength()),
-                        null);
-            } catch (JOSEException e) {
-                throw new UnsupportedOperationException("ConcatKDF key derivation failed", e);
-            }
+    @NonNull
+    private static SecretKey createEncryptionKey(@NonNull byte[] ecdhSecret) {
+        try {
+            return new ConcatKDF("SHA-256").deriveKey(
+                    new SecretKeySpec(ecdhSecret, "AES"),
+                    EncryptionMethod.A128GCM.cekBitLength(),
+                    EncryptionMethod.A128GCM.getName().getBytes(StandardCharsets.UTF_8),
+                    null,
+                    null,
+                    ConcatKDF.encodeIntData(EncryptionMethod.A128GCM.cekBitLength()),
+                    null);
+        } catch (JOSEException e) {
+            throw new UnsupportedOperationException("ConcatKDF key derivation failed", e);
         }
     }
 
@@ -325,7 +285,8 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             final KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
             keyAgreement.init(mECDHKeypair.getPrivate());
             keyAgreement.doPhase(otherPublicKey, true);
-            mECDHSecret = keyAgreement.generateSecret();
+            final byte[] ecdhSecret = keyAgreement.generateSecret();
+            mCachedEncryptionKey = createEncryptionKey(ecdhSecret);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new UnsupportedOperationException("Failed generating an ECDH secret", e);
         }
@@ -396,10 +357,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     private enum State {
         WAITING_FOR_CONNECTION, SESSION_ESTABLISHMENT, ENCRYPTED_SESSION, CLOSED
-    }
-
-    public enum PayloadEncryptionMethod {
-        AES128_GCM, AES256_GCM
     }
 
     public interface StateCallbacks {
