@@ -39,10 +39,18 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         mAssociationKey = generateECP256KeyPair();
     }
 
+    @NonNull
+    @Override
+    protected ECPublicKey getAssociationPublicKey() {
+        return (ECPublicKey) mAssociationKey.getPublic();
+    }
+
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
     @NonNull
     public String encodeAssociationToken() {
-        return encodeECP256PublicKeyToBase64((ECPublicKey) mAssociationKey.getPublic());
+        return Base64.encodeToString(encodeECP256PublicKey(
+                (ECPublicKey) mAssociationKey.getPublic()),
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
     @Override
@@ -60,7 +68,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private static String createHelloReq(@NonNull KeyPair associationKeyPair,
                                          @NonNull ECPublicKey ourPublicKey) {
-        final String ourPublicKeyBase64 = encodeECP256PublicKeyToBase64(ourPublicKey);
+        final String ourPublicKeyBase64 = Base64.encodeToString(encodeECP256PublicKey(ourPublicKey),
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
 
         final byte[] sig;
         try {
@@ -78,7 +87,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         final JSONObject o = new JSONObject();
         try {
             o.put(ProtocolContract.HELLO_MESSAGE_TYPE, ProtocolContract.HELLO_REQ_MESSAGE);
-            o.put(ProtocolContract.HELLO_REQ_PUBLIC_KEY, encodeECP256PublicKeyToBase64(ourPublicKey));
+            o.put(ProtocolContract.HELLO_REQ_PUBLIC_KEY, ourPublicKeyBase64);
             o.put(ProtocolContract.HELLO_REQ_PUBLIC_KEY_SIGNATURE, sigBase64);
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed building HELLO_RSP", e);
@@ -123,7 +132,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         final ECPublicKey otherPublicKey;
         try {
-            otherPublicKey = decodeECP256PublicKeyFromBase64(qw);
+            otherPublicKey = decodeECP256PublicKey(Base64.decode(qw, Base64.URL_SAFE));
         } catch (UnsupportedOperationException e) {
             throw new SessionMessageException("Failed creating EC public key for qw", e);
         }

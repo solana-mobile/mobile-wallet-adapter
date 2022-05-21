@@ -40,7 +40,14 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
                                       @Nullable StateCallbacks stateCallbacks) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mScenario = scenario;
-        mAssociationPublicKey = decodeECP256PublicKeyFromBase64(scenario.associationToken);
+        mAssociationPublicKey = decodeECP256PublicKey(Base64.decode(scenario.associationToken,
+                Base64.URL_SAFE));
+    }
+
+    @NonNull
+    @Override
+    protected ECPublicKey getAssociationPublicKey() {
+        return mAssociationPublicKey;
     }
 
     @Override
@@ -110,7 +117,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         }
 
         // Decode other public key
-        final ECPublicKey otherPublicKey = decodeECP256PublicKeyFromBase64(otherPublicKeyBase64);
+        final ECPublicKey otherPublicKey = decodeECP256PublicKey(
+                Base64.decode(otherPublicKeyBase64, Base64.URL_SAFE));
         Log.v(TAG, "Received public key " + otherPublicKey.getW().getAffineX() + "/" +
                 otherPublicKey.getW().getAffineY());
         return otherPublicKey;
@@ -118,10 +126,13 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     @NonNull
     private static String createHelloRsp(@NonNull ECPublicKey publicKey) {
+        final String publicKeyBase64 = Base64.encodeToString(encodeECP256PublicKey(publicKey),
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+
         final JSONObject o = new JSONObject();
         try {
             o.put(ProtocolContract.HELLO_MESSAGE_TYPE, ProtocolContract.HELLO_RSP_MESSAGE);
-            o.put(ProtocolContract.HELLO_RSP_PUBLIC_KEY, encodeECP256PublicKeyToBase64(publicKey));
+            o.put(ProtocolContract.HELLO_RSP_PUBLIC_KEY, publicKeyBase64);
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed building HELLO_RSP", e);
         }
