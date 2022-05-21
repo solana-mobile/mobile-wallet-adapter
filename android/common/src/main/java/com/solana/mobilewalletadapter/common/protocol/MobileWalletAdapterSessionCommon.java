@@ -4,15 +4,10 @@
 
 package com.solana.mobilewalletadapter.common.protocol;
 
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.crypto.impl.ConcatKDF;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -42,6 +37,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
@@ -69,6 +65,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         mDecryptedPayloadReceiver = decryptedPayloadReceiver;
         mStateCallbacks = stateCallbacks;
     }
+
+    @NonNull
+    protected abstract ECPublicKey getAssociationPublicKey();
 
     @Override
     public synchronized void receiverConnected(@NonNull MessageSender messageSender) {
@@ -219,18 +218,27 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     }
 
     @NonNull
-    private static SecretKey createEncryptionKey(@NonNull byte[] ecdhSecret) {
+    private static SecretKey createEncryptionKey(@NonNull byte[] ecdhSecret,
+                                                 @NonNull ECPublicKey associationPublicKey) {
+        final byte[] salt = encodeECP256PublicKey(associationPublicKey);
+        final byte[] aes128KeyMaterial = hkdfSHA256L16(ecdhSecret, salt);
+        return new SecretKeySpec(aes128KeyMaterial, "AES");
+    }
+
+    @NonNull
+    private static byte[] hkdfSHA256L16(@NonNull byte[] ikm, @NonNull byte[] salt) {
         try {
-            return new ConcatKDF("SHA-256").deriveKey(
-                    new SecretKeySpec(ecdhSecret, "AES"),
-                    EncryptionMethod.A128GCM.cekBitLength(),
-                    EncryptionMethod.A128GCM.getName().getBytes(StandardCharsets.UTF_8),
-                    null,
-                    null,
-                    ConcatKDF.encodeIntData(EncryptionMethod.A128GCM.cekBitLength()),
-                    null);
-        } catch (JOSEException e) {
-            throw new UnsupportedOperationException("ConcatKDF key derivation failed", e);
+            // Step 1: extract
+            final Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
+            hmacSHA256.init(new SecretKeySpec(salt, "HmacSHA256"));
+            final byte[] prk = hmacSHA256.doFinal(ikm);
+
+            // Step 2: expand
+            // Note: N = ceil(L/N) = ceil(16/32) = 1, so only one iteration is required
+            hmacSHA256.init(new SecretKeySpec(prk, "HmacSHA256"));
+            return hmacSHA256.doFinal(); // first iteration has a 0-byte input
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new UnsupportedOperationException("Error deriving key material", e);
         }
     }
 
@@ -274,7 +282,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             keyAgreement.init(mECDHKeypair.getPrivate());
             keyAgreement.doPhase(otherPublicKey, true);
             final byte[] ecdhSecret = keyAgreement.generateSecret();
-            mCachedEncryptionKey = createEncryptionKey(ecdhSecret);
+            mCachedEncryptionKey = createEncryptionKey(ecdhSecret, getAssociationPublicKey());
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new UnsupportedOperationException("Failed generating an ECDH secret", e);
         }
@@ -291,7 +299,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     }
 
     @NonNull
-    protected static String encodeECP256PublicKeyToBase64(@NonNull ECPublicKey ecPublicKey) {
+    protected static byte[] encodeECP256PublicKey(@NonNull ECPublicKey ecPublicKey) {
         final ECPoint w = ecPublicKey.getW();
         // NOTE: either x or y could be 33 bytes long, due to BigInteger always including a sign bit
         // in the output. Discard it; we are only interested in the unsigned magnitude.
@@ -303,13 +311,11 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         final int yLen = Math.min(y.length, 32);
         System.arraycopy(x, x.length - xLen, encodedPublicKey, 33 - xLen, xLen);
         System.arraycopy(y, y.length - yLen, encodedPublicKey, 65 - yLen, yLen);
-        return Base64.encodeToString(encodedPublicKey,
-                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+        return encodedPublicKey;
     }
 
     @NonNull
-    protected static ECPublicKey decodeECP256PublicKeyFromBase64(@NonNull String ecPublicKeyBase64) {
-        final byte[] encodedPublicKey = Base64.decode(ecPublicKeyBase64, Base64.URL_SAFE);
+    protected static ECPublicKey decodeECP256PublicKey(@NonNull byte[] encodedPublicKey) {
         if (encodedPublicKey.length != 65 || encodedPublicKey[0] != 0x04) {
             throw new IllegalArgumentException("input is not a base64-encoded EC P-256 public key");
         }
