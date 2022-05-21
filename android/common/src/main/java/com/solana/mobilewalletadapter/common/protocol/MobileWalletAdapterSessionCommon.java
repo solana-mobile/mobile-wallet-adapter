@@ -10,17 +10,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.nimbusds.jose.CompressionAlgorithm;
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEDecrypter;
-import com.nimbusds.jose.JWEEncrypter;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.crypto.DirectDecrypter;
-import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jose.crypto.impl.ConcatKDF;
 
 import java.io.IOException;
@@ -37,6 +28,7 @@ import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
@@ -44,15 +36,23 @@ import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
-import java.text.ParseException;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyAgreement;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.ShortBufferException;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public abstract class MobileWalletAdapterSessionCommon implements MessageReceiver, MessageSender {
     private static final String TAG = MobileWalletAdapterSessionCommon.class.getSimpleName();
+
+    private static final int AES_IV_LENGTH_BYTES = 12;
+    private static final int AES_TAG_LENGTH_BYTES = 16;
 
     @NonNull
     private final MessageReceiver mDecryptedPayloadReceiver;
@@ -180,19 +180,22 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             throw new IllegalStateException("Cannot decrypt, no session key has been established");
         }
 
-        final JWEHeader jweHeader = new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A128GCM)
-                .build();
-
-        final JWEObject jwe = new JWEObject(jweHeader, new Payload(payload));
-
         try {
-            final JWEEncrypter jweEncrypter = new DirectEncrypter(mCachedEncryptionKey);
-            jwe.encrypt(jweEncrypter);
-        } catch (JOSEException | IllegalStateException e) {
-            throw new UnsupportedOperationException("Failed encrypting payload", e);
+            final Cipher aesCipher = Cipher.getInstance("AES/GCM/NoPadding");
+            final byte[] iv = new byte[AES_IV_LENGTH_BYTES];
+            new SecureRandom().nextBytes(iv);
+            final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(
+                    AES_TAG_LENGTH_BYTES * 8, iv);
+            aesCipher.init(Cipher.ENCRYPT_MODE, mCachedEncryptionKey, gcmParameterSpec);
+            final byte[] ciphertext = Arrays.copyOf(iv, AES_IV_LENGTH_BYTES +
+                    aesCipher.getOutputSize(payload.length));
+            aesCipher.doFinal(payload, 0, payload.length, ciphertext, AES_IV_LENGTH_BYTES);
+            return ciphertext;
+        } catch (InvalidAlgorithmParameterException | NoSuchPaddingException |
+                IllegalBlockSizeException | ShortBufferException | NoSuchAlgorithmException |
+                BadPaddingException | InvalidKeyException e) {
+            throw new UnsupportedOperationException("Error encrypting session payload", e);
         }
-
-        return jwe.serialize().getBytes(StandardCharsets.UTF_8);
     }
 
     @NonNull
@@ -201,33 +204,18 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             throw new IllegalStateException("Cannot decrypt, no session key has been established");
         }
 
-        final JWEObject jwe;
         try {
-            jwe = JWEObject.parse(decodeAsUtf8String(payload));
-        } catch (CharacterCodingException e) {
-            throw new SessionMessageException("Error UTF-8 decoding encrypted session message wrapper", e);
-        } catch (ParseException e) {
-            throw new SessionMessageException("Error parsing encrypted session message wrapper as JWE", e);
-        }
-
-        final JWEHeader jweHeader = jwe.getHeader();
-        if (jweHeader.getAlgorithm() != JWEAlgorithm.DIR ||
-                (jweHeader.getEncryptionMethod() != EncryptionMethod.A128GCM &&
-                        jweHeader.getEncryptionMethod() != EncryptionMethod.A256GCM) ||
-                (jweHeader.getCompressionAlgorithm() != null &&
-                        jweHeader.getCompressionAlgorithm() != CompressionAlgorithm.DEF)
-        ) {
-            throw new SessionMessageException("JWE encrypted message wrapper parameters are incorrect");
-        }
-
-        try {
-            final JWEDecrypter jweDecrypter = new DirectDecrypter(mCachedEncryptionKey);
-            jwe.decrypt(jweDecrypter);
-        } catch (JOSEException | IllegalStateException e) {
+            final Cipher aesCipher = Cipher.getInstance("AES/GCM/NoPadding");
+            final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(
+                    AES_TAG_LENGTH_BYTES * 8, payload, 0, AES_IV_LENGTH_BYTES);
+            aesCipher.init(Cipher.DECRYPT_MODE, mCachedEncryptionKey, gcmParameterSpec);
+            return aesCipher.doFinal(payload, AES_IV_LENGTH_BYTES,
+                    payload.length - AES_IV_LENGTH_BYTES);
+        } catch (InvalidAlgorithmParameterException | NoSuchPaddingException |
+                IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException |
+                InvalidKeyException e) {
             throw new SessionMessageException("Failed decrypting payload", e);
         }
-
-        return jwe.getPayload().toBytes();
     }
 
     @NonNull
