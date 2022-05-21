@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -30,9 +29,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
@@ -52,10 +55,12 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
     @NonNull
     public String encodeAssociationToken() {
-        final String jwkStr = createJWKForECP256(
-                (ECPublicKey) mAssociationKey.getPublic(), KeyOperation.VERIFY).toJSONString();
-        return Base64.encodeToString(jwkStr.getBytes(StandardCharsets.UTF_8),
-                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+        try {
+            return encodeECP256PublicKeyToBase64(KeyFactory.getInstance("EC")
+                    .getKeySpec(mAssociationKey.getPublic(), ECPublicKeySpec.class));
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new UnsupportedOperationException("Error converting association public key to keyspec", e);
+        }
     }
 
     @Override

@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.walletlib.protocol;
 
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -14,11 +13,9 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
-import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyOperation;
-import com.nimbusds.jose.jwk.KeyType;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
@@ -30,7 +27,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
 import java.text.ParseException;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
@@ -53,35 +55,12 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     @NonNull
     private static ECPublicKey decodeAssociationToken(@NonNull String associationToken) {
-        final JWK jwk;
         try {
-            jwk = JWK.parse(decodeAsUtf8String(Base64.decode(associationToken, Base64.URL_SAFE)));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Failed base64url-decoding the association token", e);
-        } catch (CharacterCodingException e) {
-            throw new IllegalArgumentException("Failed UTF-8 decoding the association token", e);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Failed JWK parsing the association token", e);
+            final ECPublicKeySpec ecPublicKeySpec = decodeECP256PublicKeyFromBase64(associationToken);
+            return (ECPublicKey) KeyFactory.getInstance("EC").generatePublic(ecPublicKeySpec);
+        } catch (NoSuchAlgorithmException | InvalidParameterSpecException | InvalidKeySpecException e) {
+            throw new UnsupportedOperationException("Error decoding association token into ECPublicKey", e);
         }
-
-        if (!isJWKSuitableForP256SignatureVerification(jwk)) {
-            throw new IllegalArgumentException("Association token does not meet key requirements");
-        }
-
-        try {
-            return jwk.toECKey().toECPublicKey();
-        } catch (JOSEException e) {
-            throw new IllegalArgumentException("Erroring converting association token to ECPublicKey", e);
-        }
-    }
-
-    protected static boolean isJWKSuitableForP256SignatureVerification(@NonNull JWK jwk) {
-        return (jwk.getKeyType() == KeyType.EC &&
-                jwk.getKeyOperations() != null &&
-                jwk.getKeyOperations().size() == 1 &&
-                jwk.getKeyOperations().contains(KeyOperation.VERIFY) &&
-                jwk.toECKey().getCurve() == Curve.P_256 &&
-                !jwk.isPrivate());
     }
 
     @Override

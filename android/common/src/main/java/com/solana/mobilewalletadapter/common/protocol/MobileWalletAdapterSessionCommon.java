@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.common.protocol;
 
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -29,18 +30,26 @@ import com.nimbusds.jose.jwk.KeyOperation;
 import com.nimbusds.jose.jwk.KeyType;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidParameterSpecException;
 import java.text.ParseException;
+import java.util.Arrays;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
@@ -335,6 +344,39 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         if (mStateCallbacks != null) {
             mStateCallbacks.onSessionEstablished();
         }
+    }
+
+    @NonNull
+    protected static String encodeECP256PublicKeyToBase64(@NonNull ECPublicKeySpec ecPublicKeySpec) {
+        final ECPoint w = ecPublicKeySpec.getW();
+        // NOTE: either x or y could be 33 bytes long, due to BigInteger always including a sign bit
+        // in the output. Discard it; we are only interested in the unsigned magnitude.
+        final byte[] x = w.getAffineX().toByteArray();
+        final byte[] y = w.getAffineY().toByteArray();
+        final byte[] encodedPublicKey = new byte[65];
+        encodedPublicKey[0] = 0x04; // non-compressed public key
+        final int xLen = Math.min(x.length, 32);
+        final int yLen = Math.min(y.length, 32);
+        System.arraycopy(x, x.length - xLen, encodedPublicKey, 33 - xLen, xLen);
+        System.arraycopy(y, y.length - yLen, encodedPublicKey, 65 - yLen, yLen);
+        return Base64.encodeToString(encodedPublicKey,
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @NonNull
+    protected static ECPublicKeySpec decodeECP256PublicKeyFromBase64(@NonNull String ecPublicKeyBase64)
+            throws NoSuchAlgorithmException, InvalidParameterSpecException {
+        final byte[] encodedPublicKey = Base64.decode(ecPublicKeyBase64, Base64.URL_SAFE);
+        if (encodedPublicKey.length != 65 || encodedPublicKey[0] != 0x04) {
+            throw new IllegalArgumentException("input is not a base64-encoded EC P-256 public key");
+        }
+
+        final byte[] x = Arrays.copyOfRange(encodedPublicKey, 1, 33);
+        final byte[] y = Arrays.copyOfRange(encodedPublicKey, 33, 65);
+        final ECPoint w = new ECPoint(new BigInteger(1, x), new BigInteger(1, y));
+        final AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
+        algParams.init(new ECGenParameterSpec("secp256r1"));
+        return new ECPublicKeySpec(w, algParams.getParameterSpec(ECParameterSpec.class));
     }
 
     @NonNull
