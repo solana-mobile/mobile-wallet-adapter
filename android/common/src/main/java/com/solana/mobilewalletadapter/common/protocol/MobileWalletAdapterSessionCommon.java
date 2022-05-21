@@ -22,7 +22,6 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jose.crypto.impl.ConcatKDF;
-import com.nimbusds.jose.jwk.Curve;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -296,10 +295,15 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     @NonNull
     protected static KeyPair generateECP256KeyPair() {
         try {
+            final AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
+            algParams.init(new ECGenParameterSpec("secp256r1"));
+            final ECParameterSpec ecParameterSpec = algParams.getParameterSpec(ECParameterSpec.class);
+
             final KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
-            kpg.initialize(Curve.P_256.toECParameterSpec());
+            kpg.initialize(ecParameterSpec);
             return kpg.generateKeyPair();
-        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
+        } catch (NoSuchAlgorithmException | InvalidParameterSpecException |
+                InvalidAlgorithmParameterException e) {
             throw new UnsupportedOperationException("Failed generating an EC P-256 keypair for ECDH", e);
         }
     }
