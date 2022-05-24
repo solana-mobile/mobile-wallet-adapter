@@ -10,17 +10,11 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
@@ -62,9 +56,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         generateSessionECDHSecret(theirPublicKey);
 
         // Send a response to allow the counterparty to perform ECDH as well
-        final String response = createHelloRsp(ourPublicKey);
         try {
-            mMessageSender.send(response.getBytes(StandardCharsets.UTF_8));
+            mMessageSender.send(createHelloRsp(ourPublicKey));
         } catch (IOException e) {
             Log.e(TAG, "Failed to send HELLO_RSP; terminating session", e);
             onSessionError();
@@ -74,68 +67,38 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     // throw news SessionMessageException on any parsing or content failure within message
     @NonNull
     private ECPublicKey parseHelloReq(@NonNull byte[] message) throws SessionMessageException {
-        Log.v(TAG, "parseHelloReq");
-
-        // Decode message as UTF-8 string
-        final String s;
-        try {
-            s = decodeAsUtf8String(message);
-        } catch (CharacterCodingException e) {
-            throw new SessionMessageException("Failed decoding session establishment message", e);
+        if (message.length < ENCODED_PUBLIC_KEY_LENGTH_BYTES) {
+            throw new SessionMessageException("HELLO_REQ message smaller than expected");
         }
 
-        // Parse string as HELLO_REQ JSON with an encoded public key payload and a corresponding
-        // ECDSA signature
-        final String otherPublicKeyBase64;
-        final String sigBase64;
-        try {
-            final JSONObject o = new JSONObject(s);
-            final String m = o.getString(ProtocolContract.HELLO_MESSAGE_TYPE);
-            if (!m.equals(ProtocolContract.HELLO_REQ_MESSAGE)) {
-                throw new SessionMessageException("Unexpected message name: actual=" + m +
-                        ", expected=" + ProtocolContract.HELLO_REQ_MESSAGE);
-            }
-            otherPublicKeyBase64 = o.getString(ProtocolContract.HELLO_REQ_PUBLIC_KEY);
-            sigBase64 = o.getString(ProtocolContract.HELLO_REQ_PUBLIC_KEY_SIGNATURE);
-        } catch (JSONException e) {
-            throw new SessionMessageException("Failed interpreting message as HELLO_REQ: " + s, e);
-        }
-
-        // Decode signature and verify otherPublicKeyBase64
-        final byte[] sig = Base64.decode(sigBase64, Base64.URL_SAFE);
         final boolean verified;
         try {
             final Signature ecdsaSignature = Signature.getInstance("ECDSA");
             ecdsaSignature.initVerify(mAssociationPublicKey);
-            ecdsaSignature.update(otherPublicKeyBase64.getBytes(StandardCharsets.UTF_8));
-            verified = ecdsaSignature.verify(sig);
+            ecdsaSignature.update(message, 0, ENCODED_PUBLIC_KEY_LENGTH_BYTES);
+            verified = ecdsaSignature.verify(message, ENCODED_PUBLIC_KEY_LENGTH_BYTES,
+                    message.length - ENCODED_PUBLIC_KEY_LENGTH_BYTES);
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
-            throw new SessionMessageException("signature verification failed", e);
-        }
-        if (!verified) {
-            throw new SessionMessageException("signature verification failed");
+            throw new UnsupportedOperationException("Failed verifying signature of HELLO_REQ payload");
         }
 
-        // Decode other public key
-        final ECPublicKey otherPublicKey = decodeECP256PublicKey(
-                Base64.decode(otherPublicKeyBase64, Base64.URL_SAFE));
+        if (!verified) {
+            throw new SessionMessageException("HELLO_REQ signature does not match payload");
+        }
+
+        final ECPublicKey otherPublicKey;
+        try {
+            otherPublicKey = decodeECP256PublicKey(message);
+        } catch (UnsupportedOperationException e) {
+            throw new SessionMessageException("Failed decoding HELLO_REQ payload as EC P-256 public key", e);
+        }
         Log.v(TAG, "Received public key " + otherPublicKey.getW().getAffineX() + "/" +
                 otherPublicKey.getW().getAffineY());
         return otherPublicKey;
     }
 
     @NonNull
-    private static String createHelloRsp(@NonNull ECPublicKey publicKey) {
-        final String publicKeyBase64 = Base64.encodeToString(encodeECP256PublicKey(publicKey),
-                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-
-        final JSONObject o = new JSONObject();
-        try {
-            o.put(ProtocolContract.HELLO_MESSAGE_TYPE, ProtocolContract.HELLO_RSP_MESSAGE);
-            o.put(ProtocolContract.HELLO_RSP_PUBLIC_KEY, publicKeyBase64);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed building HELLO_RSP", e);
-        }
-        return o.toString();
+    private static byte[] createHelloRsp(@NonNull ECPublicKey publicKey) {
+        return encodeECP256PublicKey(publicKey);
     }
 }
