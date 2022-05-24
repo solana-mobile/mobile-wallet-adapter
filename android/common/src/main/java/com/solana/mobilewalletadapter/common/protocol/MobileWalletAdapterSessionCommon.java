@@ -11,11 +11,6 @@ import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -49,6 +44,8 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     private static final int AES_IV_LENGTH_BYTES = 12;
     private static final int AES_TAG_LENGTH_BYTES = 16;
+
+    protected static final int ENCODED_PUBLIC_KEY_LENGTH_BYTES = 65;
 
     @NonNull
     private final MessageReceiver mDecryptedPayloadReceiver;
@@ -305,7 +302,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         // in the output. Discard it; we are only interested in the unsigned magnitude.
         final byte[] x = w.getAffineX().toByteArray();
         final byte[] y = w.getAffineY().toByteArray();
-        final byte[] encodedPublicKey = new byte[65];
+        final byte[] encodedPublicKey = new byte[ENCODED_PUBLIC_KEY_LENGTH_BYTES];
         encodedPublicKey[0] = 0x04; // non-compressed public key
         final int xLen = Math.min(x.length, 32);
         final int yLen = Math.min(y.length, 32);
@@ -315,8 +312,10 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     }
 
     @NonNull
-    protected static ECPublicKey decodeECP256PublicKey(@NonNull byte[] encodedPublicKey) {
-        if (encodedPublicKey.length != 65 || encodedPublicKey[0] != 0x04) {
+    protected static ECPublicKey decodeECP256PublicKey(@NonNull byte[] encodedPublicKey)
+            throws UnsupportedOperationException {
+        if (encodedPublicKey.length < ENCODED_PUBLIC_KEY_LENGTH_BYTES ||
+                encodedPublicKey[0] != 0x04) {
             throw new IllegalArgumentException("input is not a base64-encoded EC P-256 public key");
         }
 
@@ -332,15 +331,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         } catch (NoSuchAlgorithmException | InvalidParameterSpecException | InvalidKeySpecException e) {
             throw new UnsupportedOperationException("Error decoding EC P-256 public key", e);
         }
-    }
-
-    @NonNull
-    protected static String decodeAsUtf8String(@NonNull byte[] b) throws CharacterCodingException {
-        final CharsetDecoder utf8Dec = StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT);
-        final ByteBuffer bb = ByteBuffer.wrap(b);
-        return utf8Dec.decode(bb).toString();
     }
 
     protected static class SessionMessageException extends Exception {
