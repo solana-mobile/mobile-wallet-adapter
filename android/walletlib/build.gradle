@@ -31,7 +31,6 @@ android {
 
 dependencies {
     implementation 'androidx.annotation:annotation:1.3.0'
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.22'
     implementation 'org.nanohttpd:nanohttpd-websocket:2.3.1' // TODO: proof of concept, replace with LWS
     implementation project(path: ':common')
 }
