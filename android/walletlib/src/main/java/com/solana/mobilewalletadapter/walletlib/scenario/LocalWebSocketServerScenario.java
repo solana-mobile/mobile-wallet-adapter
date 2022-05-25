@@ -25,9 +25,9 @@ public class LocalWebSocketServerScenario extends Scenario {
     public LocalWebSocketServerScenario(@NonNull Context context,
                                         @NonNull AuthIssuerConfig authIssuerConfig,
                                         @NonNull Callbacks callbacks,
-                                        @NonNull String associationToken,
+                                        @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
-        super(context, authIssuerConfig, callbacks, associationToken);
+        super(context, authIssuerConfig, callbacks, associationPublicKey);
         this.port = port;
         this.mWebSocketServer = new LocalMobileWalletAdapterWebSocketServer(this);
     }

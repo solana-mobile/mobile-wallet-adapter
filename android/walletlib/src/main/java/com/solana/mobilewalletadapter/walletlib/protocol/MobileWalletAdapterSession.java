@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.walletlib.protocol;
 
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -34,8 +33,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
                                       @Nullable StateCallbacks stateCallbacks) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mScenario = scenario;
-        mAssociationPublicKey = decodeECP256PublicKey(Base64.decode(scenario.associationToken,
-                Base64.URL_SAFE));
+        mAssociationPublicKey = decodeECP256PublicKey(scenario.associationPublicKey);
     }
 
     @NonNull
@@ -73,7 +71,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         final boolean verified;
         try {
-            final Signature ecdsaSignature = Signature.getInstance("ECDSA");
+            final Signature ecdsaSignature = Signature.getInstance("SHA256withECDSA");
             ecdsaSignature.initVerify(mAssociationPublicKey);
             ecdsaSignature.update(message, 0, ENCODED_PUBLIC_KEY_LENGTH_BYTES);
             verified = ecdsaSignature.verify(message, ENCODED_PUBLIC_KEY_LENGTH_BYTES,

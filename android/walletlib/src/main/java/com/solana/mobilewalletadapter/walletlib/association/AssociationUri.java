@@ -6,6 +6,7 @@ package com.solana.mobilewalletadapter.walletlib.association;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,12 +20,12 @@ public abstract class AssociationUri {
     public final Uri uri;
 
     @NonNull
-    public final String associationToken;
+    public final byte[] associationPublicKey;
 
     protected AssociationUri(@NonNull Uri uri) {
         this.uri = uri;
         validate(uri);
-        associationToken = parseAssociationToken(uri);
+        associationPublicKey = parseAssociationToken(uri);
     }
 
     private static void validate(@NonNull Uri uri) {
@@ -39,14 +40,14 @@ public abstract class AssociationUri {
                                             @NonNull Scenario.Callbacks callbacks);
 
     @NonNull
-    private static String parseAssociationToken(@NonNull Uri uri) {
+    private static byte[] parseAssociationToken(@NonNull Uri uri) {
         final String associationToken = uri.getQueryParameter(
                 AssociationContract.PARAMETER_ASSOCIATION_TOKEN);
         if (associationToken == null || associationToken.isEmpty()) {
             throw new IllegalArgumentException("association token must be provided");
         }
 
-        return associationToken;
+        return Base64.decode(associationToken, Base64.URL_SAFE);
     }
 
     @Nullable

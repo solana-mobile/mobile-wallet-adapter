@@ -27,7 +27,7 @@ public abstract class Scenario {
     private static final String TAG = Scenario.class.getSimpleName();
 
     @NonNull
-    public final String associationToken;
+    public final byte[] associationPublicKey;
 
     @NonNull
     protected final Looper mIoLooper;
@@ -41,10 +41,10 @@ public abstract class Scenario {
     protected Scenario(@NonNull Context context,
                        @NonNull AuthIssuerConfig authIssuerConfig,
                        @NonNull Callbacks callbacks,
-                       @NonNull String associationToken)
+                       @NonNull byte[] associationPublicKey)
     {
         mCallbacks = callbacks;
-        this.associationToken = associationToken;
+        this.associationPublicKey = associationPublicKey;
 
         final LooperThread t = new LooperThread();
         t.start();

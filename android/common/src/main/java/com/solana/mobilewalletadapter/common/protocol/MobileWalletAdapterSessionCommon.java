@@ -316,7 +316,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             throws UnsupportedOperationException {
         if (encodedPublicKey.length < ENCODED_PUBLIC_KEY_LENGTH_BYTES ||
                 encodedPublicKey[0] != 0x04) {
-            throw new IllegalArgumentException("input is not a base64-encoded EC P-256 public key");
+            throw new IllegalArgumentException("input is not a EC P-256 public key");
         }
 
         final byte[] x = Arrays.copyOfRange(encodedPublicKey, 1, 33);

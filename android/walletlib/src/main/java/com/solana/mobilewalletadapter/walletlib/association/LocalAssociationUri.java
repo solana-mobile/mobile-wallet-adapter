@@ -38,7 +38,7 @@ public class LocalAssociationUri extends AssociationUri {
                                                        @NonNull AuthIssuerConfig authIssuerConfig,
                                                        @NonNull Scenario.Callbacks callbacks) {
         return new LocalWebSocketServerScenario(context, authIssuerConfig, callbacks,
-                associationToken, port);
+                associationPublicKey, port);
     }
 
     @WebSocketsTransportContract.LocalPortRange

@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -42,10 +41,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
     @NonNull
-    public String encodeAssociationToken() {
-        return Base64.encodeToString(encodeECP256PublicKey(
-                (ECPublicKey) mAssociationKey.getPublic()),
-                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+    public byte[] getEncodedAssociationPublicKey() {
+        return encodeECP256PublicKey((ECPublicKey) mAssociationKey.getPublic());
     }
 
     @Override
@@ -66,7 +63,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         final byte[] sig;
         try {
-            final Signature ecdsaSignature = Signature.getInstance("ECDSA");
+            final Signature ecdsaSignature = Signature.getInstance("SHA256withECDSA");
             ecdsaSignature.initSign(associationKeyPair.getPrivate());
             ecdsaSignature.update(ourPublicKeyEncoded);
             sig = ecdsaSignature.sign();
