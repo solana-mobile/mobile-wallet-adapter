@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.util.EcdsaSignatures;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -71,9 +72,16 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
             throw new UnsupportedOperationException("Failed signing HELLO_REQ public key payload");
         }
 
+        final byte[] p1363Sig;
+        try {
+            p1363Sig = EcdsaSignatures.convertECP256SignatureDERtoP1363(sig, 0);
+        } catch (IllegalArgumentException e) {
+            throw new UnsupportedOperationException("Error converting DER ECDSA signature to P1363", e);
+        }
+
         final byte[] concatenated = Arrays.copyOf(ourPublicKeyEncoded,
-                ourPublicKeyEncoded.length + sig.length);
-        System.arraycopy(sig, 0, concatenated, ourPublicKeyEncoded.length, sig.length);
+                ourPublicKeyEncoded.length + p1363Sig.length);
+        System.arraycopy(p1363Sig, 0, concatenated, ourPublicKeyEncoded.length, p1363Sig.length);
         return concatenated;
     }
 
