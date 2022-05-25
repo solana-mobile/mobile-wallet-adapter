@@ -9,9 +9,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
-import com.solana.mobilewalletadapter.common.util.EcdsaSignatures;
+import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
                                       @Nullable StateCallbacks stateCallbacks) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mScenario = scenario;
-        mAssociationPublicKey = decodeECP256PublicKey(scenario.associationPublicKey);
+        mAssociationPublicKey = ECDSAKeys.decodeP256PublicKey(scenario.associationPublicKey);
     }
 
     @NonNull
@@ -66,14 +67,14 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     // throw news SessionMessageException on any parsing or content failure within message
     @NonNull
     private ECPublicKey parseHelloReq(@NonNull byte[] message) throws SessionMessageException {
-        if (message.length < ENCODED_PUBLIC_KEY_LENGTH_BYTES) {
+        if (message.length < ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES) {
             throw new SessionMessageException("HELLO_REQ message smaller than expected");
         }
 
         final byte[] derSig;
         try {
-            derSig = EcdsaSignatures.convertECP256SignatureP1363ToDER(
-                    message, message.length - EcdsaSignatures.P256_P1363_SIGNATURE_LEN);
+            derSig = ECDSASignatures.convertECP256SignatureP1363ToDER(
+                    message, message.length - ECDSASignatures.P256_P1363_SIGNATURE_LEN);
         } catch (IllegalArgumentException e) {
             throw new SessionMessageException("Invalid P1363 ECDSA signature", e);
         }
@@ -82,7 +83,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         try {
             final Signature ecdsaSignature = Signature.getInstance("SHA256withECDSA");
             ecdsaSignature.initVerify(mAssociationPublicKey);
-            ecdsaSignature.update(message, 0, ENCODED_PUBLIC_KEY_LENGTH_BYTES);
+            ecdsaSignature.update(message, 0, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES);
             verified = ecdsaSignature.verify(derSig);
         } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
             throw new UnsupportedOperationException("Failed verifying signature of HELLO_REQ payload");
@@ -94,7 +95,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         final ECPublicKey otherPublicKey;
         try {
-            otherPublicKey = decodeECP256PublicKey(message);
+            otherPublicKey = ECDSAKeys.decodeP256PublicKey(message);
         } catch (UnsupportedOperationException e) {
             throw new SessionMessageException("Failed decoding HELLO_REQ payload as EC P-256 public key", e);
         }
@@ -105,6 +106,6 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     @NonNull
     private static byte[] createHelloRsp(@NonNull ECPublicKey publicKey) {
-        return encodeECP256PublicKey(publicKey);
+        return ECDSAKeys.encodeP256PublicKey(publicKey);
     }
 }

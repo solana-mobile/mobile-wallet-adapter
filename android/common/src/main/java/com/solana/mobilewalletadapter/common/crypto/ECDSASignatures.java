@@ -1,4 +1,4 @@
-package com.solana.mobilewalletadapter.common.util;
+package com.solana.mobilewalletadapter.common.crypto;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -6,7 +6,7 @@ import androidx.annotation.Size;
 
 import java.util.Arrays;
 
-public class EcdsaSignatures {
+public class ECDSASignatures {
     // DER ECDSA signature format:
     //  0x30 || total_len (1 byte) ||
     //  0x02 || r_len (1 byte) || r (1..33 bytes) ||
@@ -137,6 +137,5 @@ public class EcdsaSignatures {
         return (derOffset + P256_DER_SIGNATURE_COMPONENT_PREFIX_LEN + p1363ComponentDERIntLength);
     }
 
-
-    private EcdsaSignatures() {}
+    private ECDSASignatures() {}
 }

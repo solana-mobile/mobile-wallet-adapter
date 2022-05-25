@@ -9,9 +9,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
-import com.solana.mobilewalletadapter.common.util.EcdsaSignatures;
+import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -43,7 +44,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
     @NonNull
     public byte[] getEncodedAssociationPublicKey() {
-        return encodeECP256PublicKey((ECPublicKey) mAssociationKey.getPublic());
+        return ECDSAKeys.encodeP256PublicKey((ECPublicKey) mAssociationKey.getPublic());
     }
 
     @Override
@@ -60,7 +61,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private static byte[] createHelloReq(@NonNull KeyPair associationKeyPair,
                                          @NonNull ECPublicKey ourPublicKey) {
-        final byte[] ourPublicKeyEncoded = encodeECP256PublicKey(ourPublicKey);
+        final byte[] ourPublicKeyEncoded = ECDSAKeys.encodeP256PublicKey(ourPublicKey);
 
         final byte[] sig;
         try {
@@ -74,7 +75,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         final byte[] p1363Sig;
         try {
-            p1363Sig = EcdsaSignatures.convertECP256SignatureDERtoP1363(sig, 0);
+            p1363Sig = ECDSASignatures.convertECP256SignatureDERtoP1363(sig, 0);
         } catch (IllegalArgumentException e) {
             throw new UnsupportedOperationException("Error converting DER ECDSA signature to P1363", e);
         }
@@ -98,7 +99,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     private ECPublicKey parseHelloRsp(@NonNull byte[] message) throws SessionMessageException {
         final ECPublicKey otherPublicKey;
         try {
-            otherPublicKey = decodeECP256PublicKey(message);
+            otherPublicKey = ECDSAKeys.decodeP256PublicKey(message);
         } catch (UnsupportedOperationException e) {
             throw new SessionMessageException("Failed creating EC public key from HELLO_RSP", e);
         }
