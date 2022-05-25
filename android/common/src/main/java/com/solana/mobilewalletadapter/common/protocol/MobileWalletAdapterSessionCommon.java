@@ -9,12 +9,13 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
+import com.solana.mobilewalletadapter.common.crypto.HKDF;
+
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -22,9 +23,6 @@ import java.security.SecureRandom;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
-import java.security.spec.ECPoint;
-import java.security.spec.ECPublicKeySpec;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 
@@ -32,7 +30,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyAgreement;
-import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
@@ -44,8 +41,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     private static final int AES_IV_LENGTH_BYTES = 12;
     private static final int AES_TAG_LENGTH_BYTES = 16;
-
-    protected static final int ENCODED_PUBLIC_KEY_LENGTH_BYTES = 65;
 
     @NonNull
     private final MessageReceiver mDecryptedPayloadReceiver;
@@ -217,26 +212,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     @NonNull
     private static SecretKey createEncryptionKey(@NonNull byte[] ecdhSecret,
                                                  @NonNull ECPublicKey associationPublicKey) {
-        final byte[] salt = encodeECP256PublicKey(associationPublicKey);
-        final byte[] aes128KeyMaterial = hkdfSHA256L16(ecdhSecret, salt);
+        final byte[] salt = ECDSAKeys.encodeP256PublicKey(associationPublicKey);
+        final byte[] aes128KeyMaterial = HKDF.hkdfSHA256L16(ecdhSecret, salt);
         return new SecretKeySpec(aes128KeyMaterial, "AES");
-    }
-
-    @NonNull
-    private static byte[] hkdfSHA256L16(@NonNull byte[] ikm, @NonNull byte[] salt) {
-        try {
-            // Step 1: extract
-            final Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
-            hmacSHA256.init(new SecretKeySpec(salt, "HmacSHA256"));
-            final byte[] prk = hmacSHA256.doFinal(ikm);
-
-            // Step 2: expand
-            // Note: N = ceil(L/N) = ceil(16/32) = 1, so only one iteration is required
-            hmacSHA256.init(new SecretKeySpec(prk, "HmacSHA256"));
-            return hmacSHA256.doFinal(); // first iteration has a 0-byte input
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new UnsupportedOperationException("Error deriving key material", e);
-        }
     }
 
     @NonNull
@@ -292,44 +270,6 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
         if (mStateCallbacks != null) {
             mStateCallbacks.onSessionEstablished();
-        }
-    }
-
-    @NonNull
-    protected static byte[] encodeECP256PublicKey(@NonNull ECPublicKey ecPublicKey) {
-        final ECPoint w = ecPublicKey.getW();
-        // NOTE: either x or y could be 33 bytes long, due to BigInteger always including a sign bit
-        // in the output. Discard it; we are only interested in the unsigned magnitude.
-        final byte[] x = w.getAffineX().toByteArray();
-        final byte[] y = w.getAffineY().toByteArray();
-        final byte[] encodedPublicKey = new byte[ENCODED_PUBLIC_KEY_LENGTH_BYTES];
-        encodedPublicKey[0] = 0x04; // non-compressed public key
-        final int xLen = Math.min(x.length, 32);
-        final int yLen = Math.min(y.length, 32);
-        System.arraycopy(x, x.length - xLen, encodedPublicKey, 33 - xLen, xLen);
-        System.arraycopy(y, y.length - yLen, encodedPublicKey, 65 - yLen, yLen);
-        return encodedPublicKey;
-    }
-
-    @NonNull
-    protected static ECPublicKey decodeECP256PublicKey(@NonNull byte[] encodedPublicKey)
-            throws UnsupportedOperationException {
-        if (encodedPublicKey.length < ENCODED_PUBLIC_KEY_LENGTH_BYTES ||
-                encodedPublicKey[0] != 0x04) {
-            throw new IllegalArgumentException("input is not a EC P-256 public key");
-        }
-
-        final byte[] x = Arrays.copyOfRange(encodedPublicKey, 1, 33);
-        final byte[] y = Arrays.copyOfRange(encodedPublicKey, 33, 65);
-        final ECPoint w = new ECPoint(new BigInteger(1, x), new BigInteger(1, y));
-        try {
-            final AlgorithmParameters algParams = AlgorithmParameters.getInstance("EC");
-            algParams.init(new ECGenParameterSpec("secp256r1"));
-            final ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(w,
-                    algParams.getParameterSpec(ECParameterSpec.class));
-            return (ECPublicKey) KeyFactory.getInstance("EC").generatePublic(ecPublicKeySpec);
-        } catch (NoSuchAlgorithmException | InvalidParameterSpecException | InvalidKeySpecException e) {
-            throw new UnsupportedOperationException("Error decoding EC P-256 public key", e);
         }
     }
 
