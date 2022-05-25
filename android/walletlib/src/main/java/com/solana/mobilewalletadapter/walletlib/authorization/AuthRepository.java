@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.ArraySet;
+import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 
@@ -16,16 +17,13 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
@@ -35,8 +33,8 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -44,10 +42,13 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+// TODO: record package name (when available) and purge AuthRepository on uninstall
 
 public class AuthRepository {
     private static final String TAG = AuthRepository.class.getSimpleName();
@@ -58,7 +59,12 @@ public class AuthRepository {
     private static final int PRIVILEGED_METHOD_SIGN_MESSAGE = 2;
     private static final int PRIVILEGED_METHOD_SIGN_AND_SEND_TRANSACTION = 4;
 
+    private static final String AUTH_TOKEN_CONTENT_TYPE = "typ";
     private static final String AUTH_TOKEN_CONTENT_TYPE_SUFFIX = "-auth-token";
+    private static final String AUTH_TOKEN_IDENTITY_ID = "iid";
+    private static final String AUTH_TOKEN_TOKEN_ID = "tid";
+
+    private static final int AUTH_TOKEN_HMAC_LENGTH_BYTES = 32;
 
     @NonNull
     private final Context mContext;
@@ -139,24 +145,39 @@ public class AuthRepository {
     public synchronized AuthRecord fromAuthToken(@NonNull String authToken) {
         final SQLiteDatabase db = ensureStarted();
 
-        final SignedJWT jwt;
+        final byte[] payload = Base64.decode(authToken, Base64.URL_SAFE);
+        if (payload.length < AUTH_TOKEN_HMAC_LENGTH_BYTES) {
+            Log.w(TAG, "Invalid auth token");
+            return null;
+        }
+        final JSONObject o;
         try {
-            jwt = SignedJWT.parse(authToken);
-        } catch (ParseException e) {
-            Log.w(TAG, "AuthToken could not be parsed as a JWS-wrapped JWT", e);
+            o = new JSONObject(
+                    new String(payload, 0, payload.length - AUTH_TOKEN_HMAC_LENGTH_BYTES));
+        } catch (JSONException e) {
+            Log.w(TAG, "Auth token is not a JSON object", e);
+            return null;
+        }
+        final String contentType;
+        final String identityIdStr;
+        final String tokenIdStr;
+        try {
+            contentType = o.getString(AUTH_TOKEN_CONTENT_TYPE);
+            identityIdStr = o.getString(AUTH_TOKEN_IDENTITY_ID);
+            tokenIdStr = o.getString(AUTH_TOKEN_TOKEN_ID);
+        } catch (JSONException e) {
+            Log.w(TAG, "Auth token does not contain expected fields", e);
             return null;
         }
 
-        final String expectedContentType = getJWTContentType();
-        final String contentType = jwt.getHeader().getContentType();
+        final String expectedContentType = getAuthTokenContentType();
         if (!expectedContentType.equals(contentType)) {
-            Log.w(TAG, "JWT content type is incorrect: expected=" + expectedContentType +
+            Log.w(TAG, "Content type is incorrect: expected=" + expectedContentType +
                     ", actual=" + contentType);
             return null;
         }
 
         // Look up the identity secret key for the key specified in this JWT
-        final String identityId = jwt.getHeader().getKeyID();
         final IdentityRecord identityRecord;
         try (final Cursor c = db.query(AuthDatabase.TABLE_IDENTITIES,
                 new String[] { AuthDatabase.COLUMN_IDENTITIES_ID,
@@ -166,12 +187,12 @@ public class AuthRepository {
                         AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY,
                         AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY_IV },
                 AuthDatabase.COLUMN_IDENTITIES_ID + "=?",
-                new String[] { identityId },
+                new String[] { identityIdStr },
                 null,
                 null,
                 null)) {
             if (!c.moveToNext()) {
-                Log.w(TAG, "Identity not found: " + identityId);
+                Log.w(TAG, "Identity not found: " + identityIdStr);
                 return null;
             }
 
@@ -185,30 +206,28 @@ public class AuthRepository {
                     Uri.parse(iconRelativeUri), keyCiphertext, keyIV);
         }
 
-        // Verify the MAC on the JWT
+        // Verify the HMAC on the auth token
         final SecretKeySpec identityKey = decryptHmacSha256SecretKey(
                 identityRecord.secretKeyCiphertext, identityRecord.secretKeyIV);
         final boolean verified;
         try {
-            verified = jwt.verify(new MACVerifier(identityKey));
-        } catch (JOSEException e) {
-            Log.w(TAG, "Failed verifying JWT; it does not belong to this identity", e);
+            final Mac hmac = Mac.getInstance("HmacSHA256");
+            hmac.init(identityKey);
+            hmac.update(payload, 0, payload.length - AUTH_TOKEN_HMAC_LENGTH_BYTES);
+            final byte[] decodedHmac = hmac.doFinal();
+            final byte[] payloadHmac = Arrays.copyOfRange(
+                    payload, payload.length - AUTH_TOKEN_HMAC_LENGTH_BYTES, payload.length);
+            verified = Arrays.equals(decodedHmac, payloadHmac);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            Log.w(TAG, "Failed performing HMAC on the auth token buffer", e);
             return null;
         }
         if (!verified) {
-            Log.w(TAG, "JWT signature is incorrect; not accepting auth token");
+            Log.w(TAG, "Auth token HMAC does not match");
             return null;
         }
 
-        // Create an AuthRecord from the claims object
-        final JWTClaimsSet claims;
-        try {
-            claims = jwt.getJWTClaimsSet();
-        } catch (ParseException e) {
-            Log.w(TAG, "Failed decoding JWT payload as a claims set", e);
-            return null;
-        }
-        final String authorizationId = claims.getJWTID();
+        // Create an AuthRecord for the auth token
         final AuthRecord authRecord;
         try (final Cursor c = db.rawQuery("SELECT " +
                 AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
@@ -221,7 +240,7 @@ public class AuthRepository {
                 " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
                 " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID + "=?",
-                new String[] { authorizationId })) {
+                new String[] { tokenIdStr })) {
             if (!c.moveToNext()) {
                 Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
                 return null;
@@ -256,33 +275,43 @@ public class AuthRepository {
             Log.e(TAG, "Issuing auth record for revoked auth token");
         }
 
+        final JSONObject o = new JSONObject();
+        try {
+            o.put(AUTH_TOKEN_CONTENT_TYPE, getAuthTokenContentType());
+            o.put(AUTH_TOKEN_IDENTITY_ID, Integer.toString(authRecord.identity.id));
+            o.put(AUTH_TOKEN_TOKEN_ID, Integer.toString(authRecord.id));
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Error encoding auth record as JSON", e);
+        }
+        final byte[] payload = o.toString().getBytes(StandardCharsets.UTF_8);
+
         // To create an AuthRecord requires that the DB have been previously opened; we can thus
         // rely on mSecretKey being initialized and valid.
         final SecretKeySpec identityKey = decryptHmacSha256SecretKey(
                 authRecord.identity.secretKeyCiphertext, authRecord.identity.secretKeyIV);
 
-        final JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .jwtID(Integer.toString(authRecord.id))
-                .build();
-        final JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
-                .contentType(getJWTContentType())
-                .keyID(Integer.toString(authRecord.identity.id))
-                .build();
-        final SignedJWT jwt = new SignedJWT(header, claims);
+        // Verify the HMAC on the auth token
+        final byte[] payloadHmac;
         try {
-            jwt.sign(new MACSigner(identityKey));
-        } catch (JOSEException e) {
-            throw new RuntimeException("Error signing JWT", e);
+            final Mac hmac = Mac.getInstance("HmacSHA256");
+            hmac.init(identityKey);
+            payloadHmac = hmac.doFinal(payload);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new UnsupportedOperationException("Error generating HMAC for auth token payload", e);
         }
+
+        assert(payloadHmac.length == AUTH_TOKEN_HMAC_LENGTH_BYTES);
+        final byte[] authToken = Arrays.copyOf(payload, payload.length + AUTH_TOKEN_HMAC_LENGTH_BYTES);
+        System.arraycopy(payloadHmac, 0, authToken, payload.length, AUTH_TOKEN_HMAC_LENGTH_BYTES);
 
         Log.v(TAG, "Returning auth token for AuthRecord: " + authRecord);
 
-        return jwt.serialize();
+        return Base64.encodeToString(authToken, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
     @NonNull
     @GuardedBy("this")
-    private String getJWTContentType() {
+    private String getAuthTokenContentType() {
         return mAuthIssuerConfig.name + AUTH_TOKEN_CONTENT_TYPE_SUFFIX;
     }
 
