@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.IntRange;
@@ -85,10 +86,13 @@ public class LocalAssociationScenario extends Scenario {
             dataUriBuilder = new Uri.Builder()
                     .scheme(AssociationContract.SCHEME_MOBILE_WALLET_ADAPTER);
         }
+        final byte[] associationPublicKey = mMobileWalletAdapterSession.getEncodedAssociationPublicKey();
+        final String associationToken = Base64.encodeToString(associationPublicKey,
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
         dataUriBuilder
                 .appendEncodedPath(AssociationContract.LOCAL_PATH_SUFFIX)
                 .appendQueryParameter(AssociationContract.PARAMETER_ASSOCIATION_TOKEN,
-                        mMobileWalletAdapterSession.encodeAssociationToken())
+                        associationToken)
                 .appendQueryParameter(AssociationContract.LOCAL_PARAMETER_PORT,
                         Integer.toString(mPort));
 
