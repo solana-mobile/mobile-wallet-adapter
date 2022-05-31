@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -20,7 +21,7 @@ public class HKDF {
             // Step 2: expand
             // Note: N = ceil(L/N) = ceil(16/32) = 1, so only one iteration is required
             hmacSHA256.init(new SecretKeySpec(prk, "HmacSHA256"));
-            return hmacSHA256.doFinal(); // first iteration has a 0-byte input
+            return Arrays.copyOf(hmacSHA256.doFinal(new byte[] { 0x01 }), 16); // first iteration has a 0-byte T input
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new UnsupportedOperationException("Error deriving key material", e);
         }
