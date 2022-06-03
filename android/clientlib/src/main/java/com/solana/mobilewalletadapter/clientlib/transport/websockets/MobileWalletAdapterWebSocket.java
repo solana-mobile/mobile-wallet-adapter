@@ -228,7 +228,7 @@ public class MobileWalletAdapterWebSocket implements MessageSender {
 
         /**
          * Invoked when this WebSocket connection to the server is terminated.
-         * <p/>NOTE: this will only be invoked after a previous call to {@link #onConnected()}
+         * <p>NOTE: this will only be invoked after a previous call to {@link #onConnected()}</p>
          */
         void onConnectionClosed();
     }
