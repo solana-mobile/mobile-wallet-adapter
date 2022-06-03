@@ -289,17 +289,17 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
         /**
          * Session has been closed normally, and should no longer be used.
-         * <p/>Note that there is no guarantee {@link #onSessionEstablished()} will have been
+         * <p>Note that there is no guarantee {@link #onSessionEstablished()} will have been
          * invoked when this is called; a session can be closed during establishment by either
-         * party.
+         * party.</p>
          */
         void onSessionClosed();
 
         /**
          * An unrecoverable error occurred during session establishment or operation. This session
          * should no longer be used.
-         * <p/>Note that this is a terminal indication; {@link #onSessionClosed()} will not be
-         * invoked for this session.
+         * <p>Note that this is a terminal indication; {@link #onSessionClosed()} will not be
+         * invoked for this session.</p>
          */
         void onSessionError();
     }

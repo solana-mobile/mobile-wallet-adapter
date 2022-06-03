@@ -4,7 +4,6 @@
 
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -26,6 +25,27 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+// Define JavaDoc build task for all variants
+android.libraryVariants.all { variant ->
+    task("generate${variant.name.capitalize()}Javadoc", type: Javadoc) {
+        description "Generates Javadoc for $variant.name."
+        source = variant.javaCompileProvider.get().source
+        classpath = project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += files(variant.javaCompileProvider.get().classpath)
+        options.links("https://docs.oracle.com/javase/8/docs/api/");
+        options.links("https://d.android.com/reference/");
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+    }
+}
+
+// Build JavaDoc when making a release build
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease') {
+        task.dependsOn("generateReleaseJavadoc")
     }
 }
 
