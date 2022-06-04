@@ -19,6 +19,8 @@ import java.util.Objects;
 
 public class LocalMobileWalletAdapterWebSocketServer extends NanoWSD {
     private static final String TAG = LocalMobileWalletAdapterWebSocketServer.class.getSimpleName();
+    private static final int SOCKET_TIMEOUT_MS = 60000;
+
     @NonNull
     private final LocalWebSocketServerScenario mScenario;
     @NonNull
@@ -33,7 +35,7 @@ public class LocalMobileWalletAdapterWebSocketServer extends NanoWSD {
         if (mState == State.NOT_INITIALIZED) {
             Log.i(TAG, "Starting local mobile-wallet-adapter WebSocket server on port " + mScenario.port);
             mState = State.STARTED;
-            start();
+            start(SOCKET_TIMEOUT_MS);
         } else {
             Log.w(TAG, "Cannot start local mobile-wallet-adapter WebSocket server in " + mState);
         }

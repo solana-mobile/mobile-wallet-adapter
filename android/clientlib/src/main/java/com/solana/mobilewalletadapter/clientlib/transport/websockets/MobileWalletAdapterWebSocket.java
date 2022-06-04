@@ -29,8 +29,6 @@ import java.util.Map;
 public class MobileWalletAdapterWebSocket implements MessageSender {
     private static final String TAG = MobileWalletAdapterWebSocket.class.getSimpleName();
 
-    private static final int PING_INTERVAL_MS = 750;
-
     @NonNull
     private final URI mUri;
     @NonNull
@@ -169,7 +167,6 @@ public class MobileWalletAdapterWebSocket implements MessageSender {
         try {
             mWebSocket = new WebSocketFactory()
                     .createSocket(mUri, mConnectTimeoutMs)
-                    .setPingInterval(PING_INTERVAL_MS)
                     .setDirectTextMessage(true)
                     .addProtocol(WebSocketsTransportContract.WEBSOCKETS_PROTOCOL)
                     .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
