@@ -52,7 +52,19 @@ yarn && lerna bootstrap && lerna run build
 
 ```
 cd js/
-yarn && lerna bootstrap
-(cd packages/wallet-adapter-native && yarn link @solana/wallet-adapter-base)
+yarn
+lerna bootstrap
+lerna link
 lerna run build
+```
+
+### Step 3: Start the server
+
+```
+# Start the demo dApp.
+cd packages/fakewebdapp
+yarn start
+
+# In a separate terminal, start a tunnel.
+yarn tunnel:start
 ```
