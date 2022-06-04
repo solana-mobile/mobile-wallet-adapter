@@ -18,9 +18,16 @@ import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoWSD;
 
 import java.io.IOException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 class MobileWalletAdapterWebSocket extends NanoWSD.WebSocket implements MessageSender {
     private static final String TAG = MobileWalletAdapterWebSocket.class.getSimpleName();
+
+    private static final int PING_FREQUENCY_MS = 45000;
+
+    @NonNull
+    private final ScheduledThreadPoolExecutor mPingExecutor;
 
     @NonNull
     private final Scenario mScenario;
@@ -37,6 +44,8 @@ class MobileWalletAdapterWebSocket extends NanoWSD.WebSocket implements MessageS
         // This is used to prepare the response indicating which protocols we support
         handshakeRequest.getHeaders().put(NanoWSD.HEADER_WEBSOCKET_PROTOCOL,
                 WebSocketsTransportContract.WEBSOCKETS_PROTOCOL);
+
+        mPingExecutor = new ScheduledThreadPoolExecutor(1);
     }
 
     @Override
@@ -45,6 +54,8 @@ class MobileWalletAdapterWebSocket extends NanoWSD.WebSocket implements MessageS
         mState = State.CONNECTED;
         mMessageReceiver = mScenario.createMessageReceiver();
         mMessageReceiver.receiverConnected(this);
+        mPingExecutor.scheduleAtFixedRate(this::pingIgnoreIOException,
+                PING_FREQUENCY_MS, PING_FREQUENCY_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -54,6 +65,7 @@ class MobileWalletAdapterWebSocket extends NanoWSD.WebSocket implements MessageS
         Log.v(TAG, "mobile-wallet-adapter WebSocket closed: " + code + "/" + reason + "/" +
                 initiatedByRemote);
         mState = State.CLOSED;
+        mPingExecutor.shutdownNow();
         mMessageReceiver.receiverDisconnected();
     }
 
@@ -90,6 +102,12 @@ class MobileWalletAdapterWebSocket extends NanoWSD.WebSocket implements MessageS
                 mState = State.CLOSED;
             }
         }
+    }
+
+    private void pingIgnoreIOException() {
+        try {
+            ping(new byte[0]);
+        } catch (IOException ignored) {}
     }
 
     private enum State {
