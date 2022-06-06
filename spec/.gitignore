@@ -1,0 +1,11 @@
+# Ruby bundler
+.bundle/
+
+# Jekyll
+_site/
+.jekyll-cache
+.jekyll-metadata
+
+# jekyll-plantuml plugin
+uml/
+

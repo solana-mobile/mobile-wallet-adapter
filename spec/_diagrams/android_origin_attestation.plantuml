@@ -1,0 +1,81 @@
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+box "Native Android app" #LightGreen
+participant wallet as "Wallet app"
+end box
+box "Android Chrome" #LightBlue
+participant dapp as "Web dapp"
+participant cct as "Chrome Custom Tab\nservice"
+participant attest as "Wallet-hosted web\norigin attestation script"
+participant dal as "Wallet-hosted Digital\nAsset Link"
+end box
+
+== Dapp attempts to authorize with unattested identity ==
+
+activate dapp
+dapp -> wallet ++ : Associate (via Local URI Intent)
+deactivate wallet
+note over wallet, dapp : Starts after Session Establishment completes
+dapp -> wallet ++ : authorize {...}
+
+== Bind Wallet to browser with an attestation keypair ==
+
+wallet -> wallet : <i>b</i> = Local URI Intent browser\npackage identifier
+alt Wallet has a stored public key for <i>b</i>
+    wallet -> wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+else Wallet does not have a stored public key for <i>b</i>
+    wallet -X wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+    wallet -> cct ++: Bind to CCT CustomTabsService
+    wallet --> cct : Adopt Wallet app origin
+    cct -> dal ++ : Fetch Wallet digital asset link file
+    return
+    cct -> cct : Validate native Wallet app signature\nmatches digital asset link assertion
+    wallet --> cct : Navigate to wallet-hosted attestation script
+    cct --> attest ++ : Load webpage into Chrome Custom Tab
+    wallet --> cct : Open postMessage channel to attestation script
+    wallet --> attest : postMessage("generate-origin-attestation-keypair")
+    attest -> attest : validate postMessage from same origin
+    attest -> attest : generate ECDSA keypair (<i>Q</i>, <i>d</i>)
+    attest -> attest : generate key unique <i>id</i>
+    attest -> attest : write (<i>id</i>, <i>d</i>) to local storage
+    attest --> wallet : postMessage("origin-attestation", {<i>id</i>, <i>Q</i>})
+    wallet -> wallet : validate postMessage from same origin
+    wallet -> wallet : write (<i>b</i>, <i>id</i>, <i>Q</i>) to local storage
+    wallet -> cct : Unbind from CCT
+    cct --> attest : close webpage
+    deactivate attest
+    destroy cct
+end
+
+== Wallet requests origin attestation ==
+
+wallet -> wallet : generate a random <i>challenge</i>
+wallet --> dapp -- : response {ERROR_ATTEST_ORIGIN_ANDROID,\n<i>id</i>, <i>challenge</i>, <i>attestation_uri</i>}
+
+== Dapp creates origin attestation token and reattempts authorization ==
+
+dapp -> attest ++ : create invisible iframe and load\nwallet-hosted attestation script
+dapp -> dapp : <i>h</i> = SHA256("attest-origin" ||\n<i>challenge</i> || <i>session_secret</i>)
+dapp --> attest : postMessage(<i>id</i>, <i>h</i>)
+attest -> attest : <i>o</i> = origin of postMessage
+attest -> attest : read (<i>id</i>, <i>d</i>) from local storage
+attest -> attest : create attestation message\n<i>m</i> = {<i>o</i>, <i>h</i>}
+attest -> attest : S = ECDSA-sign(<i>d</i>, <i>m</i>)
+attest --> dapp : postMessage(<i>m</i>, <i>S</i>)
+dapp -> dapp : validate postMessage from\nattest script origin
+dapp -> attest : destroy invisible iframe
+deactivate attest
+dapp -> wallet ++ : authorize {..., <i>m</i>, <i>S</i>}
+wallet -> wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+wallet -> wallet : validate signature\nECDSA-verify(<i>Q</i>, <i>m</i>, <i>S</i>)
+wallet -> wallet : validate that <i>m</i> contains <i>h</i>\n<i>h</i> = SHA256("attest-origin" || <i>challenge</i> || <i>session_secret</i>)
+wallet -> wallet : validate identity is valid for origin <i>o</i>
+wallet -> wallet : create auth token <i>at</i>
+wallet --> dapp -- : response {<i>at</i>, <i>uri</i>}
+
+@enduml

@@ -1,0 +1,47 @@
+name: Generate mobile-wallet-adapter specification
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'spec' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'spec' ]
+
+defaults:
+  run:
+    working-directory: spec
+
+jobs:
+  generate-spec:
+    runs-on: ubuntu-latest
+
+    env:
+      BUNDLE_WITHOUT: 'development'
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: set up PlantUML
+      run: ./setup-plantuml.sh
+      working-directory: .github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+        working-directory: spec
+
+    - name: Generate jekyll site
+      run: bundle exec jekyll build
+      with:
+        working-directory: spec
