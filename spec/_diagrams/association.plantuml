@@ -1,0 +1,55 @@
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+note across : User initiates a wallet request (e.g. transaction signing) in a dapp
+
+activate Dapp
+
+== Establish association between Dapp and Wallet\nThis could be via Android Intent, QR code, etc... ==
+
+Dapp -> Dapp : generate ECDSA pair (<i>d_a</i>, <i>Q_a</i>)
+
+Dapp --> Wallet : {<i>Q_a</i>}
+
+Dapp --X Wallet : poll for WebSocket server available
+Dapp --X Wallet
+Dapp --X Wallet
+Dapp --> Wallet ++ : connect
+
+== WebSocket connection established\nPerform ECDH to obtain a unique session key ==
+
+Dapp -> Dapp : generate ECDH pair (<i>d_d</i>, <i>Q_d</i>)
+Dapp -> Dapp : S_a = ECDSA-sign(<i>d_a</i>, <i>Q_d</i>)
+Dapp -> Wallet --++ : HELLO_REQ {<i>Q_d</i> || <i>S_a</i>}
+
+Wallet -> Wallet : verify <i>S_a</i> with <i>Q_a</i>
+Wallet -> Wallet : generate ECDH pair (<i>d_w</i>, <i>Q_w</i>)
+Wallet -> Dapp ++ : HELLO_RSP {<i>Q_w</i>}
+
+Wallet -> Wallet : <i>Z</i> = ECDH(<i>d_w</i>, <i>Q_d</i>)
+Wallet -> Wallet : <i>K</i> = HKDF(<i>Z</i>, <i>Q_a</i>, 16)
+Wallet --
+
+Dapp -> Dapp : <i>Z</i> = ECDH(<i>d_d</i>, <i>Q_w</i>)
+Dapp -> Dapp : <i>K</i> = HKDF(<i>Z</i>, <i>Q_a</i>, 16)
+Dapp --
+
+== cryptochannel ready for encrypted session communication ==
+
+legend
+| <i>d_a</i> | Dapp association ECDSA private keypoint            |
+| <i>Q_a</i> | Dapp association ECDSA public keypoint             |
+| <i>d_d</i> | Dapp session establishment ECDH private keypoint   |
+| <i>Q_d</i> | Dapp session establishment ECDH public keypoint    |
+| <i>S_a</i> | Dapp ECDSA signature of Q_d with d_a               |
+| <i>d_w</i> | Wallet session establishment ECDH private keypoint |
+| <i>Q_w</i> | Wallet session establishment ECDH public keypoint  |
+| <i>Z</i>   | Shared session establishment ECDH secret           |
+| <i>K</i>   | Shared session establishment AES-128 secret key    |
+end legend
+
+@enduml
