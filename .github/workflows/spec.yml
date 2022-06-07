@@ -3,10 +3,10 @@ name: Generate mobile-wallet-adapter specification
 on:
   push:
     branches: [ main ]
-    paths: [ 'spec' ]
+    paths: [ 'spec/**' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'spec' ]
+    paths: [ 'spec/**' ]
 
 defaults:
   run:
@@ -43,5 +43,4 @@ jobs:
 
     - name: Generate jekyll site
       run: bundle exec jekyll build
-      with:
-        working-directory: spec
+      working-directory: spec
