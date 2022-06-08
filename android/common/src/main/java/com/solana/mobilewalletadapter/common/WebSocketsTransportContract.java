@@ -11,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 
 public class WebSocketsTransportContract {
     public static final String WEBSOCKETS_LOCAL_SCHEME = "ws";
-    public static final String WEBSOCKETS_LOCAL_HOST = "localhost";
+    public static final String WEBSOCKETS_LOCAL_HOST = "127.0.0.1";
     public static final String WEBSOCKETS_LOCAL_PATH = "/solana-wallet";
     public static final int WEBSOCKETS_LOCAL_PORT_MIN = 49152;
     public static final int WEBSOCKETS_LOCAL_PORT_MAX = 65535;
