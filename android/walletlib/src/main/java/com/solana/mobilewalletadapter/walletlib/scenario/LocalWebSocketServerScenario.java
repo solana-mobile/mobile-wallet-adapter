@@ -10,16 +10,14 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
-import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalMobileWalletAdapterWebSocketServer;
-
-import java.io.IOException;
+import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
 
 public class LocalWebSocketServerScenario extends Scenario {
     @WebSocketsTransportContract.LocalPortRange
     public final int port;
 
     @NonNull
-    private final LocalMobileWalletAdapterWebSocketServer mWebSocketServer;
+    private final LocalWebSocketServer mWebSocketServer;
     private State mState = State.NOT_STARTED;
 
     public LocalWebSocketServerScenario(@NonNull Context context,
@@ -29,7 +27,7 @@ public class LocalWebSocketServerScenario extends Scenario {
                                         @WebSocketsTransportContract.LocalPortRange int port) {
         super(context, authIssuerConfig, callbacks, associationPublicKey);
         this.port = port;
-        this.mWebSocketServer = new LocalMobileWalletAdapterWebSocketServer(this);
+        this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }
 
     @Override
@@ -38,12 +36,7 @@ public class LocalWebSocketServerScenario extends Scenario {
             throw new IllegalStateException("Already started");
         }
         mState = State.RUNNING;
-        try {
-            mWebSocketServer.init();
-            mIoHandler.post(mCallbacks::onScenarioReady);
-        } catch (IOException e) {
-            mIoHandler.post(mCallbacks::onScenarioError);
-        }
+        mWebSocketServer.init();
     }
 
     @Override
@@ -52,10 +45,26 @@ public class LocalWebSocketServerScenario extends Scenario {
             return;
         }
         mState = State.CLOSED;
-        mIoHandler.post(mCallbacks::onScenarioComplete);
-        mWebSocketServer.close(); // this will close all MobileWalletAdapterSessions
-        mIoHandler.post(mCallbacks::onScenarioTeardownComplete);
+        mIoHandler.post(() -> {
+            mCallbacks.onScenarioComplete();
+            mWebSocketServer.close(); // this will close all MobileWalletAdapterSessions
+            mCallbacks.onScenarioTeardownComplete();
+        });
     }
+
+    @NonNull
+    private final LocalWebSocketServer.Callbacks mWebSocketServerCallbacks =
+            new LocalWebSocketServer.Callbacks() {
+        @Override
+        public void onStarted() {
+            mIoHandler.post(mCallbacks::onScenarioReady);
+        }
+
+        @Override
+        public void onFatalError() {
+            mIoHandler.post(mCallbacks::onScenarioError);
+        }
+    };
 
     private enum State {
         NOT_STARTED, RUNNING, CLOSED

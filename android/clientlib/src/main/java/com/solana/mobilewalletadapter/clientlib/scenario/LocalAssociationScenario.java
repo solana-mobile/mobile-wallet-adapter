@@ -61,7 +61,7 @@ public class LocalAssociationScenario extends Scenario {
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN + 1) +
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN;
         try {
-            mWebSocketUri = new URI("ws", null,
+            mWebSocketUri = new URI(WebSocketsTransportContract.WEBSOCKETS_LOCAL_SCHEME, null,
                     WebSocketsTransportContract.WEBSOCKETS_LOCAL_HOST, mPort,
                     WebSocketsTransportContract.WEBSOCKETS_LOCAL_PATH, null, null);
         } catch (URISyntaxException e) {
