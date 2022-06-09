@@ -419,7 +419,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
-        final JSONArray payloadArr = JsonPack.packByteArraysToBase64UrlArray(payloads);
+        final JSONArray payloadArr = JsonPack.packByteArraysToBase64PayloadsArray(payloads);
         final JSONObject signPayloads = new JSONObject();
         try {
             signPayloads.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
@@ -453,7 +453,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         final byte[][] payloads;
         try {
-            payloads = JsonPack.unpackBase64UrlArrayToByteArrays(arr);
+            payloads = JsonPack.unpackBase64PayloadsArrayToByteArrays(arr);
         } catch (JSONException e) {
             throw new JsonRpc20InvalidResponseException(paramName + " must be an array of base64url-encoded Strings");
         }
@@ -655,7 +655,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
-        final JSONArray payloadArr = JsonPack.packByteArraysToBase64UrlArray(transactions);
+        final JSONArray payloadArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
         final JSONObject signAndSendTransaction = new JSONObject();
         try {
             signAndSendTransaction.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);

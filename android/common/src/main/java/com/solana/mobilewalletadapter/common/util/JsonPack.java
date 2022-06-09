@@ -9,24 +9,24 @@ import org.json.JSONException;
 
 public class JsonPack {
     @NonNull
-    public static JSONArray packByteArraysToBase64UrlArray(@NonNull byte[][] byteArrays) {
+    public static JSONArray packByteArraysToBase64PayloadsArray(@NonNull byte[][] byteArrays) {
         final JSONArray arr = new JSONArray();
         for (byte[] byteArray : byteArrays) {
-            final String b64 = Base64.encodeToString(byteArray,
-                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+            final String b64 =
+                Base64.encodeToString(byteArray,Base64.NO_WRAP | Base64.NO_PADDING);
             arr.put(b64);
         }
         return arr;
     }
 
     @NonNull
-    public static byte[][] unpackBase64UrlArrayToByteArrays(@NonNull JSONArray arr)
+    public static byte[][] unpackBase64PayloadsArrayToByteArrays(@NonNull JSONArray arr)
             throws JSONException {
         final int numEntries = arr.length();
         final byte[][] byteArrays = new byte[numEntries][];
         for (int i = 0; i < numEntries; i++) {
             final String b64 = arr.getString(i);
-            byteArrays[i] = Base64.decode(b64, Base64.URL_SAFE);
+            byteArrays[i] = Base64.decode(b64, Base64.DEFAULT);
         }
         return byteArrays;
     }
