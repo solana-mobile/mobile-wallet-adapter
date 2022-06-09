@@ -600,7 +600,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final byte[][] payloads;
         try {
-            payloads = JsonPack.unpackBase64UrlArrayToByteArrays(payloadsArray);
+            payloads = JsonPack.unpackBase64PayloadsArrayToByteArrays(payloadsArray);
         } catch (JSONException e) {
             throw new IllegalArgumentException("payloads must be an array of base64url-encoded Strings");
         }
@@ -671,7 +671,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadRequest.complete()
             assert(result.signedPayloads.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signedPayloads = JsonPack.packByteArraysToBase64UrlArray(result.signedPayloads);
+            final JSONArray signedPayloads = JsonPack.packByteArraysToBase64PayloadsArray(result.signedPayloads);
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_SIGNED_PAYLOADS, signedPayloads);
@@ -834,7 +834,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signatures = JsonPack.packByteArraysToBase64UrlArray(result.signatures);
+            final JSONArray signatures = JsonPack.packByteArraysToBase64PayloadsArray(result.signatures);
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
@@ -851,7 +851,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     @NonNull
     private String createNotCommittedData(@NonNull @Size(min = 1) byte[][] signatures,
                                           @NonNull @Size(min = 1) boolean[] committed) {
-        final JSONArray signaturesArr = JsonPack.packByteArraysToBase64UrlArray(signatures);
+        final JSONArray signaturesArr = JsonPack.packByteArraysToBase64PayloadsArray(signatures);
         final JSONArray committedArr = JsonPack.packBooleans(committed);
         final JSONObject o = new JSONObject();
         try {

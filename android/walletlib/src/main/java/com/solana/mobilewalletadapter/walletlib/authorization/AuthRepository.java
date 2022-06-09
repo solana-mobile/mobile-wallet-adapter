@@ -145,7 +145,7 @@ public class AuthRepository {
     public synchronized AuthRecord fromAuthToken(@NonNull String authToken) {
         final SQLiteDatabase db = ensureStarted();
 
-        final byte[] payload = Base64.decode(authToken, Base64.URL_SAFE);
+        final byte[] payload = Base64.decode(authToken, Base64.DEFAULT);
         if (payload.length < AUTH_TOKEN_HMAC_LENGTH_BYTES) {
             Log.w(TAG, "Invalid auth token");
             return null;
@@ -306,7 +306,7 @@ public class AuthRepository {
 
         Log.v(TAG, "Returning auth token for AuthRecord: " + authRecord);
 
-        return Base64.encodeToString(authToken, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+        return Base64.encodeToString(authToken,Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
     @NonNull
