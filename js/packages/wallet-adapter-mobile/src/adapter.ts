@@ -66,6 +66,7 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         const cachedauthorizationResult = await this._authorizationResultCache?.get();
         if (cachedauthorizationResult) {
             this._authorizationResult = cachedauthorizationResult;
+            this._connecting = false;
             return;
         }
         try {
