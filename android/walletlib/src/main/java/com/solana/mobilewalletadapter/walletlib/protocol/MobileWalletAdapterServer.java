@@ -332,7 +332,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result = request.get();
             } catch (ExecutionException e) {
                 final Throwable cause = e.getCause();
-                if (cause instanceof RequestDeclinedException) {
+                if (
+                    cause instanceof AuthTokenNotValidException ||
+                    cause instanceof RequestDeclinedException
+                ) {
                     handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "reauthorize request failed", null);
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing reauthorize request", null);
