@@ -10,6 +10,7 @@ import {
 import { PublicKey, Transaction } from '@solana/web3.js';
 
 export interface AuthorizationResultCache {
+    clear(): Promise<void>;
     get(): Promise<AuthorizationResult>;
     set(authorizationResult: AuthorizationResult): Promise<void>;
 }
@@ -108,9 +109,12 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     async disconnect(): Promise<void> {
+        if (this._authorizationResultCache) {
+            this._authorizationResultCache.clear();
+        }
         delete this._authorizationResult;
         delete this._publicKey;
-        throw new Error('`disconnect()` not implemented');
+        this.emit('disconnect');
     }
 
     async signTransaction(_transaction: Transaction): Promise<Transaction> {
