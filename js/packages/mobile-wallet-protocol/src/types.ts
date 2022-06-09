@@ -17,6 +17,17 @@ export type AppIdentity = Readonly<{
 export type AssociationKeypair = CryptoKeyPair;
 
 /**
+ * The context returned from a wallet after having authorized a given
+ * account for use with a given application. You can cache this and
+ * use it later to invoke privileged methods.
+ */
+export type AuthorizationResult = Readonly<{
+    authToken: string;
+    publicKey: string;
+    walletUriBase: string;
+}>;
+
+/**
  * RPC methods for which the mobile wallet requires authorization.
  */
 export type PrivilegedMethods = 'sign_and_send_transaction' | 'sign_message' | 'sign_transaction';
