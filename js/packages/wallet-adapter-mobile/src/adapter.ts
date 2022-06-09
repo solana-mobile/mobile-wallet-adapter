@@ -1,4 +1,4 @@
-import { AppIdentity, withLocalWallet } from '@solana/mobile-wallet';
+import { AppIdentity, withLocalWallet } from '@solana/mobile-wallet-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
