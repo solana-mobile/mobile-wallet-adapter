@@ -30,13 +30,6 @@
         "@solana/web3.js": "^1.36.0"
     },
     "dependencies": {
-        "@solana/mobile-wallet-protocol": "^0.0.1"
-    },
-    "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^5.27.0",
-        "@typescript-eslint/parser": "^5.27.0",
-        "eslint": "^8.17.0",
-        "eslint-plugin-simple-import-sort": "^7.0.0",
-        "typescript": "^4.7.3"
+        "@solana/mobile-wallet-protocol": "file:../mobile-wallet-protocol"
     }
 }
