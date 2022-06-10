@@ -3,7 +3,6 @@
   ~ Copyright (c) 2022 Solana Labs, Inc.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.solana.mobilewalletadapter.common">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
 </manifest>
