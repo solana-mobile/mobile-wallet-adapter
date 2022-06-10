@@ -23,7 +23,7 @@ type State =
     | { __type: 'disconnected' }
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
 
-export default async function withLocalWallet(callback: (wallet: MobileWallet) => void): Promise<void> {
+export default async function withLocalWallet<TReturn>(callback: (wallet: MobileWallet) => TReturn): Promise<TReturn> {
     const associationKeypair = await generateAssociationKeypair();
     const randomAssociationPort = getRandomAssociationPort();
     const associationUrl = await getAssociateAndroidIntentURL(associationKeypair.publicKey, randomAssociationPort);
@@ -120,8 +120,7 @@ export default async function withLocalWallet(callback: (wallet: MobileWallet) =
                         });
                     };
                     try {
-                        await callback(wallet);
-                        resolve();
+                        resolve(await callback(wallet));
                     } catch (e) {
                         reject(e);
                     } finally {
