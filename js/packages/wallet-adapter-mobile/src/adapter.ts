@@ -91,13 +91,11 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                 } catch (e) {
                     throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
                 }
-                this._authorizationResult = {
+                this.handleAuthorizationResult({
                     authToken: auth_token,
                     publicKey: base58PublicKey,
                     walletUriBase: wallet_uri_base,
-                };
-                this.maybeCacheAuthorizationResult(this._authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-
+                }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.emit(
                     'connect',
                     // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
@@ -112,7 +110,8 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
     }
 
-    private async maybeCacheAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
+    private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
+        this._authorizationResult = authorizationResult;
         if (this._authorizationResultCache) {
             await this._authorizationResultCache.set(authorizationResult);
         }
