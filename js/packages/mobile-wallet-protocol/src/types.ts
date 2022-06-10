@@ -29,6 +29,10 @@ export type AuthorizationResult = Readonly<{
 
 export type AuthToken = string;
 
+type Base64EncodedSignedTransaction = string;
+
+type Base64EncodedTransaction = string;
+
 /**
  * RPC methods for which the mobile wallet requires authorization.
  */
@@ -49,4 +53,7 @@ export interface MobileWallet {
         }>
     >;
     (method: 'reauthorize', params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
+    (method: 'sign_transaction', params: { auth_token: AuthToken; payloads: Base64EncodedTransaction[] }): Promise<
+        Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>
+    >;
 }
