@@ -82,14 +82,18 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                     identity: this._appIdentity,
                     privileged_methods: ['sign_and_send_transaction', 'sign_message', 'sign_transaction'],
                 });
+                const base58PublicKey =
+                    pub_key === 'somebase58publickey'
+                        ? '32G1W4XLPcPBw9goEg5WyYoq5LS9kK63uRVMeRsPFjDf' // Fake pubkey for use with the dev kit
+                        : pub_key;
                 try {
-                    this._publicKey = new PublicKey(pub_key);
+                    this._publicKey = new PublicKey(base58PublicKey);
                 } catch (e) {
                     throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
                 }
                 this._authorizationResult = {
                     authToken: auth_token,
-                    publicKey: pub_key,
+                    publicKey: base58PublicKey,
                     walletUriBase: wallet_uri_base,
                 };
                 this.maybeCacheAuthorizationResult(this._authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
