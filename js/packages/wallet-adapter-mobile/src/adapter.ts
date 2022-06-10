@@ -1,13 +1,21 @@
-import { AppIdentity, AuthorizationResult, withLocalWallet } from '@solana/mobile-wallet-protocol';
+import {
+    AppIdentity,
+    AuthorizationResult,
+    AuthToken,
+    MobileWallet,
+    withLocalWallet,
+} from '@solana/mobile-wallet-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
     WalletName,
+    WalletNotConnectedError,
     WalletNotReadyError,
     WalletPublicKeyError,
     WalletReadyState,
+    WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, SIGNATURE_LENGTH_IN_BYTES, Transaction } from '@solana/web3.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -16,6 +24,7 @@ export interface AuthorizationResultCache {
 }
 
 export const NativeWalletName = 'Native' as WalletName;
+
 export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
     name = NativeWalletName;
     url = 'https://solana.com';
@@ -117,17 +126,76 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
     }
 
+    private async performReauthorization(
+        mobileWallet: MobileWallet,
+        currentAuthorizationResult: AuthorizationResult,
+    ): Promise<AuthToken> {
+        try {
+            const { auth_token } = await mobileWallet('reauthorize', {
+                auth_token: currentAuthorizationResult.authToken,
+            });
+            if (currentAuthorizationResult.authToken !== auth_token) {
+                this.handleAuthorizationResult({
+                    ...currentAuthorizationResult,
+                    authToken: auth_token,
+                }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+            }
+            return auth_token;
+        } catch (e) {
+            this.disconnect();
+            // TODO: throw a first-class error
+            throw e;
+        }
+    }
+
     async disconnect(): Promise<void> {
         if (this._authorizationResultCache) {
-            this._authorizationResultCache.clear();
+            this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         }
         delete this._authorizationResult;
         delete this._publicKey;
         this.emit('disconnect');
     }
 
-    async signTransaction(_transaction: Transaction): Promise<Transaction> {
-        throw new Error('`signTransaction()` not implemented');
+    async signTransaction(transaction: Transaction): Promise<Transaction> {
+        try {
+            const authorizationResult = this._authorizationResult;
+            if (!authorizationResult) throw new WalletNotConnectedError();
+            // Having an `authorizationResult` implies that `this.publicKey` is non-null
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const publicKey = this.publicKey!;
+            try {
+                const serializedTransaction = transaction.serialize({
+                    requireAllSignatures: false,
+                    verifySignatures: false,
+                });
+                const base64EncodedSerializedTransaction = serializedTransaction.toString('base64');
+                return await withLocalWallet(async (mobileWallet) => {
+                    const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
+                    const {
+                        signed_payloads: [signedPayloadBase64Encoded],
+                    } = await mobileWallet('sign_transaction', {
+                        auth_token: freshAuthToken,
+                        payloads: [base64EncodedSerializedTransaction],
+                    });
+                    const signedPayload = new Uint8Array(
+                        atob(signedPayloadBase64Encoded)
+                            .split('')
+                            .map((c) => c.charCodeAt(0)),
+                    );
+                    // FIXME: The fake wallet flips the first bit as 'proof' that work was done. Flip it back.
+                    signedPayload[0] = serializedTransaction[0];
+                    const signature = signedPayload.slice(0, SIGNATURE_LENGTH_IN_BYTES);
+                    transaction.addSignature(publicKey, signature as Buffer);
+                    return transaction;
+                });
+            } catch (error: any) {
+                throw new WalletSignTransactionError(error?.message, error);
+            }
+        } catch (error: any) {
+            this.emit('error', error);
+            throw error;
+        }
     }
 
     async signAllTransactions(_transactions: Transaction[]): Promise<Transaction[]> {
