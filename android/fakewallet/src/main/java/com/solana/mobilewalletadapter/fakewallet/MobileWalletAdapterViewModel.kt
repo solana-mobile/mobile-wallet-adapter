@@ -11,6 +11,8 @@ import android.provider.Browser
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.solana.mobilewalletadapter.fakewallet.usecase.Base58EncodeUseCase
+import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.RemoteAssociationUri
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import java.lang.RuntimeException
 
 class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(application) {
@@ -71,7 +74,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         this.callingPackage = callingPackage
 
         val scenario = associationUri.createScenario(
-            getApplication<Application>().applicationContext,
+            getApplication<FakeWalletApplication>().applicationContext,
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
         )
@@ -94,10 +97,16 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        if (authorized) {
-            request.request.completeWithAuthorize("somebase58publickey", Uri.parse(WALLET_BASE_URI))
-        } else {
-            request.request.completeWithDecline()
+        viewModelScope.launch {
+            if (authorized) {
+                val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
+                val publicKey = keypair.public as Ed25519PublicKeyParameters
+                val publicKeyBase58 = Base58EncodeUseCase.invoke(publicKey.encoded)
+                Log.d(TAG, "Generated a new keypair (pub=$publicKeyBase58) for authorize request")
+                request.request.completeWithAuthorize(publicKeyBase58, Uri.parse(WALLET_BASE_URI))
+            } else {
+                request.request.completeWithDecline()
+            }
         }
     }
 
@@ -105,11 +114,37 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         if (rejectStaleRequest(request)) {
             return
         }
-        val signedPayloads = Array(request.request.payloads.size) { i ->
-            request.request.payloads[i].clone().also { it[0] = i.toByte() }
+
+        viewModelScope.launch {
+            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
+            check(keypair != null) { "Unknown public key for signing request" }
+
+            val valid = BooleanArray(request.request.payloads.size) { true }
+            val signedPayloads = when (request) {
+                is MobileWalletAdapterServiceRequest.SignTransaction ->
+                    Array(request.request.payloads.size) { i ->
+                        try {
+                            SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signedPayload
+                        } catch (e: IllegalArgumentException) {
+                            Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
+                            valid[i] = false
+                            byteArrayOf()
+                        }
+                    }
+                is MobileWalletAdapterServiceRequest.SignMessage ->
+                    Array(request.request.payloads.size) { i ->
+                        SolanaSigningUseCase.signMessage(request.request.payloads[i], keypair).signedPayload
+                    }
+            }
+
+            if (valid.all { it }) {
+                Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
+                request.request.completeWithSignedPayloads(signedPayloads)
+            } else {
+                Log.e(TAG, "One or more transactions not valid")
+                request.request.completeWithInvalidPayloads(valid)
+            }
         }
-        Log.d(TAG, "Simulating signing for ${request.request.publicKey}")
-        request.request.completeWithSignedPayloads(signedPayloads)
     }
 
     fun signPayloadDeclined(request: MobileWalletAdapterServiceRequest.SignPayload) {
@@ -142,13 +177,34 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     }
 
     fun signAndSendTransactionSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
-        val signatures = Array(request.request.payloads.size) { i ->
-            ByteArray(64) { i.toByte() }
-        }
-        Log.d(TAG, "Simulating signing for ${request.request.publicKey}")
-        val requestWithSignatures = request.copy(signatures = signatures)
-        if (rejectStaleRequest(request, requestWithSignatures)) {
-            return
+        viewModelScope.launch {
+            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
+            check(keypair != null) { "Unknown public key for signing request" }
+
+            val valid = BooleanArray(request.request.payloads.size) { true }
+            val signatures = Array(request.request.payloads.size) { i ->
+                try {
+                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signature
+                } catch (e: IllegalArgumentException) {
+                    Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
+                    valid[i] = false
+                    byteArrayOf()
+                }
+            }
+
+            if (valid.all { it }) {
+                Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
+                val requestWithSignatures = request.copy(signatures = signatures)
+                if (rejectStaleRequest(request, requestWithSignatures)) {
+                    return@launch
+                }
+            } else {
+                Log.e(TAG, "One or more transactions not valid")
+                if (rejectStaleRequest(request)) {
+                    return@launch
+                }
+                request.request.completeWithInvalidSignatures(valid)
+            }
         }
     }
 
