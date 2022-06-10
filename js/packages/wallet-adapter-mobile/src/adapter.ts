@@ -11,7 +11,7 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
-    get(): Promise<AuthorizationResult>;
+    get(): Promise<AuthorizationResult | undefined>;
     set(authorizationResult: AuthorizationResult): Promise<void>;
 }
 
@@ -64,10 +64,16 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
             throw err;
         }
         this._connecting = true;
-        const cachedauthorizationResult = await this._authorizationResultCache?.get();
-        if (cachedauthorizationResult) {
-            this._authorizationResult = cachedauthorizationResult;
+        const cachedAuthorizationResult = await this._authorizationResultCache?.get();
+        if (cachedAuthorizationResult) {
+            this._authorizationResult = cachedAuthorizationResult;
             this._connecting = false;
+            this.emit(
+                'connect',
+                // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                this.publicKey!,
+            );
             return;
         }
         try {
