@@ -29,6 +29,10 @@ export type AuthorizationResult = Readonly<{
 
 export type AuthToken = string;
 
+type Base64EncodedMessage = string;
+
+type Base64EncodedSignedMessage = string;
+
 type Base64EncodedSignedTransaction = string;
 
 type Base64EncodedTransaction = string;
@@ -53,6 +57,9 @@ export interface MobileWallet {
         }>
     >;
     (method: 'reauthorize', params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
+    (method: 'sign_message', params: { auth_token: AuthToken; payloads: Base64EncodedMessage[] }): Promise<
+        Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>
+    >;
     (method: 'sign_transaction', params: { auth_token: AuthToken; payloads: Base64EncodedTransaction[] }): Promise<
         Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>
     >;

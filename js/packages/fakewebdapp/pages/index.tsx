@@ -8,7 +8,8 @@ import Button from '../components/Button';
 
 const Home: NextPage = () => {
     const { connection } = useConnection();
-    const { connect, connected, publicKey, select, signAllTransactions, signTransaction, wallet } = useWallet();
+    const { connect, connected, publicKey, select, signMessage, signAllTransactions, signTransaction, wallet } =
+        useWallet();
     useEffect(() => {
         select('Native' as WalletName);
     }, [select]);
@@ -73,6 +74,19 @@ const Home: NextPage = () => {
                 }}
             >
                 Sign Multiple Transactions
+            </Button>
+
+            <Button
+                disabled={publicKey == null}
+                onClick={async () => {
+                    if (publicKey == null || signMessage == null) {
+                        return;
+                    }
+                    const message = new Uint8Array('hello world'.split('').map((c) => c.charCodeAt(0)));
+                    const signedMessage = await signMessage(message);
+                }}
+            >
+                Sign Message
             </Button>
         </>
     );

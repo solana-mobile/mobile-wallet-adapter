@@ -25,6 +25,18 @@ export interface AuthorizationResultCache {
 
 export const NativeWalletName = 'Native' as WalletName;
 
+function getBase64StringFromByteArray(byteArray: Uint8Array): string {
+    return btoa(String.fromCharCode.call(null, ...byteArray));
+}
+
+function getByteArrayFromBase64String(base64EncodedByteArray: string): Uint8Array {
+    return new Uint8Array(
+        atob(base64EncodedByteArray)
+            .split('')
+            .map((c) => c.charCodeAt(0)),
+    );
+}
+
 export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
     name = NativeWalletName;
     url = 'https://solana.com';
@@ -157,13 +169,20 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         this.emit('disconnect');
     }
 
-    private async performSignTransactions(transactions: Transaction[]): Promise<Transaction[]> {
-        try {
-            const authorizationResult = this._authorizationResult;
-            if (!authorizationResult) throw new WalletNotConnectedError();
+    private assertIsAuthorized(): [AuthorizationResult, PublicKey] {
+        const authorizationResult = this._authorizationResult;
+        if (!authorizationResult) throw new WalletNotConnectedError();
+        return [
+            authorizationResult,
             // Having an `authorizationResult` implies that `this.publicKey` is non-null
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const publicKey = this.publicKey!;
+            this.publicKey!,
+        ];
+    }
+
+    private async performSignTransactions(transactions: Transaction[]): Promise<Transaction[]> {
+        try {
+            const [authorizationResult, publicKey] = this.assertIsAuthorized();
             try {
                 const serializedTransactions = transactions.map((transaction) =>
                     transaction.serialize({
@@ -180,14 +199,7 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                         auth_token: freshAuthToken,
                         payloads,
                     });
-                    const signedPayloads = signed_payloads.map(
-                        (signedPayloadBase64Encoded) =>
-                            new Uint8Array(
-                                atob(signedPayloadBase64Encoded)
-                                    .split('')
-                                    .map((c) => c.charCodeAt(0)),
-                            ),
-                    );
+                    const signedPayloads = signed_payloads.map(getByteArrayFromBase64String);
                     signedPayloads.forEach((signedPayload, ii) => {
                         // FIXME: The fake wallet flips the first bit as 'proof' that work was done. Flip it back.
                         signedPayload[0] = serializedTransactions[ii][0];
@@ -217,7 +229,27 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         return signedTransactions;
     }
 
-    async signMessage(_message: Uint8Array): Promise<Uint8Array> {
-        throw new Error('`signMessage()` not implemented');
+    async signMessage(message: Uint8Array): Promise<Uint8Array> {
+        try {
+            const [authorizationResult] = this.assertIsAuthorized();
+            try {
+                return await withLocalWallet(async (mobileWallet) => {
+                    const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
+                    const {
+                        signed_payloads: [signedPayloadBase64Encoded],
+                    } = await mobileWallet('sign_message', {
+                        auth_token: freshAuthToken,
+                        payloads: [getBase64StringFromByteArray(message)],
+                    });
+                    const signedPayload = getByteArrayFromBase64String(signedPayloadBase64Encoded);
+                    return signedPayload;
+                });
+            } catch (error: any) {
+                throw new WalletSignTransactionError(error?.message, error);
+            }
+        } catch (error: any) {
+            this.emit('error', error);
+            throw error;
+        }
     }
 }
