@@ -4,14 +4,17 @@
 
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 
 android {
-    compileSdk 31
+    namespace = "com.solana.mobilewalletadapter.common"
+
+    compileSdk 32
 
     defaultConfig {
-        minSdk 23
-        targetSdk 31
+        minSdk 19
+        targetSdk 32
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -25,6 +28,35 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    publishing {
+        multipleVariants {
+            allVariants()
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+publishing {
+    publications {
+        allVariants(MavenPublication) {
+            groupId = 'com.solanamobile'
+            artifactId = 'mobile-wallet-adapter-common'
+            version = releaseVersion // see gradle.properties
+
+            afterEvaluate {
+                from components.default
+            }
+        }
+    }
+    // TODO: publish to Maven Central
+    repositories {
+        maven {
+            name = 'local_repo'
+            url = "${project.buildDir}/repo"
+        }
     }
 }
 
