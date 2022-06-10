@@ -157,7 +157,7 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         this.emit('disconnect');
     }
 
-    async signTransaction(transaction: Transaction): Promise<Transaction> {
+    private async performSignTransactions(transactions: Transaction[]): Promise<Transaction[]> {
         try {
             const authorizationResult = this._authorizationResult;
             if (!authorizationResult) throw new WalletNotConnectedError();
@@ -165,29 +165,38 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const publicKey = this.publicKey!;
             try {
-                const serializedTransaction = transaction.serialize({
-                    requireAllSignatures: false,
-                    verifySignatures: false,
-                });
-                const base64EncodedSerializedTransaction = serializedTransaction.toString('base64');
+                const serializedTransactions = transactions.map((transaction) =>
+                    transaction.serialize({
+                        requireAllSignatures: false,
+                        verifySignatures: false,
+                    }),
+                );
+                const payloads = serializedTransactions.map((serializedTransaction) =>
+                    serializedTransaction.toString('base64'),
+                );
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
-                    const {
-                        signed_payloads: [signedPayloadBase64Encoded],
-                    } = await mobileWallet('sign_transaction', {
+                    const { signed_payloads } = await mobileWallet('sign_transaction', {
                         auth_token: freshAuthToken,
-                        payloads: [base64EncodedSerializedTransaction],
+                        payloads,
                     });
-                    const signedPayload = new Uint8Array(
-                        atob(signedPayloadBase64Encoded)
-                            .split('')
-                            .map((c) => c.charCodeAt(0)),
+                    const signedPayloads = signed_payloads.map(
+                        (signedPayloadBase64Encoded) =>
+                            new Uint8Array(
+                                atob(signedPayloadBase64Encoded)
+                                    .split('')
+                                    .map((c) => c.charCodeAt(0)),
+                            ),
                     );
-                    // FIXME: The fake wallet flips the first bit as 'proof' that work was done. Flip it back.
-                    signedPayload[0] = serializedTransaction[0];
-                    const signature = signedPayload.slice(0, SIGNATURE_LENGTH_IN_BYTES);
-                    transaction.addSignature(publicKey, signature as Buffer);
-                    return transaction;
+                    signedPayloads.forEach((signedPayload, ii) => {
+                        // FIXME: The fake wallet flips the first bit as 'proof' that work was done. Flip it back.
+                        signedPayload[0] = serializedTransactions[ii][0];
+                    });
+                    return transactions.map((transaction, ii) => {
+                        const signature = signedPayloads[ii].slice(0, SIGNATURE_LENGTH_IN_BYTES);
+                        transaction.addSignature(publicKey, signature as Buffer);
+                        return transaction;
+                    });
                 });
             } catch (error: any) {
                 throw new WalletSignTransactionError(error?.message, error);
@@ -198,8 +207,14 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
     }
 
-    async signAllTransactions(_transactions: Transaction[]): Promise<Transaction[]> {
-        throw new Error('`signAllTransaction()` not implemented');
+    async signTransaction(transaction: Transaction): Promise<Transaction> {
+        const [signedTransaction] = await this.performSignTransactions([transaction]);
+        return signedTransaction;
+    }
+
+    async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
+        const signedTransactions = await this.performSignTransactions(transactions);
+        return signedTransactions;
     }
 
     async signMessage(_message: Uint8Array): Promise<Uint8Array> {

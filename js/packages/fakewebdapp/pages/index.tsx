@@ -8,7 +8,7 @@ import Button from '../components/Button';
 
 const Home: NextPage = () => {
     const { connection } = useConnection();
-    const { connect, connected, publicKey, select, signTransaction, wallet } = useWallet();
+    const { connect, connected, publicKey, select, signAllTransactions, signTransaction, wallet } = useWallet();
     useEffect(() => {
         select('Native' as WalletName);
     }, [select]);
@@ -47,6 +47,32 @@ const Home: NextPage = () => {
                 }}
             >
                 Sign Transaction
+            </Button>
+            <Button
+                disabled={publicKey == null}
+                onClick={async () => {
+                    if (publicKey == null || signAllTransactions == null) {
+                        return;
+                    }
+                    const latestBlockHash = await connection.getLatestBlockhash();
+                    const tx1 = new Transaction({ ...latestBlockHash, feePayer: publicKey }).add(
+                        new TransactionInstruction({
+                            data: Buffer.from('hello world'),
+                            keys: [],
+                            programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+                        }),
+                    );
+                    const tx2 = new Transaction({ ...latestBlockHash, feePayer: publicKey }).add(
+                        new TransactionInstruction({
+                            data: Buffer.from('hello world'),
+                            keys: [],
+                            programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+                        }),
+                    );
+                    const transactions = await signAllTransactions([tx1, tx2]);
+                }}
+            >
+                Sign Multiple Transactions
             </Button>
         </>
     );
