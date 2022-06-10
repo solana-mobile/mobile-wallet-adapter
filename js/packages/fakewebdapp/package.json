@@ -10,6 +10,7 @@
         "tunnel:start": "ngrok http 3000"
     },
     "dependencies": {
+        "@radix-ui/react-toast": "^0.1.1",
         "@solana/wallet-adapter-base": "^0.9.5",
         "@solana/wallet-adapter-mobile": "file:../wallet-adapter-mobile",
         "@solana/wallet-adapter-react": "^0.15.5",
