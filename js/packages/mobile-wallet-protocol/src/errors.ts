@@ -12,6 +12,13 @@ export class SolanaMobileWalletAdapterSessionClosedError extends Error {
     }
 }
 
+export class SolanaMobileWalletAdapterReauthorizeError extends Error {
+    constructor() {
+        super('The auth token provided has gone stale and needs reauthorization.');
+        this.name = 'SolanaMobileWalletAdapterReauthorizeError';
+    }
+}
+
 export class SolanaMobileWalletAdapterJsonRpcError extends Error {
     code: number;
     jsonRpcMessageId: number;

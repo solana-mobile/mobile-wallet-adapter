@@ -27,6 +27,8 @@ export type AuthorizationResult = Readonly<{
     walletUriBase: string;
 }>;
 
+export type AuthToken = string;
+
 /**
  * RPC methods for which the mobile wallet requires authorization.
  */
@@ -41,9 +43,10 @@ export interface MobileWallet {
         },
     ): Promise<
         Readonly<{
-            auth_token: string;
+            auth_token: AuthToken;
             pub_key: string;
             wallet_uri_base: string;
         }>
     >;
+    (method: 'reauthorize', params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
 }
