@@ -54,45 +54,63 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
-        val transactions = Array(numTransactions) {
-            Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
-        }
-
-        localAssociateAndExecute(sender) { client ->
+        val signedTransactions = localAssociateAndExecute(sender) { client ->
+            val transactions = Array(numTransactions) {
+                MemoTransaction.create(uiState.value.publicKeyBase58!!)
+            }
             doSignTransaction(client, transactions)
         }
+
+        signedTransactions?.let { txns ->
+            txns.forEach { txn ->
+                try {
+                    MemoTransaction.verify(uiState.value.publicKeyBase58!!, txn)
+                } catch (e: IllegalArgumentException) {
+                    Log.e(TAG, "Memo transaction signature verification failed", e)
+                }
+            }
+        } ?: Log.w(TAG, "No signed transactions returned; skipping verification")
     }
 
     suspend fun authorizeAndSignTransaction(sender: StartActivityForResultSender) {
-        val transactions = Array(1) {
-            Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
-        }
-
-        localAssociateAndExecute(sender) { client ->
+        val signedTransactions = localAssociateAndExecute(sender) { client ->
             val authorized = doAuthorize(client)
             if (authorized) {
+                val transactions = Array(1) {
+                    MemoTransaction.create(uiState.value.publicKeyBase58!!)
+                }
                 doSignTransaction(client, transactions)
+            } else {
+                null
             }
         }
+
+        signedTransactions?.let { txns ->
+            txns.forEach { txn ->
+                try {
+                    MemoTransaction.verify(uiState.value.publicKeyBase58!!, txn)
+                } catch (e: IllegalArgumentException) {
+                    Log.e(TAG, "Memo transaction signature verification failed", e)
+                }
+            }
+        } ?: Log.w(TAG, "No signed transactions returned; skipping verification")
     }
 
     suspend fun signMessage(sender: StartActivityForResultSender, numMessages: Int) {
-        val messages = Array(numMessages) {
-            Random.nextBytes(16384)
-        }
-
         localAssociateAndExecute(sender) { client ->
+            val messages = Array(numMessages) {
+                Random.nextBytes(16384)
+            }
             doSignMessage(client, messages)
         }
     }
 
     suspend fun signAndSendTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
-        val messages = Array(numTransactions) {
-            Random.nextBytes(ProtocolContract.TRANSACTION_MAX_SIZE_BYTES)
-        }
-
         localAssociateAndExecute(sender) { client ->
-            doSignAndSendTransaction(client, messages)
+            val transactions = Array(numTransactions) {
+                MemoTransaction.create(uiState.value.publicKeyBase58!!)
+            }
+            doSignAndSendTransaction(client, transactions)
         }
     }
 
@@ -120,7 +138,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
             Log.d(TAG, "Authorized: $result")
-            _uiState.update { it.copy(authToken = result.authToken) }
+            _uiState.update {
+                it.copy(
+                    authToken = result.authToken,
+                    publicKeyBase58 = result.publicKey
+                )
+            }
             authorized = true
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending authorize", e)
@@ -221,7 +244,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return deauthorized
     }
 
-    private suspend fun doSignTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
+    private suspend fun doSignTransaction(
+        client: MobileWalletAdapterClient,
+        transactions: Array<ByteArray>
+    ): Array<ByteArray>? {
+        var signedTransactions: Array<ByteArray>? = null
         try {
             val sem = Semaphore(1, 1)
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
@@ -238,6 +265,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
             Log.d(TAG, "Signed transaction(s): $result")
+            signedTransactions = result.signedPayloads
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_transaction", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
@@ -256,9 +284,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: CancellationException) {
             Log.e(TAG, "sign_transaction request was cancelled", e)
         }
+        return signedTransactions
     }
 
-    private suspend fun doSignMessage(client: MobileWalletAdapterClient, messages: Array<ByteArray>) {
+    private suspend fun doSignMessage(
+        client: MobileWalletAdapterClient,
+        messages: Array<ByteArray>
+    ): Array<ByteArray>? {
+        var signedMessages: Array<ByteArray>? = null
         try {
             val sem = Semaphore(1, 1)
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
@@ -275,6 +308,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
             Log.d(TAG, "Signed message(s): $result")
+            signedMessages = result.signedPayloads
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_message", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
@@ -293,9 +327,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: CancellationException) {
             Log.e(TAG, "sign_message request was cancelled", e)
         }
+        return signedMessages
     }
 
-    private suspend fun doSignAndSendTransaction(client: MobileWalletAdapterClient, transactions: Array<ByteArray>) {
+    private suspend fun doSignAndSendTransaction(
+        client: MobileWalletAdapterClient,
+        transactions: Array<ByteArray>
+    ): Array<ByteArray>? {
+        var signatures: Array<ByteArray>? = null
         try {
             val sem = Semaphore(1, 1)
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
@@ -313,12 +352,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
             Log.d(TAG, "Signatures: $result")
+            signatures = result.signatures
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_and_send_transaction", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
             Log.e(TAG, "Transaction payload invalid", e)
         } catch (e: MobileWalletAdapterClient.NotCommittedException) {
             Log.e(TAG, "Commitment not reached for all transactions", e)
+            signatures = e.signatures
         } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
             when (e.code) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
@@ -333,14 +374,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: CancellationException) {
             Log.e(TAG, "sign_and_send_transaction request was cancelled", e)
         }
+        return signatures
     }
 
-    private suspend fun localAssociateAndExecute(
+    private suspend fun <T> localAssociateAndExecute(
         sender: StartActivityForResultSender,
         uriPrefix: Uri? = null,
-        action: suspend (MobileWalletAdapterClient) -> Unit
-    ) {
-        mobileWalletAdapterClientMutex.withLock {
+        action: suspend (MobileWalletAdapterClient) -> T?
+    ): T? {
+        return mobileWalletAdapterClientMutex.withLock {
             val semConnectedOrFailed = Semaphore(1, 1)
             val semTerminated = Semaphore(1, 1)
             var mobileWalletAdapterClient: MobileWalletAdapterClient? = null
@@ -372,11 +414,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e(TAG, "Timed out waiting for local association to be ready", e)
                 // Let garbage collection deal with cleanup; if we timed out starting, we might
                 // hang if we attempt to close.
-                return@withLock
+                return@withLock null
             }
 
-            mobileWalletAdapterClient?.let { client -> action(client) }
-                ?: Log.e(TAG, "Local association not ready; skip requested action")
+            val result = mobileWalletAdapterClient?.let { client -> action(client) } ?: run {
+                Log.e(TAG, "Local association not ready; skip requested action")
+                null
+            }
 
             localAssociation.close()
             try {
@@ -385,8 +429,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (e: TimeoutCancellationException) {
                 Log.e(TAG, "Timed out waiting for local association to close", e)
-                return@withLock
+                return@withLock null
             }
+
+            result
         }
     }
 
@@ -395,7 +441,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     data class UiState(
-        val authToken: String? = null
+        val authToken: String? = null,
+        val publicKeyBase58: String? = null
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
     }
