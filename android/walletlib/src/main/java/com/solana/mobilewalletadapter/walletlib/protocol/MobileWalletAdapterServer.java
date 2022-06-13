@@ -510,7 +510,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public boolean complete(@Nullable T result) {
             if (result == null) {
                 throw new IllegalArgumentException("A non-null result must be provided");
-            } else if (result.getNumResults() != payloads.length) {
+            } else if (result.signatures.length != payloads.length) {
                 throw new IllegalArgumentException("Number of signed results does not match the number of requested signatures");
             }
 
@@ -540,8 +540,20 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
-    public interface SignResult {
-        int getNumResults();
+    public static class SignResult {
+        @NonNull
+        @Size(min = 1)
+        public final byte[][] signatures;
+
+        public SignResult(@NonNull @Size(min = 1) byte[][] signatures) {
+            this.signatures = signatures;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "SignResult{signatures=" + Arrays.toString(signatures) + '}';
+        }
     }
 
     public static class SignPayloadRequest extends SignRequest<SignedPayloadResult> {
@@ -581,35 +593,26 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
-    public static class SignedPayloadResult implements SignResult {
-        @NonNull
-        @Size(min = 1)
-        public final byte[][] signatures;
-
+    public static class SignedPayloadResult extends SignResult {
         @Nullable
         @Size(min = 1)
         public final byte[][] signedPayloads;
 
         public SignedPayloadResult(@NonNull @Size(min = 1) byte[][] signatures,
                                    @Nullable @Size(min = 1) byte[][] signedPayloads) {
+            super(signatures);
             if (signedPayloads != null && signedPayloads.length != signatures.length) {
                 throw new IllegalArgumentException("signedPayloads length differs from signatures length");
             }
-            this.signatures = signatures;
             this.signedPayloads = signedPayloads;
-        }
-
-        @Override
-        public int getNumResults() {
-            return signatures.length;
         }
 
         @NonNull
         @Override
         public String toString() {
             return "SignedPayloadResult{" +
-                    "signatures=" + Arrays.toString(signatures) +
-                    ", signedPayloads=" + Arrays.toString(signedPayloads) +
+                    "signedPayloads=" + Arrays.toString(signedPayloads) +
+                    ", super=" + super.toString() +
                     '}';
         }
     }
@@ -740,10 +743,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     // =============================================================================================
     // sign_and_send_transaction
-    // TODO: can we do a better job of merging this with sign_* above?
     // =============================================================================================
 
-    public static class SignAndSendTransactionRequest extends SignRequest<SignatureResult> {
+    public static class SignAndSendTransactionRequest extends SignRequest<SignResult> {
         @NonNull
         public final CommitmentLevel commitmentLevel;
 
@@ -775,27 +777,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     "commitmentLevel=" + commitmentLevel +
                     ", super=" + super.toString() +
                     '}';
-        }
-    }
-
-    public static class SignatureResult implements SignResult {
-        @NonNull
-        @Size(min = 1)
-        public final byte[][] signatures;
-
-        public SignatureResult(@NonNull @Size(min = 1) byte[][] signatures) {
-            this.signatures = signatures;
-        }
-
-        @Override
-        public int getNumResults() {
-            return signatures.length;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "SignatureResult{signedPayloads=" + Arrays.toString(signatures) + '}';
         }
     }
 
@@ -836,11 +817,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         mMethodHandlers.signAndSendTransaction(request);
     }
 
-    private void onSignAndSendTransactionComplete(@NonNull NotifyOnCompleteFuture<SignatureResult> future) {
+    private void onSignAndSendTransactionComplete(@NonNull NotifyOnCompleteFuture<SignResult> future) {
         final SignAndSendTransactionRequest request = (SignAndSendTransactionRequest) future;
 
         try {
-            final SignatureResult result;
+            final SignResult result;
             try {
                 result = request.get();
             } catch (ExecutionException e) {
