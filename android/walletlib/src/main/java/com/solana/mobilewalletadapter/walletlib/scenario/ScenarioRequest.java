@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 Solana Labs, Inc.
+ */
+
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import androidx.annotation.NonNull;
