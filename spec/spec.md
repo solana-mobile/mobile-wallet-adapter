@@ -499,6 +499,7 @@ sign_transaction
 {
     “auth_token”: “<auth_token>”,
     “payloads”: [“<transaction>”, ...],
+    "return_signed_payloads": <return_signed_payloads>
 }
 ```
 
@@ -506,19 +507,22 @@ where:
 
 - `auth_token`: an `auth_token` returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_transaction` was requested
 - `transaction`: one or more base64url-encoded transaction payloads to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `return_signed_payloads`: (optional) if present, a boolean value indicating whether the result should contain a `signed_payloads` entry. If not present, defaults to `false`.
 
 ###### Result
 {: .no_toc }
 
 ```
 {
+    "signatures": ["<signature>", ...],
     “signed_payloads”: [“<signed_transaction>”, ...],
 }
 ```
 
 where:
 
-- `signed_payloads`: the corresponding base64url-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `signatures`: base64url-encoded transaction signatures
+- `signed_payloads`: (optional) base64url-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`. This will be present only if `return_signed_payloads` was present and `true` in params.
 
 ###### Errors
 {: .no_toc }
@@ -650,26 +654,30 @@ sign_message
 {
     “auth_token”: “<auth_token>”,
     “payloads”: [“<message>”, ...],
+    "return_signed_payloads": <return_signed_payloads>
 }
 ```
 
 where:
 
 - `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_message` was requested
-- `message`: one or more base64url-encoded message payloads to sign
+- `payloads`: one or more base64url-encoded message payloads to sign
+- `return_signed_payloads`: (optional) if present, a boolean value indicating whether the result should contain a `signed_payloads` entry. If not present, defaults to `false`.
 
 ###### Result
 {: .no_toc }
 
 ```
 {
+    "signatures": ["<signature>", ...],
     “signed_payloads”: [“<signed_message>”, ...],
 }
 ```
 
 where:
 
-- `signed_message`: the corresponding base64url-encoded signed message payloads
+- `signatures`: base64url-encoded message signatures
+- `signed_payloads`: (optional) base64url-encoded signed message payloads. This will be present only if `return_signed_payloads` was present and `true` in params.
 
 ###### Errors
 {: .no_toc }
