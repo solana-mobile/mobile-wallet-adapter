@@ -112,7 +112,7 @@ Association is the process of establishing a shared association identifier betwe
 
 ### Association keypair
 
-The dapp endpoint should generate an ephemeral EC keypair on the P-256 curve, and encode the public keypoint Qa using the X9.62 public key format `(0x02 || r || s)`. This public keypoint is then base64url-encoded, and the resulting string is called the association token. The private keypoint for this keypair will be used during session establishment.
+The dapp endpoint should generate an ephemeral EC keypair on the P-256 curve, and encode the public keypoint Qa using the X9.62 public key format `(0x04 || x || y)`. This public keypoint is then base64url-encoded, and the resulting string is called the association token. The private keypoint for this keypair will be used during session establishment.
 
 ### Local URI
 
