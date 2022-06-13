@@ -120,26 +120,28 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             check(keypair != null) { "Unknown public key for signing request" }
 
             val valid = BooleanArray(request.request.payloads.size) { true }
-            val signedPayloads = when (request) {
+            val result = when (request) {
                 is MobileWalletAdapterServiceRequest.SignTransaction ->
                     Array(request.request.payloads.size) { i ->
                         try {
-                            SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signedPayload
+                            SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair)
                         } catch (e: IllegalArgumentException) {
                             Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                             valid[i] = false
-                            byteArrayOf()
+                            SolanaSigningUseCase.Result(byteArrayOf(), ByteArray(64))
                         }
                     }
                 is MobileWalletAdapterServiceRequest.SignMessage ->
                     Array(request.request.payloads.size) { i ->
-                        SolanaSigningUseCase.signMessage(request.request.payloads[i], keypair).signedPayload
+                        SolanaSigningUseCase.signMessage(request.request.payloads[i], keypair)
                     }
             }
 
             if (valid.all { it }) {
                 Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
-                request.request.completeWithSignedPayloads(signedPayloads)
+                val signatures = result.map { r -> r.signature }.toTypedArray()
+                val signedPayloads = result.map { r -> r.signedPayload }.toTypedArray()
+                request.request.completeWithSignaturesAndSignedPayloads(signatures, signedPayloads)
             } else {
                 Log.e(TAG, "One or more transactions not valid")
                 request.request.completeWithInvalidPayloads(valid)

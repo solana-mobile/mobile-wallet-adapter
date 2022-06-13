@@ -62,6 +62,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         signedTransactions?.let { txns ->
+            check(txns.size == numTransactions) { "Received an unexpected number of signed transactions; expected=$numTransactions, actual=${txns.size}" }
             txns.forEach { txn ->
                 try {
                     MemoTransaction.verify(uiState.value.publicKeyBase58!!, txn)
@@ -86,6 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         signedTransactions?.let { txns ->
+            check(txns.size == 1) { "Received an unexpected number of signed transactions; expected=1, actual=${txns.size}" }
             txns.forEach { txn ->
                 try {
                     MemoTransaction.verify(uiState.value.publicKeyBase58!!, txn)
@@ -254,7 +256,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
             // which occurs when the client is not connected
             @Suppress("BlockingMethodInNonBlockingContext")
-            val future = client.signTransactionAsync(uiState.value.authToken!!, transactions)
+            val future = client.signTransactionAsync(uiState.value.authToken!!, transactions, true)
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
@@ -265,7 +267,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
             Log.d(TAG, "Signed transaction(s): $result")
-            signedTransactions = result.signedPayloads
+            signedTransactions = result.signedPayloads ?: arrayOf()
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_transaction", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
@@ -297,7 +299,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
             // which occurs when the client is not connected
             @Suppress("BlockingMethodInNonBlockingContext")
-            val future = client.signMessageAsync(uiState.value.authToken!!, messages)
+            val future = client.signMessageAsync(uiState.value.authToken!!, messages, true)
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
@@ -308,7 +310,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
             Log.d(TAG, "Signed message(s): $result")
-            signedMessages = result.signedPayloads
+            signedMessages = result.signedPayloads ?: arrayOf()
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_message", e)
         } catch (e: MobileWalletAdapterClient.InvalidPayloadException) {
