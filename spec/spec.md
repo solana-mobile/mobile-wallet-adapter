@@ -258,7 +258,7 @@ If either public keypoint `Qd` or `Qw` is not valid, if no `HELLO_RSP` message i
 
 ### Operation
 
-After [session establishment](#session-establishment) completes, the wallet endpoint is ready to accept [JSON-RPC 2.0](https://www.jsonrpc.org/specification) method calls from the dapp endpoint. Dapp endpoints require a successful [`authorize`](#authorize) or [`reauthorize`](#reauthorize) method call before the [signing methods](#privileged-methods) will be available.
+After [session establishment](#session-establishment) completes, the wallet endpoint is ready to accept [JSON-RPC 2.0](https://www.jsonrpc.org/specification) method calls from the dapp endpoint. Dapp endpoints require a valid auth token, obtained via a [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) method call, before the [privileged methods](#privileged-methods) will be available.
 
 ### Encrypted message wrapping
 
@@ -279,7 +279,7 @@ Why does the protocol specify this, rather than rely on, e.g., TLS?
 
 ### Non-privileged methods
 
-Non-privileged methods do not require the dapp endpoint to request access to them in a call to [`authorize`](#authorize) (though they may still require an `auth_token` be provided for their functionality).
+Non-privileged methods do not require the dapp endpoint to have a currently valid auth token to call them (though they may still accept an `auth_token` to provide their functionality).
 
 #### authorize
 
@@ -302,7 +302,6 @@ authorize
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
-    “privileged_methods”: [“<privileged_methods>”],
 }
 ```
 
@@ -311,7 +310,6 @@ where:
 - `dapp_uri`: (Optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
 - `dapp_icon_relative_path`: (Optional) a relative path (from dapp_uri) to an image asset file of an icon identifying the dapp endpoint making this authorization request
 - `dapp_name`: (Optional) the display name for this dapp endpoint
-- `privileged_methods`: a list of method names from Privileged methods for which the dapp endpoint is requesting permissions
 
 ###### Result
 {: .no_toc }
@@ -337,7 +335,7 @@ where:
 - `ERROR_AUTHORIZATION_FAILED` if the wallet endpoint did not authorize access to the requested privileged methods
 
 ##### Description
-This method allows the dapp endpoint to request authorization from the wallet endpoint for access to the specified [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to those privileged methods. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris).
+This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris).
 
 The returned `auth_token` is an opaque string with meaning only to the wallet endpoint which created it. It is recommended that the wallet endpoint include a mechanism to authenticate the contents of auth tokens it issues (for e.g., with an HMAC, or by encryption with a secret symmetric key).
 

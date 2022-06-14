@@ -15,7 +15,6 @@ import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
-import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -126,9 +125,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val future = client.authorizeAsync(
                 Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
-                "Solana",
-                setOf(PrivilegedMethod.SignTransaction, PrivilegedMethod.SignMessage,
-                    PrivilegedMethod.SignAndSendTransaction)
+                "Solana"
             )
             future.notifyOnComplete { sem.release() }
             sem.acquire()

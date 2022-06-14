@@ -12,7 +12,6 @@ import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.util.ArraySet;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
@@ -20,8 +19,6 @@ import android.util.Pair;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,7 +37,6 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -56,12 +52,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class AuthRepository {
     private static final String TAG = AuthRepository.class.getSimpleName();
-
-    // N.B. These bitmask values represent a contract for the JWTs produced by this class. Changing
-    // existing values will break compatibility with issued tokens.
-    private static final int PRIVILEGED_METHOD_SIGN_TRANSACTION = 1;
-    private static final int PRIVILEGED_METHOD_SIGN_MESSAGE = 2;
-    private static final int PRIVILEGED_METHOD_SIGN_AND_SEND_TRANSACTION = 4;
 
     private static final String AUTH_TOKEN_CONTENT_TYPE = "typ";
     private static final String AUTH_TOKEN_CONTENT_TYPE_SUFFIX = "-auth-token";
@@ -235,7 +225,6 @@ public class AuthRepository {
         final AuthRecord authRecord;
         try (final Cursor c = db.rawQuery("SELECT " +
                 AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_BASE58 +
@@ -251,12 +240,10 @@ public class AuthRepository {
             }
 
             final int id = c.getInt(0);
-            final int privilegedMethodsBitmask = c.getInt(1);
-            final long issued = c.getLong(2);
-            final int publicKeyId = c.getInt(3);
-            final String publicKey = c.getString(4);
-            authRecord = new AuthRecord(id, identityRecord, publicKey, publicKeyId,
-                    bitmaskToPrivilegedMethods(privilegedMethodsBitmask), issued,
+            final long issued = c.getLong(1);
+            final int publicKeyId = c.getInt(2);
+            final String publicKey = c.getString(3);
+            authRecord = new AuthRecord(id, identityRecord, publicKey, publicKeyId, issued,
                     issued + mAuthIssuerConfig.authorizationValidityMs);
         }
 
@@ -344,8 +331,7 @@ public class AuthRepository {
     public synchronized AuthRecord issue(@NonNull String name,
                                          @NonNull Uri uri,
                                          @NonNull Uri relativeIconUri,
-                                         @NonNull String publicKey,
-                                         @NonNull Set<PrivilegedMethod> privilegedMethods) {
+                                         @NonNull String publicKey) {
         final SQLiteDatabase db = ensureStarted();
 
         // First, try and look up a matching identity
@@ -416,8 +402,6 @@ public class AuthRepository {
         final ContentValues authContentValues = new ContentValues(4);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.id);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS,
-                privilegedMethodsToBitmask(privilegedMethods));
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
         final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, authContentValues);
 
@@ -439,7 +423,7 @@ public class AuthRepository {
         // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
         // thus know that the identity remains referenced; no need to purge unused identities.
 
-        return new AuthRecord(id, identityRecord, publicKey, publicKeyId, privilegedMethods, now,
+        return new AuthRecord(id, identityRecord, publicKey, publicKeyId, now,
                 now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
@@ -463,15 +447,10 @@ public class AuthRepository {
             final ContentValues reissueContentValues = new ContentValues(4);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.id);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS,
-                    privilegedMethodsToBitmask(authRecord.privilegedMethods));
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
             final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, reissueContentValues);
-            final ArraySet<PrivilegedMethod> privilegedMethods = new ArraySet<>(authRecord.privilegedMethods.size());
-            privilegedMethods.addAll(authRecord.privilegedMethods);
             reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
-                    authRecord.publicKeyId, privilegedMethods, now,
-                    now + mAuthIssuerConfig.authorizationValidityMs);
+                    authRecord.publicKeyId, now, now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);
             // Note: reissue is net-neutral on the number of authorizations per identity, so there's
@@ -584,7 +563,6 @@ public class AuthRepository {
         final ArrayList<AuthRecord> authorizations = new ArrayList<>();
         try (final Cursor c = db.rawQuery("SELECT " +
                 AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PRIVILEGED_METHODS +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_BASE58 +
@@ -596,14 +574,12 @@ public class AuthRepository {
                 new String[] { Integer.toString(identityRecord.id) })) {
             while (c.moveToNext()) {
                 final int id = c.getInt(0);
-                final int privilegedMethodsBitmask = c.getInt(1);
-                final long issued = c.getLong(2);
-                final int publicKeyId = c.getInt(3);
-                final String publicKey = c.getString(4);
+                final long issued = c.getLong(1);
+                final int publicKeyId = c.getInt(2);
+                final String publicKey = c.getString(3);
                 // Note: values should never be null, but protect against bugs and corruption
                 final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey,
-                        publicKeyId, bitmaskToPrivilegedMethods(privilegedMethodsBitmask), issued,
-                        issued + mAuthIssuerConfig.authorizationValidityMs);
+                        publicKeyId, issued, issued + mAuthIssuerConfig.authorizationValidityMs);
                 authorizations.add(authRecord);
             }
         }
@@ -643,45 +619,5 @@ public class AuthRepository {
                 InvalidAlgorithmParameterException |  InvalidKeyException | BadPaddingException e) {
             throw new RuntimeException("Error while decrypting identity key", e);
         }
-    }
-
-    private static int privilegedMethodsToBitmask(@NonNull Set<PrivilegedMethod> privilegedMethods) {
-        int mask = 0;
-        for (PrivilegedMethod pm : privilegedMethods) {
-            switch (pm) {
-                case SignTransaction:
-                    mask |= PRIVILEGED_METHOD_SIGN_TRANSACTION;
-                    break;
-                case SignAndSendTransaction:
-                    mask |= PRIVILEGED_METHOD_SIGN_MESSAGE;
-                    break;
-                case SignMessage:
-                    mask |= PRIVILEGED_METHOD_SIGN_AND_SEND_TRANSACTION;
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown privileged method type");
-            }
-        }
-        return mask;
-    }
-
-    @NonNull
-    private static ArraySet<PrivilegedMethod> bitmaskToPrivilegedMethods(int bitmask) {
-        final ArraySet<PrivilegedMethod> privilegedMethods = new ArraySet<>(Integer.bitCount(bitmask));
-        if ((bitmask & ~(PRIVILEGED_METHOD_SIGN_TRANSACTION |
-                PRIVILEGED_METHOD_SIGN_MESSAGE |
-                PRIVILEGED_METHOD_SIGN_AND_SEND_TRANSACTION)) != 0) {
-            throw new IllegalArgumentException("Unsupported privileged method bits are set");
-        }
-        if ((bitmask & PRIVILEGED_METHOD_SIGN_TRANSACTION) != 0) {
-            privilegedMethods.add(PrivilegedMethod.SignTransaction);
-        }
-        if ((bitmask & PRIVILEGED_METHOD_SIGN_MESSAGE) != 0) {
-            privilegedMethods.add(PrivilegedMethod.SignMessage);
-        }
-        if ((bitmask & PRIVILEGED_METHOD_SIGN_AND_SEND_TRANSACTION) != 0) {
-            privilegedMethods.add(PrivilegedMethod.SignAndSendTransaction);
-        }
-        return privilegedMethods;
     }
 }

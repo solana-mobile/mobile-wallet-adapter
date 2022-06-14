@@ -67,8 +67,8 @@ android.libraryVariants.all { variant ->
         source = variant.javaCompileProvider.get().source
         classpath = project.files(android.getBootClasspath().join(File.pathSeparator))
         classpath += files(variant.javaCompileProvider.get().classpath)
-        options.links("https://docs.oracle.com/javase/8/docs/api/");
-        options.links("https://d.android.com/reference/");
+        options.links("https://docs.oracle.com/javase/8/docs/api/")
+        options.links("https://d.android.com/reference/")
         exclude '**/BuildConfig.java'
         exclude '**/R.java'
     }

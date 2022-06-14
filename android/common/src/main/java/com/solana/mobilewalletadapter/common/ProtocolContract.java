@@ -7,7 +7,6 @@ package com.solana.mobilewalletadapter.common;
 public class ProtocolContract {
     public static final String METHOD_AUTHORIZE = "authorize";
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY
-    public static final String PARAMETER_PRIVILEGED_METHODS = "privileged_methods";
     // METHOD_AUTHORIZE returns a RESULT_AUTH_TOKEN
     // METHOD_AUTHORIZE returns a RESULT_PUBLIC_KEY
     // METHOD_AUTHORIZE returns an optional RESULT_WALLET_URI_BASE

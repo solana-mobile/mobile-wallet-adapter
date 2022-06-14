@@ -7,7 +7,6 @@ package com.solana.mobilewalletadapter.walletlib.protocol;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.ArraySet;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -16,7 +15,6 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
-import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
@@ -27,7 +25,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -136,24 +133,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             identityName = null;
         }
 
-        final JSONArray pm = o.optJSONArray(ProtocolContract.PARAMETER_PRIVILEGED_METHODS);
-        final int numPrivilegedMethods = (pm != null) ? pm.length() : 0;
-        if (numPrivilegedMethods == 0) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "privileged_methods must be a non-empty array of method names", null);
-            return;
-        }
-        final ArraySet<PrivilegedMethod> privilegedMethods = new ArraySet<>(numPrivilegedMethods);
-        for (int i = 0; i < numPrivilegedMethods; i++) {
-            final String methodName = pm.optString(i);
-            final PrivilegedMethod method = PrivilegedMethod.fromMethodName(methodName);
-            if (method == null) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "privileged_methods contains unknown method name '" + methodName + "'", null);
-                return;
-            }
-            privilegedMethods.add(method);
-        }
-
-        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName, privilegedMethods);
+        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizeComplete(f)));
         mMethodHandlers.authorize(request);
     }
@@ -205,19 +185,15 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final Uri iconUri;
         @Nullable
         public final String identityName;
-        @NonNull
-        public final Set<PrivilegedMethod> privilegedMethods;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
-                                 @Nullable String identityName,
-                                 @NonNull Set<PrivilegedMethod> privilegedMethods) {
+                                 @Nullable String identityName) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
-            this.privilegedMethods = privilegedMethods;
         }
 
         @Override
@@ -236,7 +212,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     ", identityUri=" + identityUri +
                     ", iconUri=" + iconUri +
                     ", identityName='" + identityName + '\'' +
-                    ", privilegedMethods=" + privilegedMethods +
                     '/' + super.toString() +
                     '}';
         }
