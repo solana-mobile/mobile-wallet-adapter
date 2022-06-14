@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
-import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
@@ -150,22 +149,9 @@ public abstract class Scenario {
 
         @Override
         public void signPayload(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
-            final PrivilegedMethod method;
-
-            switch (request.type) {
-                case Transaction:
-                    method = PrivilegedMethod.SignTransaction;
-                    break;
-                case Message:
-                    method = PrivilegedMethod.SignMessage;
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown payload type");
-            }
-
             final String publicKey;
             try {
-                publicKey = authTokenToPublicKey(request.authToken, method);
+                publicKey = authTokenToPublicKey(request.authToken);
             } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
                 mIoHandler.post(() -> request.completeExceptionally(e));
                 return;
@@ -190,7 +176,7 @@ public abstract class Scenario {
                 @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request) {
             final String publicKey;
             try {
-                publicKey = authTokenToPublicKey(request.authToken, PrivilegedMethod.SignAndSendTransaction);
+                publicKey = authTokenToPublicKey(request.authToken);
             } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
                 mIoHandler.post(() -> request.completeExceptionally(e));
                 return;
@@ -201,12 +187,11 @@ public abstract class Scenario {
         }
 
         @NonNull
-        private String authTokenToPublicKey(@NonNull String authToken,
-                                            @NonNull PrivilegedMethod privilegedMethod)
+        private String authTokenToPublicKey(@NonNull String authToken)
                 throws MobileWalletAdapterServer.MobileWalletAdapterServerException{
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(authToken);
 
-            if (authRecord == null || !authRecord.isAuthorized(privilegedMethod)) {
+            if (authRecord == null || !authRecord.isAuthorized()) {
                 throw new MobileWalletAdapterServer.AuthTokenNotValidException("auth_token not valid for this request");
             } else if (authRecord.isExpired()) {
                 throw new MobileWalletAdapterServer.ReauthorizationRequiredException("auth_token requires reauthorization");

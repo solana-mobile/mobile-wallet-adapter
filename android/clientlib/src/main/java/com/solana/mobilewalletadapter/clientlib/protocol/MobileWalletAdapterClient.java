@@ -13,7 +13,6 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
-import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
@@ -23,7 +22,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -140,8 +138,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public AuthorizeFuture authorizeAsync(@Nullable Uri identityUri,
                                           @Nullable Uri iconUri,
-                                          @Nullable String identityName,
-                                          @NonNull Set<PrivilegedMethod> privilegedMethods)
+                                          @Nullable String identityName)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -155,13 +152,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
             identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
             identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
-            final JSONArray privMethods = new JSONArray();
-            for (PrivilegedMethod pm : privilegedMethods) {
-                privMethods.put(pm.methodName);
-            }
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
-            authorize.put(ProtocolContract.PARAMETER_PRIVILEGED_METHODS, privMethods);
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
@@ -172,10 +164,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public AuthorizeResult authorize(@Nullable Uri identityUri,
                                      @Nullable Uri iconUri,
-                                     @Nullable String identityName,
-                                     @NonNull Set<PrivilegedMethod> privilegedMethods)
+                                     @Nullable String identityName)
             throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final AuthorizeFuture future = authorizeAsync(identityUri, iconUri, identityName, privilegedMethods);
+        final AuthorizeFuture future = authorizeAsync(identityUri, iconUri, identityName);
         try {
             return future.get();
         } catch (ExecutionException e) {

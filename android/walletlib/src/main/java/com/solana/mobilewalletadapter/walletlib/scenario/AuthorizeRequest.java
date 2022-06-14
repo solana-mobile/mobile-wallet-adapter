@@ -11,12 +11,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.solana.mobilewalletadapter.common.protocol.PrivilegedMethod;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
-
-import java.util.Set;
 
 public class AuthorizeRequest extends ScenarioRequest {
     private static final String TAG = AuthorizeRequest.class.getSimpleName();
@@ -54,11 +51,6 @@ public class AuthorizeRequest extends ScenarioRequest {
         return mRequest.iconUri;
     }
 
-    @NonNull
-    public Set<PrivilegedMethod> getPrivilegedMethods() {
-        return mRequest.privilegedMethods;
-    }
-
     public void completeWithAuthorize(@NonNull String publicKey, @Nullable Uri walletUriBase) {
         mIoHandler.post(() -> completeWithAuthToken(publicKey, walletUriBase));
     }
@@ -68,8 +60,7 @@ public class AuthorizeRequest extends ScenarioRequest {
         final String name = mRequest.identityName != null ? mRequest.identityName : "";
         final Uri uri = mRequest.identityUri != null ? mRequest.identityUri : Uri.EMPTY;
         final Uri relativeIconUri = mRequest.iconUri != null ? mRequest.iconUri : Uri.EMPTY;
-        final AuthRecord authRecord = mAuthRepository.issue(
-                name, uri, relativeIconUri, publicKey, mRequest.privilegedMethods);
+        final AuthRecord authRecord = mAuthRepository.issue(name, uri, relativeIconUri, publicKey);
         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
 
         final String authToken = mAuthRepository.toAuthToken(authRecord);
