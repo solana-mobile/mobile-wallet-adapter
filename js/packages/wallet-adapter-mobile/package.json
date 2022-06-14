@@ -30,6 +30,6 @@
         "@solana/web3.js": "^1.36.0"
     },
     "dependencies": {
-        "@solana/mobile-wallet-protocol": "file:../mobile-wallet-protocol"
+        "@solana/mobile-wallet-protocol": "^0.0.1"
     }
 }
