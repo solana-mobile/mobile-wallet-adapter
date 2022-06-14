@@ -506,7 +506,7 @@ sign_transaction
 where:
 
 - `auth_token`: an `auth_token` returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_transaction` was requested
-- `transaction`: one or more base64url-encoded transaction payloads to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `transaction`: one or more base64-encoded transaction payloads to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
 - `return_signed_payloads`: (optional) if present, a boolean value indicating whether the result should contain a `signed_payloads` entry. If not present, defaults to `false`.
 
 ###### Result
@@ -521,8 +521,8 @@ where:
 
 where:
 
-- `signatures`: base64url-encoded transaction signatures
-- `signed_payloads`: (optional) base64url-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`. This will be present only if `return_signed_payloads` was present and `true` in params.
+- `signatures`: base64-encoded transaction signatures
+- `signed_payloads`: (optional) base64-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`. This will be present only if `return_signed_payloads` was present and `true` in params.
 
 ###### Errors
 {: .no_toc }
@@ -573,7 +573,7 @@ sign_and_send_transaction
 where:
 
 - `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_and_send_transaction` was requested
-- `transaction`: one or more base64url-encoded transaction payload to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `transaction`: one or more base64-encoded transaction payload to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
 - `commitment_level`: one of `processed`, `confirmed`, or `finalized`
 
 ###### Result
@@ -661,7 +661,7 @@ sign_message
 where:
 
 - `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_message` was requested
-- `payloads`: one or more base64url-encoded message payloads to sign
+- `payloads`: one or more base64-encoded message payloads to sign
 - `return_signed_payloads`: (optional) if present, a boolean value indicating whether the result should contain a `signed_payloads` entry. If not present, defaults to `false`.
 
 ###### Result
@@ -676,8 +676,8 @@ where:
 
 where:
 
-- `signatures`: base64url-encoded message signatures
-- `signed_payloads`: (optional) base64url-encoded signed message payloads. This will be present only if `return_signed_payloads` was present and `true` in params.
+- `signatures`: base64-encoded message signatures
+- `signed_payloads`: (optional) base64-encoded signed message payloads. This will be present only if `return_signed_payloads` was present and `true` in params.
 
 ###### Errors
 {: .no_toc }
@@ -824,10 +824,10 @@ ERROR_ATTEST_ORIGIN_ANDROID
 if the `identity` provided in params requires verification, where:
 
 - `context`: the attestation context (for e.g., a key ID)
-- `challenge`: a base64url-encoded challenge nonce uniquely identifying this attestation request
+- `challenge`: a base64-encoded challenge nonce uniquely identifying this attestation request
 - `uri`: the URI of the wallet endpoint HTML document containing the attestation script
 
-On receipt of an `ERROR_ATTEST_ORIGIN_ANDROID` response, the dapp endpoint should decode the challenge nonce, construct the string `“attest-origin” || decoded_challenge || session_secret`, calculate the SHA256 hash of this string, and base64url-encode the result. This value, `h`, binds `challenge` to this dapp endpoint (by including the session secret). It should then construct the JSON message:
+On receipt of an `ERROR_ATTEST_ORIGIN_ANDROID` response, the dapp endpoint should decode the challenge nonce, construct the string `“attest-origin” || decoded_challenge || session_secret`, calculate the SHA256 hash of this string, and base64-encode the result. This value, `h`, binds `challenge` to this dapp endpoint (by including the session secret). It should then construct the JSON message:
 
 ```
 {
