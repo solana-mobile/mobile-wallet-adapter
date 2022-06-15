@@ -35,9 +35,8 @@ public abstract class SignPayloadRequest extends ScenarioRequest {
         return mRequest.payloads;
     }
 
-    public void completeWithSignaturesAndSignedPayloads(@NonNull @Size(min = 1) byte[][] signatures,
-                                                        @NonNull @Size(min = 1) byte[][] signedPayloads) {
-        mRequest.complete(new MobileWalletAdapterServer.SignedPayloadResult(signatures, signedPayloads));
+    public void completeWithSignedPayloads(@NonNull @Size(min = 1) byte[][] signedPayloads) {
+        mRequest.complete(new MobileWalletAdapterServer.SignedPayloadResult(signedPayloads));
     }
 
     public void completeWithDecline() {
