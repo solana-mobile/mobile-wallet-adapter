@@ -13,6 +13,7 @@ import {
     WalletNotReadyError,
     WalletPublicKeyError,
     WalletReadyState,
+    WalletSendTransactionError,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
@@ -206,6 +207,47 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                 });
             } catch (error: any) {
                 throw new WalletSignTransactionError(error?.message, error);
+            }
+        } catch (error: any) {
+            this.emit('error', error);
+            throw error;
+        }
+    }
+
+    async sendTransaction(
+        transaction: Transaction,
+        connection: Connection,
+        _options?: SendOptions,
+    ): Promise<TransactionSignature> {
+        try {
+            const [authorizationResult] = this.assertIsAuthorized();
+            try {
+                const serializedTransaction = transaction.serialize({
+                    requireAllSignatures: false,
+                    verifySignatures: false,
+                });
+                const payloads = [serializedTransaction.toString('base64')];
+                return await withLocalWallet(async (mobileWallet) => {
+                    const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
+                    let targetCommitment: 'confirmed' | 'finalized' | 'processed';
+                    switch (connection.commitment) {
+                        case 'confirmed':
+                        case 'finalized':
+                        case 'processed':
+                            targetCommitment = connection.commitment;
+                            break;
+                        default:
+                            targetCommitment = 'finalized';
+                    }
+                    const { signatures } = await mobileWallet('sign_and_send_transaction', {
+                        auth_token: freshAuthToken,
+                        commitment: targetCommitment,
+                        payloads,
+                    });
+                    return signatures[0];
+                });
+            } catch (error: any) {
+                throw new WalletSendTransactionError(error?.message, error);
             }
         } catch (error: any) {
             this.emit('error', error);
