@@ -8,6 +8,7 @@ import {
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
+    WalletDisconnectedError,
     WalletName,
     WalletNotConnectedError,
     WalletNotReadyError,
@@ -154,8 +155,7 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
             return auth_token;
         } catch (e) {
             this.disconnect();
-            // TODO: throw a first-class error
-            throw e;
+            throw new WalletDisconnectedError((e instanceof Error && e?.message) || 'Unknown error', e);
         }
     }
 
