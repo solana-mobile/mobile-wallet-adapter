@@ -15,7 +15,7 @@ import {
     WalletReadyState,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import { PublicKey, SIGNATURE_LENGTH_IN_BYTES, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -192,17 +192,14 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                 );
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
-                    const { signed_payloads } = await mobileWallet('sign_transaction', {
+                    const { signatures } = await mobileWallet('sign_transaction', {
                         auth_token: freshAuthToken,
                         payloads,
+                        return_signed_payloads: false,
                     });
-                    const signedPayloads = signed_payloads.map(getByteArrayFromBase64String);
-                    signedPayloads.forEach((signedPayload, ii) => {
-                        // FIXME: The fake wallet flips the first bit as 'proof' that work was done. Flip it back.
-                        signedPayload[0] = serializedTransactions[ii][0];
-                    });
+                    const decodedSignatures = signatures.map(getByteArrayFromBase64String);
                     return transactions.map((transaction, ii) => {
-                        const signature = signedPayloads[ii].slice(0, SIGNATURE_LENGTH_IN_BYTES);
+                        const signature = decodedSignatures[ii];
                         transaction.addSignature(publicKey, signature as Buffer);
                         return transaction;
                     });
