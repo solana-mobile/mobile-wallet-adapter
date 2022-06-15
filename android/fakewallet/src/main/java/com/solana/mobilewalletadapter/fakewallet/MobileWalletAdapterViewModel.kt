@@ -128,7 +128,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                         } catch (e: IllegalArgumentException) {
                             Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                             valid[i] = false
-                            SolanaSigningUseCase.Result(byteArrayOf(), ByteArray(64))
+                            SolanaSigningUseCase.Result(byteArrayOf(), "")
                         }
                     }
                 is MobileWalletAdapterServiceRequest.SignMessage ->
@@ -139,7 +139,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
             if (valid.all { it }) {
                 Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
-                val signatures = result.map { r -> r.signature }.toTypedArray()
+                val signatures = result.map { r -> r.signatureBase58 }.toTypedArray()
                 val signedPayloads = result.map { r -> r.signedPayload }.toTypedArray()
                 request.request.completeWithSignaturesAndSignedPayloads(signatures, signedPayloads)
             } else {
@@ -186,11 +186,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signatures = Array(request.request.payloads.size) { i ->
                 try {
-                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signature
+                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signatureBase58
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                     valid[i] = false
-                    byteArrayOf()
+                    ""
                 }
             }
 
@@ -334,7 +334,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         class SignMessage(request: SignMessageRequest) : SignPayload(request)
         data class SignAndSendTransaction(
             override val request: SignAndSendTransactionRequest,
-            val signatures: Array<ByteArray>? = null
+            val signatures: Array<String>? = null
         ) : MobileWalletAdapterRemoteRequest(request)
 
     }

@@ -514,14 +514,14 @@ where:
 
 ```
 {
-    "signatures": ["<signature>", ...],
+    "signatures": ["<transaction_signature>", ...],
     “signed_payloads”: [“<signed_transaction>”, ...],
 }
 ```
 
 where:
 
-- `signatures`: base64-encoded transaction signatures
+- `transaction_signature`: the corresponding base58-encoded transaction signatures
 - `signed_payloads`: (optional) base64-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`. This will be present only if `return_signed_payloads` was present and `true` in params.
 
 ###### Errors
@@ -546,7 +546,7 @@ where:
 
 ##### Description
 
-The wallet endpoint should attempt to simulate the transactions provided by data and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private key for the authorized account, and return the signed transactions to the dapp endpoint.
+The wallet endpoint should attempt to simulate the transactions provided by data and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private key for the authorized account, and return the signatures (and optionally the signed transactions) to the dapp endpoint.
 
 #### sign_and_send_transaction
 
@@ -669,14 +669,14 @@ where:
 
 ```
 {
-    "signatures": ["<signature>", ...],
+    "signatures": ["<message_signature>", ...],
     “signed_payloads”: [“<signed_message>”, ...],
 }
 ```
 
 where:
 
-- `signatures`: base64-encoded message signatures
+- `message_signature`: the corresponding base58-encoded message signatures
 - `signed_payloads`: (optional) base64-encoded signed message payloads. This will be present only if `return_signed_payloads` was present and `true` in params.
 
 ###### Errors
@@ -700,7 +700,7 @@ where:
 
 ##### Description
 
-The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account, and return the signed messages to the dapp endpoint.
+The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account, and return the signatures (and optionally the signed messages) to the dapp endpoint.
 
 ### Constants
 

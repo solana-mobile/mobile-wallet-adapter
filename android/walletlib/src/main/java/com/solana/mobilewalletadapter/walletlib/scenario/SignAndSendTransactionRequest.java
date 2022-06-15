@@ -42,7 +42,7 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
         return mRequest.commitmentLevel;
     }
 
-    public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
+    public void completeWithSignatures(@NonNull @Size(min = 1) String[] signatures) {
         mRequest.complete(new MobileWalletAdapterServer.SignResult(signatures));
     }
 
@@ -56,7 +56,7 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
                 "One or more invalid payloads provided", valid));
     }
 
-    public void completeWithNotCommitted(@NonNull @Size(min = 1) byte[][] signatures,
+    public void completeWithNotCommitted(@NonNull @Size(min = 1) String[] signatures,
                                          @NonNull @Size(min = 1) boolean[] committed) {
         mRequest.completeExceptionally(new MobileWalletAdapterServer.NotCommittedException(
                 "One or more transactions did not reach the requested commitment level",

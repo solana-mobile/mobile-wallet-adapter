@@ -543,9 +543,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class SignResult {
         @NonNull
         @Size(min = 1)
-        public final byte[][] signatures;
+        public final String[] signatures;
 
-        public SignResult(@NonNull @Size(min = 1) byte[][] signatures) {
+        public SignResult(@NonNull @Size(min = 1) String[] signatures) {
             this.signatures = signatures;
         }
 
@@ -562,21 +562,21 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final Type type;
 
-        public final boolean withSignedPayloads;
+        public final boolean returnSignedPayloads;
 
         protected SignPayloadRequest(@Nullable Object id,
                                      @NonNull Type type,
                                      @NonNull String authToken,
                                      @NonNull byte[][] payloads,
-                                     boolean withSignedPayloads) {
+                                     boolean returnSignedPayloads) {
             super(id, authToken, payloads);
             this.type = type;
-            this.withSignedPayloads = withSignedPayloads;
+            this.returnSignedPayloads = returnSignedPayloads;
         }
 
         @Override
         public boolean complete(@Nullable SignedPayloadResult result) {
-            if (withSignedPayloads && result != null && result.signedPayloads == null) {
+            if (returnSignedPayloads && result != null && result.signedPayloads == null) {
                 throw new IllegalArgumentException("Result expected to contain signed payloads");
             }
             return super.complete(result);
@@ -587,7 +587,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignPayloadRequest{" +
                     "type=" + type +
-                    ", withSignedPayloads=" + withSignedPayloads +
+                    ", returnSignedPayloads=" + returnSignedPayloads +
                     ", super=" + super.toString() +
                     '}';
         }
@@ -598,7 +598,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Size(min = 1)
         public final byte[][] signedPayloads;
 
-        public SignedPayloadResult(@NonNull @Size(min = 1) byte[][] signatures,
+        public SignedPayloadResult(@NonNull @Size(min = 1) String[] signatures,
                                    @Nullable @Size(min = 1) byte[][] signedPayloads) {
             super(signatures);
             if (signedPayloads != null && signedPayloads.length != signatures.length) {
@@ -664,9 +664,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final boolean withSignedPayloads = o.optBoolean(ProtocolContract.PARAMETER_RETURN_SIGNED_PAYLOADS, false);
+        final boolean returnSignedPayloads = o.optBoolean(ProtocolContract.PARAMETER_RETURN_SIGNED_PAYLOADS, false);
 
-        final SignPayloadRequest request = new SignPayloadRequest(id, type, authToken, payloads, withSignedPayloads);
+        final SignPayloadRequest request = new SignPayloadRequest(id, type, authToken, payloads, returnSignedPayloads);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadComplete(f)));
         mMethodHandlers.signPayload(request);
     }
@@ -703,12 +703,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
             assert(result != null); // checked in SignPayloadRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignRequest.complete()
-            assert(!request.withSignedPayloads ||
+            assert(!request.returnSignedPayloads ||
                     (result.signedPayloads != null && result.signedPayloads.length == request.payloads.length)); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signatures = JsonPack.packByteArraysToBase64PayloadsArray(result.signatures);
+            final JSONArray signatures = JsonPack.packStrings(result.signatures);
             final JSONArray signedPayloads;
-            if (request.withSignedPayloads) {
+            if (request.returnSignedPayloads) {
                 signedPayloads = JsonPack.packByteArraysToBase64PayloadsArray(result.signedPayloads);
             } else {
                 signedPayloads = null;
@@ -855,7 +855,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signatures = JsonPack.packByteArraysToBase64PayloadsArray(result.signatures);
+            final JSONArray signatures = JsonPack.packStrings(result.signatures);
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
@@ -870,9 +870,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     @NonNull
-    private String createNotCommittedData(@NonNull @Size(min = 1) byte[][] signatures,
+    private String createNotCommittedData(@NonNull @Size(min = 1) String[] signatures,
                                           @NonNull @Size(min = 1) boolean[] committed) {
-        final JSONArray signaturesArr = JsonPack.packByteArraysToBase64PayloadsArray(signatures);
+        final JSONArray signaturesArr = JsonPack.packStrings(signatures);
         final JSONArray committedArr = JsonPack.packBooleans(committed);
         final JSONObject o = new JSONObject();
         try {
@@ -926,14 +926,14 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class NotCommittedException extends MobileWalletAdapterServerException {
         @NonNull
         @Size(min = 1)
-        public final byte[][] signatures;
+        public final String[] signatures;
 
         @NonNull
         @Size(min = 1)
         public final boolean[] committed;
 
         public NotCommittedException(@NonNull String m,
-                                     @NonNull @Size(min = 1) byte[][] signatures,
+                                     @NonNull @Size(min = 1) String[] signatures,
                                      @NonNull @Size(min = 1) boolean[] committed) {
             super(m);
             this.signatures = signatures;

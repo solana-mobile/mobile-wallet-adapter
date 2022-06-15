@@ -335,8 +335,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doSignAndSendTransaction(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
-    ): Array<ByteArray>? {
-        var signatures: Array<ByteArray>? = null
+    ): Array<String>? {
+        var signatures: Array<String>? = null
         try {
             val sem = Semaphore(1, 1)
             // Note: not actually a blocking call - this check triggers on the thrown IOException,

@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.fakewallet.usecase
 
-import androidx.annotation.Size
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
@@ -53,7 +52,7 @@ object SolanaSigningUseCase {
         val signedTransaction = transaction.clone()
         System.arraycopy(sig, 0, signedTransaction, numSignaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
 
-        return Result(signedTransaction, sig)
+        return Result(signedTransaction, Base58EncodeUseCase(sig))
     }
 
     fun signMessage(
@@ -71,7 +70,7 @@ object SolanaSigningUseCase {
         val signedMessage = message.copyOf(message.size + SIGNATURE_LEN)
         sig.copyInto(signedMessage, message.size)
 
-        return Result(signedMessage, sig)
+        return Result(signedMessage, Base58EncodeUseCase(sig))
     }
 
     private fun readCompactArrayLen(b: ByteArray, off: Int): Pair<Int, Int> {
@@ -103,6 +102,6 @@ object SolanaSigningUseCase {
 
     data class Result(
         val signedPayload: ByteArray,
-        @Size(SIGNATURE_LEN.toLong()) val signature: ByteArray
+        val signatureBase58: String
     )
 }
