@@ -516,7 +516,7 @@ where:
 
 where:
 
-- `signed_payloads`: the corresponding base64-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `signed_transaction`: the corresponding base64-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
 
 ###### Errors
 {: .no_toc }
@@ -613,7 +613,7 @@ where:
 
   if the requested commitment level was not reached for any of the signed transactions, where:
 
-  - `signatures`: as defined for a successful result
+  - `transaction_signature`: as defined for a successful result
   - `commitment_reached`: for each entry in `signatures`, a boolean indicating whether the desired `commitment_level` was reached
 
 ##### Description
@@ -654,7 +654,7 @@ sign_message
 where:
 
 - `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_message` was requested
-- `payloads`: one or more base64url-encoded message payloads to sign
+- `message`: one or more base64url-encoded message payloads to sign
 
 ###### Result
 {: .no_toc }
@@ -667,7 +667,7 @@ where:
 
 where:
 
-- `signed_payloads`: the corresponding base64-encoded signed message payloads
+- `signed_message`: the corresponding base64-encoded signed message payloads
 
 ###### Errors
 {: .no_toc }
