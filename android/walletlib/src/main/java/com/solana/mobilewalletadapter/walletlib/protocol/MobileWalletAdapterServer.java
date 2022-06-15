@@ -525,24 +525,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final Type type;
 
-        public final boolean withSignedPayloads;
-
         protected SignPayloadRequest(@Nullable Object id,
                                      @NonNull Type type,
                                      @NonNull String authToken,
-                                     @NonNull byte[][] payloads,
-                                     boolean withSignedPayloads) {
+                                     @NonNull byte[][] payloads) {
             super(id, authToken, payloads);
             this.type = type;
-            this.withSignedPayloads = withSignedPayloads;
-        }
-
-        @Override
-        public boolean complete(@Nullable SignedPayloadResult result) {
-            if (withSignedPayloads && result != null && result.signedPayloads == null) {
-                throw new IllegalArgumentException("Result expected to contain signed payloads");
-            }
-            return super.complete(result);
         }
 
         @NonNull
@@ -550,7 +538,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignPayloadRequest{" +
                     "type=" + type +
-                    ", withSignedPayloads=" + withSignedPayloads +
                     ", super=" + super.toString() +
                     '}';
         }
@@ -559,33 +546,21 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class SignedPayloadResult implements SignResult {
         @NonNull
         @Size(min = 1)
-        public final byte[][] signatures;
-
-        @Nullable
-        @Size(min = 1)
         public final byte[][] signedPayloads;
 
-        public SignedPayloadResult(@NonNull @Size(min = 1) byte[][] signatures,
-                                   @Nullable @Size(min = 1) byte[][] signedPayloads) {
-            if (signedPayloads != null && signedPayloads.length != signatures.length) {
-                throw new IllegalArgumentException("signedPayloads length differs from signatures length");
-            }
-            this.signatures = signatures;
+        public SignedPayloadResult(@NonNull @Size(min = 1) byte[][] signedPayloads) {
             this.signedPayloads = signedPayloads;
         }
 
         @Override
         public int getNumResults() {
-            return signatures.length;
+            return signedPayloads.length;
         }
 
         @NonNull
         @Override
         public String toString() {
-            return "SignedPayloadResult{" +
-                    "signatures=" + Arrays.toString(signatures) +
-                    ", signedPayloads=" + Arrays.toString(signedPayloads) +
-                    '}';
+            return "SignedPayloadResult{signedPayloads=" + Arrays.toString(signedPayloads) + '}';
         }
     }
 
@@ -636,9 +611,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final boolean withSignedPayloads = o.optBoolean(ProtocolContract.PARAMETER_RETURN_SIGNED_PAYLOADS, false);
-
-        final SignPayloadRequest request = new SignPayloadRequest(id, type, authToken, payloads, withSignedPayloads);
+        final SignPayloadRequest request = new SignPayloadRequest(id, type, authToken, payloads);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadComplete(f)));
         mMethodHandlers.signPayload(request);
     }
@@ -674,21 +647,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             }
 
             assert(result != null); // checked in SignPayloadRequest.complete()
-            assert(result.signatures.length == request.payloads.length); // checked in SignRequest.complete()
-            assert(!request.withSignedPayloads ||
-                    (result.signedPayloads != null && result.signedPayloads.length == request.payloads.length)); // checked in SignPayloadRequest.complete()
+            assert(result.signedPayloads.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signatures = JsonPack.packByteArraysToBase64PayloadsArray(result.signatures);
-            final JSONArray signedPayloads;
-            if (request.withSignedPayloads) {
-                signedPayloads = JsonPack.packByteArraysToBase64PayloadsArray(result.signedPayloads);
-            } else {
-                signedPayloads = null;
-            }
-
+            final JSONArray signedPayloads = JsonPack.packByteArraysToBase64PayloadsArray(result.signedPayloads);
             final JSONObject o = new JSONObject();
             try {
-                o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
                 o.put(ProtocolContract.RESULT_SIGNED_PAYLOADS, signedPayloads);
             } catch (JSONException e) {
                 throw new RuntimeException("Failed preparing sign response", e);

@@ -27,22 +27,18 @@ public class ProtocolContract {
     public static final String METHOD_SIGN_TRANSACTION = "sign_transaction";
     // METHOD_SIGN_TRANSACTION takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_TRANSACTION takes a PARAMETER_PAYLOADS
-    // METHOD_SIGN_TRANSACTION takes a PARAMETER_RETURN_SIGNED_PAYLOADS
-    // METHOD_SIGN_TRANSACTION returns a RESULT_SIGNATURES
-    // METHOD_SIGN_TRANSACTION returns an optional RESULT_SIGNED_PAYLOADS
+    // METHOD_SIGN_TRANSACTION returns a RESULT_SIGNED_PAYLOADS
 
     public static final String METHOD_SIGN_AND_SEND_TRANSACTION = "sign_and_send_transaction";
     // METHOD_SIGN_AND_SEND_TRANSACTION takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_AND_SEND_TRANSACTION takes a PARAMETER_PAYLOADS
     public static final String PARAMETER_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values)
-    // METHOD_SIGN_AND_SEND_TRANSACTION returns a RESULT_SIGNATURES
+    public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base58-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGE = "sign_message";
     // METHOD_SIGN_MESSAGE takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_MESSAGE takes a PARAMETER_PAYLOADS
-    // METHOD_SIGN_MESSAGE takes a PARAMETER_RETURN_SIGNED_PAYLOADS
-    // METHOD_SIGN_MESSAGE returns a RESULT_SIGNATURES
-    // METHOD_SIGN_MESSAGE returns an optional RESULT_SIGNED_PAYLOADS
+    // METHOD_SIGN_MESSAGE returns a RESULT_SIGNED_PAYLOADS
 
     public static final String PARAMETER_IDENTITY = "identity"; // type: JSON object
     public static final String PARAMETER_IDENTITY_URI = "uri"; // type: String (absolute URI)
@@ -52,13 +48,11 @@ public class ProtocolContract {
     public static final String PARAMETER_AUTH_TOKEN = "auth_token"; // type: String
 
     public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of base64url-encoded transactions
-    public static final String PARAMETER_RETURN_SIGNED_PAYLOADS = "return_signed_payloads"; // type: Boolean
 
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
     public static final String RESULT_PUBLIC_KEY = "pub_key"; // type: String (base58-encoded public key)
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
 
-    public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base58-encoded payload signatures)
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64url-encoded signed payloads)
 
     public static final int ERROR_REAUTHORIZE = -1;
