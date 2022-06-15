@@ -160,6 +160,13 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     async disconnect(): Promise<void> {
+        try {
+            const [authorizationResult] = this.assertIsAuthorized();
+            await withLocalWallet(async (mobileWallet) => {
+                await mobileWallet('deauthorize', { auth_token: authorizationResult.authToken });
+            });
+            // eslint-disable-next-line no-empty
+        } catch {}
         if (this._authorizationResultCache) {
             this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         }
