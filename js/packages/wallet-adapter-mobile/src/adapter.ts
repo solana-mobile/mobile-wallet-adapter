@@ -273,13 +273,14 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
                     const {
-                        signed_payloads: [signedPayloadBase64Encoded],
+                        signatures: [base64EncodedSignature],
                     } = await mobileWallet('sign_message', {
                         auth_token: freshAuthToken,
                         payloads: [getBase64StringFromByteArray(message)],
+                        return_signed_payloads: false,
                     });
-                    const signedPayload = getByteArrayFromBase64String(signedPayloadBase64Encoded);
-                    return signedPayload;
+                    const signature = getByteArrayFromBase64String(base64EncodedSignature);
+                    return signature;
                 });
             } catch (error: any) {
                 throw new WalletSignMessageError(error?.message, error);
