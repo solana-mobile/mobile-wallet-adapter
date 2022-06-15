@@ -678,7 +678,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     // =============================================================================================
     // sign_and_send_transaction
-    // TODO: can we do a better job of merging this with sign_* above?
     // =============================================================================================
 
     public static class SignAndSendTransactionRequest extends SignRequest<SignatureResult> {
@@ -719,9 +718,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class SignatureResult implements SignResult {
         @NonNull
         @Size(min = 1)
-        public final byte[][] signatures;
+        public final String[] signatures;
 
-        public SignatureResult(@NonNull @Size(min = 1) byte[][] signatures) {
+        public SignatureResult(@NonNull @Size(min = 1) String[] signatures) {
             this.signatures = signatures;
         }
 
@@ -812,7 +811,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signatures = JsonPack.packByteArraysToBase64PayloadsArray(result.signatures);
+            final JSONArray signatures = JsonPack.packStrings(result.signatures);
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
@@ -827,9 +826,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     @NonNull
-    private String createNotCommittedData(@NonNull @Size(min = 1) byte[][] signatures,
+    private String createNotCommittedData(@NonNull @Size(min = 1) String[] signatures,
                                           @NonNull @Size(min = 1) boolean[] committed) {
-        final JSONArray signaturesArr = JsonPack.packByteArraysToBase64PayloadsArray(signatures);
+        final JSONArray signaturesArr = JsonPack.packStrings(signatures);
         final JSONArray committedArr = JsonPack.packBooleans(committed);
         final JSONObject o = new JSONObject();
         try {
@@ -883,14 +882,14 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class NotCommittedException extends MobileWalletAdapterServerException {
         @NonNull
         @Size(min = 1)
-        public final byte[][] signatures;
+        public final String[] signatures;
 
         @NonNull
         @Size(min = 1)
         public final boolean[] committed;
 
         public NotCommittedException(@NonNull String m,
-                                     @NonNull @Size(min = 1) byte[][] signatures,
+                                     @NonNull @Size(min = 1) String[] signatures,
                                      @NonNull @Size(min = 1) boolean[] committed) {
             super(m);
             this.signatures = signatures;

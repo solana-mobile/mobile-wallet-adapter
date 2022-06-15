@@ -330,8 +330,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doSignAndSendTransaction(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
-    ): Array<ByteArray>? {
-        var signatures: Array<ByteArray>? = null
+    ): Array<String>? {
+        var signatures: Array<String>? = null
         try {
             val sem = Semaphore(1, 1)
             // Note: not actually a blocking call - this check triggers on the thrown IOException,
@@ -348,7 +348,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: ExecutionException) {
                 throw MobileWalletAdapterClient.unpackExecutionException(e)
             }
-            Log.d(TAG, "Signatures: $result")
+            Log.d(TAG, "Signatures: ${result.signatures.contentToString()}")
             signatures = result.signatures
         } catch (e: IOException) {
             Log.e(TAG, "IO error while sending sign_and_send_transaction", e)
