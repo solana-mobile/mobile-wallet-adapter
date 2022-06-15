@@ -43,7 +43,7 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
     }
 
     public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
-        mRequest.complete(new MobileWalletAdapterServer.SignResult(signatures));
+        mRequest.complete(new MobileWalletAdapterServer.SignatureResult(signatures));
     }
 
     public void completeWithDecline() {
