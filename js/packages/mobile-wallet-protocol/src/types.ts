@@ -37,19 +37,8 @@ type Base64EncodedSignedTransaction = string;
 
 type Base64EncodedTransaction = string;
 
-/**
- * RPC methods for which the mobile wallet requires authorization.
- */
-export type PrivilegedMethods = 'sign_and_send_transaction' | 'sign_message' | 'sign_transaction';
-
 export interface MobileWallet {
-    (
-        method: 'authorize',
-        params: {
-            identity: AppIdentity;
-            privileged_methods: PrivilegedMethods[];
-        },
-    ): Promise<
+    (method: 'authorize', params: { identity: AppIdentity }): Promise<
         Readonly<{
             auth_token: AuthToken;
             pub_key: string;

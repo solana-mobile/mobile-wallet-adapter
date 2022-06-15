@@ -101,7 +101,6 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
             await withLocalWallet(async (mobileWallet) => {
                 const { auth_token, pub_key, wallet_uri_base } = await mobileWallet('authorize', {
                     identity: this._appIdentity,
-                    privileged_methods: ['sign_and_send_transaction', 'sign_message', 'sign_transaction'],
                 });
                 const base58PublicKey =
                     pub_key === 'somebase58publickey'
