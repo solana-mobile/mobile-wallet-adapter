@@ -99,13 +99,11 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
         try {
             await withLocalWallet(async (mobileWallet) => {
-                const { auth_token, pub_key, wallet_uri_base } = await mobileWallet('authorize', {
-                    identity: this._appIdentity,
-                });
-                const base58PublicKey =
-                    pub_key === 'somebase58publickey'
-                        ? '32G1W4XLPcPBw9goEg5WyYoq5LS9kK63uRVMeRsPFjDf' // Fake pubkey for use with the dev kit
-                        : pub_key;
+                const {
+                    auth_token,
+                    pub_key: base58PublicKey,
+                    wallet_uri_base,
+                } = await mobileWallet('authorize', { identity: this._appIdentity });
                 try {
                     this._publicKey = new PublicKey(base58PublicKey);
                 } catch (e) {
