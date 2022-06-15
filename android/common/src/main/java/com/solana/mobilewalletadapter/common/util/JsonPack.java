@@ -55,5 +55,25 @@ public class JsonPack {
         return booleans;
     }
 
+    @NonNull
+    public static JSONArray packStrings(@NonNull String[] strings) {
+        final JSONArray arr = new JSONArray();
+        for (String s : strings) {
+            arr.put(s);
+        }
+        return arr;
+    }
+
+    @NonNull
+    public static String[] unpackStrings(@NonNull JSONArray arr)
+            throws JSONException {
+        final int numEntries = arr.length();
+        final String[] strings = new String[numEntries];
+        for (int i = 0; i < numEntries; i++) {
+            strings[i] = arr.getString(i);
+        }
+        return strings;
+    }
+
     private JsonPack() {}
 }

@@ -184,11 +184,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signatures = Array(request.request.payloads.size) { i ->
                 try {
-                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signature
+                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signatureBase58
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                     valid[i] = false
-                    byteArrayOf()
+                    ""
                 }
             }
 
@@ -332,7 +332,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         class SignMessage(request: SignMessageRequest) : SignPayload(request)
         data class SignAndSendTransaction(
             override val request: SignAndSendTransactionRequest,
-            val signatures: Array<ByteArray>? = null
+            val signatures: Array<String>? = null
         ) : MobileWalletAdapterRemoteRequest(request)
 
     }
