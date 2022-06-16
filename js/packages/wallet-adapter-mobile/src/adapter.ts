@@ -176,20 +176,15 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         this.emit('disconnect');
     }
 
-    private assertIsAuthorized(): [AuthorizationResult, PublicKey] {
+    private assertIsAuthorized(): AuthorizationResult {
         const authorizationResult = this._authorizationResult;
         if (!authorizationResult) throw new WalletNotConnectedError();
-        return [
-            authorizationResult,
-            // Having an `authorizationResult` implies that `this.publicKey` is non-null
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.publicKey!,
-        ];
+        return authorizationResult;
     }
 
     private async performSignTransactions(transactions: Transaction[]): Promise<Transaction[]> {
         try {
-            const [authorizationResult, publicKey] = this.assertIsAuthorized();
+            const authorizationResult = this.assertIsAuthorized();
             try {
                 const serializedTransactions = transactions.map((transaction) =>
                     transaction.serialize({
@@ -225,7 +220,7 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
         _options?: SendOptions,
     ): Promise<TransactionSignature> {
         try {
-            const [authorizationResult] = this.assertIsAuthorized();
+            const authorizationResult = this.assertIsAuthorized();
             try {
                 const serializedTransaction = transaction.serialize({
                     requireAllSignatures: false,
@@ -272,7 +267,7 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     async signMessage(message: Uint8Array): Promise<Uint8Array> {
         try {
-            const [authorizationResult] = this.assertIsAuthorized();
+            const authorizationResult = this.assertIsAuthorized();
             try {
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
