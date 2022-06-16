@@ -9,7 +9,11 @@
     "sideEffects": false,
     "main": "lib/cjs/index.js",
     "module": "lib/esm/index.mjs",
-    "types": "lib/types/index.d.ts",
+    "types": "./lib/types/index.d.mts",
+    "browser": {
+        "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
+        "./lib/esm/index.mjs": "./lib/esm/index.browser.mjs"
+    },
     "exports": {
         "import": "./lib/esm/index.mjs",
         "require": "./lib/cjs/index.js"
@@ -22,8 +26,19 @@
     "private": true,
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && tsc -p tsconfig.json && tsc-esm -p tsconfig.json && tsc -p tsconfig.cjs.json",
-        "build:watch": "yarn clean && tsc --watch -p tsconfig.json & tsc-esm --watch -p tsconfig.json & tsc --watch -p tsconfig.cjs.json",
+        "build": "yarn clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "yarn clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "echo '{\"type\":\"commonjs\"}' | npx json > lib/cjs/package.json && echo '{\"type\":\"module\"} ' | npx json > lib/esm/package.json"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^22.0.0",
+        "@rollup/plugin-node-resolve": "^13.3.0",
+        "@rollup/plugin-replace": "^4.0.0",
+        "rollup": "^2.75.6",
+        "rollup-plugin-node-externals": "^4.0.0",
+        "rollup-plugin-ts": "^3.0.2"
+    },
+    "dependencies": {
+        "@solana/wallet-adapter-base": "^0.9.5"
     }
 }

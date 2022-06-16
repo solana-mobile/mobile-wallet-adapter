@@ -5,8 +5,6 @@
     "target": "es2019",
     "module": "esnext",
     "moduleResolution": "node",
-    "noEmit": true,
-    "declaration": true,
     "sourceMap": true,
     "noEmitOnError": true,
     "stripInternal": true,

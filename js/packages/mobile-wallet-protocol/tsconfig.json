@@ -1,9 +1,10 @@
 {
     "extends": "../../tsconfig.json",
-    "include": ["src"],
+    "include": ["src", "rollup.config.ts"],
     "compilerOptions": {
-        "outDir": "lib/esm",
+        "declaration": true,
         "declarationDir": "lib/types",
-        "noEmit": false
+        "declarationMap": true,
+        "outDir": "lib/esm"
     }
 }
