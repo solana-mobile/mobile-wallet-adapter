@@ -202,17 +202,13 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                 );
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
-                    const { signatures } = await mobileWallet('sign_transaction', {
-                        auth_token: freshAuthToken,
-                        payloads,
-                        return_signed_payloads: false,
-                    });
-                    const decodedSignatures = signatures.map(getByteArrayFromBase64String);
-                    return transactions.map((transaction, ii) => {
-                        const signature = decodedSignatures[ii];
-                        transaction.addSignature(publicKey, signature as Buffer);
-                        return transaction;
-                    });
+                    const { signed_payloads: base64EncodedCompiledTransactions } = await mobileWallet(
+                        'sign_transaction',
+                        { auth_token: freshAuthToken, payloads },
+                    );
+                    const compiledTransactions = base64EncodedCompiledTransactions.map(getByteArrayFromBase64String);
+                    const transactions = compiledTransactions.map(Transaction.from);
+                    return transactions;
                 });
             } catch (error: any) {
                 throw new WalletSignTransactionError(error?.message, error);
