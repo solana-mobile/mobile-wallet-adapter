@@ -51,14 +51,9 @@ export interface MobileWallet {
     >;
     (method: 'deauthorize', params: { auth_token: AuthToken }): Promise<Readonly<Record<string, never>>>;
     (method: 'reauthorize', params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
-    (
-        method: 'sign_message',
-        params: { auth_token: AuthToken; payloads: Base64EncodedMessage[]; return_signed_payloads: false },
-    ): Promise<Readonly<{ signatures: Base64EncodedSignature[] }>>;
-    (
-        method: 'sign_message',
-        params: { auth_token: AuthToken; payloads: Base64EncodedMessage[]; return_signed_payloads: true },
-    ): Promise<Readonly<{ signatures: Base64EncodedSignature[]; signed_payloads: Base64EncodedSignedMessage[] }>>;
+    (method: 'sign_message', params: { auth_token: AuthToken; payloads: Base64EncodedMessage[] }): Promise<
+        Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>
+    >;
     (
         method: 'sign_transaction',
         params: { auth_token: AuthToken; payloads: Base64EncodedTransaction[]; return_signed_payloads: false },

@@ -18,7 +18,15 @@ import {
     WalletSignMessageError,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
+import {
+    Connection,
+    Message,
+    PublicKey,
+    SendOptions,
+    SIGNATURE_LENGTH_IN_BYTES,
+    Transaction,
+    TransactionSignature,
+} from '@solana/web3.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -273,13 +281,13 @@ export class NativeWalletAdapter extends BaseMessageSignerWalletAdapter {
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
                     const {
-                        signatures: [base64EncodedSignature],
+                        signed_payloads: [base64EncodedSignedMessage],
                     } = await mobileWallet('sign_message', {
                         auth_token: freshAuthToken,
                         payloads: [getBase64StringFromByteArray(message)],
-                        return_signed_payloads: false,
                     });
-                    const signature = getByteArrayFromBase64String(base64EncodedSignature);
+                    const signedMessage = getByteArrayFromBase64String(base64EncodedSignedMessage);
+                    const signature = signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES);
                     return signature;
                 });
             } catch (error: any) {
