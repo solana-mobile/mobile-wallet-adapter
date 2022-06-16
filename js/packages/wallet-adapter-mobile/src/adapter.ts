@@ -20,7 +20,6 @@ import {
 } from '@solana/wallet-adapter-base';
 import {
     Connection,
-    Message,
     PublicKey,
     SendOptions,
     SIGNATURE_LENGTH_IN_BYTES,
