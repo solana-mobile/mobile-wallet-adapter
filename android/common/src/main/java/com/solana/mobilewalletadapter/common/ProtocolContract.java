@@ -47,13 +47,13 @@ public class ProtocolContract {
 
     public static final String PARAMETER_AUTH_TOKEN = "auth_token"; // type: String
 
-    public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of base64url-encoded transactions
+    public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of String (base64-encoded payloads)
 
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
     public static final String RESULT_PUBLIC_KEY = "pub_key"; // type: String (base58-encoded public key)
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
 
-    public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64url-encoded signed payloads)
+    public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)
 
     public static final int ERROR_REAUTHORIZE = -1;
     public static final int ERROR_AUTHORIZATION_FAILED = -2;
