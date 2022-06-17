@@ -19,7 +19,8 @@
         "require": "./lib/cjs/index.js"
     },
     "files": [
-        "lib"
+        "lib",
+        "LICENSE"
     ],
     "scripts": {
         "clean": "shx rm -rf lib/*",
