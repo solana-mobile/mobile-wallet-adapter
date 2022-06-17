@@ -216,6 +216,13 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         try {
             const authorizationResult = this.assertIsAuthorized();
             try {
+                if (transaction.feePayer == null) {
+                    transaction.feePayer = this.publicKey || undefined;
+                }
+                if (transaction.recentBlockhash == null) {
+                    const { blockhash } = await connection.getRecentBlockhash(connection.commitment);
+                    transaction.recentBlockhash = blockhash;
+                }
                 const serializedTransaction = transaction.serialize({
                     requireAllSignatures: false,
                     verifySignatures: false,
