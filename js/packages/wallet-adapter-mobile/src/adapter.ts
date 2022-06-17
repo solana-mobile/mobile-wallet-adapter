@@ -38,7 +38,7 @@ function getByteArrayFromBase64String(base64EncodedByteArray: string): Uint8Arra
     return new Uint8Array(
         atob(base64EncodedByteArray)
             .split('')
-            .map((c) => c.charCodeAt(0))
+            .map((c) => c.charCodeAt(0)),
     );
 }
 
@@ -98,7 +98,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 'connect',
                 // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                this.publicKey!
+                this.publicKey!,
             );
             return;
         }
@@ -123,7 +123,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     'connect',
                     // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    this.publicKey!
+                    this.publicKey!,
                 );
             });
         } catch (e) {
@@ -142,7 +142,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     private async performReauthorization(
         mobileWallet: MobileWallet,
-        currentAuthorizationResult: AuthorizationResult
+        currentAuthorizationResult: AuthorizationResult,
     ): Promise<AuthToken> {
         try {
             const { auth_token } = await mobileWallet('reauthorize', {
@@ -184,16 +184,16 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     transaction.serialize({
                         requireAllSignatures: false,
                         verifySignatures: false,
-                    })
+                    }),
                 );
                 const payloads = serializedTransactions.map((serializedTransaction) =>
-                    serializedTransaction.toString('base64')
+                    serializedTransaction.toString('base64'),
                 );
                 return await withLocalWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
                     const { signed_payloads: base64EncodedCompiledTransactions } = await mobileWallet(
                         'sign_transaction',
-                        { auth_token: freshAuthToken, payloads }
+                        { auth_token: freshAuthToken, payloads },
                     );
                     const compiledTransactions = base64EncodedCompiledTransactions.map(getByteArrayFromBase64String);
                     const transactions = compiledTransactions.map(Transaction.from);
@@ -211,7 +211,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     async sendTransaction(
         transaction: Transaction,
         connection: Connection,
-        _options?: SendOptions
+        _options?: SendOptions,
     ): Promise<TransactionSignature> {
         try {
             const authorizationResult = this.assertIsAuthorized();
