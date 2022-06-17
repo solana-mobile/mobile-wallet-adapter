@@ -1,4 +1,4 @@
-import { SolanaMobileWalletAdapterAssociationPortOutOfRangeError } from './errors';
+import { SolanaMobileWalletAdapterProtocolAssociationPortOutOfRangeError } from './errors';
 
 declare const tag: unique symbol;
 export type AssociationPort = number & { readonly [tag]: 'AssociationPort' };
@@ -9,7 +9,7 @@ export function getRandomAssociationPort(): AssociationPort {
 
 export function assertAssociationPort(port: number): AssociationPort {
     if (port < 49152 || port > 65535) {
-        throw new SolanaMobileWalletAdapterAssociationPortOutOfRangeError(port);
+        throw new SolanaMobileWalletAdapterProtocolAssociationPortOutOfRangeError(port);
     }
     return port as AssociationPort;
 }

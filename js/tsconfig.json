@@ -1,18 +1,16 @@
 {
-  "include": ["packages/*/*/src"],
-  "exclude": ["node_modules", "packages/*/*/node_modules"],
+  "include": ["rollup.config.ts"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
-    "target": "es2019",
+    "declaration": true,
+    "declarationMap": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "sourceMap": true,
     "noEmitOnError": true,
-    "stripInternal": true,
-    "jsx": "react",
+    "sourceMap": true,
     "strict": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "typeRoots": ["node_modules/@types"]
+    "target": "ES6"
   }
 }

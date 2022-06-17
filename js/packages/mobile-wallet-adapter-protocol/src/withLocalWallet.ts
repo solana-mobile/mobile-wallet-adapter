@@ -1,8 +1,10 @@
-import { WalletConnectionError } from '@solana/wallet-adapter-base';
-
 import { getRandomAssociationPort } from './associationPort';
 import createHelloReq from './createHelloReq';
-import { SolanaMobileWalletAdapterJsonRpcError, SolanaMobileWalletAdapterSessionClosedError } from './errors';
+import {
+    SolanaMobileWalletAdapterProtocolJsonRpcError,
+    SolanaMobileWalletAdapterProtocolSessionEstablishmentError,
+    SolanaMobileWalletAdapterProtocolSessionClosedError,
+} from './errors';
 import generateAssociationKeypair from './generateAssociationKeypair';
 import generateECDHKeypair from './generateECDHKeypair';
 import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL';
@@ -59,19 +61,14 @@ export default async function withLocalWallet<TReturn>(callback: (wallet: Mobile
             if (evt.wasClean) {
                 state = { __type: 'disconnected' };
             } else {
-                reject(new SolanaMobileWalletAdapterSessionClosedError(evt.code, evt.reason));
+                reject(new SolanaMobileWalletAdapterProtocolSessionClosedError(evt.code, evt.reason));
             }
             disposeSocket();
         };
         const handleError = (_evt: Event) => {
             disposeSocket();
             if (++attempts >= 100) {
-                reject(
-                    new WalletConnectionError(
-                        'Failed to connect to the native wallet on port ' +
-                            `${randomAssociationPort} after 100 attempts`,
-                    ),
-                );
+                reject(new SolanaMobileWalletAdapterProtocolSessionEstablishmentError(randomAssociationPort));
             } else {
                 attemptSocketConnection();
             }
@@ -86,7 +83,7 @@ export default async function withLocalWallet<TReturn>(callback: (wallet: Mobile
                         delete jsonRpcResponsePromises[jsonRpcMessage.id];
                         responsePromise.resolve(jsonRpcMessage.result);
                     } catch (e) {
-                        if (e instanceof SolanaMobileWalletAdapterJsonRpcError) {
+                        if (e instanceof SolanaMobileWalletAdapterProtocolJsonRpcError) {
                             const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
                             delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                             responsePromise.reject(e);

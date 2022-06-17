@@ -31,8 +31,6 @@ export type AuthToken = string;
 
 type Base58EncodedSignature = string;
 
-type Base64EncodedSignature = string;
-
 type Base64EncodedMessage = string;
 
 type Base64EncodedSignedMessage = string;

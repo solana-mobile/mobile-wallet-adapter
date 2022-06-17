@@ -1,4 +1,4 @@
-import { SolanaMobileWalletAdapterJsonRpcError } from './errors';
+import { SolanaMobileWalletAdapterProtocolJsonRpcError } from './errors';
 import { SharedSecret } from './parseHelloRsp';
 
 const INITIALIZATION_VECTOR_BYTES = 12;
@@ -35,7 +35,7 @@ export async function decryptJsonRpcMessage<TMessage>(message: ArrayBuffer, shar
     const plaintext = getUtf8Decoder().decode(plaintextBuffer);
     const jsonRpcMessage = JSON.parse(plaintext);
     if (Object.hasOwnProperty.call(jsonRpcMessage, 'error')) {
-        throw new SolanaMobileWalletAdapterJsonRpcError(
+        throw new SolanaMobileWalletAdapterProtocolJsonRpcError(
             jsonRpcMessage.id,
             jsonRpcMessage.error.code,
             jsonRpcMessage.error.message,
