@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Solana Labs, Inc.
+ * Copyright (c) 2022 Solana Mobile Inc.
  */
 
 package com.solana.mobilewalletadapter.fakewallet.ui.associate
