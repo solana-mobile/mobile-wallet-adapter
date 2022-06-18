@@ -25,6 +25,7 @@
         </activity>
 
         <activity
+            android:launchMode="singleTask"
             android:name=".MobileWalletAdapterActivity"
             android:exported="true">
             <!-- Default solana-wallet URI from a browser or native dapp -->
