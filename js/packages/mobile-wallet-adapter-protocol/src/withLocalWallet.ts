@@ -1,4 +1,3 @@
-import { getRandomAssociationPort } from './associationPort';
 import createHelloReq from './createHelloReq';
 import {
     SolanaMobileWalletAdapterProtocolJsonRpcError,
@@ -7,9 +6,9 @@ import {
 } from './errors';
 import generateAssociationKeypair from './generateAssociationKeypair';
 import generateECDHKeypair from './generateECDHKeypair';
-import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
+import { startSession } from './startSession';
 import { AssociationKeypair, MobileWallet } from './types';
 
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
@@ -27,12 +26,9 @@ type State =
 
 export default async function withLocalWallet<TReturn>(callback: (wallet: MobileWallet) => TReturn): Promise<TReturn> {
     const associationKeypair = await generateAssociationKeypair();
-    const randomAssociationPort = getRandomAssociationPort();
-    const associationUrl = await getAssociateAndroidIntentURL(associationKeypair.publicKey, randomAssociationPort);
-    const websocketURL = `ws://localhost:${randomAssociationPort}/solana-wallet`;
+    const sessionPort = await startSession(associationKeypair.publicKey);
+    const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
     let nextJsonRpcMessageId = 1;
-    // Trigger the native wallet to open the websocket.
-    window.location.assign(associationUrl.toString()); // TODO: Use timing hack to detect if protocol was supported (eg. if the window was blurred shortly after)
     let state: State = { __type: 'disconnected' };
     return new Promise((resolve, reject) => {
         let attempts = 0;
@@ -68,7 +64,7 @@ export default async function withLocalWallet<TReturn>(callback: (wallet: Mobile
         const handleError = (_evt: Event) => {
             disposeSocket();
             if (++attempts >= 100) {
-                reject(new SolanaMobileWalletAdapterProtocolSessionEstablishmentError(randomAssociationPort));
+                reject(new SolanaMobileWalletAdapterProtocolSessionEstablishmentError(sessionPort));
             } else {
                 attemptSocketConnection();
             }

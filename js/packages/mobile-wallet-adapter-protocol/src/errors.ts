@@ -1,3 +1,10 @@
+export class SolanaMobileWalletAdapterWalletNotInstalledError extends Error {
+    constructor() {
+        super(`Found no installed wallet that supports the mobile wallet protocol.`);
+        this.name = 'SolanaMobileWalletAdapterWalletNotInstalledError';
+    }
+}
+
 export class SolanaMobileWalletAdapterProtocolSessionEstablishmentError extends Error {
     constructor(port: number) {
         super(`Failed to connect to the wallet websocket on port ${port}.`);
