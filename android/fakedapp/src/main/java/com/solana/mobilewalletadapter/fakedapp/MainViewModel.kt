@@ -52,6 +52,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun getCapabilities(sender: StartActivityForResultSender) {
+        localAssociateAndExecute(sender) { client ->
+            doGetCapabilities(client)
+        }
+    }
+
     suspend fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
         val signedTransactions = localAssociateAndExecute(sender) { client ->
             val transactions = Array(numTransactions) {
@@ -241,6 +247,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return deauthorized
     }
 
+    private suspend fun doGetCapabilities(client: MobileWalletAdapterClient) {
+        try {
+            val sem = Semaphore(1, 1)
+            // Note: not actually a blocking call - this check triggers on the thrown IOException,
+            // which occurs when the client is not connected
+            @Suppress("BlockingMethodInNonBlockingContext")
+            val future = client.getCapabilitiesAsync()
+            future.notifyOnComplete { sem.release() }
+            sem.acquire()
+            val result = try {
+                // Note: this call won't block, since we've received the completion notification
+                @Suppress("BlockingMethodInNonBlockingContext")
+                future.get()
+            } catch (e: ExecutionException) {
+                throw MobileWalletAdapterClient.unpackExecutionException(e)
+            }
+            Log.d(TAG, "Capabilities: $result")
+        } catch (e: IOException) {
+            Log.e(TAG, "IO error while sending get_capabilities", e)
+        } catch (e: JsonRpc20Client.JsonRpc20RemoteException) {
+            Log.e(TAG, "Remote exception for get_capabilities", e)
+        } catch (e: JsonRpc20Client.JsonRpc20Exception) {
+            Log.e(TAG, "JSON-RPC client exception for get_capabilities", e)
+        } catch (e: TimeoutException) {
+            Log.e(TAG, "Timed out while waiting for get_capabilities result", e)
+        } catch (e: CancellationException) {
+            Log.e(TAG, "get_capabilities request was cancelled", e)
+        }
+    }
+
     private suspend fun doSignTransaction(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
@@ -272,6 +308,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
                 ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
                 ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
+                ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", e)
                 else -> Log.e(TAG, "Remote exception for authorize", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
@@ -315,6 +352,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
                 ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
                 ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
+                ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", e)
                 else -> Log.e(TAG, "Remote exception for sign_message", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {
@@ -362,6 +400,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", e)
                 ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", e)
                 ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", e)
+                ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", e)
                 else -> Log.e(TAG, "Remote exception for authorize", e)
             }
         } catch (e: JsonRpc20Client.JsonRpc20Exception) {

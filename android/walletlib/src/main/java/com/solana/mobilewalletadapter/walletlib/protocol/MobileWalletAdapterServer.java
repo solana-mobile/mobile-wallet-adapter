@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
@@ -32,6 +33,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     private static final String TAG = MobileWalletAdapterServer.class.getSimpleName();
 
     @NonNull
+    private final MobileWalletAdapterConfig mConfig;
+    @NonNull
     private final Handler mHandler;
     @NonNull
     private final MethodHandlers mMethodHandlers;
@@ -44,7 +47,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         void signAndSendTransaction(@NonNull SignAndSendTransactionRequest request);
     }
 
-    public MobileWalletAdapterServer(@NonNull Looper ioLooper, @NonNull MethodHandlers methodHandlers) {
+    public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
+                                     @NonNull Looper ioLooper,
+                                     @NonNull MethodHandlers methodHandlers) {
+        mConfig = config;
         mHandler = new Handler(ioLooper);
         mMethodHandlers = methodHandlers;
     }
@@ -64,6 +70,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 case ProtocolContract.METHOD_DEAUTHORIZE:
                     handleDeauthorize(id, params);
                     break;
+                case ProtocolContract.METHOD_GET_CAPABILITIES:
+                    handleGetCapabilities(id, params);
+                    break;
                 case ProtocolContract.METHOD_SIGN_TRANSACTION:
                     handleSignPayload(id, params, SignPayloadRequest.Type.Transaction);
                     break;
@@ -71,7 +80,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     handleSignPayload(id, params, SignPayloadRequest.Type.Message);
                     break;
                 case ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTION:
-                    handleSignAndSendTransaction(id, params);
+                    if (mConfig.supportsSignAndSendTransaction) {
+                        handleSignAndSendTransaction(id, params);
+                    } else {
+                        handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
+                                ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTION +
+                                "' not available", null);
+                    }
                     break;
                 default:
                     handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
@@ -462,6 +477,37 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     // =============================================================================================
+    // get_capabilities
+    // =============================================================================================
+
+    private void handleGetCapabilities(@Nullable Object id, @Nullable Object params) throws IOException {
+        if (!(params instanceof JSONObject)) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
+            return;
+        }
+
+        final JSONObject o = (JSONObject) params;
+        if (o.keys().hasNext()) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "params expected to be empty", null);
+        }
+
+        final JSONObject result = new JSONObject();
+        try {
+            result.put(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION, false);
+            result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTION, mConfig.supportsSignAndSendTransaction);
+            if (mConfig.maxTransactionsPerSigningRequest != 0) {
+                result.put(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, mConfig.maxTransactionsPerSigningRequest);
+            }
+            if (mConfig.maxMessagesPerSigningRequest != 0) {
+                result.put(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, mConfig.maxMessagesPerSigningRequest);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException("Failed preparing get_capabilities response", e);
+        }
+        handleRpcResult(id, result);
+    }
+
+    // =============================================================================================
     // sign_* common
     // =============================================================================================
 
@@ -611,6 +657,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
+        if (checkExceedsSigningLimits(payloads.length, type)) {
+            handleRpcError(id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of payloads provided for signing exceeds implementation limit", null);
+            return;
+        }
+
         final SignPayloadRequest request = new SignPayloadRequest(id, type, authToken, payloads);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadComplete(f)));
         mMethodHandlers.signPayload(request);
@@ -634,6 +685,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 } else if (cause instanceof InvalidPayloadException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_INVALID_PAYLOAD, "payload invalid for signing",
                             createInvalidPayloadData(((InvalidPayloadException) cause).valid));
+                } else if (cause instanceof  TooManyPayloadsException) {
+                    handleRpcError(request.id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of payloads provided for signing exceeds implementation limit", null);
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
                 }
@@ -674,6 +727,22 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         return o.toString();
+    }
+
+    private boolean checkExceedsSigningLimits(@IntRange(from = 0) int numPayloads,
+                                              @NonNull SignPayloadRequest.Type type) {
+        final int limit;
+        switch (type) {
+            case Transaction:
+                limit = mConfig.maxTransactionsPerSigningRequest;
+                break;
+            case Message:
+                limit = mConfig.maxMessagesPerSigningRequest;
+                break;
+            default:
+                throw new RuntimeException("Unexpected transaction type: " + type);
+        }
+        return (limit != 0 && numPayloads > limit);
     }
 
     // =============================================================================================
@@ -759,6 +828,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
+        if (checkExceedsSigningLimits(payloads.length, SignPayloadRequest.Type.Transaction)) {
+            handleRpcError(id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of transactions provided for signing exceeds implementation limit", null);
+            return;
+        }
+
         final String commitmentLevelStr = o.optString(ProtocolContract.PARAMETER_COMMITMENT);
         final CommitmentLevel commitmentLevel = CommitmentLevel.fromCommitmentLevelString(
                 commitmentLevelStr);
@@ -796,6 +870,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     final NotCommittedException e2 = (NotCommittedException) cause;
                     handleRpcError(request.id, ProtocolContract.ERROR_NOT_COMMITTED, "transaction not committed",
                             createNotCommittedData(e2.signatures, e2.committed));
+                } else if (cause instanceof  TooManyPayloadsException) {
+                    handleRpcError(request.id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of transactions provided for signing exceeds implementation limit", null);
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
                 }
@@ -903,5 +979,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     "/signatures=" + Arrays.toString(signatures) +
                     "/committed=" + Arrays.toString(committed);
         }
+    }
+
+    public static class TooManyPayloadsException extends MobileWalletAdapterServerException {
+        public TooManyPayloadsException(@NonNull String m) { super(m); }
     }
 }

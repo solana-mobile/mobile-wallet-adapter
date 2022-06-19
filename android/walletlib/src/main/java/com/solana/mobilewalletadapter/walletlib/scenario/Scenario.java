@@ -16,6 +16,7 @@ import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSession
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
@@ -29,6 +30,8 @@ public abstract class Scenario {
     public final byte[] associationPublicKey;
 
     @NonNull
+    protected final MobileWalletAdapterConfig mMobileWalletAdapterConfig;
+    @NonNull
     protected final Looper mIoLooper;
     @NonNull
     protected final Handler mIoHandler;
@@ -38,11 +41,13 @@ public abstract class Scenario {
     protected final AuthRepository mAuthRepository;
 
     protected Scenario(@NonNull Context context,
+                       @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                        @NonNull AuthIssuerConfig authIssuerConfig,
                        @NonNull Callbacks callbacks,
                        @NonNull byte[] associationPublicKey)
     {
         mCallbacks = callbacks;
+        mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationPublicKey = associationPublicKey;
 
         final LooperThread t = new LooperThread();
@@ -61,7 +66,7 @@ public abstract class Scenario {
     public MessageReceiver createMessageReceiver() {
         return new MobileWalletAdapterSession(
                 this,
-                new MobileWalletAdapterServer(mIoLooper, mMethodHandlers),
+                new MobileWalletAdapterServer(mMobileWalletAdapterConfig, mIoLooper, mMethodHandlers),
                 mSessionStateCallbacks);
     }
 

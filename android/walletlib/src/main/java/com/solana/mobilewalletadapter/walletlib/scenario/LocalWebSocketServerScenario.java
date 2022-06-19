@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
 
 public class LocalWebSocketServerScenario extends Scenario {
@@ -21,11 +22,12 @@ public class LocalWebSocketServerScenario extends Scenario {
     private State mState = State.NOT_STARTED;
 
     public LocalWebSocketServerScenario(@NonNull Context context,
+                                        @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                         @NonNull AuthIssuerConfig authIssuerConfig,
                                         @NonNull Callbacks callbacks,
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
-        super(context, authIssuerConfig, callbacks, associationPublicKey);
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }

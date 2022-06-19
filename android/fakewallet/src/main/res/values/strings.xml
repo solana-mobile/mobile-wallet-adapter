@@ -18,6 +18,7 @@
     <string name="label_simulate_reauthorize">Simulate reauthorization req\'d</string>
     <string name="label_simulate_authorization_failed">Simulate auth token invalid</string>
     <string name="label_simulate_invalid_payload">Simulate first payload invalid</string>
+    <string name="label_simulate_too_many_payloads">Simulate too many payloads</string>
 
     <!-- Send Transaction fragment strings -->
     <string name="label_send_transaction">Sending transaction(s)</string>

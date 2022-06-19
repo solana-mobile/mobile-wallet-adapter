@@ -39,6 +39,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        viewBinding.btnGetCapabilities.setOnClickListener {
+            lifecycleScope.launch { viewModel.getCapabilities(intentSender) }
+        }
+
         viewBinding.btnAuthorize.setOnClickListener {
             lifecycleScope.launch { viewModel.authorize(intentSender) }
         }
@@ -59,6 +63,10 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch { viewModel.signTransaction(intentSender, 3) }
         }
 
+        viewBinding.btnSignTxnX20.setOnClickListener {
+            lifecycleScope.launch { viewModel.signTransaction(intentSender, 20) }
+        }
+
         viewBinding.btnAuthorizeSign.setOnClickListener {
             lifecycleScope.launch { viewModel.authorizeAndSignTransaction(intentSender) }
         }
@@ -71,12 +79,20 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch { viewModel.signMessage(intentSender, 3) }
         }
 
+        viewBinding.btnSignMsgX20.setOnClickListener {
+            lifecycleScope.launch { viewModel.signMessage(intentSender, 20) }
+        }
+
         viewBinding.btnSignAndSendTxnX1.setOnClickListener {
             lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 1) }
         }
 
         viewBinding.btnSignAndSendTxnX3.setOnClickListener {
             lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 3) }
+        }
+
+        viewBinding.btnSignAndSendTxnX20.setOnClickListener {
+            lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 20) }
         }
     }
 

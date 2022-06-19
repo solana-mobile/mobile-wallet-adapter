@@ -11,10 +11,17 @@
     tools:context=".MainActivity">
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_authorize"
+        android:id="@+id/btn_get_capabilities"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
+        android:text="@string/label_get_capabilities" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_authorize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_get_capabilities"
         android:text="@string/label_authorize" />
 
     <androidx.appcompat.widget.AppCompatButton
@@ -46,10 +53,17 @@
         android:text="@string/label_sign_txn_x3" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_authorize_sign"
+        android:id="@+id/btn_sign_txn_x20"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_sign_txn_x3"
+        android:text="@string/label_sign_txn_x20" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_authorize_sign"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_txn_x20"
         android:text="@string/label_authorize_sign_txn" />
 
     <androidx.appcompat.widget.AppCompatButton
@@ -67,10 +81,17 @@
         android:text="@string/label_sign_msg_x3" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_sign_and_send_txn_x1"
+        android:id="@+id/btn_sign_msg_x20"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_sign_msg_x3"
+        android:text="@string/label_sign_msg_x20" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_and_send_txn_x1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_msg_x20"
         android:text="@string/label_sign_and_send_txn_x1" />
 
     <androidx.appcompat.widget.AppCompatButton
@@ -79,5 +100,12 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_sign_and_send_txn_x1"
         android:text="@string/label_sign_and_send_txn_x3" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_and_send_txn_x20"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_and_send_txn_x3"
+        android:text="@string/label_sign_and_send_txn_x20" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

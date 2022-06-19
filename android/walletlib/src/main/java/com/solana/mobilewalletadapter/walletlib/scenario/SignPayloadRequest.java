@@ -49,6 +49,11 @@ public abstract class SignPayloadRequest extends ScenarioRequest {
                 "One or more invalid payloads provided", valid));
     }
 
+    public void completeWithTooManyPayloads() {
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.TooManyPayloadsException(
+                "Number of payloads provided for signing exceeds implementation limit"));
+    }
+
     @VisibleForTesting
     public void completeWithReauthorizationRequired() {
         mRequest.completeExceptionally(new MobileWalletAdapterServer.ReauthorizationRequiredException(
