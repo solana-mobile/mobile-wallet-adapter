@@ -33,10 +33,25 @@ export class SolanaMobileWalletAdapterProtocolReauthorizeError extends Error {
     }
 }
 
+type JSONRPCErrorCode = number;
+
+export enum SolanaMobileWalletAdapterProtocolError {
+    ERROR_REAUTHORIZE = -1,
+    ERROR_AUTHORIZATION_FAILED = -2,
+    ERROR_INVALID_PAYLOAD = -3,
+    ERROR_NOT_SIGNED = -4,
+    ERROR_NOT_COMMITTED = -5,
+    ERROR_ATTEST_ORIGIN_ANDROID = -100,
+}
+
 export class SolanaMobileWalletAdapterProtocolJsonRpcError extends Error {
-    code: number;
+    code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode;
     jsonRpcMessageId: number;
-    constructor(jsonRpcMessageId: number, code: number, message: string) {
+    constructor(
+        jsonRpcMessageId: number,
+        code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode,
+        message: string,
+    ) {
         super(message);
         this.code = code;
         this.jsonRpcMessageId = jsonRpcMessageId;
