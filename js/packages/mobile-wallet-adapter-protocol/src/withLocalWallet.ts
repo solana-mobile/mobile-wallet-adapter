@@ -1,8 +1,8 @@
 import createHelloReq from './createHelloReq';
 import {
     SolanaMobileWalletAdapterProtocolJsonRpcError,
-    SolanaMobileWalletAdapterProtocolSessionEstablishmentError,
     SolanaMobileWalletAdapterProtocolSessionClosedError,
+    SolanaMobileWalletAdapterProtocolSessionEstablishmentError,
 } from './errors';
 import generateAssociationKeypair from './generateAssociationKeypair';
 import generateECDHKeypair from './generateECDHKeypair';
