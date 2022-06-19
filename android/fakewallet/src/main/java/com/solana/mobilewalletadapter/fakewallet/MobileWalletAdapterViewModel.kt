@@ -17,6 +17,7 @@ import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.RemoteAssociationUri
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,6 +76,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         val scenario = associationUri.createScenario(
             getApplication<FakeWalletApplication>().applicationContext,
+            MobileWalletAdapterConfig(true, 10, 10),
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
         )
@@ -176,6 +178,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithInvalidPayloads(valid)
     }
 
+    fun signPayloadSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignPayload) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithTooManyPayloads()
+    }
+
     fun signAndSendTransactionSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
         viewModelScope.launch {
             val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
@@ -250,6 +259,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
         val committed = BooleanArray(request.request.payloads.size) { i -> i != 0 }
         request.request.completeWithNotCommitted(request.signatures!!, committed)
+    }
+
+    fun signAndSendTransactionSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithTooManyPayloads()
     }
 
     private fun rejectStaleRequest(

@@ -477,6 +477,52 @@ The original `auth_token` passed to this method remains valid, and the dapp endp
 
 The clone_authorization method enables sharing of an authorization between related instances of a dapp endpoint (for example, running on a mobile device and a desktop OS). This is a sensitive operation; dapp endpoints must endeavor to transfer the token securely between dapp endpoint instances. The ability of wallet endpoints to validate the identity of the holder of the cloned token is an implementation detail, and may be weaker than that of the original token. As such, not all wallet endpoints are expected to support this feature.
 
+#### get_capabilities
+
+##### JSON-RPC method specification
+
+###### Method
+{: .no_toc }
+
+```
+get_capabilities
+```
+
+###### Params
+{: .no_toc }
+
+```
+{}
+```
+
+###### Result
+{: .no_toc }
+
+```
+{
+    "supports_clone_authorization": <supports_clone_authorization>,
+    "supports_sign_and_send_transaction": <supports_sign_and_send_transaction>,
+    "max_transactions_per_request": <max_transactions_per_request>,
+    "max_messages_per_request": <max_messages_per_request>,
+}
+```
+
+where:
+
+- `supports_clone_authorization`: `true` if the [`clone_authorization`](#clone_authorization) method is supported, otherwise `false`
+- `supports_sign_and_send_transaction`: `true` if the [`sign_and_send_transaction`](#sign_and_send_transaction) method is supported, otherwise `false`
+- `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transaction`](#sign_transaction) or [`sign_and_send_transaction`](#sign_and_send_transaction) request. If absent, the implementation doesn't publish a specific limit for this parameter.
+- `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_message`](#sign_message) request. If absent, the implementation doesn't publish a specific limit for this parameter.
+
+###### Errors
+{: .no_toc }
+
+- `-32602` (Invalid params) if the params object does not match the format defined above
+
+##### Description
+
+This method can be used to enumerate the capabilities and limits of a wallet endpoint's implementation of this specification. It returns whether optional specification features are supported, as well as any implementation-specific limits.
+
 ### Privileged methods
 
 #### sign_transaction
@@ -537,6 +583,7 @@ where:
     - `transaction_valid`: an array of booleans with the same length as payloads indicating which are valid
 
 - `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign these transactions for any reason
+- `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
 
@@ -615,6 +662,7 @@ where:
 
   - `transaction_signature`: as defined for a successful result
   - `commitment_reached`: for each entry in `signatures`, a boolean indicating whether the desired `commitment_level` was reached
+- `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
 
@@ -687,6 +735,7 @@ where:
 
   - `message_valid`: an array of booleans with the same length as `payloads` indicating which are valid
 - `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign these messages for any reason
+- - `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all messages due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
 
@@ -702,6 +751,7 @@ const ERROR_AUTHORIZATION_FAILED = -2
 const ERROR_INVALID_PAYLOAD = -3
 const ERROR_NOT_SIGNED = -4
 const ERROR_NOT_COMMITTED = -5
+const ERROR_TOO_MANY_PAYLOADS = -6
 
 const ERROR_ATTEST_ORIGIN_ANDROID = -100
 

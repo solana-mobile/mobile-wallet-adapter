@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
 public class RemoteAssociationUri extends AssociationUri {
@@ -36,6 +37,7 @@ public class RemoteAssociationUri extends AssociationUri {
     @NonNull
     @Override
     public Scenario createScenario(@NonNull Context context,
+                                   @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                    @NonNull AuthIssuerConfig authIssuerConfig,
                                    @NonNull Scenario.Callbacks callbacks) {
         throw new UnsupportedOperationException("Remote association is not yet implemented");

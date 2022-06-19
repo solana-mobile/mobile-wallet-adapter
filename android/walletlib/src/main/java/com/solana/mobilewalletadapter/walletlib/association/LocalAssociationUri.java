@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.LocalWebSocketServerScenario;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
@@ -35,10 +36,11 @@ public class LocalAssociationUri extends AssociationUri {
     @NonNull
     @Override
     public LocalWebSocketServerScenario createScenario(@NonNull Context context,
+                                                       @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                                        @NonNull AuthIssuerConfig authIssuerConfig,
                                                        @NonNull Scenario.Callbacks callbacks) {
-        return new LocalWebSocketServerScenario(context, authIssuerConfig, callbacks,
-                associationPublicKey, port);
+        return new LocalWebSocketServerScenario(context, mobileWalletAdapterConfig,
+                authIssuerConfig, callbacks, associationPublicKey, port);
     }
 
     @WebSocketsTransportContract.LocalPortRange

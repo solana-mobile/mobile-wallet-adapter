@@ -69,6 +69,10 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.btnSimulateInvalidPayload.setOnClickListener {
                                 activityViewModel.signPayloadSimulateInvalidPayload(request)
                             }
+
+                            viewBinding.btnSimulateTooManyPayloads.setOnClickListener {
+                                activityViewModel.signPayloadSimulateTooManyPayloads(request)
+                            }
                         }
                         is MobileWalletAdapterServiceRequest.SignAndSendTransaction -> {
                             request.signatures?.run {
@@ -99,6 +103,10 @@ class SignPayloadFragment : Fragment() {
 
                             viewBinding.btnSimulateInvalidPayload.setOnClickListener {
                                 activityViewModel.signAndSendTransactionSimulateInvalidPayload(request)
+                            }
+
+                            viewBinding.btnSimulateTooManyPayloads.setOnClickListener {
+                                activityViewModel.signAndSendTransactionSimulateTooManyPayloads(request)
                             }
                         }
                         else -> {

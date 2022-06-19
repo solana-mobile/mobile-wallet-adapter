@@ -393,6 +393,105 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     // =============================================================================================
+    // get_capabilities
+    // =============================================================================================
+
+    @NonNull
+    public GetCapabilitiesFuture getCapabilitiesAsync()
+            throws IOException {
+        final JSONObject params = new JSONObject();
+        return new GetCapabilitiesFuture(methodCall(ProtocolContract.METHOD_GET_CAPABILITIES,
+                params, mClientTimeoutMs));
+    }
+
+    public GetCapabilitiesResult getCapabilities()
+            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+        final GetCapabilitiesFuture future = getCapabilitiesAsync();
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            throw unpackExecutionException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while waiting for get_capabilities response", e);
+        }
+    }
+
+    public static class GetCapabilitiesResult {
+        public final boolean supportsCloneAuthorization;
+
+        public final boolean supportsSignAndSendTransaction;
+
+        @IntRange(from = 0)
+        public final int maxTransactionsPerSigningRequest;
+
+        @IntRange(from = 0)
+        public final int maxMessagesPerSigningRequest;
+
+        private GetCapabilitiesResult(boolean supportsCloneAuthorization,
+                                      boolean supportsSignAndSendTransaction,
+                                      @IntRange(from = 0) int maxTransactionsPerSigningRequest,
+                                      @IntRange(from = 0) int maxMessagesPerSigningRequest) {
+            this.supportsCloneAuthorization = supportsCloneAuthorization;
+            this.supportsSignAndSendTransaction = supportsSignAndSendTransaction;
+            this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
+            this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "GetCapabilitiesResult{" +
+                    "supportsCloneAuthorization=" + supportsCloneAuthorization +
+                    ", supportsSignAndSendTransaction=" + supportsSignAndSendTransaction +
+                    ", maxTransactionsPerSigningRequest=" + maxTransactionsPerSigningRequest +
+                    ", maxMessagesPerSigningRequest=" + maxMessagesPerSigningRequest +
+                    '}';
+        }
+    }
+
+    public static class GetCapabilitiesFuture
+            extends JsonRpc20MethodResultFuture<GetCapabilitiesResult>
+            implements NotifyOnCompleteFuture<GetCapabilitiesResult> {
+        private GetCapabilitiesFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+            super(methodCallFuture);
+        }
+
+        @NonNull
+        @Override
+        protected GetCapabilitiesResult processResult(@Nullable Object o)
+                throws JsonRpc20InvalidResponseException {
+            if (!(o instanceof JSONObject)) {
+                throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
+            }
+
+            final JSONObject jo = (JSONObject) o;
+
+            final boolean supportsCloneAuthorization;
+            final boolean supportsSignAndSendTransaction;
+            final int maxTransactionsPerSigningRequest;
+            final int maxMessagesPerSigningRequest;
+            try {
+                supportsCloneAuthorization = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION);
+                supportsSignAndSendTransaction = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTION);
+                maxTransactionsPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, 0);
+                maxMessagesPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, 0);
+            } catch (JSONException e) {
+                throw new JsonRpc20InvalidResponseException("result does not conform to expected format");
+            }
+
+            return new GetCapabilitiesResult(supportsCloneAuthorization,
+                    supportsSignAndSendTransaction,
+                    maxTransactionsPerSigningRequest,
+                    maxMessagesPerSigningRequest);
+        }
+
+        @Override
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<GetCapabilitiesResult>> cb) {
+            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
+        }
+    }
+
+    // =============================================================================================
     // sign_* common
     // =============================================================================================
 

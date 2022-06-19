@@ -63,6 +63,11 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
                 signatures, committed));
     }
 
+    public void completeWithTooManyPayloads() {
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.TooManyPayloadsException(
+                "Number of payloads provided for signing exceeds implementation limit"));
+    }
+
     @VisibleForTesting
     public void completeWithReauthorizationRequired() {
         mRequest.completeExceptionally(new MobileWalletAdapterServer.ReauthorizationRequiredException(

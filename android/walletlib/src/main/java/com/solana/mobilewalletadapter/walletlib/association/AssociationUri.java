@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
 public abstract class AssociationUri {
@@ -36,6 +37,7 @@ public abstract class AssociationUri {
 
     @NonNull
     public abstract Scenario createScenario(@NonNull Context context,
+                                            @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                             @NonNull AuthIssuerConfig authIssuerConfig,
                                             @NonNull Scenario.Callbacks callbacks);
 

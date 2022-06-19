@@ -24,6 +24,12 @@ public class ProtocolContract {
     // METHOD_CLONE_AUTHORIZATION takes a PARAMETER_AUTH_TOKEN
     // METHOD_CLONE_AUTHORIZATION returns a RESULT_AUTH_TOKEN
 
+    public static final String METHOD_GET_CAPABILITIES = "get_capabilities";
+    public static final String RESULT_SUPPORTS_CLONE_AUTHORIZATION = "supports_clone_authorization"; // type: Boolean
+    public static final String RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTION = "supports_sign_and_send_transaction"; // type: Boolean
+    public static final String RESULT_MAX_TRANSACTIONS_PER_REQUEST = "max_transactions_per_request"; // type: Number
+    public static final String RESULT_MAX_MESSAGES_PER_REQUEST = "max_messages_per_request"; // type: Number
+
     public static final String METHOD_SIGN_TRANSACTION = "sign_transaction";
     // METHOD_SIGN_TRANSACTION takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_TRANSACTION takes a PARAMETER_PAYLOADS
@@ -60,6 +66,7 @@ public class ProtocolContract {
     public static final int ERROR_INVALID_PAYLOAD = -3;
     public static final int ERROR_NOT_SIGNED = -4;
     public static final int ERROR_NOT_COMMITTED = -5;
+    public static final int ERROR_TOO_MANY_PAYLOADS = -6;
     public static final int ERROR_ATTEST_ORIGIN_ANDROID = -100;
 
     public static final String DATA_INVALID_PAYLOAD_VALID = "valid"; // Type: JSON array of Boolean
