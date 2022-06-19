@@ -54,17 +54,23 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _connecting = false;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState =
-        typeof window === 'undefined' || typeof document === 'undefined'
+        typeof window === 'undefined' || typeof document === 'undefined' || !/android/i.test(navigator.userAgent)
             ? WalletReadyState.Unsupported
-            : WalletReadyState.NotDetected;
+            : WalletReadyState.Loadable;
 
     constructor(config: { appIdentity: AppIdentity; authorizationResultCache?: AuthorizationResultCache }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._appIdentity = config.appIdentity;
-        if (this._readyState !== WalletReadyState.Unsupported) {
-            // TODO: Implement actual detection strategy
-            this._readyState = WalletReadyState.Installed;
+        if (this._readyState !== WalletReadyState.Unsupported && this._authorizationResultCache) {
+            this._authorizationResultCache.get().then((authorizationResult) => {
+                if (authorizationResult) {
+                    // Having a prior authorization result is, right now, the best
+                    // indication that a mobile wallet is installed. There is no API
+                    // we can use to test for whether the association URI is supported.
+                    this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
+                }
+            });
         }
     }
 
@@ -84,7 +90,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     async connect(): Promise<void> {
-        if (this._readyState !== WalletReadyState.Installed) {
+        if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
             const err = new WalletNotReadyError();
             this.emit('error', err);
             throw err;
@@ -94,6 +100,9 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         if (cachedAuthorizationResult) {
             this._authorizationResult = cachedAuthorizationResult;
             this._connecting = false;
+            if (this._readyState !== WalletReadyState.Installed) {
+                this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
+            }
             this.emit(
                 'connect',
                 // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
