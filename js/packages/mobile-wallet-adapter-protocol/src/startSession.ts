@@ -57,7 +57,8 @@ export async function startSession(associationPublicKey: CryptoKey): Promise<Ass
                 break;
             default:
                 // Exhaustive switch check.
-                ((_: never): void => {})(browser);
+                // eslint-disable-next-line no-case-declarations
+                const _: never = browser; // eslint-disable-line @typescript-eslint/no-unused-vars
         }
     } catch (e) {
         throw new SolanaMobileWalletAdapterWalletNotInstalledError();
