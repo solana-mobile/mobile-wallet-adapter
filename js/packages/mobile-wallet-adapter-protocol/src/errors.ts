@@ -44,16 +44,38 @@ export enum SolanaMobileWalletAdapterProtocolError {
     ERROR_ATTEST_ORIGIN_ANDROID = -100,
 }
 
-export class SolanaMobileWalletAdapterProtocolJsonRpcError extends Error {
+type ErrorDataTypeMap = {
+    [SolanaMobileWalletAdapterProtocolError.ERROR_ATTEST_ORIGIN_ANDROID]: {
+        attest_origin_uri: string;
+        challenge: string;
+        context: string;
+    };
+};
+
+export class SolanaMobileWalletAdapterProtocolJsonRpcError<TErrorCode extends keyof ErrorDataTypeMap> extends Error {
+    data: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown> ? ErrorDataTypeMap[TErrorCode] : undefined;
     code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode;
     jsonRpcMessageId: number;
     constructor(
-        jsonRpcMessageId: number,
-        code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode,
-        message: string,
+        ...args: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
+            ? [
+                  jsonRpcMessageId: number,
+                  code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode,
+                  message: string,
+                  data: ErrorDataTypeMap[TErrorCode],
+              ]
+            : [
+                  jsonRpcMessageId: number,
+                  code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode,
+                  message: string,
+              ]
     ) {
+        const [jsonRpcMessageId, code, message, data] = args;
         super(message);
         this.code = code;
+        this.data = data as ErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
+            ? ErrorDataTypeMap[TErrorCode]
+            : undefined;
         this.jsonRpcMessageId = jsonRpcMessageId;
         this.name = 'SolanaNativeWalletAdapterJsonRpcError';
     }
