@@ -49,14 +49,17 @@ export class SolanaMobileWalletAdapterProtocolReauthorizeError extends Error {
 
 type JSONRPCErrorCode = number;
 
-export enum SolanaMobileWalletAdapterProtocolError {
-    ERROR_REAUTHORIZE = -1,
-    ERROR_AUTHORIZATION_FAILED = -2,
-    ERROR_INVALID_PAYLOAD = -3,
-    ERROR_NOT_SIGNED = -4,
-    ERROR_NOT_COMMITTED = -5,
-    ERROR_ATTEST_ORIGIN_ANDROID = -100,
-}
+// Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
+export const SolanaMobileWalletAdapterProtocolError = {
+    ERROR_REAUTHORIZE: -1,
+    ERROR_AUTHORIZATION_FAILED: -2,
+    ERROR_INVALID_PAYLOAD: -3,
+    ERROR_NOT_SIGNED: -4,
+    ERROR_NOT_COMMITTED: -5,
+    ERROR_ATTEST_ORIGIN_ANDROID: -100,
+} as const;
+type SolanaMobileWalletAdapterProtocolErrorEnum =
+    typeof SolanaMobileWalletAdapterProtocolError[keyof typeof SolanaMobileWalletAdapterProtocolError];
 
 type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterProtocolError.ERROR_ATTEST_ORIGIN_ANDROID]: {
@@ -68,19 +71,19 @@ type ErrorDataTypeMap = {
 
 export class SolanaMobileWalletAdapterProtocolJsonRpcError<TErrorCode extends keyof ErrorDataTypeMap> extends Error {
     data: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown> ? ErrorDataTypeMap[TErrorCode] : undefined;
-    code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode;
+    code: SolanaMobileWalletAdapterProtocolErrorEnum | JSONRPCErrorCode;
     jsonRpcMessageId: number;
     constructor(
         ...args: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
             ? [
                   jsonRpcMessageId: number,
-                  code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode,
+                  code: SolanaMobileWalletAdapterProtocolErrorEnum | JSONRPCErrorCode,
                   message: string,
                   data: ErrorDataTypeMap[TErrorCode],
               ]
             : [
                   jsonRpcMessageId: number,
-                  code: SolanaMobileWalletAdapterProtocolError | JSONRPCErrorCode,
+                  code: SolanaMobileWalletAdapterProtocolErrorEnum | JSONRPCErrorCode,
                   message: string,
               ]
     ) {

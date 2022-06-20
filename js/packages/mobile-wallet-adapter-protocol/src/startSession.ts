@@ -2,16 +2,18 @@ import { AssociationPort, getRandomAssociationPort } from './associationPort';
 import { SolanaMobileWalletAdapterWalletNotInstalledError } from './errors';
 import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL';
 
-enum Browser {
-    Firefox,
-    Other,
-}
+// Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
+const Browser = {
+    Firefox: 0,
+    Other: 1,
+} as const;
+type BrowserEnum = typeof Browser[keyof typeof Browser];
 
 function assertUnreachable(x: never): never {
     return x;
 }
 
-function getBrowser(): Browser {
+function getBrowser(): BrowserEnum {
     return navigator.userAgent.indexOf('Firefox/') !== -1 ? Browser.Firefox : Browser.Other;
 }
 
