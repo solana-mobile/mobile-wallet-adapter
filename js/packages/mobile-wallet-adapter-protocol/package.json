@@ -22,6 +22,9 @@
         "lib",
         "LICENSE"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "clean": "shx rm -rf lib/*",
         "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
