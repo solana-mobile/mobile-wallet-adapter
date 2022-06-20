@@ -251,7 +251,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating ${request.request.commitmentLevel} reached on RPC=${request.request.rpcEndpointUri}")
+        Log.d(TAG, "Simulating commitmentLevel=${request.request.commitmentLevel} reached on cluster=${request.request.cluster}")
 
         request.request.completeWithSignatures(request.signatures!!)
     }
@@ -261,7 +261,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating ${request.request.commitmentLevel} NOT reached on RPC ${request.request.rpcEndpointUri}")
+        Log.d(TAG, "Simulating commitmentLevel=${request.request.commitmentLevel} NOT reached on cluster=${request.request.cluster}")
 
         val committed = BooleanArray(request.request.payloads.size) { i -> i != 0 }
         request.request.completeWithNotCommitted(request.signatures!!, committed)

@@ -39,7 +39,7 @@ public class ProtocolContract {
     // METHOD_SIGN_AND_SEND_TRANSACTION takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_AND_SEND_TRANSACTION takes a PARAMETER_PAYLOADS
     public static final String PARAMETER_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values)
-    public static final String PARAMETER_ENDPOINT = "endpoint"; // type: String (absolute URI)
+    public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
     public static final String PARAMETER_SKIP_PREFLIGHT = "skip_preflight"; // type: Boolean
     public static final String PARAMETER_PREFLIGHT_COMMITMENT = "preflight_commitment"; // type: String (one of the COMMITMENT_* values)
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base58-encoded payload signatures)
@@ -80,6 +80,10 @@ public class ProtocolContract {
     public static final String COMMITMENT_PROCESSED = "processed";
     public static final String COMMITMENT_CONFIRMED = "confirmed";
     public static final String COMMITMENT_FINALIZED = "finalized";
+
+    public static final String CLUSTER_MAINNET_BETA = "mainnet_beta";
+    public static final String CLUSTER_TESTNET = "testnet";
+    public static final String CLUSTER_DEVNET = "devnet";
 
     public static final int TRANSACTION_MAX_SIZE_BYTES = 1232;
 

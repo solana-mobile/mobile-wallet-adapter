@@ -754,7 +754,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final CommitmentLevel commitmentLevel;
 
         @Nullable
-        public final Uri rpcEndpointUri;
+        public final String cluster;
 
         public final boolean skipPreflight;
 
@@ -765,12 +765,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                               @NonNull String authToken,
                                               @NonNull @Size(min = 1) byte[][] transactions,
                                               @NonNull CommitmentLevel commitmentLevel,
-                                              @Nullable Uri rpcEndpointUri,
+                                              @Nullable String cluster,
                                               boolean skipPreflight,
                                               @NonNull CommitmentLevel preflightCommitmentLevel) {
             super(id, authToken, transactions);
             this.commitmentLevel = commitmentLevel;
-            this.rpcEndpointUri = rpcEndpointUri;
+            this.cluster = cluster;
             this.skipPreflight = skipPreflight;
             this.preflightCommitmentLevel = preflightCommitmentLevel;
         }
@@ -793,7 +793,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignAndSendTransactionRequest{" +
                     "commitmentLevel=" + commitmentLevel +
-                    ", rpcEndpointUri=" + rpcEndpointUri +
+                    ", cluster=" + cluster +
                     ", skipPreflight=" + skipPreflight +
                     ", preflightCommitmentLevel=" + preflightCommitmentLevel +
                     ", super=" + super.toString() +
@@ -858,12 +858,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final Uri rpcEndpointUri;
-        if (o.has(ProtocolContract.PARAMETER_ENDPOINT)) {
-            rpcEndpointUri = Uri.parse(o.optString(ProtocolContract.PARAMETER_ENDPOINT));
-        } else {
-            rpcEndpointUri = null;
-        }
+        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER, null);
 
         final boolean skipPreflight = o.optBoolean(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, false);
 
@@ -880,7 +875,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         final SignAndSendTransactionRequest request = new SignAndSendTransactionRequest(
-                id, authToken, payloads, commitmentLevel, rpcEndpointUri, skipPreflight, preflightCommitmentLevel);
+                id, authToken, payloads, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionComplete(f)));
         mMethodHandlers.signAndSendTransaction(request);
     }
