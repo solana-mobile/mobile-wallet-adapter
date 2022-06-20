@@ -4,7 +4,10 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 import androidx.annotation.VisibleForTesting;
 
@@ -40,6 +43,20 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
     @NonNull
     public CommitmentLevel getCommitmentLevel() {
         return mRequest.commitmentLevel;
+    }
+
+    @Nullable
+    public Uri getRpcEndpointUri() {
+        return mRequest.rpcEndpointUri;
+    }
+
+    public boolean getSkipPreflight() {
+        return mRequest.skipPreflight;
+    }
+
+    @NonNull
+    public CommitmentLevel getPreflightCommitmentLevel() {
+        return mRequest.preflightCommitmentLevel;
     }
 
     public void completeWithSignatures(@NonNull @Size(min = 1) String[] signatures) {

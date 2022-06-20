@@ -39,6 +39,9 @@ public class ProtocolContract {
     // METHOD_SIGN_AND_SEND_TRANSACTION takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_AND_SEND_TRANSACTION takes a PARAMETER_PAYLOADS
     public static final String PARAMETER_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values)
+    public static final String PARAMETER_ENDPOINT = "endpoint"; // type: String (absolute URI)
+    public static final String PARAMETER_SKIP_PREFLIGHT = "skip_preflight"; // type: Boolean
+    public static final String PARAMETER_PREFLIGHT_COMMITMENT = "preflight_commitment"; // type: String (one of the COMMITMENT_* values)
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base58-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGE = "sign_message";

@@ -608,6 +608,9 @@ sign_and_send_transaction
     “auth_token”: “<auth_token>”,
     “payloads”: [“<transaction>”, ...],
     “commitment”: “<commitment_level>”,
+    "endpoint": "<cluster_endpoint>",
+    "skip_preflight": <skip_preflight>,
+    "preflight_commitment": "<preflight_commitment>",
 }
 ```
 
@@ -616,6 +619,9 @@ where:
 - `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_and_send_transaction` was requested
 - `transaction`: one or more base64-encoded transaction payload to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
 - `commitment_level`: one of `processed`, `confirmed`, or `finalized`
+- `cluster_endpoint`: (optional) if set, the RPC endpoint of the Solana network cluster to send the signed transaction(s) to. If not set, the wallet endpoint determines which RPC endpoint (and cluster) to send transactions to.
+- `skip_preflight`: (optional) see the JSON-RPC [sendTransaction](https://docs.solana.com/developing/clients/jsonrpc-api#sendtransaction) API. If not set, defaults to `false`.
+- `preflight_commitment`: (optional) see the JSON-RPC [sendTransaction](https://docs.solana.com/developing/clients/jsonrpc-api#sendtransaction) API. If not set, defaults to `finalized`.
 
 ###### Result
 {: .no_toc }
@@ -661,7 +667,7 @@ where:
   if the requested commitment level was not reached for any of the signed transactions, where:
 
   - `transaction_signature`: as defined for a successful result
-  - `commitment_reached`: for each entry in `signatures`, a boolean indicating whether the desired `commitment_level` was reached
+  - `commitment_reached`: for each entry in `signatures`, a boolean indicating whether the desired commitment level was reached
 - `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
@@ -669,6 +675,8 @@ where:
 _Implementation of this method by a wallet endpoint is optional._
 
 The wallet endpoint should attempt to simulate the transactions provided by `payloads` and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private key for the authorized account, submit them to the network, wait for the requested commitment level to be reached, and return the transaction signatures to the dapp endpoint.
+
+Several options are available to customize how transactions are sent to the Solana network. `cluster_endpoint` can be used to select which RPC node transactions should be submitted to. This can be used to send transactions to the [devnet](https://docs.solana.com/cluster/rpc-endpoints#devnet) or [testnet](https://docs.solana.com/cluster/rpc-endpoints#testnet) cluster, for example. `skip_preflight` and `preflight_commitment` allow configuration of preflight checks for the signed transaction(s).
 
 ###### Non-normative commentary
 

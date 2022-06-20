@@ -753,12 +753,26 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final CommitmentLevel commitmentLevel;
 
+        @Nullable
+        public final Uri rpcEndpointUri;
+
+        public final boolean skipPreflight;
+
+        @NonNull
+        public final CommitmentLevel preflightCommitmentLevel;
+
         private SignAndSendTransactionRequest(@Nullable Object id,
                                               @NonNull String authToken,
                                               @NonNull @Size(min = 1) byte[][] transactions,
-                                              @NonNull CommitmentLevel commitmentLevel) {
+                                              @NonNull CommitmentLevel commitmentLevel,
+                                              @Nullable Uri rpcEndpointUri,
+                                              boolean skipPreflight,
+                                              @NonNull CommitmentLevel preflightCommitmentLevel) {
             super(id, authToken, transactions);
             this.commitmentLevel = commitmentLevel;
+            this.rpcEndpointUri = rpcEndpointUri;
+            this.skipPreflight = skipPreflight;
+            this.preflightCommitmentLevel = preflightCommitmentLevel;
         }
 
         @Override
@@ -779,6 +793,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignAndSendTransactionRequest{" +
                     "commitmentLevel=" + commitmentLevel +
+                    ", rpcEndpointUri=" + rpcEndpointUri +
+                    ", skipPreflight=" + skipPreflight +
+                    ", preflightCommitmentLevel=" + preflightCommitmentLevel +
                     ", super=" + super.toString() +
                     '}';
         }
@@ -841,8 +858,29 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
+        final Uri rpcEndpointUri;
+        if (o.has(ProtocolContract.PARAMETER_ENDPOINT)) {
+            rpcEndpointUri = Uri.parse(o.optString(ProtocolContract.PARAMETER_ENDPOINT));
+        } else {
+            rpcEndpointUri = null;
+        }
+
+        final boolean skipPreflight = o.optBoolean(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, false);
+
+        final CommitmentLevel preflightCommitmentLevel;
+        if (o.has(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT)) {
+            final String preflightCommitmentLevelStr = o.optString(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT);
+            preflightCommitmentLevel = CommitmentLevel.fromCommitmentLevelString(preflightCommitmentLevelStr);
+            if (preflightCommitmentLevel == null) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "request contains an invalid preflight_commitment", null);
+                return;
+            }
+        } else {
+            preflightCommitmentLevel = CommitmentLevel.Finalized;
+        }
+
         final SignAndSendTransactionRequest request = new SignAndSendTransactionRequest(
-                id, authToken, payloads, commitmentLevel);
+                id, authToken, payloads, commitmentLevel, rpcEndpointUri, skipPreflight, preflightCommitmentLevel);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionComplete(f)));
         mMethodHandlers.signAndSendTransaction(request);
     }

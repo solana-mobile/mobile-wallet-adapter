@@ -250,6 +250,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         if (rejectStaleRequest(request)) {
             return
         }
+
+        Log.d(TAG, "Simulating ${request.request.commitmentLevel} reached on RPC=${request.request.rpcEndpointUri}")
+
         request.request.completeWithSignatures(request.signatures!!)
     }
 
@@ -257,6 +260,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         if (rejectStaleRequest(request)) {
             return
         }
+
+        Log.d(TAG, "Simulating ${request.request.commitmentLevel} NOT reached on RPC ${request.request.rpcEndpointUri}")
+
         val committed = BooleanArray(request.request.payloads.size) { i -> i != 0 }
         request.request.completeWithNotCommitted(request.signatures!!, committed)
     }
