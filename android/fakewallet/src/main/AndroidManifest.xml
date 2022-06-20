@@ -41,15 +41,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="solana-wallet" />
             </intent-filter>
-            <!-- App Link entrypoint -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https"
-                    android:host="solanamobile.com"
-                    android:pathPrefix="/somepathprefix" />
-            </intent-filter>
         </activity>
     </application>
 </manifest>

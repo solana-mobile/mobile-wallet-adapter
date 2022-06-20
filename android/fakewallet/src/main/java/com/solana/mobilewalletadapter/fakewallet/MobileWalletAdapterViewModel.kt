@@ -105,7 +105,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
                 val publicKeyBase58 = Base58EncodeUseCase.invoke(publicKey.encoded)
                 Log.d(TAG, "Generated a new keypair (pub=$publicKeyBase58) for authorize request")
-                request.request.completeWithAuthorize(publicKeyBase58, Uri.parse(WALLET_BASE_URI))
+                request.request.completeWithAuthorize(publicKeyBase58, null)
             } else {
                 request.request.completeWithDecline()
             }
@@ -361,6 +361,5 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     companion object {
         private val TAG = MobileWalletAdapterViewModel::class.simpleName
-        private const val WALLET_BASE_URI = "https://solanamobile.com/somepathprefix"
     }
 }
