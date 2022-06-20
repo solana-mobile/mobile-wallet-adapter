@@ -1,5 +1,5 @@
 {
-    "name": "@solanamobile/mobile-wallet-adapter-protocol",
+    "name": "@solana-mobile/mobile-wallet-adapter-protocol",
     "description": "An implementation of Solana's mobile wallet protocol. Use this to open a session with a native mobile wallet app, and to issue API calls to it.",
     "version": "0.0.0",
     "author": "Steven Luscher <steven.luscher@solana.com>",

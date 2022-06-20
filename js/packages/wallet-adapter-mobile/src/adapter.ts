@@ -4,7 +4,7 @@ import {
     AuthToken,
     MobileWallet,
     withLocalWallet,
-} from '@solanamobile/mobile-wallet-adapter-protocol';
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,

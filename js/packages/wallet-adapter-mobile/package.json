@@ -1,5 +1,5 @@
 {
-    "name": "@solanamobile/wallet-adapter-mobile",
+    "name": "@solana-mobile/wallet-adapter-mobile",
     "description": "An adapter for native Solana wallet apps on mobile",
     "version": "0.0.0",
     "author": "Steven Luscher <steven.luscher@solana.com>",
@@ -35,6 +35,6 @@
     "dependencies": {
         "@solana/wallet-adapter-base": "^0.9.0",
         "@solana/web3.js": "^1.20.0",
-        "@solanamobile/mobile-wallet-adapter-protocol": "^0.0.0"
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^0.0.0"
     }
 }
