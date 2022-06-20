@@ -19,7 +19,6 @@
         "require": "./lib/cjs/index.js"
     },
     "files": [
-        ".yalc",
         "lib",
         "LICENSE"
     ],
