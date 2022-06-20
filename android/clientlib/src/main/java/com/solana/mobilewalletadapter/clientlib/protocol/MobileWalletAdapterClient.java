@@ -765,7 +765,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public SignAndSendTransactionFuture signAndSendTransactionAsync(@NonNull String authToken,
                                                                     @NonNull @Size(min = 1) byte[][] transactions,
                                                                     @NonNull CommitmentLevel commitmentLevel,
-                                                                    @Nullable Uri rpcEndpointUri,
+                                                                    @Nullable String cluster,
                                                                     boolean skipPreflight,
                                                                     @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException {
@@ -785,10 +785,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             signAndSendTransaction.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
             signAndSendTransaction.put(ProtocolContract.PARAMETER_COMMITMENT,
                     commitmentLevel.commitmentLevel);
-            if (rpcEndpointUri != null) {
-                signAndSendTransaction.put(ProtocolContract.PARAMETER_ENDPOINT,
-                        rpcEndpointUri.toString());
-            }
+            signAndSendTransaction.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
             if (skipPreflight) {
                 signAndSendTransaction.put(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, true);
             }
@@ -818,13 +815,13 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public SignAndSendTransactionResult signAndSendTransaction(@NonNull String authToken,
                                                                @NonNull @Size(min = 1) byte[][] transactions,
                                                                @NonNull CommitmentLevel commitmentLevel,
-                                                               @Nullable Uri rpcEndpointUri,
+                                                               @Nullable String cluster,
                                                                boolean skipPreflight,
                                                                @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
         final SignAndSendTransactionFuture future =
                 signAndSendTransactionAsync(authToken, transactions, commitmentLevel,
-                        rpcEndpointUri, skipPreflight, preflightCommitmentLevel);
+                        cluster, skipPreflight, preflightCommitmentLevel);
         try {
             return future.get();
         } catch (ExecutionException e) {

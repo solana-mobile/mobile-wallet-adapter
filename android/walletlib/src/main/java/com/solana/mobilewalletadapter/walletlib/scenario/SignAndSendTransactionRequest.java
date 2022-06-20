@@ -46,8 +46,8 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
     }
 
     @Nullable
-    public Uri getRpcEndpointUri() {
-        return mRequest.rpcEndpointUri;
+    public String getCluster() {
+        return mRequest.cluster;
     }
 
     public boolean getSkipPreflight() {

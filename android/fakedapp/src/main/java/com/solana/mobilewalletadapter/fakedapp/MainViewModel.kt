@@ -376,7 +376,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // which occurs when the client is not connected
             @Suppress("BlockingMethodInNonBlockingContext")
             val future = client.signAndSendTransactionAsync(uiState.value.authToken!!, transactions,
-                CommitmentLevel.Confirmed, Uri.parse(TESTNET_ENDPOINT_URI), false, null)
+                CommitmentLevel.Confirmed, ProtocolContract.CLUSTER_TESTNET, false, null)
             future.notifyOnComplete { sem.release() }
             sem.acquire()
             val result = try {
@@ -486,6 +486,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private val TAG = MainViewModel::class.simpleName
         private const val ASSOCIATION_TIMEOUT_MS = 10000L
-        private const val TESTNET_ENDPOINT_URI = "https://api.testnet.solana.com"
     }
 }
