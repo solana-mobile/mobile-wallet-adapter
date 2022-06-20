@@ -41,6 +41,7 @@ For example,
 <activity
     android:name=".MobileWalletAdapterActivity"
     android:launchMode="singleTask"
+    android:taskAffinity="com.solana.mobilewalletadapter.fakewallet.mwa_host_task"
     android:exported="true">
     <!-- Default solana-wallet URI from a browser or native dapp -->
     <intent-filter android:order="1">
