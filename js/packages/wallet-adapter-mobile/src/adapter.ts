@@ -54,7 +54,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _connecting = false;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState =
-        typeof window === 'undefined' || typeof document === 'undefined' || !/android/i.test(navigator.userAgent)
+        typeof window === 'undefined' ||
+        typeof document === 'undefined' ||
+        !/android/i.test(navigator.userAgent) ||
+        !window.isSecureContext
             ? WalletReadyState.Unsupported
             : WalletReadyState.Loadable;
 
