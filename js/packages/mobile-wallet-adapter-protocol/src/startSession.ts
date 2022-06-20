@@ -32,7 +32,7 @@ function getDetectionPromise() {
         const timeoutId = setTimeout(() => {
             cleanup();
             reject();
-        }, 500);
+        }, 2000);
     });
 }
 
