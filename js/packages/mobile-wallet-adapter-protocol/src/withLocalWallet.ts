@@ -13,6 +13,10 @@ import { AssociationKeypair, MobileWallet } from './types';
 
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
 
+type Config = Readonly<{
+    baseUri?: string;
+}>;
+
 type JsonResponsePromises<T> = Record<
     number,
     Readonly<{ resolve: (value?: T | PromiseLike<T>) => void; reject: (reason?: unknown) => void }>
@@ -24,9 +28,12 @@ type State =
     | { __type: 'disconnected' }
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
 
-export default async function withLocalWallet<TReturn>(callback: (wallet: MobileWallet) => TReturn): Promise<TReturn> {
+export default async function withLocalWallet<TReturn>(
+    callback: (wallet: MobileWallet) => TReturn,
+    config?: Config,
+): Promise<TReturn> {
     const associationKeypair = await generateAssociationKeypair();
-    const sessionPort = await startSession(associationKeypair.publicKey);
+    const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
     const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
     let nextJsonRpcMessageId = 1;
     let state: State = { __type: 'disconnected' };

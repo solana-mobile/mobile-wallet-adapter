@@ -1,3 +1,10 @@
+export class SolanaMobileWalletAdapterForbiddenWalletBaseURLError extends Error {
+    constructor() {
+        super('Base URLs supplied by wallets must be valid `https` URLs');
+        this.name = 'SolanaMobileWalletAdapterForbiddenWalletBaseURLError';
+    }
+}
+
 export class SolanaMobileWalletAdapterWalletNotInstalledError extends Error {
     constructor() {
         super(`Found no installed wallet that supports the mobile wallet protocol.`);

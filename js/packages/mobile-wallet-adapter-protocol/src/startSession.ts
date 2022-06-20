@@ -7,61 +7,83 @@ enum Browser {
     Other,
 }
 
+function assertUnreachable(x: never): never {
+    return x;
+}
+
 function getBrowser(): Browser {
     return navigator.userAgent.indexOf('Firefox/') !== -1 ? Browser.Firefox : Browser.Other;
 }
 
-let _frame: HTMLIFrameElement;
+function getDetectionPromise() {
+    // Chrome and others silently fail if a custom protocol is not supported.
+    // For these, we wait to see if the browser is navigated away from in
+    // a reasonable amount of time (ie. the native wallet opened).
+    return new Promise<void>((resolve, reject) => {
+        function cleanup() {
+            clearTimeout(timeoutId);
+            window.removeEventListener('blur', handleBlur);
+        }
+        function handleBlur() {
+            cleanup();
+            resolve();
+        }
+        window.addEventListener('blur', handleBlur);
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            reject();
+        }, 500);
+    });
+}
+
+let _frame: HTMLIFrameElement | null = null;
 function launchUrlThroughHiddenFrame(url: URL) {
     if (_frame == null) {
         _frame = document.createElement('iframe');
         _frame.style.display = 'none';
         document.body.appendChild(_frame);
     }
-    _frame.contentWindow!.location.assign(url);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _frame.contentWindow!.location.href = url.toString();
 }
 
-export async function startSession(associationPublicKey: CryptoKey): Promise<AssociationPort> {
-    let detectionPromise: Promise<void> | undefined;
+export async function startSession(
+    associationPublicKey: CryptoKey,
+    associationURLBase?: string,
+): Promise<AssociationPort> {
     const randomAssociationPort = getRandomAssociationPort();
-    const associationUrl = await getAssociateAndroidIntentURL(associationPublicKey, randomAssociationPort);
-    const browser = getBrowser();
-    try {
-        switch (browser) {
-            case Browser.Firefox:
-                // If a custom protocol is not supported in Firefox, it throws.
-                launchUrlThroughHiddenFrame(associationUrl);
-                // If we reached this line, it's supported.
-                break;
-            case Browser.Other:
-                // Other browsers silently fail if a custom protocol is not supported.
-                // For these, we wait to see if the browser is navigated away from in
-                // a reasonable amount of time (ie. the native wallet opened).
-                detectionPromise = new Promise<void>((resolve, reject) => {
-                    function cleanup() {
-                        clearTimeout(timeoutId);
-                        window.removeEventListener('blur', handleBlur);
-                    }
-                    function handleBlur() {
-                        cleanup();
-                        resolve();
-                    }
-                    window.addEventListener('blur', handleBlur);
-                    const timeoutId = setTimeout(() => {
-                        cleanup();
-                        reject();
-                    }, 500);
-                });
-                window.location.replace(associationUrl);
-                await detectionPromise;
-                break;
-            default:
-                // Exhaustive switch check.
-                // eslint-disable-next-line no-case-declarations
-                const _: never = browser; // eslint-disable-line @typescript-eslint/no-unused-vars
+    const associationUrl = await getAssociateAndroidIntentURL(
+        associationPublicKey,
+        randomAssociationPort,
+        associationURLBase,
+    );
+    if (associationUrl.protocol === 'https:') {
+        // The association URL is an Android 'App Link' or iOS 'Universal Link'.
+        // These are regular web URLs that are designed to launch an app if it
+        // is installed or load the actual target webpage if not.
+        window.location.assign(associationUrl);
+    } else {
+        // The association URL has a custom protocol (eg. `solana-wallet:`)
+        try {
+            const browser = getBrowser();
+            switch (browser) {
+                case Browser.Firefox:
+                    // If a custom protocol is not supported in Firefox, it throws.
+                    launchUrlThroughHiddenFrame(associationUrl);
+                    // If we reached this line, it's supported.
+                    break;
+                case Browser.Other: {
+                    const detectionPromise = getDetectionPromise();
+                    window.location.assign(associationUrl);
+                    await detectionPromise;
+                    break;
+                }
+                default:
+                    assertUnreachable(browser);
+            }
+        } catch (e) {
+            throw new SolanaMobileWalletAdapterWalletNotInstalledError();
         }
-    } catch (e) {
-        throw new SolanaMobileWalletAdapterWalletNotInstalledError();
     }
     return randomAssociationPort;
 }

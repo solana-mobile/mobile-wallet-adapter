@@ -112,7 +112,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             return;
         }
         try {
-            await withLocalWallet(async (mobileWallet) => {
+            await this.withWallet(async (mobileWallet) => {
                 const {
                     auth_token,
                     pub_key: base58PublicKey,
@@ -179,6 +179,12 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         this.emit('disconnect');
     }
 
+    private async withWallet<TReturn>(callback: (wallet: MobileWallet) => TReturn): Promise<TReturn> {
+        const walletUriBase = this._authorizationResult?.walletUriBase;
+        const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
+        return await withLocalWallet(callback, config);
+    }
+
     private assertIsAuthorized(): AuthorizationResult {
         const authorizationResult = this._authorizationResult;
         if (!authorizationResult) throw new WalletNotConnectedError();
@@ -198,7 +204,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 const payloads = serializedTransactions.map((serializedTransaction) =>
                     serializedTransaction.toString('base64'),
                 );
-                return await withLocalWallet(async (mobileWallet) => {
+                return await this.withWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
                     const { signed_payloads: base64EncodedCompiledTransactions } = await mobileWallet(
                         'sign_transaction',
@@ -237,7 +243,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     verifySignatures: false,
                 });
                 const payloads = [serializedTransaction.toString('base64')];
-                return await withLocalWallet(async (mobileWallet) => {
+                return await this.withWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
                     let targetCommitment: 'confirmed' | 'finalized' | 'processed';
                     switch (connection.commitment) {
@@ -279,7 +285,7 @@ export class MobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         try {
             const authorizationResult = this.assertIsAuthorized();
             try {
-                return await withLocalWallet(async (mobileWallet) => {
+                return await this.withWallet(async (mobileWallet) => {
                     const freshAuthToken = await this.performReauthorization(mobileWallet, authorizationResult);
                     const {
                         signed_payloads: [base64EncodedSignedMessage],
