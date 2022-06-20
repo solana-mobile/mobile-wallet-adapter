@@ -47,6 +47,7 @@ export interface MobileWallet {
             wallet_uri_base: string;
         }>
     >;
+    (method: 'clone_authorization', params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
     (method: 'deauthorize', params: { auth_token: AuthToken }): Promise<Readonly<Record<string, never>>>;
     (method: 'reauthorize', params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
     (method: 'sign_message', params: { auth_token: AuthToken; payloads: Base64EncodedMessage[] }): Promise<
