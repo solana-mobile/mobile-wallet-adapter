@@ -361,6 +361,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     companion object {
         private val TAG = MobileWalletAdapterViewModel::class.simpleName
-        private const val WALLET_BASE_URI = "https://solanaexamplewallet.io/somepathprefix"
+        private const val WALLET_BASE_URI = "https://solanamobile.com/somepathprefix"
     }
 }

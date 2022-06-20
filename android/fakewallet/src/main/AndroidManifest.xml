@@ -47,7 +47,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
-                    android:host="solanaexamplewallet.io"
+                    android:host="solanamobile.com"
                     android:pathPrefix="/somepathprefix" />
             </intent-filter>
         </activity>
