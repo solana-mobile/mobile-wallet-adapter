@@ -3,6 +3,7 @@ import {
     SolanaMobileWalletAdapterProtocolJsonRpcError,
     SolanaMobileWalletAdapterProtocolSessionClosedError,
     SolanaMobileWalletAdapterProtocolSessionEstablishmentError,
+    SolanaMobileWalletAdapterSecureContextRequiredError,
 } from './errors';
 import generateAssociationKeypair from './generateAssociationKeypair';
 import generateECDHKeypair from './generateECDHKeypair';
@@ -28,10 +29,17 @@ type State =
     | { __type: 'disconnected' }
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
 
+function assertSecureContext() {
+    if (typeof window === 'undefined' || window.isSecureContext !== true) {
+        throw new SolanaMobileWalletAdapterSecureContextRequiredError();
+    }
+}
+
 export default async function withLocalWallet<TReturn>(
     callback: (wallet: MobileWallet) => TReturn,
     config?: Config,
 ): Promise<TReturn> {
+    assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
     const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;

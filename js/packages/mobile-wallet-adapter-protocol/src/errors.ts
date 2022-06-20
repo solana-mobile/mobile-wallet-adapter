@@ -1,3 +1,10 @@
+export class SolanaMobileWalletAdapterSecureContextRequiredError extends Error {
+    constructor() {
+        super('The mobile wallet adapter protocol must be used in a secure context (`https`).');
+        this.name = 'SolanaMobileWalletAdapterSecureContextRequiredError';
+    }
+}
+
 export class SolanaMobileWalletAdapterForbiddenWalletBaseURLError extends Error {
     constructor() {
         super('Base URLs supplied by wallets must be valid `https` URLs');
