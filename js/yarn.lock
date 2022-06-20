@@ -1286,6 +1286,11 @@ acorn@8.1.0:
   resolved "https://registry.npmjs.org/acorn/-/acorn-8.1.0.tgz#52311fd7037ae119cbb134309e901aa46295b3fe"
   integrity sha512-LWCF/Wn0nfHOmJ9rzQApGnxnvgfROzGilS8936rqN/lfcYkY9MYZzdMqN+2NJ4SlTc+m5HiSa+kNfDtI64dwUA==
 
+acorn@^7.1.0:
+  version "7.4.1"
+  resolved "https://registry.npmjs.org/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
+  integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
+
 acorn@^8.7.1:
   version "8.7.1"
   resolved "https://registry.npmjs.org/acorn/-/acorn-8.7.1.tgz#0197122c843d1bf6d0a5e83220a788f278f63c30"
@@ -1295,6 +1300,15 @@ add-stream@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/add-stream/-/add-stream-1.0.0.tgz#6a7990437ca736d5e1288db92bd3266d5f5cb2aa"
   integrity sha512-qQLMr+8o0WC4FZGQTcJiKBVC59JylcPSrTtk6usvmIDFUOCKegapy1VHQwRbFMOFyb/inzUVqHs+eMYKDM1YeQ==
+
+agadoo@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/agadoo/-/agadoo-2.0.0.tgz#1fbbcf429ce5e71df3d93855a915252b277667ed"
+  integrity sha512-68aFhseH51ZBKYKkQNxwDi1hJwTnywBjHWg068qFnMkpXShhOazNzJUPRvaLQjrqhT3EOUth5G9mt1A0/dGhOw==
+  dependencies:
+    acorn "^7.1.0"
+    rollup "^1"
+    rollup-plugin-virtual "^1.0.1"
 
 agent-base@6, agent-base@^6.0.2:
   version "6.0.2"
@@ -4876,6 +4890,20 @@ rollup-plugin-ts@^3.0.2:
     magic-string "^0.26.2"
     ts-clone-node "^1.0.0"
     tslib "^2.4.0"
+
+rollup-plugin-virtual@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/rollup-plugin-virtual/-/rollup-plugin-virtual-1.0.1.tgz#8227c94c605b981adfe433ea74de3551e42ffeb4"
+  integrity sha512-HCTBpV8MwP5lNzZrHD2moVxHIToHU1EkzkKGVj6Z0DcgUfxrxrZmeQirQeLz2yhnkJqRjwiVywK9CS8jDYakrw==
+
+rollup@^1:
+  version "1.32.1"
+  resolved "https://registry.npmjs.org/rollup/-/rollup-1.32.1.tgz#4480e52d9d9e2ae4b46ba0d9ddeaf3163940f9c4"
+  integrity sha512-/2HA0Ec70TvQnXdzynFffkjA6XN+1e2pEv/uKS5Ulca40g2L7KuOE3riasHoNVHOsFD5KKZgDsMk1CP3Tw9s+A==
+  dependencies:
+    "@types/estree" "*"
+    "@types/node" "*"
+    acorn "^7.1.0"
 
 rollup@^2.75.6:
   version "2.75.6"

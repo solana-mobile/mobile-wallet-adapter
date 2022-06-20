@@ -30,14 +30,18 @@
         "clean": "shx rm -rf lib/*",
         "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
         "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
-        "postbuild": "echo '{\"type\":\"commonjs\"}' | npx json > lib/cjs/package.json && echo '{\"type\":\"module\"} ' | npx json > lib/esm/package.json"
+        "postbuild": "echo '{\"type\":\"commonjs\"}' | npx json > lib/cjs/package.json && echo '{\"type\":\"module\"} ' | npx json > lib/esm/package.json",
+        "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
         "@solana/web3.js": "^1.36.0"
     },
     "dependencies": {
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^0.0.0",
         "@solana/wallet-adapter-base": "^0.9.0",
-        "@solana/web3.js": "^1.20.0",
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^0.0.0"
+        "@solana/web3.js": "^1.20.0"
+    },
+    "devDependencies": {
+        "agadoo": "^2.0.0"
     }
 }
