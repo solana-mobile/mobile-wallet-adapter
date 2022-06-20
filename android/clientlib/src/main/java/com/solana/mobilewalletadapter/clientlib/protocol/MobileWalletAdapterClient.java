@@ -764,7 +764,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public SignAndSendTransactionFuture signAndSendTransactionAsync(@NonNull String authToken,
                                                                     @NonNull @Size(min = 1) byte[][] transactions,
-                                                                    @NonNull CommitmentLevel commitmentLevel)
+                                                                    @NonNull CommitmentLevel commitmentLevel,
+                                                                    @Nullable Uri rpcEndpointUri,
+                                                                    boolean skipPreflight,
+                                                                    @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException {
         if (authToken.isEmpty()) {
             throw new IllegalArgumentException("authToken cannot be empty");
@@ -782,6 +785,17 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             signAndSendTransaction.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
             signAndSendTransaction.put(ProtocolContract.PARAMETER_COMMITMENT,
                     commitmentLevel.commitmentLevel);
+            if (rpcEndpointUri != null) {
+                signAndSendTransaction.put(ProtocolContract.PARAMETER_ENDPOINT,
+                        rpcEndpointUri.toString());
+            }
+            if (skipPreflight) {
+                signAndSendTransaction.put(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, true);
+            }
+            if (preflightCommitmentLevel != null) {
+                signAndSendTransaction.put(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT,
+                        preflightCommitmentLevel.commitmentLevel);
+            }
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
         }
@@ -793,12 +807,24 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     @NonNull
+    public SignAndSendTransactionFuture signAndSendTransactionAsync(@NonNull String authToken,
+                                                                    @NonNull @Size(min = 1) byte[][] transactions,
+                                                                    @NonNull CommitmentLevel commitmentLevel)
+            throws IOException {
+        return signAndSendTransactionAsync(authToken, transactions, commitmentLevel, null, false, null);
+    }
+
+    @NonNull
     public SignAndSendTransactionResult signAndSendTransaction(@NonNull String authToken,
                                                                @NonNull @Size(min = 1) byte[][] transactions,
-                                                               @NonNull CommitmentLevel commitmentLevel)
+                                                               @NonNull CommitmentLevel commitmentLevel,
+                                                               @Nullable Uri rpcEndpointUri,
+                                                               boolean skipPreflight,
+                                                               @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
         final SignAndSendTransactionFuture future =
-                signAndSendTransactionAsync(authToken, transactions, commitmentLevel);
+                signAndSendTransactionAsync(authToken, transactions, commitmentLevel,
+                        rpcEndpointUri, skipPreflight, preflightCommitmentLevel);
         try {
             return future.get();
         } catch (ExecutionException e) {
@@ -806,6 +832,14 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while waiting for sign_and_send_transaction response", e);
         }
+    }
+
+    @NonNull
+    public SignAndSendTransactionResult signAndSendTransaction(@NonNull String authToken,
+                                                               @NonNull @Size(min = 1) byte[][] transactions,
+                                                               @NonNull CommitmentLevel commitmentLevel)
+            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+        return signAndSendTransaction(authToken, transactions, commitmentLevel, null, false, null);
     }
 
     public static class SignAndSendTransactionFuture
