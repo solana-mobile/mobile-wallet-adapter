@@ -50,7 +50,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     private _appIdentity: AppIdentity;
     private _authorizationResult: AuthorizationResult | undefined;
-    private _authorizationResultCache: AuthorizationResultCache | undefined;
+    private _authorizationResultCache: AuthorizationResultCache;
     private _connecting = false;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState =
@@ -58,11 +58,11 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             ? WalletReadyState.Unsupported
             : WalletReadyState.Loadable;
 
-    constructor(config: { appIdentity: AppIdentity; authorizationResultCache?: AuthorizationResultCache }) {
+    constructor(config: { appIdentity: AppIdentity; authorizationResultCache: AuthorizationResultCache }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._appIdentity = config.appIdentity;
-        if (this._readyState !== WalletReadyState.Unsupported && this._authorizationResultCache) {
+        if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
                 if (authorizationResult) {
                     // Having a prior authorization result is, right now, the best
@@ -96,7 +96,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             throw err;
         }
         this._connecting = true;
-        const cachedAuthorizationResult = await this._authorizationResultCache?.get();
+        const cachedAuthorizationResult = await this._authorizationResultCache.get();
         if (cachedAuthorizationResult) {
             this._authorizationResult = cachedAuthorizationResult;
             this._connecting = false;
@@ -144,9 +144,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
         this._authorizationResult = authorizationResult;
-        if (this._authorizationResultCache) {
-            await this._authorizationResultCache.set(authorizationResult);
-        }
+        await this._authorizationResultCache.set(authorizationResult);
     }
 
     private async performReauthorization(
@@ -171,9 +169,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     async disconnect(): Promise<void> {
-        if (this._authorizationResultCache) {
-            this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-        }
+        this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         delete this._authorizationResult;
         delete this._publicKey;
         this.emit('disconnect');
