@@ -81,6 +81,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         return this._publicKey ? this._publicKey : null;
     }
 
+    get connected(): boolean {
+        return !!this._authorizationResult;
+    }
+
     get connecting(): boolean {
         return this._connecting;
     }
