@@ -26,7 +26,7 @@ export interface AuthorizationResultCache {
     set(authorizationResult: AuthorizationResult): Promise<void>;
 }
 
-export const SolanaMobileWalletAdapterWalletName = 'SolanaMobileWalletAdapter' as WalletName;
+export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 
