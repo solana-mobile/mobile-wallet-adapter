@@ -3,7 +3,7 @@ import { AuthorizationResultCache } from './adapter';
 
 const CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 
-export default function getDefaultAuthorizationResultCache(): AuthorizationResultCache {
+export default function createDefaultAuthorizationResultCache(): AuthorizationResultCache {
     let storage: Storage | null | undefined;
     try {
         storage = window.localStorage;

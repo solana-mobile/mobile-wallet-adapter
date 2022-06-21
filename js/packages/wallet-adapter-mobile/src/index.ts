@@ -1,2 +1,2 @@
 export * from './adapter';
-export { default as getDefaultAuthorizationResultCache } from './getDefaultAuthorizationResultCache';
+export { default as createDefaultAuthorizationResultCache } from './createDefaultAuthorizationResultCache';
