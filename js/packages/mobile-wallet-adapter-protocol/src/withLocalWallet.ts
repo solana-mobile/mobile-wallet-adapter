@@ -12,6 +12,17 @@ import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
 import { startSession } from './startSession';
 import { AssociationKeypair, MobileWallet } from './types';
 
+const WEBSOCKET_CONNECTION_CONFIG = {
+    maxAttempts: 34,
+    /**
+     * 300 milliseconds is a generally accepted threshold for what someone
+     * would consider an acceptable response time for a user interface
+     * after having performed a low-attention tapping task. We set the
+     * interval at which we wait for the wallet to set up the websocket at
+     * half this, as per the Nyquist frequency.
+     */
+    retryDelayMs: 150,
+} as const;
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
 
 type Config = Readonly<{
@@ -76,11 +87,14 @@ export default async function withLocalWallet<TReturn>(
             }
             disposeSocket();
         };
-        const handleError = (_evt: Event) => {
+        const handleError = async (_evt: Event) => {
             disposeSocket();
-            if (++attempts >= 100) {
+            if (++attempts >= WEBSOCKET_CONNECTION_CONFIG.maxAttempts) {
                 reject(new SolanaMobileWalletAdapterProtocolSessionEstablishmentError(sessionPort));
             } else {
+                await new Promise((resolve) => {
+                    retryWaitTimeoutId = window.setTimeout(resolve, WEBSOCKET_CONNECTION_CONFIG.retryDelayMs);
+                });
                 attemptSocketConnection();
             }
         };
@@ -140,6 +154,7 @@ export default async function withLocalWallet<TReturn>(
             }
         };
         let disposeSocket: () => void;
+        let retryWaitTimeoutId: number;
         const attemptSocketConnection = () => {
             if (disposeSocket) {
                 disposeSocket();
@@ -151,6 +166,7 @@ export default async function withLocalWallet<TReturn>(
             socket.addEventListener('error', handleError);
             socket.addEventListener('message', handleMessage);
             disposeSocket = () => {
+                window.clearTimeout(retryWaitTimeoutId);
                 socket.removeEventListener('open', handleOpen);
                 socket.removeEventListener('close', handleClose);
                 socket.removeEventListener('error', handleError);
