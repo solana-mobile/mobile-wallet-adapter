@@ -2,7 +2,7 @@
 
 _Part of the [Solana Mobile Stack](https://github.com/solana-mobile/solana-mobile-stack-sdk)_
 
-Join us on [Discord](TODO)
+Join us on [Discord](https://discord.gg/UGmCGJhvAr)
 
 ## Summary
 
@@ -30,4 +30,4 @@ _Check back soon! We plan to publish the [walletlib](android/walletlib) and [cli
 
 ## Get involved
 
-Contributions are welcome! Go ahead and file Issues, open Pull Requests, or join us on our [Discord](TODO) to discuss this SDK.
+Contributions are welcome! Go ahead and file Issues, open Pull Requests, or join us on our [Discord](https://discord.gg/UGmCGJhvAr) to discuss this SDK.
