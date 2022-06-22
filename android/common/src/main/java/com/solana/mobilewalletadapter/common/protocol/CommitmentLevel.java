@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public enum CommitmentLevel {
+    // In ascending level of commitment, allowing for numeric comparison of ordinals
     Processed("processed"), Confirmed("confirmed"), Finalized("finalized");
 
     @NonNull

@@ -5,18 +5,25 @@
 <resources>
     <string name="app_name">Fake dApp</string>
 
+    <string name="msg_request_succeeded">Wallet request successful</string>
+    <string name="msg_request_failed">Wallet request failed; check logcat for details</string>
+    <string name="msg_airdrop_request_sent">Airdrop request sent; check block explorer for result</string>
+    <string name="msg_airdrop_failed">Airdrop request failed; check logcat for details</string>
+    <string name="msg_signature_verification_failed">One or more signatures incorrect; check logcat for details</string>
+
     <string name="label_get_capabilities">Get capabilities</string>
     <string name="label_authorize">Authorize</string>
     <string name="label_reauthorize">Reauthorize</string>
     <string name="label_deauthorize">Deauthorize</string>
+    <string name="label_request_airdrop">Request airdrop</string>
     <string name="label_sign_txn_x1">Sign txn x1</string>
-    <string name="label_sign_txn_x3">Sign txn x3</string>
-    <string name="label_sign_txn_x20">Sign txn x20</string>
+    <string name="label_sign_txn_x3">x3</string>
+    <string name="label_sign_txn_x20">x20</string>
     <string name="label_authorize_sign_txn">Combined authorize and sign txn x1</string>
     <string name="label_sign_msg_x1">Sign msg x1</string>
-    <string name="label_sign_msg_x3">Sign msg x3</string>
-    <string name="label_sign_msg_x20">Sign msg x20</string>
+    <string name="label_sign_msg_x3">x3</string>
+    <string name="label_sign_msg_x20">x20</string>
     <string name="label_sign_and_send_txn_x1">Sign and send txn x1</string>
-    <string name="label_sign_and_send_txn_x3">Sign and send txn x3</string>
-    <string name="label_sign_and_send_txn_x20">Sign and send txn x20</string>
+    <string name="label_sign_and_send_txn_x3">x3</string>
+    <string name="label_sign_and_send_txn_x20">x20</string>
 </resources>

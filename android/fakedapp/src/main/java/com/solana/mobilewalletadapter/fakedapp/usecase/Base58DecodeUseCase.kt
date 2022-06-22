@@ -2,7 +2,7 @@
  * Copyright (c) 2022 Solana Mobile Inc.
  */
 
-package com.solana.mobilewalletadapter.fakedapp
+package com.solana.mobilewalletadapter.fakedapp.usecase
 
 object Base58DecodeUseCase {
     // throws IllegalArgumentException if base58 input string contains a non-base58 character

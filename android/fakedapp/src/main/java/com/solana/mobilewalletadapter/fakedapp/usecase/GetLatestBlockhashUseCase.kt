@@ -1,0 +1,67 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
+package com.solana.mobilewalletadapter.fakedapp.usecase
+
+import android.net.Uri
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
+
+// NOTE: this is just a minimal implementation of this Solana RPC call, for testing purposes. It is
+// NOT suitable for production use.
+object GetLatestBlockhashUseCase {
+    @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO
+    suspend operator fun invoke(rpcUri: Uri): ByteArray {
+        return withContext(Dispatchers.IO) {
+            val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.readTimeout = TIMEOUT_MS
+            conn.connectTimeout = TIMEOUT_MS
+            conn.doOutput = true
+            conn.outputStream.use { outputStream ->
+                outputStream.write(createGetLatestBlockhashRequest().encodeToByteArray())
+            }
+            conn.connect()
+            if (conn.responseCode != HttpURLConnection.HTTP_OK) {
+                throw GetLatestBlockhashFailedException("Response code=${conn.responseCode}")
+            }
+            val blockhash = conn.inputStream.use { inputStream ->
+                val response = inputStream.readBytes().toString(StandardCharsets.UTF_8)
+                parseLatestBlockhashResponse(response)
+            }
+            Log.d(TAG, "getLatestBlockhash blockhash=$blockhash")
+            Base58DecodeUseCase(blockhash)
+        }
+    }
+
+    private fun createGetLatestBlockhashRequest(): String {
+        val jo = JSONObject()
+        jo.put("jsonrpc", "2.0")
+        jo.put("id", 1)
+        jo.put("method", "getLatestBlockhash")
+        jo.put("params", JSONArray())
+
+        return jo.toString()
+    }
+
+    private fun parseLatestBlockhashResponse(response: String): String {
+        val jo = JSONObject(response)
+        val result = jo.optJSONObject("result")
+            ?: throw GetLatestBlockhashFailedException("getLatestBlockhash request was not successful, response=$response")
+        val value = result.getJSONObject("value")
+        return value.getString("blockhash")
+    }
+
+    class GetLatestBlockhashFailedException(message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
+
+    private val TAG = GetLatestBlockhashUseCase::class.simpleName
+    private const val TIMEOUT_MS = 20000
+}
