@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="2576.0417px" preserveAspectRatio="none" style="width:1462px;height:2576px;background:#FFFFFF;" version="1.1" viewBox="0 0 1462 2576" width="1462.5px" zoomAndPan="magnify"><defs><linearGradient id="gvmu6re6mu4hg0" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#59B6EC"/><stop offset="100%" stop-color="#2FA4E7"/></linearGradient><linearGradient id="gvmu6re6mu4hg1" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#F8F9FA"/></linearGradient><linearGradient id="gvmu6re6mu4hg2" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#35638F"/><stop offset="100%" stop-color="#033C73"/></linearGradient></defs><g><rect fill="#90EE90" height="2545.9391" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:1.0416666666666667;" width="180.2083" x="53.125" y="11.4583"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="125" x="80.7292" y="28.7516">Native Android app</text><rect fill="#ADD8E6" height="2545.9391" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:1.0416666666666667;" width="976.5625" x="430.7292" y="11.4583"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="107.2917" x="865.3646" y="28.7516">Android Chrome</text><rect fill="#EDF0F2" height="31.25" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="138.0208" y="192.3584"/><rect fill="#EDF0F2" height="1268.7337" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="138.0208" y="309.3018"/><rect fill="#EDF0F2" height="335.4818" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="138.0208" y="2209.4157"/><rect fill="#EDF0F2" height="2447.6074" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="515.1042" y="106.665"/><rect fill="#EDF0F2" height="759.6436" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="727.0833" y="649.0885"/><rect fill="#EDF0F2" height="518.1885" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1010.4167" y="890.5436"/><rect fill="#EDF0F2" height="482.9102" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1010.4167" y="1686.7839"/><rect fill="#EDF0F2" height="14.5833" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1281.25" y="728.5319"/><rect height="969.8486" rx="4.1667" ry="4.1667" style="stroke:#59B6EC;stroke-width:1.0416666666666667;fill:none;" width="1366.6667" x="46.875" y="447.2168"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="142.7083" x2="142.7083" y1="96.2484" y2="2563.6475"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="520.3125" x2="520.3125" y1="96.2484" y2="2563.6475"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="731.7708" x2="731.7708" y1="96.2484" y2="2563.6475"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="1015.625" x2="1015.625" y1="96.2484" y2="2563.6475"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="1286.4583" x2="1286.4583" y1="96.2484" y2="2563.6475"/><rect fill="url(#gvmu6re6mu4hg0)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="88.5417" x="98.9583" y="55.485"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="63.5417" x="111.4583" y="80.07">Wallet app</text><rect fill="url(#gvmu6re6mu4hg0)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="87.5" x="476.5625" y="55.485"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="62.5" x="489.0625" y="80.07">Web dapp</text><rect fill="url(#gvmu6re6mu4hg0)" height="54.4434" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="148.9583" x="657.8125" y="40.7633"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="123.9583" x="670.3125" y="65.3483">Chrome Custom Tab</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="41.6667" x="711.4583" y="80.07">service</text><rect fill="url(#gvmu6re6mu4hg0)" height="54.4434" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="162.5" x="934.375" y="40.7633"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="112.5" x="959.375" y="65.3483">Wallet-hosted web</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="137.5" x="946.875" y="80.07">origin attestation script</text><rect fill="url(#gvmu6re6mu4hg0)" height="54.4434" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="150" x="1211.4583" y="40.7633"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="125" x="1223.9583" y="65.3483">Wallet-hosted Digital</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="60.4167" x="1256.25" y="80.07">Asset Link</text><rect fill="#EDF0F2" height="31.25" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="138.0208" y="192.3584"/><rect fill="#EDF0F2" height="1268.7337" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="138.0208" y="309.3018"/><rect fill="#EDF0F2" height="335.4818" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="138.0208" y="2209.4157"/><rect fill="#EDF0F2" height="2447.6074" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="515.1042" y="106.665"/><rect fill="#EDF0F2" height="759.6436" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="727.0833" y="649.0885"/><rect fill="#EDF0F2" height="518.1885" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1010.4167" y="890.5436"/><rect fill="#EDF0F2" height="482.9102" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1010.4167" y="1686.7839"/><rect fill="#EDF0F2" height="14.5833" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1281.25" y="728.5319"/><rect fill="url(#gvmu6re6mu4hg1)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#gvmu6re6mu4hg1);stroke-width:1.0416666666666667;" width="1439.5833" x="10.4167" y="132.7759"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="132.7759" y2="132.7759"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="135.9009" y2="135.9009"/><rect fill="url(#gvmu6re6mu4hg1)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="369.7917" x="545.3125" y="117.0817"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="340.625" x="556.7708" y="138.5417">Dapp attempts to authorize with unattested identity</text><polygon fill="#2FA4E7" points="159.8958,188.1917,149.4792,192.3584,159.8958,196.5251,155.7292,192.3584" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="153.6458" x2="514.0625" y1="192.3584" y2="192.3584"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="181.25" x="171.3542" y="182.43">Associate (via Local URI Intent)</text><path d="M59.375,241.3167 L59.375,268.4001 A4.1667,4.1667 0 0 0 63.5417,272.5667 L597.9167,272.5667 A4.1667,4.1667 0 0 0 602.0833,268.4001 L602.0833,247.5667 L591.6667,237.1501 L63.5417,237.1501 A4.1667,4.1667 0 0 0 59.375,241.3167 " fill="url(#gvmu6re6mu4hg2)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><path d="M591.6667,237.1501 L591.6667,245.4834 A2.0833,2.0833 0 0 0 593.75,247.5667 L602.0833,247.5667 L591.6667,237.1501 " fill="url(#gvmu6re6mu4hg2)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="266.6667" x="192.9688" y="259.6517">Starts after Session Establishment completes</text><polygon fill="#2FA4E7" points="159.8958,305.1351,149.4792,309.3018,159.8958,313.4684,155.7292,309.3018" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="153.6458" x2="514.0625" y1="309.3018" y2="309.3018"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="81.25" x="171.3542" y="299.3734">authorize {...}</text><rect fill="url(#gvmu6re6mu4hg1)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#gvmu6re6mu4hg1);stroke-width:1.0416666666666667;" width="1439.5833" x="10.4167" y="343.7459"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="343.7459" y2="343.7459"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="346.8709" y2="346.8709"/><rect fill="url(#gvmu6re6mu4hg1)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="355.2083" x="552.6042" y="328.0518"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="326.0417" x="564.0625" y="349.5117">Bind Wallet to browser with an attestation keypair</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="418.0501" y2="418.0501"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="418.0501" y2="431.5918"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="431.5918" y2="431.5918"/><polygon fill="#2FA4E7" points="159.8958,427.4251,149.4792,431.5918,159.8958,435.7585,155.7292,431.5918" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="160.9375" y="393.4001">b</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="159.375" x="173.4375" y="393.4001">= Local URI Intent browser</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="108.3333" x="160.9375" y="408.1217">package identifier</text><path d="M51.0417,447.2168 L120.8333,447.2168 L120.8333,464.0218 L110.4167,474.4385 L46.875,474.4385 L46.875,451.3835 A4.1667,4.1667 0 0 1 51.0417,447.2168 " fill="#E9ECEF" style="stroke:#868E96;stroke-width:1.0416666666666667;"/><rect fill="none" height="969.8486" rx="4.1667" ry="4.1667" style="stroke:#59B6EC;stroke-width:1.0416666666666667;" width="1366.6667" x="46.875" y="447.2168"/><text fill="#033C73" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="16.6667" x="67.7083" y="465.5518">alt</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="221.875" x="141.6667" y="466.5934">[Wallet has a stored public key for</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" font-weight="bold" lengthAdjust="spacing" textLength="8.3333" x="367.7083" y="466.5934">b</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="4.1667" x="376.0417" y="466.5934">]</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="515.3402" y2="515.3402"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="515.3402" y2="528.8818"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="528.8818" y2="528.8818"/><polygon fill="#2FA4E7" points="159.8958,524.7152,149.4792,528.8818,159.8958,533.0485,155.7292,528.8818" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="104.1667" x="160.9375" y="505.4118">read stored key (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="265.1042" y="505.4118">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="276.5625" y="505.4118">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="284.8958" y="505.4118">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="25" x="294.2708" y="505.4118">) for</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="323.4375" y="505.4118">b</text><line style="stroke:#59B6EC;stroke-width:1.0416666666666667;stroke-dasharray:2.0,2.0;" x1="46.875" x2="1413.5417" y1="538.2568" y2="538.2568"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="290.625" x="57.2917" y="555.5501">[Wallet does not have a stored public key for</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" font-weight="bold" lengthAdjust="spacing" textLength="8.3333" x="352.0833" y="555.5501">b</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="4.1667" x="360.4167" y="555.5501">]</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="595.8252" y2="595.8252"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="595.8252" y2="609.3669"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="161.9792" x2="192.1875" y1="609.3669" y2="609.3669"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="154.6875" x2="165.1042" y1="604.1585" y2="614.5752"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="154.6875" x2="165.1042" y1="614.5752" y2="604.1585"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="104.1667" x="160.9375" y="585.8968">read stored key (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="265.1042" y="585.8968">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="276.5625" y="585.8968">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="284.8958" y="585.8968">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="25" x="294.2708" y="585.8968">) for</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="323.4375" y="585.8968">b</text><polygon fill="#2FA4E7" points="714.5833,644.9219,725,649.0885,714.5833,653.2552,718.75,649.0885" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="720.8333" y1="649.0885" y2="649.0885"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="191.6667" x="160.9375" y="639.1602">Bind to CCT CustomTabsService</text><polygon fill="#2FA4E7" points="714.5833,684.6436,725,688.8102,714.5833,692.9769,718.75,688.8102" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="148.4375" x2="720.8333" y1="688.8102" y2="688.8102"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="141.6667" x="160.9375" y="678.8818">Adopt Wallet app origin</text><polygon fill="#2FA4E7" points="1268.75,724.3652,1279.1667,728.5319,1268.75,732.6986,1272.9167,728.5319" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="737.5" x2="1275" y1="728.5319" y2="728.5319"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="193.75" x="750" y="718.6035">Fetch Wallet digital asset link file</text><polygon fill="#2FA4E7" points="748.9583,738.9486,738.5417,743.1152,748.9583,747.2819,744.7917,743.1152" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="742.7083" x2="1285.4167" y1="743.1152" y2="743.1152"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="737.5" x2="781.25" y1="797.5586" y2="797.5586"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="781.25" x2="781.25" y1="797.5586" y2="811.1003"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="738.5417" x2="781.25" y1="811.1003" y2="811.1003"/><polygon fill="#2FA4E7" points="748.9583,806.9336,738.5417,811.1003,748.9583,815.2669,744.7917,811.1003" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="215.625" x="750" y="772.9085">Validate native Wallet app signature</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="209.375" x="750" y="787.6302">matches digital asset link assertion</text><polygon fill="#2FA4E7" points="714.5833,846.6553,725,850.8219,714.5833,854.9886,718.75,850.8219" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="148.4375" x2="720.8333" y1="850.8219" y2="850.8219"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="258.3333" x="160.9375" y="840.8936">Navigate to wallet-hosted attestation script</text><polygon fill="#2FA4E7" points="997.9167,886.377,1008.3333,890.5436,997.9167,894.7103,1002.0833,890.5436" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="737.5" x2="1004.1667" y1="890.5436" y2="890.5436"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="242.7083" x="750" y="880.6152">Load webpage into Chrome Custom Tab</text><polygon fill="#2FA4E7" points="714.5833,926.0986,725,930.2653,714.5833,934.432,718.75,930.2653" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="148.4375" x2="720.8333" y1="930.2653" y2="930.2653"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="284.375" x="160.9375" y="920.3369">Open postMessage channel to attestation script</text><polygon fill="#2FA4E7" points="997.9167,965.8203,1008.3333,969.987,997.9167,974.1536,1002.0833,969.987" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="148.4375" x2="1004.1667" y1="969.987" y2="969.987"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="310.4167" x="160.9375" y="960.0586">postMessage("generate-origin-attestation-keypair")</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1009.7087" y2="1009.7087"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1009.7087" y2="1023.2503"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1023.2503" y2="1023.2503"/><polygon fill="#2FA4E7" points="1032.2917,1019.0837,1021.875,1023.2503,1032.2917,1027.417,1028.125,1023.2503" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="235.4167" x="1033.3333" y="999.7803">validate postMessage from same origin</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1062.972" y2="1062.972"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1062.972" y2="1076.5137"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1076.5137" y2="1076.5137"/><polygon fill="#2FA4E7" points="1032.2917,1072.347,1021.875,1076.5137,1032.2917,1080.6803,1028.125,1076.5137" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="154.1667" x="1033.3333" y="1053.0436">generate ECDSA keypair (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="1187.5" y="1053.0436">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1196.875" y="1053.0436">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="1205.2083" y="1053.0436">d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1213.5417" y="1053.0436">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1116.2354" y2="1116.2354"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1116.2354" y2="1129.777"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1129.777" y2="1129.777"/><polygon fill="#2FA4E7" points="1032.2917,1125.6104,1021.875,1129.777,1032.2917,1133.9437,1028.125,1129.777" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="122.9167" x="1033.3333" y="1106.307">generate key unique</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="1160.4167" y="1106.307">id</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1169.4987" y2="1169.4987"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1169.4987" y2="1183.0404"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1183.0404" y2="1183.0404"/><polygon fill="#2FA4E7" points="1032.2917,1178.8737,1021.875,1183.0404,1032.2917,1187.207,1028.125,1183.0404" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="1033.3333" y="1159.5703">write (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="1070.8333" y="1159.5703">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1082.2917" y="1159.5703">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="1090.625" y="1159.5703">d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="1098.9583" y="1159.5703">) to local storage</text><polygon fill="#2FA4E7" points="159.8958,1218.5954,149.4792,1222.762,159.8958,1226.9287,155.7292,1222.762" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="153.6458" x2="1009.375" y1="1222.762" y2="1222.762"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="206.25" x="171.3542" y="1212.8337">postMessage("origin-attestation", {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="377.6042" y="1212.8337">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="389.0625" y="1212.8337">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="397.3958" y="1212.8337">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="8.3333" x="406.7708" y="1212.8337">})</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="1262.4837" y2="1262.4837"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="1262.4837" y2="1276.0254"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="1276.0254" y2="1276.0254"/><polygon fill="#2FA4E7" points="159.8958,1271.8587,149.4792,1276.0254,159.8958,1280.1921,155.7292,1276.0254" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="235.4167" x="160.9375" y="1252.5553">validate postMessage from same origin</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="1315.7471" y2="1315.7471"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="1315.7471" y2="1329.2887"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="1329.2887" y2="1329.2887"/><polygon fill="#2FA4E7" points="159.8958,1325.1221,149.4792,1329.2887,159.8958,1333.4554,155.7292,1329.2887" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="160.9375" y="1305.8187">write (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="198.4375" y="1305.8187">b</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="206.7708" y="1305.8187">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="215.1042" y="1305.8187">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="226.5625" y="1305.8187">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="234.8958" y="1305.8187">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="244.2708" y="1305.8187">) to local storage</text><polygon fill="#2FA4E7" points="714.5833,1364.8438,725,1369.0104,714.5833,1373.1771,718.75,1369.0104" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="720.8333" y1="1369.0104" y2="1369.0104"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="104.1667" x="160.9375" y="1359.082">Unbind from CCT</text><polygon fill="#2FA4E7" points="1003.125,1404.5654,1013.5417,1408.7321,1003.125,1412.8988,1007.2917,1408.7321" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="732.2917" x2="1009.375" y1="1408.7321" y2="1408.7321"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="89.5833" x="744.7917" y="1398.8037">close webpage</text><line style="stroke:#BABDBF;stroke-width:2.0833333333333335;" x1="722.9167" x2="741.6667" y1="1399.3571" y2="1418.1071"/><line style="stroke:#BABDBF;stroke-width:2.0833333333333335;" x1="722.9167" x2="741.6667" y1="1418.1071" y2="1399.3571"/><rect fill="url(#gvmu6re6mu4hg1)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#gvmu6re6mu4hg1);stroke-width:1.0416666666666667;" width="1439.5833" x="10.4167" y="1450.4679"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="1450.4679" y2="1450.4679"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="1453.5929" y2="1453.5929"/><rect fill="url(#gvmu6re6mu4hg1)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="246.875" x="606.7708" y="1434.7738"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="217.7083" x="618.2292" y="1456.2337">Wallet requests origin attestation</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="1510.0505" y2="1510.0505"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="1510.0505" y2="1523.5921"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="1523.5921" y2="1523.5921"/><polygon fill="#2FA4E7" points="159.8958,1519.4255,149.4792,1523.5921,159.8958,1527.7588,155.7292,1523.5921" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="115.625" x="160.9375" y="1500.1221">generate a random</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="56.25" x="280.7292" y="1500.1221">challenge</text><polygon fill="#2FA4E7" points="502.6042,1573.8688,513.0208,1578.0355,502.6042,1582.2021,506.7708,1578.0355" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="143.2292" x2="508.8542" y1="1578.0355" y2="1578.0355"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="275" x="155.7292" y="1553.3854">response {ERROR_ATTEST_ORIGIN_ANDROID,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="155.7292" y="1568.1071">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="167.1875" y="1568.1071">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="56.25" x="175.5208" y="1568.1071">challenge</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="231.7708" y="1568.1071">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="84.375" x="240.1042" y="1568.1071">attestation_uri</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="324.4792" y="1568.1071">}</text><rect fill="url(#gvmu6re6mu4hg1)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#gvmu6re6mu4hg1);stroke-width:1.0416666666666667;" width="1439.5833" x="10.4167" y="1612.4797"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="1612.4797" y2="1612.4797"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="1450" y1="1615.6047" y2="1615.6047"/><rect fill="url(#gvmu6re6mu4hg1)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="467.7083" x="496.3542" y="1596.7855"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="438.5417" x="507.8125" y="1618.2454">Dapp creates origin attestation token and reattempts authorization</text><polygon fill="#2FA4E7" points="997.9167,1682.6172,1008.3333,1686.7839,997.9167,1690.9505,1002.0833,1686.7839" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="525.5208" x2="1004.1667" y1="1686.7839" y2="1686.7839"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="189.5833" x="538.0208" y="1662.1338">create invisible iframe and load</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="186.4583" x="538.0208" y="1676.8555">wallet-hosted attestation script</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="525.5208" x2="569.2708" y1="1741.2272" y2="1741.2272"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="569.2708" x2="569.2708" y1="1741.2272" y2="1754.7689"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="526.5625" x2="569.2708" y1="1754.7689" y2="1754.7689"/><polygon fill="#2FA4E7" points="536.9792,1750.6022,526.5625,1754.7689,536.9792,1758.9355,532.8125,1754.7689" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="538.0208" y="1716.5771">h</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="162.5" x="549.4792" y="1716.5771">= SHA256("attest-origin" ||</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="56.25" x="538.0208" y="1731.2988">challenge</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="8.3333" x="598.4375" y="1731.2988">||</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="86.4583" x="610.9375" y="1731.2988">session_secret</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="697.3958" y="1731.2988">)</text><polygon fill="#2FA4E7" points="997.9167,1790.3239,1008.3333,1794.4906,997.9167,1798.6572,1002.0833,1794.4906" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="525.5208" x2="1004.1667" y1="1794.4906" y2="1794.4906"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="82.2917" x="538.0208" y="1784.5622">postMessage(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="620.3125" y="1784.5622">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="631.7708" y="1784.5622">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="640.1042" y="1784.5622">h</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="647.3958" y="1784.5622">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1834.2122" y2="1834.2122"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1834.2122" y2="1847.7539"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1847.7539" y2="1847.7539"/><polygon fill="#2FA4E7" points="1032.2917,1843.5872,1021.875,1847.7539,1032.2917,1851.9206,1028.125,1847.7539" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="1033.3333" y="1824.2839">o</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="145.8333" x="1044.7917" y="1824.2839">= origin of postMessage</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1887.4756" y2="1887.4756"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1887.4756" y2="1901.0173"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1901.0173" y2="1901.0173"/><polygon fill="#2FA4E7" points="1032.2917,1896.8506,1021.875,1901.0173,1032.2917,1905.1839,1028.125,1901.0173" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="36.4583" x="1033.3333" y="1877.5472">read (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="1069.7917" y="1877.5472">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1081.25" y="1877.5472">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="1089.5833" y="1877.5472">d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="116.6667" x="1097.9167" y="1877.5472">) from local storage</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="1955.4606" y2="1955.4606"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="1955.4606" y2="1969.0023"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="1969.0023" y2="1969.0023"/><polygon fill="#2FA4E7" points="1032.2917,1964.8356,1021.875,1969.0023,1032.2917,1973.1689,1028.125,1969.0023" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="161.4583" x="1033.3333" y="1930.8105">create attestation message</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="1033.3333" y="1945.5322">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="18.75" x="1048.9583" y="1945.5322">= {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="1067.7083" y="1945.5322">o</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1075" y="1945.5322">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="1083.3333" y="1945.5322">h</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1090.625" y="1945.5322">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1020.8333" x2="1064.5833" y1="2008.724" y2="2008.724"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1064.5833" x2="1064.5833" y1="2008.724" y2="2022.2656"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="1021.875" x2="1064.5833" y1="2022.2656" y2="2022.2656"/><polygon fill="#2FA4E7" points="1032.2917,2018.099,1021.875,2022.2656,1032.2917,2026.4323,1028.125,2022.2656" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="1033.3333" y="1998.7956">S = ECDSA-sign(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="1133.3333" y="1998.7956">d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1141.6667" y="1998.7956">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="1150" y="1998.7956">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="1161.4583" y="1998.7956">)</text><polygon fill="#2FA4E7" points="536.9792,2057.8206,526.5625,2061.9873,536.9792,2066.154,532.8125,2061.9873" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="530.7292" x2="1009.375" y1="2061.9873" y2="2061.9873"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="82.2917" x="548.4375" y="2052.0589">postMessage(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="630.7292" y="2052.0589">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="642.1875" y="2052.0589">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="6.25" x="650.5208" y="2052.0589">S</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="656.7708" y="2052.0589">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="525.5208" x2="569.2708" y1="2116.4307" y2="2116.4307"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="569.2708" x2="569.2708" y1="2116.4307" y2="2129.9723"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="526.5625" x2="569.2708" y1="2129.9723" y2="2129.9723"/><polygon fill="#2FA4E7" points="536.9792,2125.8057,526.5625,2129.9723,536.9792,2134.139,532.8125,2129.9723" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="161.4583" x="538.0208" y="2091.7806">validate postMessage from</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="108.3333" x="538.0208" y="2106.5023">attest script origin</text><polygon fill="#2FA4E7" points="1003.125,2165.5273,1013.5417,2169.694,1003.125,2173.8607,1007.2917,2169.694" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="525.5208" x2="1009.375" y1="2169.694" y2="2169.694"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="139.5833" x="538.0208" y="2159.7656">destroy invisible iframe</text><polygon fill="#2FA4E7" points="159.8958,2205.249,149.4792,2209.4157,159.8958,2213.5824,155.7292,2209.4157" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="153.6458" x2="514.0625" y1="2209.4157" y2="2209.4157"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="81.25" x="171.3542" y="2199.4873">authorize {...,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="256.7708" y="2199.4873">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="268.2292" y="2199.4873">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="6.25" x="276.5625" y="2199.4873">S</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="282.8125" y="2199.4873">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="2249.1374" y2="2249.1374"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="2249.1374" y2="2262.679"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="2262.679" y2="2262.679"/><polygon fill="#2FA4E7" points="159.8958,2258.5124,149.4792,2262.679,159.8958,2266.8457,155.7292,2262.679" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="104.1667" x="160.9375" y="2239.209">read stored key (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="265.1042" y="2239.209">id</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="276.5625" y="2239.209">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="284.8958" y="2239.209">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="25" x="294.2708" y="2239.209">) for</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="323.4375" y="2239.209">b</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="2317.1224" y2="2317.1224"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="2317.1224" y2="2330.6641"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="2330.6641" y2="2330.6641"/><polygon fill="#2FA4E7" points="159.8958,2326.4974,149.4792,2330.6641,159.8958,2334.8307,155.7292,2330.6641" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="106.25" x="160.9375" y="2292.4723">validate signature</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="83.3333" x="160.9375" y="2307.194">ECDSA-verify(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="244.2708" y="2307.194">Q</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="253.6458" y="2307.194">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="261.9792" y="2307.194">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="273.4375" y="2307.194">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="6.25" x="281.7708" y="2307.194">S</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="288.0208" y="2307.194">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="2385.1074" y2="2385.1074"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="2385.1074" y2="2398.6491"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="2398.6491" y2="2398.6491"/><polygon fill="#2FA4E7" points="159.8958,2394.4824,149.4792,2398.6491,159.8958,2402.8158,155.7292,2398.6491" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="73.9583" x="160.9375" y="2360.4574">validate that</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="239.0625" y="2360.4574">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="48.9583" x="254.6875" y="2360.4574">contains</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="307.8125" y="2360.4574">h</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="160.9375" y="2375.179">h</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="162.5" x="172.3958" y="2375.179">= SHA256("attest-origin" ||</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="56.25" x="339.0625" y="2375.179">challenge</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="8.3333" x="399.4792" y="2375.179">||</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="86.4583" x="411.9792" y="2375.179">session_secret</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="498.4375" y="2375.179">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="2438.3708" y2="2438.3708"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="2438.3708" y2="2451.9124"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="2451.9124" y2="2451.9124"/><polygon fill="#2FA4E7" points="159.8958,2447.7458,149.4792,2451.9124,159.8958,2456.0791,155.7292,2451.9124" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="198.9583" x="160.9375" y="2428.4424">validate identity is valid for origin</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="364.0625" y="2428.4424">o</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="148.4375" x2="192.1875" y1="2491.6341" y2="2491.6341"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="192.1875" x2="192.1875" y1="2491.6341" y2="2505.1758"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="149.4792" x2="192.1875" y1="2505.1758" y2="2505.1758"/><polygon fill="#2FA4E7" points="159.8958,2501.0091,149.4792,2505.1758,159.8958,2509.3424,155.7292,2505.1758" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="105.2083" x="160.9375" y="2481.7057">create auth token</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="270.3125" y="2481.7057">at</text><polygon fill="#2FA4E7" points="502.6042,2540.7308,513.0208,2544.8975,502.6042,2549.0641,506.7708,2544.8975" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="143.2292" x2="508.8542" y1="2544.8975" y2="2544.8975"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="63.5417" x="155.7292" y="2534.9691">response {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="219.2708" y="2534.9691">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="230.7292" y="2534.9691">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="15.625" x="239.0625" y="2534.9691">uri</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="254.6875" y="2534.9691">}</text><!--MD5=[1ec85d4af394543107b2d5dd68d9b976]
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+box "Native Android app" #LightGreen
+participant wallet as "Wallet app"
+end box
+box "Android Chrome" #LightBlue
+participant dapp as "Web dapp"
+participant cct as "Chrome Custom Tab\nservice"
+participant attest as "Wallet-hosted web\norigin attestation script"
+participant dal as "Wallet-hosted Digital\nAsset Link"
+end box
+
+== Dapp attempts to authorize with unattested identity ==
+
+activate dapp
+dapp -> wallet ++ : Associate (via Local URI Intent)
+deactivate wallet
+note over wallet, dapp : Starts after Session Establishment completes
+dapp -> wallet ++ : authorize {...}
+
+== Bind Wallet to browser with an attestation keypair ==
+
+wallet -> wallet : <i>b</i> = Local URI Intent browser\npackage identifier
+alt Wallet has a stored public key for <i>b</i>
+    wallet -> wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+else Wallet does not have a stored public key for <i>b</i>
+    wallet -X wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+    wallet -> cct ++: Bind to CCT CustomTabsService
+    wallet - -> cct : Adopt Wallet app origin
+    cct -> dal ++ : Fetch Wallet digital asset link file
+    return
+    cct -> cct : Validate native Wallet app signature\nmatches digital asset link assertion
+    wallet - -> cct : Navigate to wallet-hosted attestation script
+    cct - -> attest ++ : Load webpage into Chrome Custom Tab
+    wallet - -> cct : Open postMessage channel to attestation script
+    wallet - -> attest : postMessage("generate-origin-attestation-keypair")
+    attest -> attest : validate postMessage from same origin
+    attest -> attest : generate ECDSA keypair (<i>Q</i>, <i>d</i>)
+    attest -> attest : generate key unique <i>id</i>
+    attest -> attest : write (<i>id</i>, <i>d</i>) to local storage
+    attest - -> wallet : postMessage("origin-attestation", {<i>id</i>, <i>Q</i>})
+    wallet -> wallet : validate postMessage from same origin
+    wallet -> wallet : write (<i>b</i>, <i>id</i>, <i>Q</i>) to local storage
+    wallet -> cct : Unbind from CCT
+    cct - -> attest : close webpage
+    deactivate attest
+    destroy cct
+end
+
+== Wallet requests origin attestation ==
+
+wallet -> wallet : generate a random <i>challenge</i>
+wallet - -> dapp - - : response {ERROR_ATTEST_ORIGIN_ANDROID,\n<i>id</i>, <i>challenge</i>, <i>attestation_uri</i>}
+
+== Dapp creates origin attestation token and reattempts authorization ==
+
+dapp -> attest ++ : create invisible iframe and load\nwallet-hosted attestation script
+dapp -> dapp : <i>h</i> = SHA256("attest-origin" ||\n<i>challenge</i> || <i>session_secret</i>)
+dapp - -> attest : postMessage(<i>id</i>, <i>h</i>)
+attest -> attest : <i>o</i> = origin of postMessage
+attest -> attest : read (<i>id</i>, <i>d</i>) from local storage
+attest -> attest : create attestation message\n<i>m</i> = {<i>o</i>, <i>h</i>}
+attest -> attest : S = ECDSA-sign(<i>d</i>, <i>m</i>)
+attest - -> dapp : postMessage(<i>m</i>, <i>S</i>)
+dapp -> dapp : validate postMessage from\nattest script origin
+dapp -> attest : destroy invisible iframe
+deactivate attest
+dapp -> wallet ++ : authorize {..., <i>m</i>, <i>S</i>}
+wallet -> wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+wallet -> wallet : validate signature\nECDSA-verify(<i>Q</i>, <i>m</i>, <i>S</i>)
+wallet -> wallet : validate that <i>m</i> contains <i>h</i>\n<i>h</i> = SHA256("attest-origin" || <i>challenge</i> || <i>session_secret</i>)
+wallet -> wallet : validate identity is valid for origin <i>o</i>
+wallet -> wallet : create auth token <i>at</i>
+wallet - -> dapp - - : response {<i>at</i>, <i>uri</i>}
+
+@enduml
+
+@startuml
+
+
+
+
+skinparam backgroundColor transparent
+skinparam useBetaStyle false
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor transparent
+    FontColor #FFF
+    HyperLinkColor #FD7E14
+    LineColor #2683B9
+    LineThickness 1
+    Margin 10
+    Padding 6
+    Shadowing 0.0
+  }
+  node {
+   Padding 15
+   roundcorner 20
+   BackgroundColor #2FA4E7-#2683B9
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  groupHeader {
+    BackgroundColor #E9ECEF
+    FontColor #033C73
+    FontStyle bold
+  }
+  header {
+    LineThickness 0
+  }
+  referenceHeader {
+    BackgroundColor transparent
+    FontColor #343A40
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor #343A40
+    FontColor transparent
+    FontStyle bold
+  }
+  title {
+	FontSize 20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor  #EDF0F2-#E9ECEF
+	FontColor #2FA4E7
+	BorderColor #E9ECEF
+  }
+  nwdiagDiagram {
+	network {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7    
+		LineColor #2FA4E7
+		LineThickness 1.0
+		FontColor #2683B9
+	}
+	server {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	}
+	arrow {
+		FontColor #2683B9
+		LineColor #2683B9
+	}
+	group {
+		BackGroundColor #F8F9FA
+		LineColor $LIGHT_DARK
+		LineThickness 2.0
+		Margin 5
+		Padding 5
+	}
+  }
+  ganttDiagram {
+	task {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+		LineColor #2FA4E7
+		Margin 10
+		Padding 6
+	}
+	note {
+		FontColor #FFF
+		LineColor #02305C
+		BackGroundColor #033C73
+	}
+	separator {
+		LineColor #E9ECEF
+		BackGroundColor #E9ECEF-#BABDBF
+		FontColor #343A40
+	}
+	milestone {
+		FontColor #033C73
+		FontSize 16
+		FontStyle italic
+		BackGroundColor #E9ECEF
+		LineColor #BABDBF
+	}
+	timeline {
+		BackgroundColor #E9ECEF
+		FontColor #343A40
+	}
+	closed {
+		BackgroundColor #B14500
+		FontColor #FFF
+	}
+  }
+</style>
+skinparam defaultFontName        "Verdana"
+skinparam defaultFontSize        12
+skinparam dpi                    100
+skinparam shadowing              false
+skinparam roundcorner            8
+skinparam ParticipantPadding     40
+skinparam BoxPadding             40
+skinparam Padding                5
+skinparam ArrowColor             #868E96
+skinparam stereotype {
+    CBackgroundColor #EDF0F2
+    CBorderColor #BABDBF
+    ABackgroundColor #8FB961
+    ABorderColor #5C862E
+    IBackgroundColor #D2494E
+    IBorderColor #9F161B
+    EBackgroundColor #E47833
+    EBorderColor #B14500
+    NBackgroundColor #35638F
+    NBorderColor #02305C
+}
+skinparam title {
+	FontColor	                 #2FA4E7
+	BorderColor	                 #BABDBF
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor              #EDF0F2-#E9ECEF
+}
+
+
+skinparam legend {
+	BackgroundColor #E9ECEF
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+skinparam swimlane {
+	BorderColor #033C73
+	BorderThickness 2
+	TitleBackgroundColor  #EDF0F2-#E9ECEF
+	TitleFontColor #2FA4E7
+}
+
+
+skinparam activity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BarColor #73A839
+	StartColor #033C73
+	EndColor #033C73
+	DiamondBackgroundColor #FFF-#EDF0F2
+  	DiamondBorderColor #BABDBF
+	DiamondFontColor #343A40
+}
+
+
+skinparam participant {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	ParticipantBorderThickness 2
+}
+
+
+skinparam actor {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam arrow {
+	Thickness 3
+	Color #2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam sequence {
+	BorderColor #2FA4E7
+	TitleFontColor #2FA4E7
+	BackgroundColor transparent
+	StartColor #2FA4E7
+	EndColor #2FA4E7
+	BoxBackgroundColor #F8F9FA
+	BoxBorderColor #868E96
+	BoxFontColor #343A40
+	DelayFontColor #343A40
+	LifeLineBorderColor #BABDBF
+	LifeLineBorderThickness 2
+	LifeLineBackgroundColor #EDF0F2
+	GroupBorderColor #868E96
+	GroupFontColor #343A40
+	GroupHeaderFontColor #033C73
+	DividerBackgroundColor #FFF-#F8F9FA
+    DividerBorderColor #868E96
+    DividerBorderThickness 2
+    DividerFontColor #343A40
+	ReferenceBackgroundColor transparent
+	ReferenceBorderColor #868E96
+	ReferenceFontColor #343A40
+	ReferenceHeaderFontColor #033C73
+	StereotypeFontColor #FFF
+}
+
+
+skinparam partition {
+	BorderColor #2FA4E7
+	FontColor #2FA4E7
+	BackgroundColor transparent
+}
+
+
+skinparam collections {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam control {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam entity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam boundary {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam agent {
+	BackgroundColor #orange
+	BorderColor #999999
+	FontColor #333333
+}
+
+
+skinparam note {
+	BorderThickness 1
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam artifact {
+	BackgroundColor #FFF-#F8F9FA
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+
+skinparam component {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam interface {
+	BackgroundColor  #D2494E
+	BorderColor  #C71C22
+	FontColor #343A40
+}
+
+
+skinparam storage {
+	BackgroundColor #E47833-#DD5600
+  	BorderColor #DD5600
+	FontColor #FFF
+}
+
+
+skinparam node {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #E9ECEF
+	FontColor #343A40
+}
+
+
+skinparam cloud {
+	BackgroundColor #F2FCFE-#eeeeee
+	BorderColor #F2FCFE
+	FontColor #2FA4E7
+}
+
+
+skinparam database {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam class {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	HeaderBackgroundColor #2FA4E7-#2683B9
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #F8F9FA
+	AttributeFontSize 11
+}
+
+
+skinparam object {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam usecase {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam rectangle {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam package {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+}
+
+
+skinparam folder {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #DD5600
+	FontColor #DD5600
+	BorderThickness 2
+}
+
+
+skinparam frame {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #033C73
+	FontColor #033C73
+	BorderThickness 2
+}
+
+
+skinparam state {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderColor #2683B9
+	StartColor #033C73
+	EndColor #033C73
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam queue {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam card {
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam file {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #033C73
+	FontColor #868E96
+
+}
+
+
+skinparam stack {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+box "Native Android app" #LightGreen
+participant wallet as "Wallet app"
+end box
+box "Android Chrome" #LightBlue
+participant dapp as "Web dapp"
+participant cct as "Chrome Custom Tab\nservice"
+participant attest as "Wallet-hosted web\norigin attestation script"
+participant dal as "Wallet-hosted Digital\nAsset Link"
+end box
+
+== Dapp attempts to authorize with unattested identity ==
+
+activate dapp
+dapp -> wallet ++ : Associate (via Local URI Intent)
+deactivate wallet
+note over wallet, dapp : Starts after Session Establishment completes
+dapp -> wallet ++ : authorize {...}
+
+== Bind Wallet to browser with an attestation keypair ==
+
+wallet -> wallet : <i>b</i> = Local URI Intent browser\npackage identifier
+alt Wallet has a stored public key for <i>b</i>
+    wallet -> wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+else Wallet does not have a stored public key for <i>b</i>
+    wallet -X wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+    wallet -> cct ++: Bind to CCT CustomTabsService
+    wallet - -> cct : Adopt Wallet app origin
+    cct -> dal ++ : Fetch Wallet digital asset link file
+    return
+    cct -> cct : Validate native Wallet app signature\nmatches digital asset link assertion
+    wallet - -> cct : Navigate to wallet-hosted attestation script
+    cct - -> attest ++ : Load webpage into Chrome Custom Tab
+    wallet - -> cct : Open postMessage channel to attestation script
+    wallet - -> attest : postMessage("generate-origin-attestation-keypair")
+    attest -> attest : validate postMessage from same origin
+    attest -> attest : generate ECDSA keypair (<i>Q</i>, <i>d</i>)
+    attest -> attest : generate key unique <i>id</i>
+    attest -> attest : write (<i>id</i>, <i>d</i>) to local storage
+    attest - -> wallet : postMessage("origin-attestation", {<i>id</i>, <i>Q</i>})
+    wallet -> wallet : validate postMessage from same origin
+    wallet -> wallet : write (<i>b</i>, <i>id</i>, <i>Q</i>) to local storage
+    wallet -> cct : Unbind from CCT
+    cct - -> attest : close webpage
+    deactivate attest
+    destroy cct
+end
+
+== Wallet requests origin attestation ==
+
+wallet -> wallet : generate a random <i>challenge</i>
+wallet - -> dapp - - : response {ERROR_ATTEST_ORIGIN_ANDROID,\n<i>id</i>, <i>challenge</i>, <i>attestation_uri</i>}
+
+== Dapp creates origin attestation token and reattempts authorization ==
+
+dapp -> attest ++ : create invisible iframe and load\nwallet-hosted attestation script
+dapp -> dapp : <i>h</i> = SHA256("attest-origin" ||\n<i>challenge</i> || <i>session_secret</i>)
+dapp - -> attest : postMessage(<i>id</i>, <i>h</i>)
+attest -> attest : <i>o</i> = origin of postMessage
+attest -> attest : read (<i>id</i>, <i>d</i>) from local storage
+attest -> attest : create attestation message\n<i>m</i> = {<i>o</i>, <i>h</i>}
+attest -> attest : S = ECDSA-sign(<i>d</i>, <i>m</i>)
+attest - -> dapp : postMessage(<i>m</i>, <i>S</i>)
+dapp -> dapp : validate postMessage from\nattest script origin
+dapp -> attest : destroy invisible iframe
+deactivate attest
+dapp -> wallet ++ : authorize {..., <i>m</i>, <i>S</i>}
+wallet -> wallet : read stored key (<i>id</i>, <i>Q</i>) for <i>b</i>
+wallet -> wallet : validate signature\nECDSA-verify(<i>Q</i>, <i>m</i>, <i>S</i>)
+wallet -> wallet : validate that <i>m</i> contains <i>h</i>\n<i>h</i> = SHA256("attest-origin" || <i>challenge</i> || <i>session_secret</i>)
+wallet -> wallet : validate identity is valid for origin <i>o</i>
+wallet -> wallet : create auth token <i>at</i>
+wallet - -> dapp - - : response {<i>at</i>, <i>uri</i>}
+
+@enduml
+
+PlantUML version 1.2022.4(Sat Apr 09 09:29:17 EDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

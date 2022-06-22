@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="1317.7083px" preserveAspectRatio="none" style="width:594px;height:1317px;background:#FFFFFF;" version="1.1" viewBox="0 0 594 1317" width="594.7917px" zoomAndPan="magnify"><defs><linearGradient id="g10znphidayg50" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#59B6EC"/><stop offset="100%" stop-color="#2FA4E7"/></linearGradient><linearGradient id="g10znphidayg51" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#35638F"/><stop offset="100%" stop-color="#033C73"/></linearGradient><linearGradient id="g10znphidayg52" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#F8F9FA"/></linearGradient></defs><g><rect fill="#EDF0F2" height="523.5352" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="95.8333" y="61.5967"/><rect fill="#EDF0F2" height="205.7617" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="95.8333" y="731.3802"/><rect fill="#EDF0F2" height="638.2568" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="346.875" y="369.8568"/><rect fill="#EDF0F2" height="245.4834" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="352.0833" y="585.1318"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="101.0417" x2="101.0417" y1="51.18" y2="1017.4886"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="352.0833" x2="352.0833" y1="51.18" y2="1017.4886"/><rect fill="url(#g10znphidayg50)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="58.3333" x="71.875" y="10.4167"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="33.3333" x="84.375" y="35.0016">Dapp</text><rect fill="url(#g10znphidayg50)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="60.4167" x="321.875" y="10.4167"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="35.4167" x="334.375" y="35.0016">Wallet</text><rect fill="#EDF0F2" height="523.5352" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="95.8333" y="61.5967"/><rect fill="#EDF0F2" height="205.7617" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="95.8333" y="731.3802"/><rect fill="#EDF0F2" height="638.2568" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="346.875" y="369.8568"/><rect fill="#EDF0F2" height="245.4834" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="352.0833" y="585.1318"/><path d="M15.625,70.9717 L15.625,98.055 A4.1667,4.1667 0 0 0 19.7917,102.2217 L434.375,102.2217 A4.1667,4.1667 0 0 0 438.5417,98.055 L438.5417,77.2217 L428.125,66.805 L19.7917,66.805 A4.1667,4.1667 0 0 0 15.625,70.9717 " fill="url(#g10znphidayg51)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><path d="M428.125,66.805 L428.125,75.1383 A2.0833,2.0833 0 0 0 430.2083,77.2217 L438.5417,77.2217 L428.125,66.805 " fill="url(#g10znphidayg51)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="390.625" x="27.0833" y="89.3066">User initiates a wallet request (e.g. transaction signing) in a dapp</text><rect fill="url(#g10znphidayg52)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g10znphidayg52);stroke-width:1.0416666666666667;" width="571.875" x="10.4167" y="141.04"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="582.2917" y1="141.04" y2="141.04"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="582.2917" y1="144.165" y2="144.165"/><rect fill="url(#g10znphidayg52)" height="48.1934" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="334.375" x="129.1667" y="117.985"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="306.25" x="140.625" y="139.445">Establish association between Dapp and Wallet</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="305.2083" x="140.625" y="154.1667">This could be via Android Intent, QR code, etc...</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="106.25" x2="150" y1="207.9834" y2="207.9834"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="150" x2="150" y1="207.9834" y2="221.5251"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="107.2917" x2="150" y1="221.5251" y2="221.5251"/><polygon fill="#2FA4E7" points="117.7083,217.3584,107.2917,221.5251,117.7083,225.6917,113.5417,221.5251" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="133.3333" x="118.75" y="198.055">generate ECDSA pair (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="21.875" x="252.0833" y="198.055">d_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="273.9583" y="198.055">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="282.2917" y="198.055">Q_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="305.2083" y="198.055">)</text><polygon fill="#2FA4E7" points="339.5833,257.0801,350,261.2467,339.5833,265.4134,343.75,261.2467" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="106.25" x2="345.8333" y1="261.2467" y2="261.2467"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="118.75" y="251.3184">{</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="122.9167" y="251.3184">Q_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="145.8333" y="251.3184">}</text><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="333.3333" x2="343.75" y1="295.7601" y2="306.1768"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="333.3333" x2="343.75" y1="306.1768" y2="295.7601"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="106.25" x2="338.5417" y1="300.9684" y2="300.9684"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="210.4167" x="118.75" y="291.04">poll for WebSocket server available</text><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="333.3333" x2="343.75" y1="310.3434" y2="320.7601"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="333.3333" x2="343.75" y1="320.7601" y2="310.3434"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="106.25" x2="338.5417" y1="315.5518" y2="315.5518"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="333.3333" x2="343.75" y1="324.9268" y2="335.3434"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="333.3333" x2="343.75" y1="335.3434" y2="324.9268"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="106.25" x2="338.5417" y1="330.1351" y2="330.1351"/><polygon fill="#2FA4E7" points="334.375,365.6901,344.7917,369.8568,334.375,374.0234,338.5417,369.8568" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="106.25" x2="340.625" y1="369.8568" y2="369.8568"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="45.8333" x="118.75" y="359.9284">connect</text><rect fill="url(#g10znphidayg52)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g10znphidayg52);stroke-width:1.0416666666666667;" width="571.875" x="10.4167" y="411.6618"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="582.2917" y1="411.6618" y2="411.6618"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="582.2917" y1="414.7868" y2="414.7868"/><rect fill="url(#g10znphidayg52)" height="48.1934" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="326.0417" x="133.3333" y="388.6068"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="223.9583" x="144.7917" y="410.0667">WebSocket connection established</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="296.875" x="144.7917" y="424.7884">Perform ECDH to obtain a unique session key</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="106.25" x2="150" y1="478.6051" y2="478.6051"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="150" x2="150" y1="478.6051" y2="492.1468"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="107.2917" x2="150" y1="492.1468" y2="492.1468"/><polygon fill="#2FA4E7" points="117.7083,487.9801,107.2917,492.1468,117.7083,496.3135,113.5417,492.1468" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="128.125" x="118.75" y="468.6768">generate ECDH pair (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="246.875" y="468.6768">d_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="269.7917" y="468.6768">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="278.125" y="468.6768">Q_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="302.0833" y="468.6768">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="106.25" x2="150" y1="531.8685" y2="531.8685"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="150" x2="150" y1="531.8685" y2="545.4102"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="107.2917" x2="150" y1="545.4102" y2="545.4102"/><polygon fill="#2FA4E7" points="117.7083,541.2435,107.2917,545.4102,117.7083,549.5768,113.5417,545.4102" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="113.5417" x="118.75" y="521.9401">S_a = ECDSA-sign(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="21.875" x="232.2917" y="521.9401">d_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="254.1667" y="521.9401">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="262.5" y="521.9401">Q_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="286.4583" y="521.9401">)</text><polygon fill="#2FA4E7" points="339.5833,580.9652,350,585.1318,339.5833,589.2985,343.75,585.1318" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="101.0417" x2="345.8333" y1="585.1318" y2="585.1318"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="78.125" x="113.5417" y="575.2035">HELLO_REQ {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="191.6667" y="575.2035">Q_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="8.3333" x="219.7917" y="575.2035">||</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="232.2917" y="575.2035">S_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="252.0833" y="575.2035">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="362.5" x2="406.25" y1="624.8535" y2="624.8535"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="406.25" x2="406.25" y1="624.8535" y2="638.3952"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="363.5417" x2="406.25" y1="638.3952" y2="638.3952"/><polygon fill="#2FA4E7" points="373.9583,634.2285,363.5417,638.3952,373.9583,642.5618,369.7917,638.3952" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="32.2917" x="375" y="614.9251">verify</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="411.4583" y="614.9251">S_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="23.9583" x="435.4167" y="614.9251">with</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="463.5417" y="614.9251">Q_a</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="362.5" x2="406.25" y1="678.1169" y2="678.1169"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="406.25" x2="406.25" y1="678.1169" y2="691.6585"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="363.5417" x2="406.25" y1="691.6585" y2="691.6585"/><polygon fill="#2FA4E7" points="373.9583,687.4919,363.5417,691.6585,373.9583,695.8252,369.7917,691.6585" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="128.125" x="375" y="668.1885">generate ECDH pair (</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="503.125" y="668.1885">d_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="527.0833" y="668.1885">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="25" x="535.4167" y="668.1885">Q_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="560.4167" y="668.1885">)</text><polygon fill="#2FA4E7" points="117.7083,727.2135,107.2917,731.3802,117.7083,735.5469,113.5417,731.3802" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="111.4583" x2="351.0417" y1="731.3802" y2="731.3802"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="75" x="129.1667" y="721.4518">HELLO_RSP {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="25" x="204.1667" y="721.4518">Q_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="229.1667" y="721.4518">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="362.5" x2="406.25" y1="771.1019" y2="771.1019"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="406.25" x2="406.25" y1="771.1019" y2="784.6436"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="363.5417" x2="406.25" y1="784.6436" y2="784.6436"/><polygon fill="#2FA4E7" points="373.9583,780.4769,363.5417,784.6436,373.9583,788.8102,369.7917,784.6436" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="375" y="761.1735">Z</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="53.125" x="386.4583" y="761.1735">= ECDH(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="439.5833" y="761.1735">d_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="463.5417" y="761.1735">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="471.875" y="761.1735">Q_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="495.8333" y="761.1735">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="362.5" x2="406.25" y1="829.5736" y2="829.5736"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="406.25" x2="406.25" y1="829.5736" y2="843.1152"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="357.2917" x2="406.25" y1="843.1152" y2="843.1152"/><polygon fill="#2FA4E7" points="367.7083,838.9486,357.2917,843.1152,367.7083,847.2819,363.5417,843.1152" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="375" y="819.6452">K</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="52.0833" x="387.5" y="819.6452">= HKDF(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="439.5833" y="819.6452">Z</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="446.875" y="819.6452">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="455.2083" y="819.6452">Q_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="29.1667" x="478.125" y="819.6452">, 16)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="106.25" x2="150" y1="877.6286" y2="877.6286"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="150" x2="150" y1="877.6286" y2="891.1702"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="107.2917" x2="150" y1="891.1702" y2="891.1702"/><polygon fill="#2FA4E7" points="117.7083,887.0036,107.2917,891.1702,117.7083,895.3369,113.5417,891.1702" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="118.75" y="867.7002">Z</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="53.125" x="130.2083" y="867.7002">= ECDH(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="183.3333" y="867.7002">d_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="206.25" y="867.7002">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="25" x="214.5833" y="867.7002">Q_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="239.5833" y="867.7002">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="106.25" x2="150" y1="936.1003" y2="936.1003"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="150" x2="150" y1="936.1003" y2="949.6419"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="101.0417" x2="150" y1="949.6419" y2="949.6419"/><polygon fill="#2FA4E7" points="111.4583,945.4753,101.0417,949.6419,111.4583,953.8086,107.2917,949.6419" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="118.75" y="926.1719">K</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="52.0833" x="131.25" y="926.1719">= HKDF(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="7.2917" x="183.3333" y="926.1719">Z</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="190.625" y="926.1719">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="198.9583" y="926.1719">Q_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="29.1667" x="221.875" y="926.1719">, 16)</text><rect fill="url(#g10znphidayg52)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g10znphidayg52);stroke-width:1.0416666666666667;" width="571.875" x="10.4167" y="978.8778"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="582.2917" y1="978.8778" y2="978.8778"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="582.2917" y1="982.0028" y2="982.0028"/><rect fill="url(#g10znphidayg52)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="408.3333" x="92.1875" y="963.1836"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="379.1667" x="103.6458" y="984.6436">cryptochannel ready for encrypted session communication</text><rect fill="#FFFFFF" height="275.411" rx="4.1667" ry="4.1667" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="460.4167" x="65.625" y="1018.5303"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1051.3794"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="25" x="86.4583" y="1051.3794">d_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="111.4583" y="1051.3794"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="292.7083" x="135.4167" y="1051.3794">Dapp association ECDSA private keypoint</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1078.9714"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="27.0833" x="86.4583" y="1078.9714">Q_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="113.5417" y="1078.9714"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="287.5" x="135.4167" y="1078.9714">Dapp association ECDSA public keypoint</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1106.5633"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="26.0417" x="86.4583" y="1106.5633">d_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="112.5" y="1106.5633"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="361.4583" x="135.4167" y="1106.5633">Dapp session establishment ECDH private keypoint</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1134.1553"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="28.125" x="86.4583" y="1134.1553">Q_d</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="114.5833" y="1134.1553"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="356.25" x="135.4167" y="1134.1553">Dapp session establishment ECDH public keypoint</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1161.7472"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="86.4583" y="1161.7472">S_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="110.4167" y="1161.7472"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="276.0417" x="135.4167" y="1161.7472">Dapp ECDSA signature of Q_d with d_a</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1189.3392"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="28.125" x="86.4583" y="1189.3392">d_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="114.5833" y="1189.3392"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="366.6667" x="135.4167" y="1189.3392">Wallet session establishment ECDH private keypoint</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1216.9312"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="30.2083" x="86.4583" y="1216.9312">Q_w</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="116.6667" y="1216.9312"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="361.4583" x="135.4167" y="1216.9312">Wallet session establishment ECDH public keypoint</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1244.5231"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="86.4583" y="1244.5231">Z</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="12.5" x="94.7917" y="1244.5231">   </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="302.0833" x="135.4167" y="1244.5231">Shared session establishment ECDH secret</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="82.2917" y="1272.1151"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="86.4583" y="1272.1151">K</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="12.5" x="95.8333" y="1272.1151">   </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="354.1667" x="135.4167" y="1272.1151">Shared session establishment AES-128 secret key</text><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1032.0719" y2="1032.0719"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1059.6639" y2="1059.6639"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1087.2559" y2="1087.2559"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1114.8478" y2="1114.8478"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1142.4398" y2="1142.4398"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1170.0317" y2="1170.0317"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1197.6237" y2="1197.6237"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1225.2157" y2="1225.2157"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1252.8076" y2="1252.8076"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="514.5833" y1="1280.3996" y2="1280.3996"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="77.0833" x2="77.0833" y1="1032.0719" y2="1280.3996"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="126.0417" x2="126.0417" y1="1032.0719" y2="1280.3996"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="514.5833" x2="514.5833" y1="1032.0719" y2="1280.3996"/><!--MD5=[678899530a542c55ffe0b48ba0ad3402]
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+note across : User initiates a wallet request (e.g. transaction signing) in a dapp
+
+activate Dapp
+
+== Establish association between Dapp and Wallet\nThis could be via Android Intent, QR code, etc... ==
+
+Dapp -> Dapp : generate ECDSA pair (<i>d_a</i>, <i>Q_a</i>)
+
+Dapp - -> Wallet : {<i>Q_a</i>}
+
+Dapp - -X Wallet : poll for WebSocket server available
+Dapp - -X Wallet
+Dapp - -X Wallet
+Dapp - -> Wallet ++ : connect
+
+== WebSocket connection established\nPerform ECDH to obtain a unique session key ==
+
+Dapp -> Dapp : generate ECDH pair (<i>d_d</i>, <i>Q_d</i>)
+Dapp -> Dapp : S_a = ECDSA-sign(<i>d_a</i>, <i>Q_d</i>)
+Dapp -> Wallet - -++ : HELLO_REQ {<i>Q_d</i> || <i>S_a</i>}
+
+Wallet -> Wallet : verify <i>S_a</i> with <i>Q_a</i>
+Wallet -> Wallet : generate ECDH pair (<i>d_w</i>, <i>Q_w</i>)
+Wallet -> Dapp ++ : HELLO_RSP {<i>Q_w</i>}
+
+Wallet -> Wallet : <i>Z</i> = ECDH(<i>d_w</i>, <i>Q_d</i>)
+Wallet -> Wallet : <i>K</i> = HKDF(<i>Z</i>, <i>Q_a</i>, 16)
+Wallet - -
+
+Dapp -> Dapp : <i>Z</i> = ECDH(<i>d_d</i>, <i>Q_w</i>)
+Dapp -> Dapp : <i>K</i> = HKDF(<i>Z</i>, <i>Q_a</i>, 16)
+Dapp - -
+
+== cryptochannel ready for encrypted session communication ==
+
+legend
+| <i>d_a</i> | Dapp association ECDSA private keypoint            |
+| <i>Q_a</i> | Dapp association ECDSA public keypoint             |
+| <i>d_d</i> | Dapp session establishment ECDH private keypoint   |
+| <i>Q_d</i> | Dapp session establishment ECDH public keypoint    |
+| <i>S_a</i> | Dapp ECDSA signature of Q_d with d_a               |
+| <i>d_w</i> | Wallet session establishment ECDH private keypoint |
+| <i>Q_w</i> | Wallet session establishment ECDH public keypoint  |
+| <i>Z</i>   | Shared session establishment ECDH secret           |
+| <i>K</i>   | Shared session establishment AES-128 secret key    |
+end legend
+
+@enduml
+
+@startuml
+
+
+
+
+skinparam backgroundColor transparent
+skinparam useBetaStyle false
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor transparent
+    FontColor #FFF
+    HyperLinkColor #FD7E14
+    LineColor #2683B9
+    LineThickness 1
+    Margin 10
+    Padding 6
+    Shadowing 0.0
+  }
+  node {
+   Padding 15
+   roundcorner 20
+   BackgroundColor #2FA4E7-#2683B9
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  groupHeader {
+    BackgroundColor #E9ECEF
+    FontColor #033C73
+    FontStyle bold
+  }
+  header {
+    LineThickness 0
+  }
+  referenceHeader {
+    BackgroundColor transparent
+    FontColor #343A40
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor #343A40
+    FontColor transparent
+    FontStyle bold
+  }
+  title {
+	FontSize 20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor  #EDF0F2-#E9ECEF
+	FontColor #2FA4E7
+	BorderColor #E9ECEF
+  }
+  nwdiagDiagram {
+	network {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7    
+		LineColor #2FA4E7
+		LineThickness 1.0
+		FontColor #2683B9
+	}
+	server {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	}
+	arrow {
+		FontColor #2683B9
+		LineColor #2683B9
+	}
+	group {
+		BackGroundColor #F8F9FA
+		LineColor $LIGHT_DARK
+		LineThickness 2.0
+		Margin 5
+		Padding 5
+	}
+  }
+  ganttDiagram {
+	task {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+		LineColor #2FA4E7
+		Margin 10
+		Padding 6
+	}
+	note {
+		FontColor #FFF
+		LineColor #02305C
+		BackGroundColor #033C73
+	}
+	separator {
+		LineColor #E9ECEF
+		BackGroundColor #E9ECEF-#BABDBF
+		FontColor #343A40
+	}
+	milestone {
+		FontColor #033C73
+		FontSize 16
+		FontStyle italic
+		BackGroundColor #E9ECEF
+		LineColor #BABDBF
+	}
+	timeline {
+		BackgroundColor #E9ECEF
+		FontColor #343A40
+	}
+	closed {
+		BackgroundColor #B14500
+		FontColor #FFF
+	}
+  }
+</style>
+skinparam defaultFontName        "Verdana"
+skinparam defaultFontSize        12
+skinparam dpi                    100
+skinparam shadowing              false
+skinparam roundcorner            8
+skinparam ParticipantPadding     40
+skinparam BoxPadding             40
+skinparam Padding                5
+skinparam ArrowColor             #868E96
+skinparam stereotype {
+    CBackgroundColor #EDF0F2
+    CBorderColor #BABDBF
+    ABackgroundColor #8FB961
+    ABorderColor #5C862E
+    IBackgroundColor #D2494E
+    IBorderColor #9F161B
+    EBackgroundColor #E47833
+    EBorderColor #B14500
+    NBackgroundColor #35638F
+    NBorderColor #02305C
+}
+skinparam title {
+	FontColor	                 #2FA4E7
+	BorderColor	                 #BABDBF
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor              #EDF0F2-#E9ECEF
+}
+
+
+skinparam legend {
+	BackgroundColor #E9ECEF
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+skinparam swimlane {
+	BorderColor #033C73
+	BorderThickness 2
+	TitleBackgroundColor  #EDF0F2-#E9ECEF
+	TitleFontColor #2FA4E7
+}
+
+
+skinparam activity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BarColor #73A839
+	StartColor #033C73
+	EndColor #033C73
+	DiamondBackgroundColor #FFF-#EDF0F2
+  	DiamondBorderColor #BABDBF
+	DiamondFontColor #343A40
+}
+
+
+skinparam participant {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	ParticipantBorderThickness 2
+}
+
+
+skinparam actor {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam arrow {
+	Thickness 3
+	Color #2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam sequence {
+	BorderColor #2FA4E7
+	TitleFontColor #2FA4E7
+	BackgroundColor transparent
+	StartColor #2FA4E7
+	EndColor #2FA4E7
+	BoxBackgroundColor #F8F9FA
+	BoxBorderColor #868E96
+	BoxFontColor #343A40
+	DelayFontColor #343A40
+	LifeLineBorderColor #BABDBF
+	LifeLineBorderThickness 2
+	LifeLineBackgroundColor #EDF0F2
+	GroupBorderColor #868E96
+	GroupFontColor #343A40
+	GroupHeaderFontColor #033C73
+	DividerBackgroundColor #FFF-#F8F9FA
+    DividerBorderColor #868E96
+    DividerBorderThickness 2
+    DividerFontColor #343A40
+	ReferenceBackgroundColor transparent
+	ReferenceBorderColor #868E96
+	ReferenceFontColor #343A40
+	ReferenceHeaderFontColor #033C73
+	StereotypeFontColor #FFF
+}
+
+
+skinparam partition {
+	BorderColor #2FA4E7
+	FontColor #2FA4E7
+	BackgroundColor transparent
+}
+
+
+skinparam collections {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam control {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam entity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam boundary {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam agent {
+	BackgroundColor #orange
+	BorderColor #999999
+	FontColor #333333
+}
+
+
+skinparam note {
+	BorderThickness 1
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam artifact {
+	BackgroundColor #FFF-#F8F9FA
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+
+skinparam component {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam interface {
+	BackgroundColor  #D2494E
+	BorderColor  #C71C22
+	FontColor #343A40
+}
+
+
+skinparam storage {
+	BackgroundColor #E47833-#DD5600
+  	BorderColor #DD5600
+	FontColor #FFF
+}
+
+
+skinparam node {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #E9ECEF
+	FontColor #343A40
+}
+
+
+skinparam cloud {
+	BackgroundColor #F2FCFE-#eeeeee
+	BorderColor #F2FCFE
+	FontColor #2FA4E7
+}
+
+
+skinparam database {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam class {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	HeaderBackgroundColor #2FA4E7-#2683B9
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #F8F9FA
+	AttributeFontSize 11
+}
+
+
+skinparam object {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam usecase {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam rectangle {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam package {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+}
+
+
+skinparam folder {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #DD5600
+	FontColor #DD5600
+	BorderThickness 2
+}
+
+
+skinparam frame {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #033C73
+	FontColor #033C73
+	BorderThickness 2
+}
+
+
+skinparam state {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderColor #2683B9
+	StartColor #033C73
+	EndColor #033C73
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam queue {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam card {
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam file {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #033C73
+	FontColor #868E96
+
+}
+
+
+skinparam stack {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+note across : User initiates a wallet request (e.g. transaction signing) in a dapp
+
+activate Dapp
+
+== Establish association between Dapp and Wallet\nThis could be via Android Intent, QR code, etc... ==
+
+Dapp -> Dapp : generate ECDSA pair (<i>d_a</i>, <i>Q_a</i>)
+
+Dapp - -> Wallet : {<i>Q_a</i>}
+
+Dapp - -X Wallet : poll for WebSocket server available
+Dapp - -X Wallet
+Dapp - -X Wallet
+Dapp - -> Wallet ++ : connect
+
+== WebSocket connection established\nPerform ECDH to obtain a unique session key ==
+
+Dapp -> Dapp : generate ECDH pair (<i>d_d</i>, <i>Q_d</i>)
+Dapp -> Dapp : S_a = ECDSA-sign(<i>d_a</i>, <i>Q_d</i>)
+Dapp -> Wallet - -++ : HELLO_REQ {<i>Q_d</i> || <i>S_a</i>}
+
+Wallet -> Wallet : verify <i>S_a</i> with <i>Q_a</i>
+Wallet -> Wallet : generate ECDH pair (<i>d_w</i>, <i>Q_w</i>)
+Wallet -> Dapp ++ : HELLO_RSP {<i>Q_w</i>}
+
+Wallet -> Wallet : <i>Z</i> = ECDH(<i>d_w</i>, <i>Q_d</i>)
+Wallet -> Wallet : <i>K</i> = HKDF(<i>Z</i>, <i>Q_a</i>, 16)
+Wallet - -
+
+Dapp -> Dapp : <i>Z</i> = ECDH(<i>d_d</i>, <i>Q_w</i>)
+Dapp -> Dapp : <i>K</i> = HKDF(<i>Z</i>, <i>Q_a</i>, 16)
+Dapp - -
+
+== cryptochannel ready for encrypted session communication ==
+
+legend
+| <i>d_a</i> | Dapp association ECDSA private keypoint            |
+| <i>Q_a</i> | Dapp association ECDSA public keypoint             |
+| <i>d_d</i> | Dapp session establishment ECDH private keypoint   |
+| <i>Q_d</i> | Dapp session establishment ECDH public keypoint    |
+| <i>S_a</i> | Dapp ECDSA signature of Q_d with d_a               |
+| <i>d_w</i> | Wallet session establishment ECDH private keypoint |
+| <i>Q_w</i> | Wallet session establishment ECDH public keypoint  |
+| <i>Z</i>   | Shared session establishment ECDH secret           |
+| <i>K</i>   | Shared session establishment AES-128 secret key    |
+end legend
+
+@enduml
+
+PlantUML version 1.2022.4(Sat Apr 09 09:29:17 EDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

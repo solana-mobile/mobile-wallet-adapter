@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="812.5px" preserveAspectRatio="none" style="width:1128px;height:812px;background:#FFFFFF;" version="1.1" viewBox="0 0 1128 812" width="1128.125px" zoomAndPan="magnify"><defs><linearGradient id="g9wyo9ff88xkp0" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#59B6EC"/><stop offset="100%" stop-color="#2FA4E7"/></linearGradient><linearGradient id="g9wyo9ff88xkp1" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#35638F"/><stop offset="100%" stop-color="#033C73"/></linearGradient></defs><g><rect fill="#90EE90" height="600.7568" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:1.0416666666666667;" width="489.0625" x="53.125" y="11.4583"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="71.875" x="261.7188" y="28.7516">Endpoint A</text><rect fill="#ADD8E6" height="600.7568" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:1.0416666666666667;" width="489.0625" x="627.6042" y="11.4583"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="70.8333" x="836.7188" y="28.7516">Endpoint B</text><rect fill="#EDF0F2" height="108.61" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="156.25" y="106.665"/><rect fill="#EDF0F2" height="223.4701" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="412.5" y="184.0251"/><rect fill="#EDF0F2" height="223.4701" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="746.875" y="376.2451"/><rect fill="#EDF0F2" height="40.625" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1003.125" y="568.4652"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="161.4583" x2="161.4583" y1="96.2484" y2="618.4652"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="417.1875" x2="417.1875" y1="96.2484" y2="618.4652"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="751.5625" x2="751.5625" y1="96.2484" y2="618.4652"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="1008.3333" x2="1008.3333" y1="96.2484" y2="618.4652"/><rect fill="url(#g9wyo9ff88xkp0)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="125" x="98.9583" y="55.485"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="111.4583" y="80.07">Application layer</text><rect fill="url(#g9wyo9ff88xkp0)" height="54.4434" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="157.2917" x="339.0625" y="40.7633"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="132.2917" x="351.5625" y="65.3483">Mobile Wallet Adapter</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="62.5" x="386.4583" y="80.07">Encryption</text><rect fill="url(#g9wyo9ff88xkp0)" height="54.4434" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="157.2917" x="673.4375" y="40.7633"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="132.2917" x="685.9375" y="65.3483">Mobile Wallet Adapter</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="64.5833" x="719.7917" y="80.07">Decryption</text><rect fill="url(#g9wyo9ff88xkp0)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="125" x="945.8333" y="55.485"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="958.3333" y="80.07">Application layer</text><rect fill="#EDF0F2" height="108.61" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="156.25" y="106.665"/><rect fill="#EDF0F2" height="223.4701" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="412.5" y="184.0251"/><rect fill="#EDF0F2" height="223.4701" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="746.875" y="376.2451"/><rect fill="#EDF0F2" height="40.625" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="1003.125" y="568.4652"/><path d="M300,116.04 L300,143.1234 A4.1667,4.1667 0 0 0 304.1667,147.29 L865.625,147.29 A4.1667,4.1667 0 0 0 869.7917,143.1234 L869.7917,122.29 L859.375,111.8734 L304.1667,111.8734 A4.1667,4.1667 0 0 0 300,116.04 " fill="url(#g9wyo9ff88xkp1)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><path d="M859.375,111.8734 L859.375,120.2067 A2.0833,2.0833 0 0 0 861.4583,122.29 L869.7917,122.29 L859.375,111.8734 " fill="url(#g9wyo9ff88xkp1)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="321.875" x="413.0208" y="134.375">Both endpoints in possession of secret encryption key</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="739.0625" y="134.375">K</text><polygon fill="#2FA4E7" points="400,179.8584,410.4167,184.0251,400,188.1917,404.1667,184.0251" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="166.6667" x2="406.25" y1="184.0251" y2="184.0251"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="200" x="179.1667" y="174.0967">Outgoing JSON-RPC 2.0 message</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="383.3333" y="174.0967">m</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="422.9167" x2="466.6667" y1="254.9967" y2="254.9967"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="466.6667" x2="466.6667" y1="254.9967" y2="268.5384"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="423.9583" x2="466.6667" y1="268.5384" y2="268.5384"/><polygon fill="#2FA4E7" points="434.375,264.3717,423.9583,268.5384,434.375,272.7051,430.2083,268.5384" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="191.6667" x="435.4167" y="245.0684">iv = generate 96-bit random IV</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="422.9167" x2="466.6667" y1="322.9818" y2="322.9818"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="466.6667" x2="466.6667" y1="322.9818" y2="336.5234"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="423.9583" x2="466.6667" y1="336.5234" y2="336.5234"/><polygon fill="#2FA4E7" points="434.375,332.3568,423.9583,336.5234,434.375,340.6901,430.2083,336.5234" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="44.7917" x="435.4167" y="298.3317">Encrypt</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="484.375" y="298.3317">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="435.4167" y="313.0534">(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="26.0417" x="439.5833" y="313.0534">C_m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="465.625" y="313.0534">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="18.75" x="473.9583" y="313.0534">tag</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="112.5" x="492.7083" y="313.0534">) = AES-GCM-enc(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="605.2083" y="313.0534">K</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="613.5417" y="313.0534">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="621.875" y="313.0534">iv</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="631.25" y="313.0534">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="639.5833" y="313.0534">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="651.0417" y="313.0534">)</text><polygon fill="#2FA4E7" points="734.375,372.0785,744.7917,376.2451,734.375,380.4118,738.5417,376.2451" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="422.9167" x2="740.625" y1="376.2451" y2="376.2451"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="435.4167" y="366.3167">{</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="439.5833" y="366.3167">iv</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="448.9583" y="366.3167">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="26.0417" x="457.2917" y="366.3167">C_m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="483.3333" y="366.3167">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="18.75" x="491.6667" y="366.3167">tag</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="510.4167" y="366.3167">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="757.2917" x2="801.0417" y1="461.9385" y2="461.9385"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="801.0417" x2="801.0417" y1="461.9385" y2="475.4801"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="758.3333" x2="801.0417" y1="475.4801" y2="475.4801"/><polygon fill="#2FA4E7" points="768.75,471.3135,758.3333,475.4801,768.75,479.6468,764.5833,475.4801" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="46.875" x="769.7917" y="437.2884">Decrypt</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="26.0417" x="820.8333" y="437.2884">C_m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="769.7917" y="452.0101">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="105.2083" x="785.4167" y="452.0101">= AES-GCM-dec(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="8.3333" x="890.625" y="452.0101">K</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="898.9583" y="452.0101">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="907.2917" y="452.0101">iv</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="916.6667" y="452.0101">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="26.0417" x="925" y="452.0101">C_m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="951.0417" y="452.0101">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="757.2917" x2="801.0417" y1="515.2018" y2="515.2018"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="801.0417" x2="801.0417" y1="515.2018" y2="528.7435"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="758.3333" x2="801.0417" y1="528.7435" y2="528.7435"/><polygon fill="#2FA4E7" points="768.75,524.5768,758.3333,528.7435,768.75,532.9102,764.5833,528.7435" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="48.9583" x="769.7917" y="505.2734">Validate</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="18.75" x="822.9167" y="505.2734">tag</text><polygon fill="#2FA4E7" points="990.625,564.2985,1001.0417,568.4652,990.625,572.6318,994.7917,568.4652" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="757.2917" x2="996.875" y1="568.4652" y2="568.4652"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="200" x="769.7917" y="558.5368">Incoming JSON-RPC 2.0 message</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="973.9583" y="558.5368">m</text><rect fill="#FFFFFF" height="165.0431" rx="4.1667" ry="4.1667" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="472.9167" x="347.9167" y="623.6735"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="364.5833" y="656.5226"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="9.375" x="368.75" y="656.5226">K</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="12.5" x="378.125" y="656.5226">   </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="260.4167" x="418.75" y="656.5226">AES-128-GCM secret encryption key</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="364.5833" y="684.1146"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="13.5417" x="368.75" y="684.1146">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="12.5" x="382.2917" y="684.1146">   </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="129.1667" x="418.75" y="684.1146">Plaintext message</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="364.5833" y="711.7065"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="368.75" y="711.7065">iv</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="8.3333" x="380.2083" y="711.7065">  </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="381.25" x="418.75" y="711.7065">96-bit random initialization vector for AES-128-GCM</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="364.5833" y="739.2985"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="31.25" x="368.75" y="739.2985">C_m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="400" y="739.2985"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="94.7917" x="418.75" y="739.2985">Ciphertext of</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="13.5417" x="517.7083" y="739.2985">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="148.9583" x="535.4167" y="739.2985">using AES-128-GCM</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="364.5833" y="766.8905"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="368.75" y="766.8905">tag</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="391.6667" y="766.8905"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="180.2083" x="418.75" y="766.8905">128-bit AES-GCM tag for</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="13.5417" x="603.125" y="766.8905">m</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="83.3333" x="616.6667" y="766.8905">                    </text><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="809.375" y1="637.2152" y2="637.2152"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="809.375" y1="664.8071" y2="664.8071"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="809.375" y1="692.3991" y2="692.3991"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="809.375" y1="719.991" y2="719.991"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="809.375" y1="747.583" y2="747.583"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="809.375" y1="775.175" y2="775.175"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="359.375" x2="359.375" y1="637.2152" y2="775.175"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="409.375" x2="409.375" y1="637.2152" y2="775.175"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="809.375" x2="809.375" y1="637.2152" y2="775.175"/><!--MD5=[2d41169eb38e6488bb94f30547a3db18]
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+box "Endpoint A" #LightGreen
+participant App_A as "Application layer"
+participant MWA_A as "Mobile Wallet Adapter\nEncryption"
+end box
+box "Endpoint B" #LightBlue
+participant MWA_B as "Mobile Wallet Adapter\nDecryption"
+participant App_B as "Application layer"
+end box
+
+App_A ++
+
+note over MWA_A, MWA_B : Both endpoints in possession of secret encryption key <i>K</i>
+
+App_A -> MWA_A ++- - : Outgoing JSON-RPC 2.0 message <i>m</i>
+
+MWA_A -> MWA_A : iv = generate 96-bit random IV
+MWA_A -> MWA_A : Encrypt <i>m</i>\n(<i>C_m</i>, <i>tag</i>) = AES-GCM-enc(<i>K</i>, <i>iv</i>, <i>m</i>)
+
+MWA_A - -> MWA_B ++- - : {<i>iv</i>, <i>C_m</i>, <i>tag</i>}
+
+MWA_B -> MWA_B : Decrypt <i>C_m</i>\n<i>m</i> = AES-GCM-dec(<i>K</i>, <i>iv</i>, <i>C_m</i>)
+MWA_B -> MWA_B : Validate <i>tag</i>
+
+MWA_B -> App_B ++- - : Incoming JSON-RPC 2.0 message <i>m</i>
+
+legend
+| <i>K</i>   | AES-128-GCM secret encryption key                   |
+| <i>m</i>   | Plaintext message                                   |
+| <i>iv</i>  | 96-bit random initialization vector for AES-128-GCM |
+| <i>C_m</i> | Ciphertext of <i>m</i> using AES-128-GCM            |
+| <i>tag</i> | 128-bit AES-GCM tag for <i>m</i>                    |
+end legend
+
+@enduml
+
+@startuml
+
+
+
+
+skinparam backgroundColor transparent
+skinparam useBetaStyle false
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor transparent
+    FontColor #FFF
+    HyperLinkColor #FD7E14
+    LineColor #2683B9
+    LineThickness 1
+    Margin 10
+    Padding 6
+    Shadowing 0.0
+  }
+  node {
+   Padding 15
+   roundcorner 20
+   BackgroundColor #2FA4E7-#2683B9
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  groupHeader {
+    BackgroundColor #E9ECEF
+    FontColor #033C73
+    FontStyle bold
+  }
+  header {
+    LineThickness 0
+  }
+  referenceHeader {
+    BackgroundColor transparent
+    FontColor #343A40
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor #343A40
+    FontColor transparent
+    FontStyle bold
+  }
+  title {
+	FontSize 20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor  #EDF0F2-#E9ECEF
+	FontColor #2FA4E7
+	BorderColor #E9ECEF
+  }
+  nwdiagDiagram {
+	network {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7    
+		LineColor #2FA4E7
+		LineThickness 1.0
+		FontColor #2683B9
+	}
+	server {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	}
+	arrow {
+		FontColor #2683B9
+		LineColor #2683B9
+	}
+	group {
+		BackGroundColor #F8F9FA
+		LineColor $LIGHT_DARK
+		LineThickness 2.0
+		Margin 5
+		Padding 5
+	}
+  }
+  ganttDiagram {
+	task {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+		LineColor #2FA4E7
+		Margin 10
+		Padding 6
+	}
+	note {
+		FontColor #FFF
+		LineColor #02305C
+		BackGroundColor #033C73
+	}
+	separator {
+		LineColor #E9ECEF
+		BackGroundColor #E9ECEF-#BABDBF
+		FontColor #343A40
+	}
+	milestone {
+		FontColor #033C73
+		FontSize 16
+		FontStyle italic
+		BackGroundColor #E9ECEF
+		LineColor #BABDBF
+	}
+	timeline {
+		BackgroundColor #E9ECEF
+		FontColor #343A40
+	}
+	closed {
+		BackgroundColor #B14500
+		FontColor #FFF
+	}
+  }
+</style>
+skinparam defaultFontName        "Verdana"
+skinparam defaultFontSize        12
+skinparam dpi                    100
+skinparam shadowing              false
+skinparam roundcorner            8
+skinparam ParticipantPadding     40
+skinparam BoxPadding             40
+skinparam Padding                5
+skinparam ArrowColor             #868E96
+skinparam stereotype {
+    CBackgroundColor #EDF0F2
+    CBorderColor #BABDBF
+    ABackgroundColor #8FB961
+    ABorderColor #5C862E
+    IBackgroundColor #D2494E
+    IBorderColor #9F161B
+    EBackgroundColor #E47833
+    EBorderColor #B14500
+    NBackgroundColor #35638F
+    NBorderColor #02305C
+}
+skinparam title {
+	FontColor	                 #2FA4E7
+	BorderColor	                 #BABDBF
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor              #EDF0F2-#E9ECEF
+}
+
+
+skinparam legend {
+	BackgroundColor #E9ECEF
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+skinparam swimlane {
+	BorderColor #033C73
+	BorderThickness 2
+	TitleBackgroundColor  #EDF0F2-#E9ECEF
+	TitleFontColor #2FA4E7
+}
+
+
+skinparam activity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BarColor #73A839
+	StartColor #033C73
+	EndColor #033C73
+	DiamondBackgroundColor #FFF-#EDF0F2
+  	DiamondBorderColor #BABDBF
+	DiamondFontColor #343A40
+}
+
+
+skinparam participant {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	ParticipantBorderThickness 2
+}
+
+
+skinparam actor {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam arrow {
+	Thickness 3
+	Color #2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam sequence {
+	BorderColor #2FA4E7
+	TitleFontColor #2FA4E7
+	BackgroundColor transparent
+	StartColor #2FA4E7
+	EndColor #2FA4E7
+	BoxBackgroundColor #F8F9FA
+	BoxBorderColor #868E96
+	BoxFontColor #343A40
+	DelayFontColor #343A40
+	LifeLineBorderColor #BABDBF
+	LifeLineBorderThickness 2
+	LifeLineBackgroundColor #EDF0F2
+	GroupBorderColor #868E96
+	GroupFontColor #343A40
+	GroupHeaderFontColor #033C73
+	DividerBackgroundColor #FFF-#F8F9FA
+    DividerBorderColor #868E96
+    DividerBorderThickness 2
+    DividerFontColor #343A40
+	ReferenceBackgroundColor transparent
+	ReferenceBorderColor #868E96
+	ReferenceFontColor #343A40
+	ReferenceHeaderFontColor #033C73
+	StereotypeFontColor #FFF
+}
+
+
+skinparam partition {
+	BorderColor #2FA4E7
+	FontColor #2FA4E7
+	BackgroundColor transparent
+}
+
+
+skinparam collections {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam control {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam entity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam boundary {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam agent {
+	BackgroundColor #orange
+	BorderColor #999999
+	FontColor #333333
+}
+
+
+skinparam note {
+	BorderThickness 1
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam artifact {
+	BackgroundColor #FFF-#F8F9FA
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+
+skinparam component {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam interface {
+	BackgroundColor  #D2494E
+	BorderColor  #C71C22
+	FontColor #343A40
+}
+
+
+skinparam storage {
+	BackgroundColor #E47833-#DD5600
+  	BorderColor #DD5600
+	FontColor #FFF
+}
+
+
+skinparam node {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #E9ECEF
+	FontColor #343A40
+}
+
+
+skinparam cloud {
+	BackgroundColor #F2FCFE-#eeeeee
+	BorderColor #F2FCFE
+	FontColor #2FA4E7
+}
+
+
+skinparam database {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam class {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	HeaderBackgroundColor #2FA4E7-#2683B9
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #F8F9FA
+	AttributeFontSize 11
+}
+
+
+skinparam object {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam usecase {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam rectangle {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam package {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+}
+
+
+skinparam folder {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #DD5600
+	FontColor #DD5600
+	BorderThickness 2
+}
+
+
+skinparam frame {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #033C73
+	FontColor #033C73
+	BorderThickness 2
+}
+
+
+skinparam state {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderColor #2683B9
+	StartColor #033C73
+	EndColor #033C73
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam queue {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam card {
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam file {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #033C73
+	FontColor #868E96
+
+}
+
+
+skinparam stack {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+box "Endpoint A" #LightGreen
+participant App_A as "Application layer"
+participant MWA_A as "Mobile Wallet Adapter\nEncryption"
+end box
+box "Endpoint B" #LightBlue
+participant MWA_B as "Mobile Wallet Adapter\nDecryption"
+participant App_B as "Application layer"
+end box
+
+App_A ++
+
+note over MWA_A, MWA_B : Both endpoints in possession of secret encryption key <i>K</i>
+
+App_A -> MWA_A ++- - : Outgoing JSON-RPC 2.0 message <i>m</i>
+
+MWA_A -> MWA_A : iv = generate 96-bit random IV
+MWA_A -> MWA_A : Encrypt <i>m</i>\n(<i>C_m</i>, <i>tag</i>) = AES-GCM-enc(<i>K</i>, <i>iv</i>, <i>m</i>)
+
+MWA_A - -> MWA_B ++- - : {<i>iv</i>, <i>C_m</i>, <i>tag</i>}
+
+MWA_B -> MWA_B : Decrypt <i>C_m</i>\n<i>m</i> = AES-GCM-dec(<i>K</i>, <i>iv</i>, <i>C_m</i>)
+MWA_B -> MWA_B : Validate <i>tag</i>
+
+MWA_B -> App_B ++- - : Incoming JSON-RPC 2.0 message <i>m</i>
+
+legend
+| <i>K</i>   | AES-128-GCM secret encryption key                   |
+| <i>m</i>   | Plaintext message                                   |
+| <i>iv</i>  | 96-bit random initialization vector for AES-128-GCM |
+| <i>C_m</i> | Ciphertext of <i>m</i> using AES-128-GCM            |
+| <i>tag</i> | 128-bit AES-GCM tag for <i>m</i>                    |
+end legend
+
+@enduml
+
+PlantUML version 1.2022.4(Sat Apr 09 09:29:17 EDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

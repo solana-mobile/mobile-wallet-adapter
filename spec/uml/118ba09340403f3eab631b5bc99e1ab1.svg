@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="1850px" preserveAspectRatio="none" style="width:898px;height:1850px;background:#FFFFFF;" version="1.1" viewBox="0 0 898 1850" width="898.9583px" zoomAndPan="magnify"><defs><linearGradient id="g1ftdxjd0shnff0" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#59B6EC"/><stop offset="100%" stop-color="#2FA4E7"/></linearGradient><linearGradient id="g1ftdxjd0shnff1" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#35638F"/><stop offset="100%" stop-color="#033C73"/></linearGradient><linearGradient id="g1ftdxjd0shnff2" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#F8F9FA"/></linearGradient></defs><g><rect fill="#EDF0F2" height="269.4417" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="76.3184"/><rect fill="#EDF0F2" height="209.79" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="438.7451"/><rect fill="#EDF0F2" height="209.79" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="967.3503"/><rect fill="#EDF0F2" height="125.2767" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="1391.3737"/><rect fill="#EDF0F2" height="155.485" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="532.2917" y="314.5101"/><rect fill="#EDF0F2" height="381.3151" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="532.2917" y="617.2852"/><rect fill="#EDF0F2" height="276.7334" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="532.2917" y="1145.8903"/><rect height="89.9984" rx="4.1667" ry="4.1667" style="stroke:#59B6EC;stroke-width:1.0416666666666667;fill:none;" width="420.8333" x="455.2083" y="838.6719"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="157.2917" x2="157.2917" y1="1528.6296" y2="1615.8854"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="316.6667" x2="316.6667" y1="65.9017" y2="1615.8854"/><line style="stroke:#BABDBF;stroke-width:1.0416666666666667;fill:none;stroke-dasharray:5.0,5.0;" x1="537.5" x2="537.5" y1="65.9017" y2="1615.8854"/><rect fill="url(#g1ftdxjd0shnff0)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="58.3333" x="287.5" y="25.1383"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="33.3333" x="300" y="49.7233">Dapp</text><rect fill="url(#g1ftdxjd0shnff0)" height="39.7217" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="60.4167" x="507.2917" y="25.1383"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="35.4167" x="519.7917" y="49.7233">Wallet</text><rect fill="#EDF0F2" height="269.4417" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="76.3184"/><rect fill="#EDF0F2" height="209.79" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="438.7451"/><rect fill="#EDF0F2" height="209.79" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="967.3503"/><rect fill="#EDF0F2" height="125.2767" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="311.4583" y="1391.3737"/><rect fill="#EDF0F2" height="155.485" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="532.2917" y="314.5101"/><rect fill="#EDF0F2" height="381.3151" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="532.2917" y="617.2852"/><rect fill="#EDF0F2" height="276.7334" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="10.4167" x="532.2917" y="1145.8903"/><path d="M15.625,85.6934 L15.625,112.7767 A4.1667,4.1667 0 0 0 19.7917,116.9434 L675,116.9434 A4.1667,4.1667 0 0 0 679.1667,112.7767 L679.1667,91.9434 L668.75,81.5267 L19.7917,81.5267 A4.1667,4.1667 0 0 0 15.625,85.6934 " fill="url(#g1ftdxjd0shnff1)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><path d="M668.75,81.5267 L668.75,89.86 A2.0833,2.0833 0 0 0 670.8333,91.9434 L679.1667,91.9434 L668.75,81.5267 " fill="url(#g1ftdxjd0shnff1)" style="stroke:#2683B9;stroke-width:1.0416666666666667;"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="631.25" x="27.0833" y="104.0283">Dapp has established a session with Wallet for transaction signing using a previously obtained auth token</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="365.625" y1="153.6784" y2="153.6784"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="365.625" x2="365.625" y1="153.6784" y2="167.2201"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="322.9167" x2="365.625" y1="167.2201" y2="167.2201"/><polygon fill="#2FA4E7" points="333.3333,163.0534,322.9167,167.2201,333.3333,171.3867,329.1667,167.2201" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="334.375" y="143.75">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="345.8333" y="143.75">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="354.1667" y="143.75">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="52.0833" x="382.2917" y="143.75">= Load()</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="365.625" y1="206.9417" y2="206.9417"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="365.625" x2="365.625" y1="206.9417" y2="220.4834"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="322.9167" x2="365.625" y1="220.4834" y2="220.4834"/><polygon fill="#2FA4E7" points="333.3333,216.3167,322.9167,220.4834,333.3333,224.6501,329.1667,220.4834" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="4.1667" x="334.375" y="197.0133">t</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="128.125" x="342.7083" y="197.0133">= CreateTransaction(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="470.8333" y="197.0133">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="25" x="494.7917" y="197.0133">, ...)</text><rect fill="url(#g1ftdxjd0shnff2)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g1ftdxjd0shnff2);stroke-width:1.0416666666666667;" width="876.0417" x="10.4167" y="254.9276"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="254.9276" y2="254.9276"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="258.0526" y2="258.0526"/><rect fill="url(#g1ftdxjd0shnff2)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="306.25" x="295.3125" y="239.2334"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="277.0833" x="306.7708" y="260.6934">Submit for signing with cached auth token</text><polygon fill="#2FA4E7" points="519.7917,310.3434,530.2083,314.5101,519.7917,318.6768,523.9583,314.5101" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="526.0417" y1="314.5101" y2="314.5101"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="104.1667" x="334.375" y="304.5817">sign_transaction {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="438.5417" y="304.5817">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="450" y="304.5817">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="4.1667" x="458.3333" y="304.5817">t</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="462.5" y="304.5817">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="385.4818" y2="385.4818"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="385.4818" y2="399.0234"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="556.25" x2="586.4583" y1="399.0234" y2="399.0234"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="548.9583" x2="559.375" y1="393.8151" y2="404.2318"/><line style="stroke:#2FA4E7;stroke-width:2.0833333333333335;" x1="548.9583" x2="559.375" y1="404.2318" y2="393.8151"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="114.5833" x="555.2083" y="375.5534">validate auth token</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="673.9583" y="375.5534">at</text><polygon fill="#2FA4E7" points="333.3333,434.5785,322.9167,438.7451,333.3333,442.9118,329.1667,438.7451" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="327.0833" x2="531.25" y1="438.7451" y2="438.7451"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="176.0417" x="344.7917" y="428.8167">error {ERROR_REAUTHORIZE}</text><rect fill="url(#g1ftdxjd0shnff2)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g1ftdxjd0shnff2);stroke-width:1.0416666666666667;" width="876.0417" x="10.4167" y="504.4393"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="504.4393" y2="504.4393"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="507.5643" y2="507.5643"/><rect fill="url(#g1ftdxjd0shnff2)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="106.25" x="395.3125" y="488.7451"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="77.0833" x="406.7708" y="510.2051">Reauthorize</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="365.625" y1="564.0218" y2="564.0218"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="365.625" x2="365.625" y1="564.0218" y2="577.5635"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="322.9167" x2="365.625" y1="577.5635" y2="577.5635"/><polygon fill="#2FA4E7" points="333.3333,573.3968,322.9167,577.5635,333.3333,581.7301,329.1667,577.5635" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="3.125" x="334.375" y="554.0934">i</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="341.6667" y="554.0934">= DappIdentity()</text><polygon fill="#2FA4E7" points="519.7917,613.1185,530.2083,617.2852,519.7917,621.4518,523.9583,617.2852" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="526.0417" y1="617.2852" y2="617.2852"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="77.0833" x="334.375" y="607.3568">reauthorize {</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="3.125" x="411.4583" y="607.3568">i</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="414.5833" y="607.3568">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="422.9167" y="607.3568">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="434.375" y="607.3568">}</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="688.2568" y2="688.2568"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="688.2568" y2="701.7985"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="701.7985" y2="701.7985"/><polygon fill="#2FA4E7" points="554.1667,697.6318,543.75,701.7985,554.1667,705.9652,550,701.7985" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="132.2917" x="555.2083" y="678.3285">validate Dapp identity</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="3.125" x="691.6667" y="678.3285">i</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="50" x="698.9583" y="678.3285">matches</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="753.125" y="678.3285">at</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="756.2419" y2="756.2419"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="756.2419" y2="769.7835"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="769.7835" y2="769.7835"/><polygon fill="#2FA4E7" points="554.1667,765.6169,543.75,769.7835,554.1667,773.9502,550,769.7835" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="151.0417" x="555.2083" y="731.5918">Generate new auth token</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="555.2083" y="746.3135">at2</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="152.0833" x="579.1667" y="746.3135">= RegenerateAuthToken(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="3.125" x="731.25" y="746.3135">i</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="734.375" y="746.3135">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="11.4583" x="742.7083" y="746.3135">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="754.1667" y="746.3135">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="809.5052" y2="809.5052"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="809.5052" y2="823.0469"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="823.0469" y2="823.0469"/><polygon fill="#2FA4E7" points="554.1667,818.8802,543.75,823.0469,554.1667,827.2135,550,823.0469" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="555.2083" y="799.5768">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="198.9583" x="583.3333" y="799.5768">= base58encode(GetPublicKey())</text><path d="M459.375,838.6719 L529.1667,838.6719 L529.1667,855.4769 L518.75,865.8936 L455.2083,865.8936 L455.2083,842.8385 A4.1667,4.1667 0 0 1 459.375,838.6719 " fill="#E9ECEF" style="stroke:#868E96;stroke-width:1.0416666666666667;"/><rect fill="none" height="89.9984" rx="4.1667" ry="4.1667" style="stroke:#59B6EC;stroke-width:1.0416666666666667;" width="420.8333" x="455.2083" y="838.6719"/><text fill="#033C73" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="16.6667" x="476.0417" y="857.0068">alt</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="315.625" x="550" y="858.0485">[if wallet endpoint has an endpoint-specific URI]</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="906.7952" y2="906.7952"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="906.7952" y2="920.3369"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="920.3369" y2="920.3369"/><polygon fill="#2FA4E7" points="554.1667,916.1702,543.75,920.3369,554.1667,924.5036,550,920.3369" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="15.625" x="555.2083" y="896.8669">uri</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="123.9583" x="575" y="896.8669">= EndpointBaseURI()</text><polygon fill="#2FA4E7" points="333.3333,963.1836,322.9167,967.3503,333.3333,971.5169,329.1667,967.3503" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="327.0833" x2="531.25" y1="967.3503" y2="967.3503"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="59.375" x="344.7917" y="957.4219">response(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="404.1667" y="957.4219">at2</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="423.9583" y="957.4219">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="432.2917" y="957.4219">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="456.25" y="957.4219">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="15.625" x="464.5833" y="957.4219">uri</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="480.2083" y="957.4219">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="365.625" y1="1038.3219" y2="1038.3219"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="365.625" x2="365.625" y1="1038.3219" y2="1051.8636"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="322.9167" x2="365.625" y1="1051.8636" y2="1051.8636"/><polygon fill="#2FA4E7" points="333.3333,1047.6969,322.9167,1051.8636,333.3333,1056.0303,329.1667,1051.8636" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="34.375" x="334.375" y="1028.3936">Store(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="368.75" y="1028.3936">at2</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="388.5417" y="1028.3936">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="23.9583" x="396.875" y="1028.3936">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="420.8333" y="1028.3936">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="15.625" x="429.1667" y="1028.3936">uri</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="444.7917" y="1028.3936">)</text><rect fill="url(#g1ftdxjd0shnff2)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g1ftdxjd0shnff2);stroke-width:1.0416666666666667;" width="876.0417" x="10.4167" y="1086.3078"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="1086.3078" y2="1086.3078"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="1089.4328" y2="1089.4328"/><rect fill="url(#g1ftdxjd0shnff2)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="304.1667" x="296.3542" y="1070.6136"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="275" x="307.8125" y="1092.0736">Resubmit for signing with new auth token</text><polygon fill="#2FA4E7" points="519.7917,1141.7236,530.2083,1145.8903,519.7917,1150.057,523.9583,1145.8903" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="321.875" x2="526.0417" y1="1145.8903" y2="1145.8903"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="100" x="334.375" y="1135.9619">sign_transaction(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="434.375" y="1135.9619">at2</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="454.1667" y="1135.9619">,</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="4.1667" x="462.5" y="1135.9619">t</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="466.6667" y="1135.9619">)</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="1216.862" y2="1216.862"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="1216.862" y2="1230.4036"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="1230.4036" y2="1230.4036"/><polygon fill="#2FA4E7" points="554.1667,1226.237,543.75,1230.4036,554.1667,1234.5703,550,1230.4036" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="114.5833" x="555.2083" y="1206.9336">validate auth token</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="19.7917" x="673.9583" y="1206.9336">at2</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="1270.1253" y2="1270.1253"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="1270.1253" y2="1283.667"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="1283.667" y2="1283.667"/><polygon fill="#2FA4E7" points="554.1667,1279.5003,543.75,1283.667,554.1667,1287.8337,550,1283.667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="116.6667" x="555.2083" y="1260.1969">validate transaction</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="4.1667" x="676.0417" y="1260.1969">t</text><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="542.7083" x2="586.4583" y1="1338.1104" y2="1338.1104"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="586.4583" x2="586.4583" y1="1338.1104" y2="1351.652"/><line style="stroke:#2FA4E7;stroke-width:3.125;" x1="543.75" x2="586.4583" y1="1351.652" y2="1351.652"/><polygon fill="#2FA4E7" points="554.1667,1347.4854,543.75,1351.652,554.1667,1355.8187,550,1351.652" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="93.75" x="555.2083" y="1313.4603">sign transaction</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="10.4167" x="555.2083" y="1328.182">st</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="151.0417" x="569.7917" y="1328.182">= SignSolanaTransaction(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="4.1667" x="720.8333" y="1328.182">t</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="725" y="1328.182">)</text><polygon fill="#2FA4E7" points="333.3333,1387.207,322.9167,1391.3737,333.3333,1395.5404,329.1667,1391.3737" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="327.0833" x2="531.25" y1="1391.3737" y2="1391.3737"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="59.375" x="344.7917" y="1381.4453">response(</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="10.4167" x="404.1667" y="1381.4453">st</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="414.5833" y="1381.4453">)</text><rect fill="url(#g1ftdxjd0shnff2)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g1ftdxjd0shnff2);stroke-width:1.0416666666666667;" width="876.0417" x="10.4167" y="1457.0679"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="1457.0679" y2="1457.0679"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="1460.1929" y2="1460.1929"/><rect fill="url(#g1ftdxjd0shnff2)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="275" x="310.9375" y="1441.3737"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="245.8333" x="322.3958" y="1462.8337">Submit signed transaction to network</text><polygon fill="#2FA4E7" points="205.2083,1512.4837,194.7917,1516.6504,205.2083,1520.8171,201.0417,1516.6504" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;"/><line style="stroke:#2FA4E7;stroke-width:3.125;stroke-dasharray:2.0,2.0;" x1="198.9583" x2="315.625" y1="1516.6504" y2="1516.6504"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="216.6667" y="1506.722">{</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="10.4167" x="220.8333" y="1506.722">st</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="4.1667" x="231.25" y="1506.722">}</text><rect fill="url(#g1ftdxjd0shnff0)" height="54.4434" rx="4.1667" ry="4.1667" style="stroke:#2FA4E7;stroke-width:1.0416666666666667;" width="72.9167" x="120.8333" y="1485.262"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="38.5417" x="138.0208" y="1509.847">Solana</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="47.9167" x="133.3333" y="1524.5687">network</text><rect fill="url(#g1ftdxjd0shnff2)" height="3.125" rx="4.1667" ry="4.1667" style="stroke:url(#g1ftdxjd0shnff2);stroke-width:1.0416666666666667;" width="876.0417" x="10.4167" y="1577.2746"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="1577.2746" y2="1577.2746"/><line style="stroke:#868E96;stroke-width:1.0416666666666667;" x1="10.4167" x2="886.4583" y1="1580.3996" y2="1580.3996"/><rect fill="url(#g1ftdxjd0shnff2)" height="33.4717" rx="4.1667" ry="4.1667" style="stroke:#868E96;stroke-width:2.0833333333333335;" width="91.6667" x="402.6042" y="1561.5804"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="62.5" x="414.0625" y="1583.0404">Complete</text><rect fill="#FFFFFF" height="209.8104" rx="4.1667" ry="4.1667" style="stroke:#BABDBF;stroke-width:1.0416666666666667;" width="767.7083" x="64.0625" y="1616.9271"/><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="80.7292" y="1649.7762"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="4.1667" x="84.8958" y="1649.7762">i</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="12.5" x="89.0625" y="1649.7762">   </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="304.1667" x="131.7708" y="1649.7762">the dapp identity (name, icon, website URI)</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="80.7292" y="1677.3682"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="13.5417" x="84.8958" y="1677.3682">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="8.3333" x="98.4375" y="1677.3682">  </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="641.6667" x="131.7708" y="1677.3682">a persistent authentication token issued by the wallet to this dapp which is no longer valid</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="80.7292" y="1704.9601"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="22.9167" x="84.8958" y="1704.9601">at2</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="107.8125" y="1704.9601"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="431.25" x="131.7708" y="1704.9601">a persistent authentication token with the same privileges as</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="13.5417" x="567.1875" y="1704.9601">at</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="94.7917" x="584.8958" y="1704.9601">which is valid</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="80.7292" y="1732.5521"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="28.125" x="84.8958" y="1732.5521">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="113.0208" y="1732.5521"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="444.7917" x="131.7708" y="1732.5521">the wallet account public key for which this dapp is authorized</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="80.7292" y="1760.144"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="5.2083" x="84.8958" y="1760.144">t</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="12.5" x="90.1042" y="1760.144">   </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="367.7083" x="131.7708" y="1760.144">the transaction that the dapp wishes to have signed</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="266.6667" x="127.6042" y="1777.3193">with the private key corresponding to</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="28.125" x="398.4375" y="1777.3193">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="426.5625" y="1777.3193"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="80.7292" y="1804.9113"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="12.5" x="84.8958" y="1804.9113">st</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="8.3333" x="97.3958" y="1804.9113">  </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="4.1667" x="127.6042" y="1804.9113"> </text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="5.2083" x="131.7708" y="1804.9113">t</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="327.0833" x="136.9792" y="1804.9113">, signed with the private key corresponding to</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" font-style="italic" lengthAdjust="spacing" textLength="28.125" x="468.2292" y="1804.9113">pub</text><text fill="#343A40" font-family="&quot;Verdana&quot;" font-size="14.5833" lengthAdjust="spacing" textLength="154.1667" x="496.3542" y="1804.9113">                                     </text><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1630.4688" y2="1630.4688"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1658.0607" y2="1658.0607"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1685.6527" y2="1685.6527"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1713.2446" y2="1713.2446"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1740.8366" y2="1740.8366"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1785.6038" y2="1785.6038"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="820.3125" y1="1813.1958" y2="1813.1958"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="75.5208" x2="75.5208" y1="1630.4688" y2="1813.1958"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="122.3958" x2="122.3958" y1="1630.4688" y2="1813.1958"/><line style="stroke:#343A40;stroke-width:1.0416666666666667;" x1="820.3125" x2="820.3125" y1="1630.4688" y2="1813.1958"/><!--MD5=[f35e57661f225dfcc1ab784c04b95ba0]
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+participant Solana as "Solana\nnetwork"
+participant Dapp
+participant Wallet
+
+note across : Dapp has established a session with Wallet for transaction signing using a previously obtained auth token
+
+activate Dapp
+
+Dapp -> Dapp : <i>at</i>, <i>pub</i> = Load()
+Dapp -> Dapp : <i>t</i> = CreateTransaction(<i>pub</i>, ...)
+
+== Submit for signing with cached auth token ==
+
+Dapp -> Wallet ++- - : sign_transaction {<i>at</i>, <i>t</i>}
+Wallet -X Wallet : validate auth token <i>at</i>
+Wallet - -> Dapp ++- - : error {ERROR_REAUTHORIZE}
+
+== Reauthorize ==
+
+Dapp -> Dapp : <i>i</i> = DappIdentity()
+Dapp -> Wallet ++- - : reauthorize {<i>i</i>, <i>at</i>}
+Wallet -> Wallet : validate Dapp identity <i>i</i> matches <i>at</i>
+Wallet -> Wallet : Generate new auth token\n<i>at2</i> = RegenerateAuthToken(<i>i</i>, <i>at</i>)
+Wallet -> Wallet : <i>pub</i> = base58encode(GetPublicKey())
+alt if wallet endpoint has an endpoint-specific URI
+    Wallet -> Wallet : <i>uri</i> = EndpointBaseURI() 
+end
+Wallet - -> Dapp ++- - : response(<i>at2</i>, <i>pub</i>, <i>uri</i>)
+Dapp -> Dapp : Store(<i>at2</i>, <i>pub</i>, <i>uri</i>)
+
+== Resubmit for signing with new auth token ==
+
+Dapp -> Wallet ++- - : sign_transaction(<i>at2</i>, <i>t</i>)
+Wallet -> Wallet : validate auth token <i>at2</i>
+Wallet -> Wallet : validate transaction <i>t</i>
+Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransaction(<i>t</i>)
+Wallet - -> Dapp ++- - : response(<i>st</i>)
+
+== Submit signed transaction to network ==
+
+create Solana
+Dapp - -> Solana - - : {<i>st</i>}
+
+== Complete ==
+
+legend
+| <i>i</i>   | the dapp identity (name, icon, website URI)                                                           |
+| <i>at</i>  | a persistent authentication token issued by the wallet to this dapp which is no longer valid          |
+| <i>at2</i> | a persistent authentication token with the same privileges as <i>at</i> which is valid                |
+| <i>pub</i> | the wallet account public key for which this dapp is authorized                                       |
+| <i>t</i>   | the transaction that the dapp wishes to have signed\nwith the private key corresponding to <i>pub</i> |
+| <i>st</i>  | <i>t</i>, signed with the private key corresponding to <i>pub</i>                                     |
+end legend
+
+@enduml
+
+@startuml
+
+
+
+
+skinparam backgroundColor transparent
+skinparam useBetaStyle false
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor transparent
+    FontColor #FFF
+    HyperLinkColor #FD7E14
+    LineColor #2683B9
+    LineThickness 1
+    Margin 10
+    Padding 6
+    Shadowing 0.0
+  }
+  node {
+   Padding 15
+   roundcorner 20
+   BackgroundColor #2FA4E7-#2683B9
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  groupHeader {
+    BackgroundColor #E9ECEF
+    FontColor #033C73
+    FontStyle bold
+  }
+  header {
+    LineThickness 0
+  }
+  referenceHeader {
+    BackgroundColor transparent
+    FontColor #343A40
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor #343A40
+    FontColor transparent
+    FontStyle bold
+  }
+  title {
+	FontSize 20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor  #EDF0F2-#E9ECEF
+	FontColor #2FA4E7
+	BorderColor #E9ECEF
+  }
+  nwdiagDiagram {
+	network {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7    
+		LineColor #2FA4E7
+		LineThickness 1.0
+		FontColor #2683B9
+	}
+	server {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	}
+	arrow {
+		FontColor #2683B9
+		LineColor #2683B9
+	}
+	group {
+		BackGroundColor #F8F9FA
+		LineColor $LIGHT_DARK
+		LineThickness 2.0
+		Margin 5
+		Padding 5
+	}
+  }
+  ganttDiagram {
+	task {
+			FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+		LineColor #2FA4E7
+		Margin 10
+		Padding 6
+	}
+	note {
+		FontColor #FFF
+		LineColor #02305C
+		BackGroundColor #033C73
+	}
+	separator {
+		LineColor #E9ECEF
+		BackGroundColor #E9ECEF-#BABDBF
+		FontColor #343A40
+	}
+	milestone {
+		FontColor #033C73
+		FontSize 16
+		FontStyle italic
+		BackGroundColor #E9ECEF
+		LineColor #BABDBF
+	}
+	timeline {
+		BackgroundColor #E9ECEF
+		FontColor #343A40
+	}
+	closed {
+		BackgroundColor #B14500
+		FontColor #FFF
+	}
+  }
+</style>
+skinparam defaultFontName        "Verdana"
+skinparam defaultFontSize        12
+skinparam dpi                    100
+skinparam shadowing              false
+skinparam roundcorner            8
+skinparam ParticipantPadding     40
+skinparam BoxPadding             40
+skinparam Padding                5
+skinparam ArrowColor             #868E96
+skinparam stereotype {
+    CBackgroundColor #EDF0F2
+    CBorderColor #BABDBF
+    ABackgroundColor #8FB961
+    ABorderColor #5C862E
+    IBackgroundColor #D2494E
+    IBorderColor #9F161B
+    EBackgroundColor #E47833
+    EBorderColor #B14500
+    NBackgroundColor #35638F
+    NBorderColor #02305C
+}
+skinparam title {
+	FontColor	                 #2FA4E7
+	BorderColor	                 #BABDBF
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor              #EDF0F2-#E9ECEF
+}
+
+
+skinparam legend {
+	BackgroundColor #E9ECEF
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+skinparam swimlane {
+	BorderColor #033C73
+	BorderThickness 2
+	TitleBackgroundColor  #EDF0F2-#E9ECEF
+	TitleFontColor #2FA4E7
+}
+
+
+skinparam activity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BarColor #73A839
+	StartColor #033C73
+	EndColor #033C73
+	DiamondBackgroundColor #FFF-#EDF0F2
+  	DiamondBorderColor #BABDBF
+	DiamondFontColor #343A40
+}
+
+
+skinparam participant {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	ParticipantBorderThickness 2
+}
+
+
+skinparam actor {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam arrow {
+	Thickness 3
+	Color #2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam sequence {
+	BorderColor #2FA4E7
+	TitleFontColor #2FA4E7
+	BackgroundColor transparent
+	StartColor #2FA4E7
+	EndColor #2FA4E7
+	BoxBackgroundColor #F8F9FA
+	BoxBorderColor #868E96
+	BoxFontColor #343A40
+	DelayFontColor #343A40
+	LifeLineBorderColor #BABDBF
+	LifeLineBorderThickness 2
+	LifeLineBackgroundColor #EDF0F2
+	GroupBorderColor #868E96
+	GroupFontColor #343A40
+	GroupHeaderFontColor #033C73
+	DividerBackgroundColor #FFF-#F8F9FA
+    DividerBorderColor #868E96
+    DividerBorderThickness 2
+    DividerFontColor #343A40
+	ReferenceBackgroundColor transparent
+	ReferenceBorderColor #868E96
+	ReferenceFontColor #343A40
+	ReferenceHeaderFontColor #033C73
+	StereotypeFontColor #FFF
+}
+
+
+skinparam partition {
+	BorderColor #2FA4E7
+	FontColor #2FA4E7
+	BackgroundColor transparent
+}
+
+
+skinparam collections {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam control {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam entity {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam boundary {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam agent {
+	BackgroundColor #orange
+	BorderColor #999999
+	FontColor #333333
+}
+
+
+skinparam note {
+	BorderThickness 1
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam artifact {
+	BackgroundColor #FFF-#F8F9FA
+	BorderColor #BABDBF
+	FontColor #343A40
+}
+
+
+skinparam component {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam interface {
+	BackgroundColor  #D2494E
+	BorderColor  #C71C22
+	FontColor #343A40
+}
+
+
+skinparam storage {
+	BackgroundColor #E47833-#DD5600
+  	BorderColor #DD5600
+	FontColor #FFF
+}
+
+
+skinparam node {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #E9ECEF
+	FontColor #343A40
+}
+
+
+skinparam cloud {
+	BackgroundColor #F2FCFE-#eeeeee
+	BorderColor #F2FCFE
+	FontColor #2FA4E7
+}
+
+
+skinparam database {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	FontColor #343A40
+}
+
+
+skinparam class {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	HeaderBackgroundColor #2FA4E7-#2683B9
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #F8F9FA
+	AttributeFontSize 11
+}
+
+
+skinparam object {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	StereotypeFontColor #343A40
+	BorderThickness 1
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam usecase {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam rectangle {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+	StereotypeFontColor #2FA4E7
+}
+
+
+skinparam package {
+	FontColor #2FA4E7
+	BorderColor #59B6EC
+	BackgroundColor transparent
+	BorderThickness 2
+}
+
+
+skinparam folder {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #DD5600
+	FontColor #DD5600
+	BorderThickness 2
+}
+
+
+skinparam frame {
+	BackgroundColor #FFF-#EDF0F2
+  	BorderColor #033C73
+	FontColor #033C73
+	BorderThickness 2
+}
+
+
+skinparam state {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+	BorderColor #2683B9
+	StartColor #033C73
+	EndColor #033C73
+	AttributeFontColor #343A40
+	AttributeFontSize 11
+}
+
+
+skinparam queue {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+
+
+skinparam card {
+	BackgroundColor #35638F-#033C73
+	BorderColor #033C73
+	FontColor #FFF
+}
+
+
+skinparam file {
+	BackgroundColor #EDF0F2-#E9ECEF
+	BorderColor #033C73
+	FontColor #868E96
+
+}
+
+
+skinparam stack {
+		FontColor #FFF
+	BorderColor #2FA4E7
+	BackgroundColor #59B6EC-#2FA4E7
+}
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+participant Solana as "Solana\nnetwork"
+participant Dapp
+participant Wallet
+
+note across : Dapp has established a session with Wallet for transaction signing using a previously obtained auth token
+
+activate Dapp
+
+Dapp -> Dapp : <i>at</i>, <i>pub</i> = Load()
+Dapp -> Dapp : <i>t</i> = CreateTransaction(<i>pub</i>, ...)
+
+== Submit for signing with cached auth token ==
+
+Dapp -> Wallet ++- - : sign_transaction {<i>at</i>, <i>t</i>}
+Wallet -X Wallet : validate auth token <i>at</i>
+Wallet - -> Dapp ++- - : error {ERROR_REAUTHORIZE}
+
+== Reauthorize ==
+
+Dapp -> Dapp : <i>i</i> = DappIdentity()
+Dapp -> Wallet ++- - : reauthorize {<i>i</i>, <i>at</i>}
+Wallet -> Wallet : validate Dapp identity <i>i</i> matches <i>at</i>
+Wallet -> Wallet : Generate new auth token\n<i>at2</i> = RegenerateAuthToken(<i>i</i>, <i>at</i>)
+Wallet -> Wallet : <i>pub</i> = base58encode(GetPublicKey())
+alt if wallet endpoint has an endpoint-specific URI
+    Wallet -> Wallet : <i>uri</i> = EndpointBaseURI() 
+end
+Wallet - -> Dapp ++- - : response(<i>at2</i>, <i>pub</i>, <i>uri</i>)
+Dapp -> Dapp : Store(<i>at2</i>, <i>pub</i>, <i>uri</i>)
+
+== Resubmit for signing with new auth token ==
+
+Dapp -> Wallet ++- - : sign_transaction(<i>at2</i>, <i>t</i>)
+Wallet -> Wallet : validate auth token <i>at2</i>
+Wallet -> Wallet : validate transaction <i>t</i>
+Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransaction(<i>t</i>)
+Wallet - -> Dapp ++- - : response(<i>st</i>)
+
+== Submit signed transaction to network ==
+
+create Solana
+Dapp - -> Solana - - : {<i>st</i>}
+
+== Complete ==
+
+legend
+| <i>i</i>   | the dapp identity (name, icon, website URI)                                                           |
+| <i>at</i>  | a persistent authentication token issued by the wallet to this dapp which is no longer valid          |
+| <i>at2</i> | a persistent authentication token with the same privileges as <i>at</i> which is valid                |
+| <i>pub</i> | the wallet account public key for which this dapp is authorized                                       |
+| <i>t</i>   | the transaction that the dapp wishes to have signed\nwith the private key corresponding to <i>pub</i> |
+| <i>st</i>  | <i>t</i>, signed with the private key corresponding to <i>pub</i>                                     |
+end legend
+
+@enduml
+
+PlantUML version 1.2022.4(Sat Apr 09 09:29:17 EDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
