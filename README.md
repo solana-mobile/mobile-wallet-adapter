@@ -14,7 +14,7 @@ This repository is intended for consumption by Solana mobile developers.
 
 ## What's included
 
-- The [Mobile Wallet Adapter protocol specification](TODO)
+- The [Mobile Wallet Adapter protocol specification](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html)
 - An [integration guide](android/docs/integration_guide.md) for Android wallets and dapps
 - An Android library for [wallets](android/walletlib) to provide Mobile Wallet Adapter transaction signing services to dapps
 - An Android library for [dapps](android/clientlib) to consume Mobile Wallet Adapter transaction signing services
