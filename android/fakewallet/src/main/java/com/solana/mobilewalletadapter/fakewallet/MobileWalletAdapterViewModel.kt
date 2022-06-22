@@ -6,10 +6,13 @@ package com.solana.mobilewalletadapter.fakewallet
 
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.fakewallet.usecase.ClientTrustUseCase
+import com.solana.mobilewalletadapter.fakewallet.usecase.SendTransactionUseCase
 import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -174,20 +177,25 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
             check(keypair != null) { "Unknown public key for signing request" }
 
-            val valid = BooleanArray(request.request.payloads.size) { true }
-            val signatures = Array(request.request.payloads.size) { i ->
+            val signingResults = request.request.payloads.map { payload ->
                 try {
-                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signature
+                    SolanaSigningUseCase.signTransaction(payload, keypair)
                 } catch (e: IllegalArgumentException) {
-                    Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
-                    valid[i] = false
-                    byteArrayOf()
+                    Log.w(TAG, "not a valid Solana transaction", e)
+                    SolanaSigningUseCase.Result(byteArrayOf(), byteArrayOf())
                 }
             }
 
+            val valid = signingResults.map { result -> result.signature.isNotEmpty() }
             if (valid.all { it }) {
                 Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
-                if (!updateExistingRequest(request, request.copy(signatures = signatures))) {
+                val signatures = signingResults.map { result -> result.signature }
+                val signedTransactions = signingResults.map { result -> result.signedPayload }
+                val requestWithSignatures = request.copy(
+                    signatures = signatures.toTypedArray(),
+                    signedTransactions = signedTransactions.toTypedArray()
+                )
+                if (!updateExistingRequest(request, requestWithSignatures)) {
                     return@launch
                 }
             } else {
@@ -195,7 +203,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 if (rejectStaleRequest(request)) {
                     return@launch
                 }
-                request.request.completeWithInvalidSignatures(valid)
+                request.request.completeWithInvalidSignatures(valid.toBooleanArray())
             }
         }
     }
@@ -250,6 +258,43 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithNotCommitted(request.signatures!!, committed)
     }
 
+    fun signAndSendTransactionSend(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+
+        Log.d(TAG, "Sending transactions to ${request.endpointUri}")
+
+        viewModelScope.launch(Dispatchers.IO) {
+            request.signedTransactions!!
+            request.signatures!!
+
+            try {
+                val commitmentReached = SendTransactionUseCase(
+                    request.endpointUri,
+                    request.signedTransactions,
+                    request.request.commitmentLevel,
+                    request.request.skipPreflight,
+                    request.request.preflightCommitmentLevel
+                )
+                Log.d(TAG, "Commitment status for transactions submitted via RPC: ${commitmentReached.contentToString()}")
+                if (commitmentReached.all { it }) {
+                    request.request.completeWithSignatures(request.signatures)
+                } else {
+                    request.request.completeWithNotCommitted(request.signatures, commitmentReached)
+                }
+            } catch (e: SendTransactionUseCase.InvalidTransactionsException) {
+                Log.e(TAG, "Failed submitting transactions via RPC", e)
+                request.request.completeWithInvalidSignatures(e.valid)
+            } catch (e: SendTransactionUseCase.CannotVerifySignaturesException) {
+                Log.e(TAG, "Failed verifying transaction committment reached via RPC", e)
+                request.request.completeWithNotCommitted(
+                    request.signatures,
+                    BooleanArray(request.signatures.size) { false })
+            }
+        }
+    }
+
     fun signAndSendTransactionSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
         if (rejectStaleRequest(request)) {
             return
@@ -290,6 +335,17 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         val oldRequest = _mobileWalletAdapterServiceEvents.getAndUpdate { request }
         if (oldRequest is MobileWalletAdapterServiceRequest.MobileWalletAdapterRemoteRequest) {
             oldRequest.request.cancel()
+        }
+    }
+
+    private fun clusterToRpcUri(cluster: String?): Uri {
+        return when (cluster) {
+            ProtocolContract.CLUSTER_MAINNET_BETA ->
+                Uri.parse("https://api.mainnet-beta.solana.com")
+            ProtocolContract.CLUSTER_DEVNET ->
+                Uri.parse("https://api.devnet.solana.com")
+            else ->
+                Uri.parse("https://api.testnet.solana.com")
         }
     }
 
@@ -386,7 +442,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         override fun onSignAndSendTransactionRequest(request: SignAndSendTransactionRequest) {
             if (verifyPrivilegedMethodSource(request)) {
-                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignAndSendTransaction(request))
+                val endpointUri = clusterToRpcUri(request.cluster)
+                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignAndSendTransaction(request, endpointUri))
             } else {
                 request.completeWithDecline()
             }
@@ -414,6 +471,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         data class SignMessage(override val request: SignMessageRequest) : SignPayload(request)
         data class SignAndSendTransaction(
             override val request: SignAndSendTransactionRequest,
+            val endpointUri: Uri,
+            val signedTransactions: Array<ByteArray>? = null,
             val signatures: Array<ByteArray>? = null
         ) : MobileWalletAdapterRemoteRequest(request)
     }

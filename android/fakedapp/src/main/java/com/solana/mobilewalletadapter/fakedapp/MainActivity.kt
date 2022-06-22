@@ -12,6 +12,8 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.uiState.collect { uiState ->
                     viewBinding.btnReauthorize.isEnabled = uiState.hasAuthToken
                     viewBinding.btnDeauthorize.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnRequestAirdrop.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX3.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX20.isEnabled = uiState.hasAuthToken
@@ -38,6 +41,19 @@ class MainActivity : AppCompatActivity() {
                     viewBinding.btnSignAndSendTxnX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignAndSendTxnX3.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignAndSendTxnX20.isEnabled = uiState.hasAuthToken
+
+                    if (uiState.messages.isNotEmpty()) {
+                        val message = uiState.messages.first()
+                        Snackbar.make(viewBinding.root, message, Snackbar.LENGTH_SHORT)
+                            .addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                                override fun onDismissed(
+                                    transientBottomBar: Snackbar?,
+                                    event: Int
+                                ) {
+                                    viewModel.messageShown()
+                                }
+                            }).show()
+                    }
                 }
             }
         }
@@ -56,6 +72,12 @@ class MainActivity : AppCompatActivity() {
 
         viewBinding.btnDeauthorize.setOnClickListener {
             lifecycleScope.launch { viewModel.deauthorize(intentSender) }
+        }
+
+        viewBinding.btnRequestAirdrop.setOnClickListener {
+            lifecycleScope.launch {
+                viewModel.requestAirdrop()
+            }
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {

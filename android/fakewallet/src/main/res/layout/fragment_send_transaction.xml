@@ -40,6 +40,26 @@
         app:layout_constraintStart_toEndOf="@id/label_desired_commitment"
         android:textSize="10pt" />
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_cluster"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toBottomOf="@id/label_desired_commitment"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="@string/label_cluster"
+        android:textSize="10pt" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_cluster"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="8dp"
+        app:layout_constraintTop_toTopOf="@id/label_cluster"
+        app:layout_constraintBottom_toBottomOf="@id/label_cluster"
+        app:layout_constraintStart_toEndOf="@id/label_cluster"
+        android:textSize="10pt" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_simulate_commitment_reached"
         android:layout_width="match_parent"
@@ -47,7 +67,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="8dp"
         android:layout_marginHorizontal="8dp"
-        app:layout_constraintTop_toBottomOf="@id/label_desired_commitment"
+        app:layout_constraintTop_toBottomOf="@id/label_cluster"
         android:text="@string/label_simulate_commitment_reached"
         android:textSize="10pt" />
 
@@ -58,6 +78,15 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_simulate_commitment_reached"
         android:text="@string/label_simulate_commitment_not_reached"
+        android:textSize="10pt" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_send_transaction_to_cluster"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toBottomOf="@id/btn_simulate_commitment_not_reached"
+        android:text="@string/label_send_transaction_to_cluster"
         android:textSize="10pt" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
