@@ -12,7 +12,7 @@ Developers of Android wallets and dapps.
 
 ### Mobile Wallet Adapter protocol
 
-The Mobile Wallet Adapter protocol describes how wallets can provide transaction signing services to dapps, whether the dapps are native Android apps, mobile-friendly web dapps, or even running on a remote system (such as a desktop or laptop). See the [protocol specification](TODO) for more details.
+The Mobile Wallet Adapter protocol describes how wallets can provide transaction signing services to dapps, whether the dapps are native Android apps, mobile-friendly web dapps, or even running on a remote system (such as a desktop or laptop). See the [protocol specification](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html) for more details.
 
 ### Android reference implementation
 
