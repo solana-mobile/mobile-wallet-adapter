@@ -1,9 +1,9 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-protocol",
-    "description": "An implementation of Solana's mobile wallet protocol. Use this to open a session with a native mobile wallet app, and to issue API calls to it.",
+    "description": "An implementation of the Solana Mobile Mobile Wallet Adapter protocol. Use this to open a session with a mobile wallet app, and to issue API calls to it.",
     "version": "0.0.0",
-    "author": "Steven Luscher <steven.luscher@solana.com>",
-    "repository": "https://github.com/solanamobile/mobile-wallet-adapter-protocol",
+    "author": "Steven Luscher <steven.luscher@solanamobile.com>",
+    "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
     "type": "module",
     "sideEffects": false,

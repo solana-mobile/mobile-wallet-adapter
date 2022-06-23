@@ -1,8 +1,8 @@
 {
     "name": "@solana-mobile/example-web-app",
     "version": "0.0.0",
-    "author": "Steven Luscher <steven.luscher@solana.com>",
-    "repository": "https://github.com/solana-labs/wallet-adapter",
+    "author": "Steven Luscher <steven.luscher@solanamobile.com>",
+    "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
     "private": true,
     "scripts": {
