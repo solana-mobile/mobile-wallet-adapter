@@ -7,21 +7,25 @@ package com.solana.mobilewalletadapter.fakewallet.ui.authorizedapp
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import coil.ImageLoader
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAuthorizeDappBinding
 import kotlinx.coroutines.launch
+import java.util.*
 
 class AuthorizeDappFragment : Fragment() {
     private val activityViewModel: MobileWalletAdapterViewModel by activityViewModels()
@@ -54,11 +58,12 @@ class AuthorizeDappFragment : Fragment() {
                                     request.request.identityUri!!,
                                     request.request.iconRelativeUri!!.encodedPath
                                 )
-                                Glide.with(this@AuthorizeDappFragment).load(uri)
-                                    .into(viewBinding.imageIcon)
+                                viewBinding.imageIcon.loadImage(uri.toString())
+
                             }
                             viewBinding.textName.text = request.request.identityName ?: "<no name>"
-                            viewBinding.textUri.text = request.request.identityUri?.toString() ?: "<no URI>"
+                            viewBinding.textUri.text =
+                                request.request.identityUri?.toString() ?: "<no URI>"
                         }
                         else -> {
                             this@AuthorizeDappFragment.request = null
@@ -93,5 +98,23 @@ class AuthorizeDappFragment : Fragment() {
 
     companion object {
         private val TAG = AuthorizeDappFragment::class.simpleName
+    }
+}
+
+fun AppCompatImageView.loadImage(imgUrl: String?) {
+    imgUrl?.let { url ->
+        val imageLoader = if (url.lowercase(Locale.getDefault()).contains("svg")) {
+            ImageLoader.Builder(this.context)
+                .components {
+                    add(SvgDecoder.Factory())
+                }.build()
+        } else {
+            ImageLoader(context)
+        }
+        val request = ImageRequest.Builder(context).apply {
+            data(url)
+        }.target(this).build()
+
+        imageLoader.enqueue(request)
     }
 }
