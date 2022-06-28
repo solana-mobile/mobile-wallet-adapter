@@ -25,7 +25,6 @@ import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.Mo
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAuthorizeDappBinding
 import kotlinx.coroutines.launch
-import java.util.*
 
 class AuthorizeDappFragment : Fragment() {
     private val activityViewModel: MobileWalletAdapterViewModel by activityViewModels()
@@ -103,14 +102,11 @@ class AuthorizeDappFragment : Fragment() {
 
 fun AppCompatImageView.loadImage(imgUrl: String?) {
     imgUrl?.let { url ->
-        val imageLoader = if (url.lowercase(Locale.getDefault()).contains("svg")) {
+        val imageLoader =
             ImageLoader.Builder(this.context)
                 .components {
                     add(SvgDecoder.Factory())
                 }.build()
-        } else {
-            ImageLoader(context)
-        }
         val request = ImageRequest.Builder(context).apply {
             data(url)
         }.target(this).build()
