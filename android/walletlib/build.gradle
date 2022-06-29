@@ -5,6 +5,7 @@
 plugins {
     id 'com.android.library'
     id 'maven-publish'
+    id 'signing'
 }
 
 android {
@@ -31,8 +32,7 @@ android {
     }
 
     publishing {
-        multipleVariants {
-            allVariants()
+        singleVariant('release') {
             withSourcesJar()
             withJavadocJar()
         }
@@ -41,23 +41,62 @@ android {
 
 publishing {
     publications {
-        allVariants(MavenPublication) {
+        release(MavenPublication) {
             groupId = 'com.solanamobile'
             artifactId = 'mobile-wallet-adapter-walletlib'
-            version = releaseVersion // see gradle.properties
+            pom {
+                name = 'Mobile Wallet Adapter - Wallet library'
+                description = 'Wallet library for Mobile Wallet Adapter. It implements the wallet endpoint role of the Mobile Wallet Adapter protocol specification.'
+                url = 'https://github.com/solana-mobile/mobile-wallet-adapter'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Solana Mobile Engineering'
+                        email = 'eng@solanamobile.com'
+                        organization = 'Solana Mobile Inc.'
+                        organizationUrl = 'https://solanamobile.com'
+                    }
+                }
+                organization {
+                    name = 'Solana Mobile Inc.'
+                    url = 'https://solanamobile.com'
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/solana-mobile/mobile-wallet-adapter.git'
+                    developerConnection = 'scm:git:ssh://github.com/solana-mobile/mobile-wallet-adapter.git'
+                    url = 'https://github.com/solana-mobile/mobile-wallet-adapter/tree/main'
+                }
+            }
 
             afterEvaluate {
-                from components.default
+                from components.release
             }
         }
     }
-    // TODO: publish to Maven Central
     repositories {
         maven {
-            name = 'local_repo'
-            url = "${project.buildDir}/repo"
+            name = 'ossrh_maven_central'
+            url = version.endsWith('SNAPSHOT') ?
+                    'https://s01.oss.sonatype.org/content/repositories/snapshots/' :
+                    'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            credentials {
+                username = findProperty('ossrhUsername')
+                password = findProperty('ossrhPassword')
+            }
         }
     }
+}
+
+signing {
+    def signingKey = findProperty('signingKey')
+    def signingPassword = findProperty('signingPassword')
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.release
 }
 
 // Define JavaDoc build task for all variants

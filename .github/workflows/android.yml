@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [ main ]
     paths: [ 'android/**' ]
+  release:
+    types: [ published ]
 
 defaults:
   run:
@@ -16,7 +18,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write # needed for uploading files to releases
+
     steps:
+    # Setup
     - uses: actions/checkout@v3
     - name: set up JDK 11
       uses: actions/setup-java@v3
@@ -25,7 +31,43 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    # Build
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle and run tests
       run: ./gradlew build
+
+    # Publish to Maven Central
+    - name: Publish to Maven Central (release only)
+      if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') }}
+      env:
+        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY }}
+        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY_PASSWORD }}
+        ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
+        ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
+        TAG: ${{ github.event.release.tag_name }}-SNAPSHOT
+      run: ./gradlew publish -P version=${TAG:1}
+
+    # Upload artifacts to GitHub release
+    - name: Compress clientlib javadoc (release only)
+      if: ${{ github.event_name == 'release' }}
+      run: tar -cvzf clientlib/build/docs/clientlib-javadoc.tgz -C clientlib/build/docs javadoc
+    - name: Compress common javadoc (release only)
+      if: ${{ github.event_name == 'release' }}
+      run: tar -cvzf common/build/docs/common-javadoc.tgz -C common/build/docs javadoc
+    - name: Compress walletlib javadoc (release only)
+      if: ${{ github.event_name == 'release' }}
+      run: tar -cvzf walletlib/build/docs/walletlib-javadoc.tgz -C walletlib/build/docs javadoc
+    - name: Upload files to release (release only)
+      if: ${{ github.event_name == 'release' }}
+      run: gh release upload ${TAG} ${FILES}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ github.event.release.tag_name }}
+        FILES: |
+          clientlib/build/docs/clientlib-javadoc.tgz
+          clientlib/build/outputs/aar/*.aar
+          common/build/docs/common-javadoc.tgz
+          common/build/outputs/aar/*.aar
+          walletlib/build/docs/walletlib-javadoc.tgz
+          walletlib/build/outputs/aar/*.aar
