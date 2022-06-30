@@ -16,10 +16,14 @@
         "./lib/esm/index.mjs": "./lib/esm/index.browser.mjs"
     },
     "exports": {
-        "import": "./lib/esm/index.mjs",
-        "require": "./lib/cjs/index.js"
+        "./package.json": "./package.json",
+        ".": {
+            "import": "./lib/esm/index.mjs",
+            "require": "./lib/esm/index.cjs"
+        }
     },
     "files": [
+        "android",
         "lib",
         "LICENSE"
     ],
@@ -32,6 +36,9 @@
         "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "echo '{\"type\":\"commonjs\"}' | npx json > lib/cjs/package.json && echo '{\"type\":\"module\"} ' | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
+    },
+    "dependencies": {
+        "react-native": "^0.69.1"
     },
     "devDependencies": {
         "agadoo": "^2.0.0"
