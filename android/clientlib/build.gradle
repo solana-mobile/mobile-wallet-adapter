@@ -42,7 +42,7 @@ android {
 publishing {
     publications {
         release(MavenPublication) {
-            groupId = 'com.solanamobile'
+            groupId = group
             artifactId = 'mobile-wallet-adapter-clientlib'
             pom {
                 name = 'Mobile Wallet Adapter - Client library'
@@ -78,21 +78,11 @@ publishing {
             }
         }
     }
-    repositories {
-        maven {
-            name = 'ossrh_maven_central'
-            url = version.endsWith('SNAPSHOT') ?
-                    'https://s01.oss.sonatype.org/content/repositories/snapshots/' :
-                    'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
-            credentials {
-                username = findProperty('ossrhUsername')
-                password = findProperty('ossrhPassword')
-            }
-        }
-    }
 }
 
 signing {
+    // Signing private key and password provided by ORG_GRADLE_PROJECT_signingKey and
+    // ORG_GRADLE_PROJECT_signingPassword, respectively
     def signingKey = findProperty('signingKey')
     def signingPassword = findProperty('signingPassword')
     useInMemoryPgpKeys(signingKey, signingPassword)

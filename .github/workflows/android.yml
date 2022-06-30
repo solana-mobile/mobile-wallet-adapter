@@ -37,16 +37,16 @@ jobs:
     - name: Build with Gradle and run tests
       run: ./gradlew build
 
-    # Publish to Maven Central
+    # Publish to Maven Central (only for releases that start with 'v')
     - name: Publish to Maven Central (release only)
       if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') }}
       env:
         ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY }}
         ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY_PASSWORD }}
-        ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
-        ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
+        ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
+        ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
         TAG: ${{ github.event.release.tag_name }}
-      run: ./gradlew publish -P version=${TAG:1}
+      run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
 
     # Upload artifacts to GitHub release
     - name: Compress clientlib javadoc (release only)
