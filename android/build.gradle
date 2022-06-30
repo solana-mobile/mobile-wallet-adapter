@@ -26,7 +26,7 @@ nexusPublishing {
         sonatype {
             // Username and password provided by ORG_GRADLE_PROJECT_sonatypeUsername and
             // ORG_GRADLE_PROJECT_sonatypeUsername, respectively
-            nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'))
+            nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/'))
             snapshotRepositoryUrl.set(uri('https://s01.oss.sonatype.org/content/repositories/snapshots/'))
         }
     }
