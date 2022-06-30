@@ -1,0 +1,14 @@
+# OSX
+#
+.DS_Store
+
+# Android/IJ
+#
+.classpath
+.cxx
+.gradle
+.idea
+.project
+.settings
+local.properties
+android.iml
