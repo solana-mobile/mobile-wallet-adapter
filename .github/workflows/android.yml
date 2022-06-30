@@ -45,7 +45,7 @@ jobs:
         ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY_PASSWORD }}
         ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
         ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
-        TAG: ${{ github.event.release.tag_name }}-SNAPSHOT
+        TAG: ${{ github.event.release.tag_name }}
       run: ./gradlew publish -P version=${TAG:1}
 
     # Upload artifacts to GitHub release
