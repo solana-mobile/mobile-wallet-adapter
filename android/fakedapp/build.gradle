@@ -48,6 +48,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3'
     implementation project(path: ':clientlib')
 }
