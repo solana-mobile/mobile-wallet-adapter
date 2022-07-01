@@ -58,6 +58,5 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2'
     implementation project(path: ':walletlib')
-    implementation project(path: ':common')
     kapt 'androidx.room:room-compiler:2.4.2'
 }
