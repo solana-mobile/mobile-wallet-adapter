@@ -33,7 +33,23 @@ All Android projects within this repository can be built using [Android Studio](
 
 ### How to reference these libraries in your project
 
-_Check back soon! We plan to publish the [walletlib](android/walletlib) and [clientlib](android/clientlib) libraries on Maven Central._
+#### Gradle
+
+For dApps,
+
+```
+dependencies {
+    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:0.1.2'
+}
+```
+
+For wallets,
+
+```
+dependencies {
+    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:0.1.2'
+}
+```
 
 ## Get involved
 
