@@ -3,10 +3,10 @@ name: Android CI
 on:
   push:
     branches: [ main ]
-    paths: [ 'android/**' ]
+    paths: [ '.github/**', 'android/**' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'android/**' ]
+    paths: [ '.github/**', 'android/**' ]
   release:
     types: [ published ]
 
@@ -22,52 +22,110 @@ jobs:
       contents: write # needed for uploading files to releases
 
     steps:
-    # Setup
-    - uses: actions/checkout@v3
-    - name: set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: gradle
+      # Setup
+      - uses: actions/checkout@v3
+      - name: set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
 
-    # Build
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle and run tests
-      run: ./gradlew build
+      # Build
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle and run tests
+        run: ./gradlew build
 
-    # Publish to Maven Central (only for releases that start with 'v')
-    - name: Publish to Maven Central (release only)
-      if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') }}
-      env:
-        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY }}
-        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY_PASSWORD }}
-        ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
-        ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
-        TAG: ${{ github.event.release.tag_name }}
-      run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
+      # Upload javadoc to workflow artifacts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: clientlib-javadoc
+          path: |
+            android/clientlib/build/docs/*
+            !android/clientlib/build/docs/**/*.zip
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@v3
+        with:
+          name: common-javadoc
+          path: |
+            android/common/build/docs/*
+            !android/common/build/docs/**/*.zip
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@v3
+        with:
+          name: walletlib-javadoc
+          path: |
+            android/walletlib/build/docs/*
+            !android/walletlib/build/docs/**/*.zip
+          if-no-files-found: error
+          retention-days: 1
 
-    # Upload artifacts to GitHub release
-    - name: Compress clientlib javadoc (release only)
-      if: ${{ github.event_name == 'release' }}
-      run: tar -cvzf clientlib/build/docs/clientlib-javadoc.tgz -C clientlib/build/docs javadoc
-    - name: Compress common javadoc (release only)
-      if: ${{ github.event_name == 'release' }}
-      run: tar -cvzf common/build/docs/common-javadoc.tgz -C common/build/docs javadoc
-    - name: Compress walletlib javadoc (release only)
-      if: ${{ github.event_name == 'release' }}
-      run: tar -cvzf walletlib/build/docs/walletlib-javadoc.tgz -C walletlib/build/docs javadoc
-    - name: Upload files to release (release only)
-      if: ${{ github.event_name == 'release' }}
-      run: gh release upload ${TAG} ${FILES}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TAG: ${{ github.event.release.tag_name }}
-        FILES: |
-          clientlib/build/docs/clientlib-javadoc.tgz
-          clientlib/build/outputs/aar/*.aar
-          common/build/docs/common-javadoc.tgz
-          common/build/outputs/aar/*.aar
-          walletlib/build/docs/walletlib-javadoc.tgz
-          walletlib/build/outputs/aar/*.aar
+      # Publish to Maven Central (only for releases that start with 'v')
+      - name: Publish to Maven Central (release only)
+        if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v') }}
+        env:
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PRIVATE_KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
+
+      # Upload artifacts to GitHub release
+      - name: Compress clientlib javadoc (release only)
+        if: ${{ github.event_name == 'release' }}
+        run: tar -cvzf clientlib/build/docs/clientlib-javadoc.tgz -C clientlib/build/docs javadoc
+      - name: Compress common javadoc (release only)
+        if: ${{ github.event_name == 'release' }}
+        run: tar -cvzf common/build/docs/common-javadoc.tgz -C common/build/docs javadoc
+      - name: Compress walletlib javadoc (release only)
+        if: ${{ github.event_name == 'release' }}
+        run: tar -cvzf walletlib/build/docs/walletlib-javadoc.tgz -C walletlib/build/docs javadoc
+      - name: Upload files to release (release only)
+        if: ${{ github.event_name == 'release' }}
+        run: gh release upload ${TAG} ${FILES}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          FILES: |
+            clientlib/build/docs/clientlib-javadoc.tgz
+            clientlib/build/outputs/aar/*.aar
+            common/build/docs/common-javadoc.tgz
+            common/build/outputs/aar/*.aar
+            walletlib/build/docs/walletlib-javadoc.tgz
+            walletlib/build/outputs/aar/*.aar
+
+  publish-to-gh-pages:
+    runs-on: ubuntu-latest
+    needs: build
+    concurrency: publish-to-gh-pages
+    if: ${{ github.event_name == 'push' }}
+
+    steps:
+      - name: Update clientlib javadoc
+        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        with:
+          token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
+          branch: gh-pages
+          artifact-name: clientlib-javadoc
+          dest: clientlib
+          commit-message: 'Update clientlib javadoc'
+      - name: Update common javadoc
+        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        with:
+          token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
+          branch: gh-pages
+          artifact-name: common-javadoc
+          dest: common
+          commit-message: 'Update common javadoc'
+      - name: Update walletlib javadoc
+        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        with:
+          token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
+          branch: gh-pages
+          artifact-name: walletlib-javadoc
+          dest: walletlib
+          commit-message: 'Update walletlib javadoc'
