@@ -10,16 +10,13 @@ on:
   release:
     types: [ published ]
 
-defaults:
-  run:
-    working-directory: android
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write # needed for uploading files to releases
+    defaults:
+      run:
+        working-directory: android
 
     steps:
       # Setup
@@ -37,8 +34,32 @@ jobs:
       - name: Build with Gradle and run tests
         run: ./gradlew build
 
+      # Upload libraries to workflow artifacts
+      - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          name: libraries
+          path: android/clientlib/build/outputs/aar/*.aar
+          if-no-files-found: error
+          retention-days: 5
+      - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          name: libraries
+          path: android/common/build/outputs/aar/*.aar
+          if-no-files-found: error
+          retention-days: 5
+      - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          name: libraries
+          path: android/walletlib/build/outputs/aar/*.aar
+          if-no-files-found: error
+          retention-days: 5
+
       # Upload javadoc to workflow artifacts
       - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           name: clientlib-javadoc
           path: |
@@ -47,6 +68,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           name: common-javadoc
           path: |
@@ -55,6 +77,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           name: walletlib-javadoc
           path: |
@@ -74,30 +97,7 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
 
-      # Upload artifacts to GitHub release
-      - name: Compress clientlib javadoc (release only)
-        if: ${{ github.event_name == 'release' }}
-        run: tar -cvzf clientlib/build/docs/clientlib-javadoc.tgz -C clientlib/build/docs javadoc
-      - name: Compress common javadoc (release only)
-        if: ${{ github.event_name == 'release' }}
-        run: tar -cvzf common/build/docs/common-javadoc.tgz -C common/build/docs javadoc
-      - name: Compress walletlib javadoc (release only)
-        if: ${{ github.event_name == 'release' }}
-        run: tar -cvzf walletlib/build/docs/walletlib-javadoc.tgz -C walletlib/build/docs javadoc
-      - name: Upload files to release (release only)
-        if: ${{ github.event_name == 'release' }}
-        run: gh release upload ${TAG} ${FILES}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.release.tag_name }}
-          FILES: |
-            clientlib/build/docs/clientlib-javadoc.tgz
-            clientlib/build/outputs/aar/*.aar
-            common/build/docs/common-javadoc.tgz
-            common/build/outputs/aar/*.aar
-            walletlib/build/docs/walletlib-javadoc.tgz
-            walletlib/build/outputs/aar/*.aar
-
+  # Note: only runs on 'push' events
   publish-to-gh-pages:
     runs-on: ubuntu-latest
     needs: build
@@ -129,3 +129,46 @@ jobs:
           artifact-name: walletlib-javadoc
           dest: walletlib
           commit-message: 'Update walletlib javadoc'
+
+  # Note: only runs on 'release' events
+  upload-to-release:
+    runs-on: ubuntu-latest
+    needs: build
+    concurrency: publish-to-gh-pages
+    permissions:
+      contents: write # needed for uploading files to releases
+    if: ${{ github.event_name == 'release' }}
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: libraries
+          path: libraries
+      - uses: actions/download-artifact@v3
+        with:
+          name: clientlib-javadoc
+          path: clientlib-javadoc
+      - uses: actions/download-artifact@v3
+        with:
+          name: common-javadoc
+          path: common-javadoc
+      - uses: actions/download-artifact@v3
+        with:
+          name: walletlib-javadoc
+          path: walletlib-javadoc
+      - name: Compress clientlib javadoc
+        run: tar -cvzf clientlib-javadoc/clientlib-javadoc.tgz -C clientlib-javadoc javadoc
+      - name: Compress common javadoc
+        run: tar -cvzf common-javadoc/common-javadoc.tgz -C common-javadoc javadoc
+      - name: Compress walletlib javadoc
+        run: tar -cvzf walletlib-javadoc/walletlib-javadoc.tgz -C walletlib-javadoc javadoc
+      - name: Upload files to release
+        run: gh release -R ${GITHUB_REPOSITORY} upload ${TAG} ${FILES}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          FILES: |
+            libraries/*.aar
+            clientlib-javadoc/clientlib-javadoc.tgz
+            common-javadoc/common-javadoc.tgz
+            walletlib-javadoc/walletlib-javadoc.tgz
