@@ -10,7 +10,7 @@ import generateECDHKeypair from './generateECDHKeypair';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
 import { startSession } from './startSession';
-import { AssociationKeypair, MobileWallet } from './types';
+import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     maxAttempts: 34,
@@ -24,10 +24,6 @@ const WEBSOCKET_CONNECTION_CONFIG = {
     retryDelayMs: 150,
 } as const;
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
-
-type Config = Readonly<{
-    baseUri?: string;
-}>;
 
 type JsonResponsePromises<T> = Record<
     number,
@@ -48,7 +44,7 @@ function assertSecureContext() {
 
 export default async function withLocalWallet<TReturn>(
     callback: (wallet: MobileWallet) => TReturn,
-    config?: Config,
+    config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
