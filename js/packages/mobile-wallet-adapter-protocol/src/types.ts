@@ -39,6 +39,10 @@ type Base64EncodedSignedTransaction = string;
 
 type Base64EncodedTransaction = string;
 
+export type WalletAssociationConfig = Readonly<{
+    baseUri?: string;
+}>;
+
 export interface MobileWallet {
     (method: 'authorize', params: { identity: AppIdentity }): Promise<
         Readonly<{
