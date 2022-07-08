@@ -15,14 +15,18 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class LocalAssociationScenario extends Scenario {
@@ -43,12 +47,13 @@ public class LocalAssociationScenario extends Scenario {
     private int mConnectionAttempts = 0;
     private MobileWalletAdapterSession mMobileWalletAdapterSession;
     private MobileWalletAdapterWebSocket mMobileWalletAdapterWebSocket;
+    private NotifyingCompletableFuture<MobileWalletAdapterClient> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
+    private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
     public LocalAssociationScenario(@NonNull Looper looper,
                                     @IntRange(from = 0) int clientTimeoutMs,
-                                    @Nullable Callbacks callbacks,
                                     @Nullable Uri endpointSpecificUriPrefix) {
-        super(clientTimeoutMs, callbacks);
+        super(clientTimeoutMs);
 
         if (endpointSpecificUriPrefix != null && (!endpointSpecificUriPrefix.isAbsolute() ||
                 !endpointSpecificUriPrefix.isHierarchical())) {
@@ -103,57 +108,97 @@ public class LocalAssociationScenario extends Scenario {
     }
 
     @Override
-    public void start() {
+    public NotifyOnCompleteFuture<MobileWalletAdapterClient> start() {
         if (mState != State.NOT_STARTED) {
             throw new IllegalStateException("Scenario has already been started");
         }
 
         mState = State.CONNECTING;
+        final NotifyingCompletableFuture<MobileWalletAdapterClient> future = startDeferredFuture();
 
         // Delay the first connect to allow the association intent receiver to start the WebSocket
         // server
-        mHandler.postDelayed(this::doConnect, CONNECT_BACKOFF_SCHEDULE_MS[0]);
+        mHandler.postDelayed(this::doTryConnect, CONNECT_BACKOFF_SCHEDULE_MS[0]);
+
+        return future;
     }
 
     @Override
-    public void close() {
+    public NotifyOnCompleteFuture<Void> close() {
+        final NotifyingCompletableFuture<Void> future;
         switch (mState) {
             case NOT_STARTED:
                 // If not started, just teardown immediately
                 mState = State.CLOSED;
                 destroyResources();
-                if (mCallbacks != null) {
-                    mCallbacks.onScenarioComplete();
-                    mCallbacks.onScenarioTeardownComplete();
-                }
+                future = closedImmediatelyFuture();
                 break;
             case CONNECTING:
+                mState = State.CLOSING;
+                notifySessionEstablishmentFailed("Scenario closed while connecting");
+
                 if (mMobileWalletAdapterWebSocket != null) {
-                    mState = State.CLOSING;
+                    future = closeDeferredFuture();
                     mMobileWalletAdapterWebSocket.close();
                 } else {
                     // In the middle of a backoff - we can tear down immediately
                     mState = State.CLOSED;
                     mHandler.removeCallbacksAndMessages(null); // pre-closed callbacks no longer relevant
                     destroyResources();
-                    if (mCallbacks != null) {
-                        mCallbacks.onScenarioComplete();
-                        mCallbacks.onScenarioTeardownComplete();
-                    }
+                    future = closedImmediatelyFuture();
                 }
                 break;
-            case CONNECTED:
+            case ESTABLISHING_SESSION:
                 mState = State.CLOSING;
+                notifySessionEstablishmentFailed("Scenario closed during session establishment");
+                future = closeDeferredFuture();
+                mMobileWalletAdapterWebSocket.close();
+                break;
+            case STARTED:
+                mState = State.CLOSING;
+                future = closeDeferredFuture();
                 mMobileWalletAdapterWebSocket.close();
                 break;
             case CLOSING:
+                // Already closing - nothing to do here
+                future = closeDeferredFuture();
+                break;
             case CLOSED:
                 // No-op; scenario is either already complete, or in the process of being torn down
+                future = closedImmediatelyFuture();
                 break;
+            default:
+                throw new IllegalStateException("Error: attempt to close in an unknown state");
         }
+
+        return future;
     }
 
-    private void doConnect() {
+    private NotifyingCompletableFuture<MobileWalletAdapterClient> startDeferredFuture() {
+        assert(mState == State.CONNECTING && mSessionEstablishedFuture == null);
+        final NotifyingCompletableFuture<MobileWalletAdapterClient> future = new NotifyingCompletableFuture<>();
+        mSessionEstablishedFuture = future;
+        return future;
+    }
+
+    private NotifyingCompletableFuture<Void> closedImmediatelyFuture() {
+        assert(mState == State.CLOSED);
+        final NotifyingCompletableFuture<Void> future = new NotifyingCompletableFuture<>();
+        future.complete(null);
+        return future;
+    }
+
+    private NotifyingCompletableFuture<Void> closeDeferredFuture() {
+        assert(mState == State.CLOSING);
+        final NotifyingCompletableFuture<Void> future = new NotifyingCompletableFuture<>();
+        if (mClosedFuture == null) {
+            mClosedFuture = new ArrayList<>(1);
+        }
+        mClosedFuture.add(future);
+        return future;
+    }
+
+    private void doTryConnect() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
         mMobileWalletAdapterWebSocket = new MobileWalletAdapterWebSocket(mWebSocketUri,
@@ -164,8 +209,8 @@ public class LocalAssociationScenario extends Scenario {
     private void doConnected() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
-        mState = State.CONNECTED;
         Log.v(TAG, "WebSocket connection established, waiting for session establishment");
+        mState = State.ESTABLISHING_SESSION;
     }
 
     private void doConnectionFailed() {
@@ -178,65 +223,92 @@ public class LocalAssociationScenario extends Scenario {
                             CONNECT_BACKOFF_SCHEDULE_MS.length - 1];
             Log.d(TAG, "Connect attempt failed, retrying in " + delay + " ms");
             mMobileWalletAdapterWebSocket = null;
-            mHandler.postDelayed(this::doConnect, delay);
+            mHandler.postDelayed(this::doTryConnect, delay);
         } else {
+            Log.w(TAG, "Failed establishing a WebSocket connection");
+
             // We never connected, so we won't get an onConnectionClosed; do cleanup directly here
             mState = State.CLOSED;
             mHandler.removeCallbacksAndMessages(null); // pre-closed callbacks no longer relevant
             destroyResources();
-
-            Log.w(TAG, "Failed establishing a WebSocket connection");
-            if (mCallbacks != null) {
-                mCallbacks.onScenarioError();
-                mCallbacks.onScenarioTeardownComplete();
-            }
+            notifySessionEstablishmentFailed("Unable to connect to websocket server");
         }
     }
 
     private void doDisconnected() {
-        assert(mState == State.CONNECTING || mState == State.CONNECTED || mState == State.CLOSING);
-        if (mState != State.CLOSING) {
-            // Disconnecting before session establishment completed
+        assert(mState == State.CONNECTING || mState == State.ESTABLISHING_SESSION || mState == State.STARTED || mState == State.CLOSING);
+        if (mState == State.CONNECTING || mState == State.ESTABLISHING_SESSION) {
+            Log.w(TAG, "Disconnected before session established");
             mState = State.CLOSING;
-            Log.d(TAG, "Session terminated before session established");
-            if (mCallbacks != null) mCallbacks.onScenarioComplete();
+            notifySessionEstablishmentFailed("Disconnected before session established");
+        } else {
+            Log.d(TAG, "Disconnected during normal operation");
         }
         mState = State.CLOSED;
         mHandler.removeCallbacksAndMessages(null); // pre-closed callbacks no longer relevant
         destroyResources();
-
-        Log.i(TAG, "Session cleanup complete");
-        if (mCallbacks != null) mCallbacks.onScenarioTeardownComplete();
+        notifyCloseCompleted();
     }
 
     private void doSessionEstablished() {
-        assert(mState == State.CONNECTED || mState == State.CLOSING);
+        assert(mState == State.ESTABLISHING_SESSION || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
         Log.d(TAG, "Session established, scenario ready for use");
-        if (mCallbacks != null) mCallbacks.onScenarioReady(mMobileWalletAdapterClient);
+        mState = State.STARTED;
+        notifySessionEstablishmentSucceeded();
     }
 
     private void doSessionClosed() {
-        assert(mState == State.CONNECTED || mState == State.CLOSING);
+        assert(mState == State.ESTABLISHING_SESSION || mState == State.STARTED || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
-        mState = State.CLOSING;
-        Log.d(TAG, "Session terminated normally");
-        if (mCallbacks != null) mCallbacks.onScenarioComplete();
+        if (mState == State.ESTABLISHING_SESSION) {
+            Log.d(TAG, "Session terminated before session establishment");
+            mState = State.CLOSING;
+            notifySessionEstablishmentFailed("Session terminated before session establishment");
+        } else {
+            Log.d(TAG, "Session terminated normally");
+            mState = State.CLOSING;
+        }
         // doDisconnected is responsible for connection cleanup
     }
 
     private void doSessionError() {
-        assert(mState == State.CONNECTED || mState == State.CLOSING);
+        assert(mState == State.ESTABLISHING_SESSION || mState == State.STARTED || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
-        mState = State.CLOSING;
-        Log.w(TAG, "Session error, terminating");
-        if (mCallbacks != null) mCallbacks.onScenarioError();
+        if (mState == State.ESTABLISHING_SESSION) {
+            Log.w(TAG, "Session error, terminating before session established");
+            mState = State.CLOSING;
+            notifySessionEstablishmentFailed("Closing before session establishment due to session error");
+        } else {
+            Log.w(TAG, "Session error, terminating");
+            mState = State.CLOSING;
+        }
         // doDisconnected is responsible for connection cleanup
     }
 
     private void destroyResources() {
         mMobileWalletAdapterSession = null;
         mMobileWalletAdapterWebSocket = null;
+    }
+
+    private void notifySessionEstablishmentSucceeded() {
+        mSessionEstablishedFuture.complete(mMobileWalletAdapterClient);
+        mSessionEstablishedFuture = null;
+    }
+
+    private void notifySessionEstablishmentFailed(@NonNull String message) {
+        mSessionEstablishedFuture.completeExceptionally(new ConnectionFailedException(message));
+        mSessionEstablishedFuture = null;
+    }
+
+    private void notifyCloseCompleted() {
+        // NOTE: if close was initiated by counterparty, there won't be a closed future to complete
+        if (mClosedFuture != null) {
+            for (NotifyingCompletableFuture<Void> future : mClosedFuture) {
+                future.complete(null);
+            }
+            mClosedFuture = null;
+        }
     }
 
     private final MobileWalletAdapterWebSocket.StateCallbacks mWebSocketStateCallbacks = new MobileWalletAdapterWebSocket.StateCallbacks() {
@@ -262,6 +334,10 @@ public class LocalAssociationScenario extends Scenario {
     };
 
     private enum State {
-        NOT_STARTED, CONNECTING, CONNECTED, CLOSING, CLOSED
+        NOT_STARTED, CONNECTING, ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
+    }
+
+    public static class ConnectionFailedException extends RuntimeException {
+        public ConnectionFailedException(@NonNull String message) { super(message); }
     }
 }
