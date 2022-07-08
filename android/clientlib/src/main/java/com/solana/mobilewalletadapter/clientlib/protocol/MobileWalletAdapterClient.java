@@ -36,17 +36,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         mClientTimeoutMs = clientTimeoutMs;
     }
 
-    public static RuntimeException unpackExecutionException(@NonNull ExecutionException e)
-            throws JsonRpc20Exception, TimeoutException {
-        final Throwable cause = e.getCause();
-        if (cause instanceof JsonRpc20Exception) {
-            throw (JsonRpc20Exception) cause;
-        } else if (cause instanceof TimeoutException) {
-            throw (TimeoutException) cause;
-        }
-        return new RuntimeException("Unknown exception while waiting for a JSON-RPC 2.0 response", cause);
-    }
-
     private static abstract class JsonRpc20MethodResultFuture<T> implements Future<T> {
         @NonNull
         protected final NotifyOnCompleteFuture<Object> mMethodCallFuture;
@@ -136,9 +125,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public AuthorizeFuture authorizeAsync(@Nullable Uri identityUri,
-                                          @Nullable Uri iconUri,
-                                          @Nullable String identityName)
+    public AuthorizeFuture authorize(@Nullable Uri identityUri,
+                                     @Nullable Uri iconUri,
+                                     @Nullable String identityName)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -159,21 +148,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         return new AuthorizeFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
-    }
-
-    @NonNull
-    public AuthorizeResult authorize(@Nullable Uri identityUri,
-                                     @Nullable Uri iconUri,
-                                     @Nullable String identityName)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final AuthorizeFuture future = authorizeAsync(identityUri, iconUri, identityName);
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for authorize response", e);
-        }
     }
 
     public static class AuthorizeResult {
@@ -252,10 +226,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public ReauthorizeFuture reauthorizeAsync(@Nullable Uri identityUri,
-                                              @Nullable Uri iconUri,
-                                              @Nullable String identityName,
-                                              @NonNull String authToken)
+    public ReauthorizeFuture reauthorize(@Nullable Uri identityUri,
+                                         @Nullable Uri iconUri,
+                                         @Nullable String identityName,
+                                         @NonNull String authToken)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -277,22 +251,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         return new ReauthorizeFuture(methodCall(ProtocolContract.METHOD_REAUTHORIZE, reauthorize, mClientTimeoutMs));
-    }
-
-    @NonNull
-    public ReauthorizeResult reauthorize(@Nullable Uri identityUri,
-                                         @Nullable Uri iconUri,
-                                         @Nullable String identityName,
-                                         @NonNull String authToken)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final ReauthorizeFuture future = reauthorizeAsync(identityUri, iconUri, identityName, authToken);
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for reauthorize response", e);
-        }
     }
 
     public static class ReauthorizeResult {
@@ -348,7 +306,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public DeauthorizeFuture deauthorizeAsync(@NonNull String authToken)
+    public DeauthorizeFuture deauthorize(@NonNull String authToken)
             throws IOException {
         final JSONObject deauthorize;
         try {
@@ -359,18 +317,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         return new DeauthorizeFuture(methodCall(ProtocolContract.METHOD_DEAUTHORIZE, deauthorize, mClientTimeoutMs));
-    }
-
-    public void deauthorize(@NonNull String authToken)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final DeauthorizeFuture future = deauthorizeAsync(authToken);
-        try {
-            future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for deauthorize response", e);
-        }
     }
 
     public static class DeauthorizeFuture
@@ -397,23 +343,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public GetCapabilitiesFuture getCapabilitiesAsync()
+    public GetCapabilitiesFuture getCapabilities()
             throws IOException {
         final JSONObject params = new JSONObject();
         return new GetCapabilitiesFuture(methodCall(ProtocolContract.METHOD_GET_CAPABILITIES,
                 params, mClientTimeoutMs));
-    }
-
-    public GetCapabilitiesResult getCapabilities()
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final GetCapabilitiesFuture future = getCapabilitiesAsync();
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for get_capabilities response", e);
-        }
     }
 
     public static class GetCapabilitiesResult {
@@ -496,9 +430,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    private NotifyOnCompleteFuture<Object> signPayloadAsync(@NonNull String method,
-                                                            @NonNull String authToken,
-                                                            @NonNull @Size(min = 1) byte[][] payloads)
+    private NotifyOnCompleteFuture<Object> signPayload(@NonNull String method,
+                                                       @NonNull String authToken,
+                                                       @NonNull @Size(min = 1) byte[][] payloads)
             throws IOException {
         if (authToken.isEmpty()) {
             throw new IllegalArgumentException("authToken cannot be empty");
@@ -527,7 +461,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                                        @NonNull String paramName,
                                                        @IntRange(from = 1) int numExpectedPayloads)
             throws JsonRpc20InvalidResponseException {
-        assert(numExpectedPayloads > 0); // checked with inputs to sign*[Async]
+        assert(numExpectedPayloads > 0); // checked with inputs to sign*
 
         final JSONArray arr;
         try {
@@ -557,7 +491,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                                         @NonNull String paramName,
                                                         @IntRange(from = 1) int numExpectedBooleans)
             throws JsonRpc20InvalidResponseException {
-        assert(numExpectedBooleans > 0); // checked with inputs to sign*[Async]
+        assert(numExpectedBooleans > 0); // checked with inputs to sign*
 
         final JSONArray arr;
         try {
@@ -587,7 +521,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                                       @NonNull String paramName,
                                                       @IntRange(from = 1) int numExpectedStrings)
             throws JsonRpc20InvalidResponseException {
-        assert(numExpectedStrings > 0); // checked with inputs to sign*[Async]
+        assert(numExpectedStrings > 0); // checked with inputs to sign*
 
         final JSONArray arr;
         try {
@@ -708,26 +642,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignPayloadFuture signTransactionAsync(@NonNull String authToken,
-                                                  @NonNull @Size(min = 1) byte[][] transactions)
+    public SignPayloadFuture signTransaction(@NonNull String authToken,
+                                             @NonNull @Size(min = 1) byte[][] transactions)
             throws IOException {
         return new SignPayloadFuture(
-                signPayloadAsync(ProtocolContract.METHOD_SIGN_TRANSACTION, authToken, transactions),
+                signPayload(ProtocolContract.METHOD_SIGN_TRANSACTION, authToken, transactions),
                 transactions.length);
-    }
-
-    @NonNull
-    public SignPayloadResult signTransaction(@NonNull String authToken,
-                                             @NonNull @Size(min = 1) byte[][] transactions)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final SignPayloadFuture future = signTransactionAsync(authToken, transactions);
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for sign_transaction response", e);
-        }
     }
 
     // =============================================================================================
@@ -735,26 +655,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignPayloadFuture signMessageAsync(@NonNull String authToken,
-                                              @NonNull @Size(min = 1) byte[][] messages)
+    public SignPayloadFuture signMessage(@NonNull String authToken,
+                                         @NonNull @Size(min = 1) byte[][] messages)
             throws IOException {
         return new SignPayloadFuture(
-                signPayloadAsync(ProtocolContract.METHOD_SIGN_MESSAGE, authToken, messages),
+                signPayload(ProtocolContract.METHOD_SIGN_MESSAGE, authToken, messages),
                 messages.length);
-    }
-
-    @NonNull
-    public SignPayloadResult signMessage(@NonNull String authToken,
-                                         @NonNull @Size(min = 1) byte[][] messages)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final SignPayloadFuture future = signMessageAsync(authToken, messages);
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for sign_message response", e);
-        }
     }
 
     // =============================================================================================
@@ -762,12 +668,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignAndSendTransactionFuture signAndSendTransactionAsync(@NonNull String authToken,
-                                                                    @NonNull @Size(min = 1) byte[][] transactions,
-                                                                    @NonNull CommitmentLevel commitmentLevel,
-                                                                    @Nullable String cluster,
-                                                                    boolean skipPreflight,
-                                                                    @Nullable CommitmentLevel preflightCommitmentLevel)
+    public SignAndSendTransactionFuture signAndSendTransaction(@NonNull String authToken,
+                                                               @NonNull @Size(min = 1) byte[][] transactions,
+                                                               @NonNull CommitmentLevel commitmentLevel,
+                                                               @Nullable String cluster,
+                                                               boolean skipPreflight,
+                                                               @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException {
         if (authToken.isEmpty()) {
             throw new IllegalArgumentException("authToken cannot be empty");
@@ -804,38 +710,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     @NonNull
-    public SignAndSendTransactionFuture signAndSendTransactionAsync(@NonNull String authToken,
-                                                                    @NonNull @Size(min = 1) byte[][] transactions,
-                                                                    @NonNull CommitmentLevel commitmentLevel)
-            throws IOException {
-        return signAndSendTransactionAsync(authToken, transactions, commitmentLevel, null, false, null);
-    }
-
-    @NonNull
-    public SignAndSendTransactionResult signAndSendTransaction(@NonNull String authToken,
-                                                               @NonNull @Size(min = 1) byte[][] transactions,
-                                                               @NonNull CommitmentLevel commitmentLevel,
-                                                               @Nullable String cluster,
-                                                               boolean skipPreflight,
-                                                               @Nullable CommitmentLevel preflightCommitmentLevel)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
-        final SignAndSendTransactionFuture future =
-                signAndSendTransactionAsync(authToken, transactions, commitmentLevel,
-                        cluster, skipPreflight, preflightCommitmentLevel);
-        try {
-            return future.get();
-        } catch (ExecutionException e) {
-            throw unpackExecutionException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for sign_and_send_transaction response", e);
-        }
-    }
-
-    @NonNull
-    public SignAndSendTransactionResult signAndSendTransaction(@NonNull String authToken,
+    public SignAndSendTransactionFuture signAndSendTransaction(@NonNull String authToken,
                                                                @NonNull @Size(min = 1) byte[][] transactions,
                                                                @NonNull CommitmentLevel commitmentLevel)
-            throws IOException, JsonRpc20Exception, TimeoutException, CancellationException {
+            throws IOException {
         return signAndSendTransaction(authToken, transactions, commitmentLevel, null, false, null);
     }
 
