@@ -4,11 +4,10 @@
 
 package com.solana.mobilewalletadapter.fakedapp
 
-import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
@@ -28,7 +27,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.random.Random
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
@@ -381,7 +380,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ): T? {
         return mobileWalletAdapterClientMutex.withLock {
             val localAssociation = LocalAssociationScenario(
-                getApplication<Application>().mainLooper,
                 Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
                 uriPrefix
             )
