@@ -111,7 +111,7 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.4.0'
+    compileOnly 'androidx.annotation:annotation:1.4.0'
     implementation 'org.java-websocket:Java-WebSocket:1.5.3'
     implementation 'org.slf4j:slf4j-android:1.7.36' // SLF4J logging facility for Java-WebSocket
     api project(path: ':common')
