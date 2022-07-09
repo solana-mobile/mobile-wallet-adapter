@@ -26,8 +26,8 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":10,"i16":9};
-var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -266,71 +266,46 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colSecond" scope="col">Method</th>
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.AuthorizeResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizeResult</a></code></td>
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.AuthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizeFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#authorize(android.net.Uri,android.net.Uri,java.lang.String)">authorize</a></span>&#8203;(<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
          <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
          <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.AuthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizeFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#authorizeAsync(android.net.Uri,android.net.Uri,java.lang.String)">authorizeAsync</a></span>&#8203;(<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
-              <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
-              <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>void</code></td>
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.DeauthorizeFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#deauthorize(java.lang.String)">deauthorize</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.DeauthorizeFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#deauthorizeAsync(java.lang.String)">deauthorizeAsync</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.GetCapabilitiesResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesResult</a></code></td>
+<tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCapabilities()">getCapabilities</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCapabilitiesAsync()">getCapabilitiesAsync</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.ReauthorizeResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.ReauthorizeResult</a></code></td>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.ReauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.ReauthorizeFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#reauthorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)">reauthorize</a></span>&#8203;(<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
            <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
            <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName,
            <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.ReauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.ReauthorizeFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#reauthorizeAsync(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)">reauthorizeAsync</a></span>&#8203;(<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
-                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
-                <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName,
-                <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i8" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionResult</a></code></td>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransaction(java.lang.String,byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransaction</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                       byte[][]&nbsp;transactions,
                       com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionResult</a></code></td>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransaction(java.lang.String,byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransaction</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                       byte[][]&nbsp;transactions,
                       com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel,
@@ -339,50 +314,16 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
                       com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;preflightCommitmentLevel)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransactionAsync(java.lang.String,byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransactionAsync</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                           byte[][]&nbsp;transactions,
-                           com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i11" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransactionAsync(java.lang.String,byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransactionAsync</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                           byte[][]&nbsp;transactions,
-                           com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel,
-                           <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;cluster,
-                           boolean&nbsp;skipPreflight,
-                           com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;preflightCommitmentLevel)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i12" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadResult</a></code></td>
+<tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessage(java.lang.String,byte%5B%5D%5B%5D)">signMessage</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
            byte[][]&nbsp;messages)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessageAsync(java.lang.String,byte%5B%5D%5B%5D)">signMessageAsync</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                byte[][]&nbsp;messages)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i14" class="altColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadResult</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransaction(java.lang.String,byte%5B%5D%5B%5D)">signTransaction</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                byte[][]&nbsp;transactions)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i15" class="rowColor">
-<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactionAsync(java.lang.String,byte%5B%5D%5B%5D)">signTransactionAsync</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                    byte[][]&nbsp;transactions)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i16" class="altColor">
-<td class="colFirst"><code>static <a href="https://d.android.com/reference/java/lang/RuntimeException.html?is-external=true" title="class or interface in java.lang" class="externalLink">RuntimeException</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#unpackExecutionException(java.util.concurrent.ExecutionException)">unpackExecutionException</a></span>&#8203;(<a href="https://d.android.com/reference/java/util/concurrent/ExecutionException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">ExecutionException</a>&nbsp;e)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -436,43 +377,6 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="unpackExecutionException(java.util.concurrent.ExecutionException)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>unpackExecutionException</h4>
-<pre class="methodSignature">public static&nbsp;<a href="https://d.android.com/reference/java/lang/RuntimeException.html?is-external=true" title="class or interface in java.lang" class="externalLink">RuntimeException</a>&nbsp;unpackExecutionException&#8203;(@NonNull
-                                                        <a href="https://d.android.com/reference/java/util/concurrent/ExecutionException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">ExecutionException</a>&nbsp;e)
-                                                 throws <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                        <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="authorizeAsync(android.net.Uri,android.net.Uri,java.lang.String)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>authorizeAsync</h4>
-<pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.AuthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizeFuture</a>&nbsp;authorizeAsync&#8203;(@Nullable
-                                                                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
-                                                                @Nullable
-                                                                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
-                                                                @Nullable
-                                                                <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName)
-                                                         throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-</dl>
-</li>
-</ul>
 <a id="authorize(android.net.Uri,android.net.Uri,java.lang.String)">
 <!--   -->
 </a>
@@ -480,41 +384,13 @@ public&nbsp;<a href="MobileWalletAdapterClient.AuthorizeFuture.html" title="clas
 <li class="blockList">
 <h4>authorize</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.AuthorizeResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizeResult</a>&nbsp;authorize&#8203;(@Nullable
+public&nbsp;<a href="MobileWalletAdapterClient.AuthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizeFuture</a>&nbsp;authorize&#8203;(@Nullable
                                                            <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
                                                            @Nullable
                                                            <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
                                                            @Nullable
                                                            <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName)
-                                                    throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                           <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                           <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                           <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="reauthorizeAsync(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>reauthorizeAsync</h4>
-<pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.ReauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.ReauthorizeFuture</a>&nbsp;reauthorizeAsync&#8203;(@Nullable
-                                                                    <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
-                                                                    @Nullable
-                                                                    <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
-                                                                    @Nullable
-                                                                    <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName,
-                                                                    @NonNull
-                                                                    <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)
-                                                             throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+                                                    throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
@@ -528,7 +404,7 @@ public&nbsp;<a href="MobileWalletAdapterClient.ReauthorizeFuture.html" title="cl
 <li class="blockList">
 <h4>reauthorize</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.ReauthorizeResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.ReauthorizeResult</a>&nbsp;reauthorize&#8203;(@Nullable
+public&nbsp;<a href="MobileWalletAdapterClient.ReauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.ReauthorizeFuture</a>&nbsp;reauthorize&#8203;(@Nullable
                                                                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
                                                                @Nullable
                                                                <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
@@ -536,29 +412,7 @@ public&nbsp;<a href="MobileWalletAdapterClient.ReauthorizeResult.html" title="cl
                                                                <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName,
                                                                @NonNull
                                                                <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)
-                                                        throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                               <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                               <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                               <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="deauthorizeAsync(java.lang.String)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>deauthorizeAsync</h4>
-<pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.DeauthorizeFuture</a>&nbsp;deauthorizeAsync&#8203;(@NonNull
-                                                                    <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)
-                                                             throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+                                                        throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
@@ -571,30 +425,10 @@ public&nbsp;<a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="cl
 <ul class="blockList">
 <li class="blockList">
 <h4>deauthorize</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;deauthorize&#8203;(@NonNull
-                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)
-                 throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                        <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                        <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                        <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="getCapabilitiesAsync()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getCapabilitiesAsync</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesFuture</a>&nbsp;getCapabilitiesAsync()
-                                                                     throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+public&nbsp;<a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.DeauthorizeFuture</a>&nbsp;deauthorize&#8203;(@NonNull
+                                                               <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken)
+                                                        throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
@@ -607,32 +441,9 @@ public&nbsp;<a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title
 <ul class="blockList">
 <li class="blockList">
 <h4>getCapabilities</h4>
-<pre class="methodSignature">public&nbsp;<a href="MobileWalletAdapterClient.GetCapabilitiesResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesResult</a>&nbsp;getCapabilities()
-                                                                throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                                       <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                                       <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                                       <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="signTransactionAsync(java.lang.String,byte[][])">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>signTransactionAsync</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a>&nbsp;signTransactionAsync&#8203;(@NonNull
-                                                                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                        @NonNull @Size(min=1L)
-                                                                        byte[][]&nbsp;transactions)
-                                                                 throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+public&nbsp;<a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesFuture</a>&nbsp;getCapabilities()
+                                                                throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
@@ -646,35 +457,11 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="cl
 <li class="blockList">
 <h4>signTransaction</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadResult</a>&nbsp;signTransaction&#8203;(@NonNull
+public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a>&nbsp;signTransaction&#8203;(@NonNull
                                                                    <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                                                                    @NonNull @Size(min=1L)
                                                                    byte[][]&nbsp;transactions)
-                                                            throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                                   <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                                   <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                                   <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="signMessageAsync(java.lang.String,byte[][])">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>signMessageAsync</h4>
-<pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a>&nbsp;signMessageAsync&#8203;(@NonNull
-                                                                    <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                    @NonNull @Size(min=1L)
-                                                                    byte[][]&nbsp;messages)
-                                                             throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+                                                            throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
@@ -688,62 +475,11 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="cl
 <li class="blockList">
 <h4>signMessage</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadResult</a>&nbsp;signMessage&#8203;(@NonNull
+public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadFuture</a>&nbsp;signMessage&#8203;(@NonNull
                                                                <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                                                                @NonNull @Size(min=1L)
                                                                byte[][]&nbsp;messages)
-                                                        throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                               <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                               <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                               <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="signAndSendTransactionAsync(java.lang.String,byte[][],com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>signAndSendTransactionAsync</h4>
-<pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a>&nbsp;signAndSendTransactionAsync&#8203;(@NonNull
-                                                                                          <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                                          @NonNull @Size(min=1L)
-                                                                                          byte[][]&nbsp;transactions,
-                                                                                          @NonNull
-                                                                                          com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel,
-                                                                                          @Nullable
-                                                                                          <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;cluster,
-                                                                                          boolean&nbsp;skipPreflight,
-                                                                                          @Nullable
-                                                                                          com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;preflightCommitmentLevel)
-                                                                                   throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
-<dl>
-<dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-</dl>
-</li>
-</ul>
-<a id="signAndSendTransactionAsync(java.lang.String,byte[][],com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>signAndSendTransactionAsync</h4>
-<pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a>&nbsp;signAndSendTransactionAsync&#8203;(@NonNull
-                                                                                          <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                                          @NonNull @Size(min=1L)
-                                                                                          byte[][]&nbsp;transactions,
-                                                                                          @NonNull
-                                                                                          com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel)
-                                                                                   throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+                                                        throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
@@ -757,7 +493,7 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html
 <li class="blockList">
 <h4>signAndSendTransaction</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionResult</a>&nbsp;signAndSendTransaction&#8203;(@NonNull
+public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a>&nbsp;signAndSendTransaction&#8203;(@NonNull
                                                                                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                                                                                      @NonNull @Size(min=1L)
                                                                                      byte[][]&nbsp;transactions,
@@ -768,16 +504,10 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionResult.html
                                                                                      boolean&nbsp;skipPreflight,
                                                                                      @Nullable
                                                                                      com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;preflightCommitmentLevel)
-                                                                              throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                                                     <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                                                     <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                                                     <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
+                                                                              throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
 </dl>
 </li>
 </ul>
@@ -788,22 +518,16 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionResult.html
 <li class="blockList">
 <h4>signAndSendTransaction</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionResult</a>&nbsp;signAndSendTransaction&#8203;(@NonNull
+public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionFuture</a>&nbsp;signAndSendTransaction&#8203;(@NonNull
                                                                                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                                                                                      @NonNull @Size(min=1L)
                                                                                      byte[][]&nbsp;transactions,
                                                                                      @NonNull
                                                                                      com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel)
-                                                                              throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a>,
-                                                                                     <a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a>,
-                                                                                     <a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a>,
-                                                                                     <a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></pre>
+                                                                              throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
-<dd><code><a href="JsonRpc20Client.JsonRpc20Exception.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">JsonRpc20Client.JsonRpc20Exception</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/TimeoutException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">TimeoutException</a></code></dd>
-<dd><code><a href="https://d.android.com/reference/java/util/concurrent/CancellationException.html?is-external=true" title="class or interface in java.util.concurrent" class="externalLink">CancellationException</a></code></dd>
 </dl>
 </li>
 </ul>
