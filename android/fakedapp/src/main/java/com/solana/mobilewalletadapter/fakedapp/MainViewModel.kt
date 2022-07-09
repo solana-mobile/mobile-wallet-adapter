@@ -18,8 +18,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
@@ -31,7 +31,7 @@ class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
-    private val mobileWalletAdapterClientMutex = Mutex() // allow only a single MWA connection at a time
+    private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
 
     suspend fun authorize(sender: StartActivityForResultSender) {
         localAssociateAndExecute(sender) { client ->
@@ -378,14 +378,14 @@ class MainViewModel : ViewModel() {
         uriPrefix: Uri? = null,
         action: (MobileWalletAdapterClient) -> T?
     ): T? {
-        return mobileWalletAdapterClientMutex.withLock {
+        return mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(
                 Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
                 uriPrefix
             )
             sender.startActivityForResult(localAssociation.createAssociationIntent())
 
-            return@withLock withContext(Dispatchers.IO) {
+            return@withPermit withContext(Dispatchers.IO) {
                 val mobileWalletAdapterClient = try {
                     @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
                     localAssociation.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
