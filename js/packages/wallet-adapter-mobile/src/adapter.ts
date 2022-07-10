@@ -19,6 +19,7 @@ import {
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
+import getIsSupported from './getIsSupported';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -31,12 +32,13 @@ export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as Walle
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 
 function getBase64StringFromByteArray(byteArray: Uint8Array): string {
-    return btoa(String.fromCharCode.call(null, ...byteArray));
+    return window.btoa(String.fromCharCode.call(null, ...byteArray));
 }
 
 function getByteArrayFromBase64String(base64EncodedByteArray: string): Uint8Array {
     return new Uint8Array(
-        atob(base64EncodedByteArray)
+        window
+            .atob(base64EncodedByteArray)
             .split('')
             .map((c) => c.charCodeAt(0)),
     );
@@ -53,13 +55,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _authorizationResultCache: AuthorizationResultCache;
     private _connecting = false;
     private _publicKey: PublicKey | undefined;
-    private _readyState: WalletReadyState =
-        typeof window === 'undefined' ||
-        typeof document === 'undefined' ||
-        !/android/i.test(navigator.userAgent) ||
-        !window.isSecureContext
-            ? WalletReadyState.Unsupported
-            : WalletReadyState.Loadable;
+    private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
 
     constructor(config: { appIdentity: AppIdentity; authorizationResultCache: AuthorizationResultCache }) {
         super();
