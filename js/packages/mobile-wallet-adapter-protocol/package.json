@@ -8,6 +8,7 @@
     "type": "module",
     "sideEffects": false,
     "main": "lib/cjs/index.js",
+    "react-native": "lib/cjs/index.native.js",
     "module": "lib/esm/index.mjs",
     "types": "lib/types/index.d.ts",
     "browser": {
