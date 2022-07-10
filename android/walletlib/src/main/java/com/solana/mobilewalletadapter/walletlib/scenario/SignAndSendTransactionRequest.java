@@ -4,6 +4,8 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
@@ -12,7 +14,7 @@ import androidx.annotation.VisibleForTesting;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public class SignAndSendTransactionRequest extends ScenarioRequest {
+public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest {
     @NonNull
     private final MobileWalletAdapterServer.SignAndSendTransactionRequest mRequest;
 
@@ -21,8 +23,12 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
 
     /*package*/ SignAndSendTransactionRequest(
             @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request,
+            @Nullable String identityName,
+            @Nullable Uri identityUri,
+            @Nullable Uri iconUri,
+            @NonNull byte[] authorizationScope,
             @NonNull byte[] publicKey) {
-        super(request);
+        super(request, identityName, identityUri, iconUri, authorizationScope);
         mRequest = request;
         mPublicKey = publicKey;
     }
