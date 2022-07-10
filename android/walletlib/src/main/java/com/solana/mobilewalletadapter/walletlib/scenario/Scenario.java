@@ -154,9 +154,9 @@ public abstract class Scenario {
 
         @Override
         public void signPayload(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
-            final byte[] publicKey;
+            final AuthRecord authRecord;
             try {
-                publicKey = authTokenToPublicKey(request.authToken);
+                authRecord = authTokenToAuthRecord(request.authToken);
             } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
                 mIoHandler.post(() -> request.completeExceptionally(e));
                 return;
@@ -165,10 +165,16 @@ public abstract class Scenario {
             final Runnable r;
             switch (request.type) {
                 case Transaction:
-                    r = () -> mCallbacks.onSignTransactionRequest(new SignTransactionRequest(request, publicKey));
+                    r = () -> mCallbacks.onSignTransactionRequest(new SignTransactionRequest(
+                            request, authRecord.identity.name, authRecord.identity.uri,
+                            authRecord.identity.relativeIconUri, authRecord.scope,
+                            authRecord.publicKey));
                     break;
                 case Message:
-                    r = () -> mCallbacks.onSignMessageRequest(new SignMessageRequest(request, publicKey));
+                    r = () -> mCallbacks.onSignMessageRequest(new SignMessageRequest(request,
+                            authRecord.identity.name, authRecord.identity.uri,
+                            authRecord.identity.relativeIconUri, authRecord.scope,
+                            authRecord.publicKey));
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown payload type");
@@ -179,20 +185,22 @@ public abstract class Scenario {
         @Override
         public void signAndSendTransaction(
                 @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request) {
-            final byte[] publicKey;
+            final AuthRecord authRecord;
             try {
-                publicKey = authTokenToPublicKey(request.authToken);
+                authRecord = authTokenToAuthRecord(request.authToken);
             } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
                 mIoHandler.post(() -> request.completeExceptionally(e));
                 return;
             }
 
             mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionRequest(
-                    new SignAndSendTransactionRequest(request, publicKey)));
+                    new SignAndSendTransactionRequest(request, authRecord.identity.name,
+                            authRecord.identity.uri, authRecord.identity.relativeIconUri,
+                            authRecord.scope, authRecord.publicKey)));
         }
 
         @NonNull
-        private byte[] authTokenToPublicKey(@NonNull String authToken)
+        private AuthRecord authTokenToAuthRecord(@NonNull String authToken)
                 throws MobileWalletAdapterServer.MobileWalletAdapterServerException{
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(authToken);
 
@@ -202,7 +210,7 @@ public abstract class Scenario {
                 throw new MobileWalletAdapterServer.ReauthorizationRequiredException("auth_token requires reauthorization");
             }
 
-            return authRecord.publicKey;
+            return authRecord;
         }
     };
 

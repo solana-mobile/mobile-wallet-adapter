@@ -15,7 +15,7 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public class AuthorizeRequest extends ScenarioRequest {
+public class AuthorizeRequest extends BaseScenarioRequest {
     private static final String TAG = AuthorizeRequest.class.getSimpleName();
 
     @NonNull

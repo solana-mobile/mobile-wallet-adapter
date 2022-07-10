@@ -4,13 +4,16 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public abstract class SignPayloadRequest extends ScenarioRequest {
+public abstract class SignPayloadRequest extends BaseVerifiableIdentityRequest {
     @NonNull
     protected final MobileWalletAdapterServer.SignPayloadRequest mRequest;
 
@@ -18,8 +21,12 @@ public abstract class SignPayloadRequest extends ScenarioRequest {
     protected final byte[] mPublicKey;
 
     protected SignPayloadRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
+                                 @Nullable String identityName,
+                                 @Nullable Uri identityUri,
+                                 @Nullable Uri iconUri,
+                                 @NonNull byte[] authorizationScope,
                                  @NonNull byte[] publicKey) {
-        super(request);
+        super(request, identityName, identityUri, iconUri, authorizationScope);
         mRequest = request;
         mPublicKey = publicKey;
     }
