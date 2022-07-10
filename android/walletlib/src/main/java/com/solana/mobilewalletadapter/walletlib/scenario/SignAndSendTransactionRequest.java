@@ -4,8 +4,6 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
-import android.net.Uri;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
@@ -19,18 +17,18 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
     private final MobileWalletAdapterServer.SignAndSendTransactionRequest mRequest;
 
     @NonNull
-    protected final String mPublicKey;
+    protected final byte[] mPublicKey;
 
     /*package*/ SignAndSendTransactionRequest(
             @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request,
-            @NonNull String publicKey) {
+            @NonNull byte[] publicKey) {
         super(request);
         mRequest = request;
         mPublicKey = publicKey;
     }
 
     @NonNull
-    public String getPublicKey() {
+    public byte[] getPublicKey() {
         return mPublicKey;
     }
 
@@ -59,7 +57,7 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
         return mRequest.preflightCommitmentLevel;
     }
 
-    public void completeWithSignatures(@NonNull @Size(min = 1) String[] signatures) {
+    public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
         mRequest.complete(new MobileWalletAdapterServer.SignatureResult(signatures));
     }
 
@@ -73,7 +71,7 @@ public class SignAndSendTransactionRequest extends ScenarioRequest {
                 "One or more invalid payloads provided", valid));
     }
 
-    public void completeWithNotCommitted(@NonNull @Size(min = 1) String[] signatures,
+    public void completeWithNotCommitted(@NonNull @Size(min = 1) byte[][] signatures,
                                          @NonNull @Size(min = 1) boolean[] committed) {
         mRequest.completeExceptionally(new MobileWalletAdapterServer.NotCommittedException(
                 "One or more transactions did not reach the requested commitment level",

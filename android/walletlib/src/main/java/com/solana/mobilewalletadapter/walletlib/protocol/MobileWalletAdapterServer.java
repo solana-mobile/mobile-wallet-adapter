@@ -16,6 +16,7 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
+import com.solana.mobilewalletadapter.common.util.Base58;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
@@ -181,7 +182,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                o.put(ProtocolContract.RESULT_PUBLIC_KEY, result.publicKey);
+                o.put(ProtocolContract.RESULT_PUBLIC_KEY, Base58.encode(result.publicKey));
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
                 throw new RuntimeException("Failed preparing authorize response", e);
@@ -237,13 +238,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final String authToken;
 
         @NonNull
-        public final String publicKey;
+        public final byte[] publicKey;
 
         @Nullable
         public final Uri walletUriBase;
 
         public AuthorizeResult(@NonNull String authToken,
-                               @NonNull String publicKey,
+                               @NonNull byte[] publicKey,
                                @Nullable Uri walletUriBase) {
             this.authToken = authToken;
             this.publicKey = publicKey;
@@ -255,7 +256,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
-                    ", publicKey='" + publicKey + '\'' +
+                    ", publicKey=" + Arrays.toString(publicKey) +
                     ", walletUriBase=" + walletUriBase +
                     '}';
         }
@@ -804,9 +805,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class SignatureResult implements SignResult {
         @NonNull
         @Size(min = 1)
-        public final String[] signatures;
+        public final byte[][] signatures;
 
-        public SignatureResult(@NonNull @Size(min = 1) String[] signatures) {
+        public SignatureResult(@NonNull @Size(min = 1) byte[][] signatures) {
             this.signatures = signatures;
         }
 
@@ -818,7 +819,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         @Override
         public String toString() {
-            return "SignatureResult{signedPayloads=" + Arrays.toString(signatures) + '}';
+            return "SignatureResult{signatures=" + Arrays.toString(signatures) + '}';
         }
     }
 
@@ -920,7 +921,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignPayloadRequest.complete()
 
-            final JSONArray signatures = JsonPack.packStrings(result.signatures);
+            final String[] signaturesBase58 = new String[result.signatures.length];
+            for (int i = 0; i < result.signatures.length; i++) {
+                signaturesBase58[i] = Base58.encode(result.signatures[i]);
+            }
+
+            final JSONArray signatures = JsonPack.packStrings(signaturesBase58);
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
@@ -935,9 +941,14 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     @NonNull
-    private String createNotCommittedData(@NonNull @Size(min = 1) String[] signatures,
+    private String createNotCommittedData(@NonNull @Size(min = 1) byte[][] signatures,
                                           @NonNull @Size(min = 1) boolean[] committed) {
-        final JSONArray signaturesArr = JsonPack.packStrings(signatures);
+        final String[] signaturesBase58 = new String[signatures.length];
+        for (int i = 0; i < signatures.length; i++) {
+            signaturesBase58[i] = Base58.encode(signatures[i]);
+        }
+
+        final JSONArray signaturesArr = JsonPack.packStrings(signaturesBase58);
         final JSONArray committedArr = JsonPack.packBooleans(committed);
         final JSONObject o = new JSONObject();
         try {
@@ -991,14 +1002,14 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class NotCommittedException extends MobileWalletAdapterServerException {
         @NonNull
         @Size(min = 1)
-        public final String[] signatures;
+        public final byte[][] signatures;
 
         @NonNull
         @Size(min = 1)
         public final boolean[] committed;
 
         public NotCommittedException(@NonNull String m,
-                                     @NonNull @Size(min = 1) String[] signatures,
+                                     @NonNull @Size(min = 1) byte[][] signatures,
                                      @NonNull @Size(min = 1) boolean[] committed) {
             super(m);
             this.signatures = signatures;

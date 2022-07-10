@@ -5,9 +5,9 @@
 package com.solana.mobilewalletadapter.fakewallet.data
 
 import android.app.Application
+import android.util.Base64
 import android.util.Log
 import androidx.room.Room
-import com.solana.mobilewalletadapter.fakewallet.usecase.Base58EncodeUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair
@@ -29,19 +29,20 @@ class Ed25519KeyRepository(private val application: Application) {
             val keypair = kpg.generateKeyPair()
             val publicKey = keypair.public as Ed25519PublicKeyParameters
             val privateKey = keypair.private as Ed25519PrivateKeyParameters
-            val publicKeyBase58 = Base58EncodeUseCase(publicKey.encoded)
+            val publicKeyBase64 = Base64.encodeToString(publicKey.encoded, Base64.NO_PADDING or Base64.NO_WRAP)
             val id = db.keysDao().insert(
-                Ed25519KeyPair(publicKeyBase58 = publicKeyBase58, privateKey = privateKey.encoded)
+                Ed25519KeyPair(publicKeyBase64 = publicKeyBase64, privateKey = privateKey.encoded)
             )
-            Log.d(TAG, "Inserted key entry with id=$id for $publicKeyBase58")
+            Log.d(TAG, "Inserted key entry with id=$id for $publicKeyBase64")
             keypair
         }
         return kp
     }
 
-    suspend fun getKeypair(publicKeyBase58: String): AsymmetricCipherKeyPair? {
+    suspend fun getKeypair(publicKeyRaw: ByteArray): AsymmetricCipherKeyPair? {
+        val publicKeyBase64 = Base64.encodeToString(publicKeyRaw, Base64.NO_PADDING or Base64.NO_WRAP)
         return withContext(Dispatchers.IO) {
-            db.keysDao().get(publicKeyBase58)?.let { keypair ->
+            db.keysDao().get(publicKeyBase64)?.let { keypair ->
                 val privateKeyParams = Ed25519PrivateKeyParameters(keypair.privateKey, 0)
                 AsymmetricCipherKeyPair(privateKeyParams.generatePublicKey(), privateKeyParams)
             }

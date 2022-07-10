@@ -10,7 +10,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 
 public class SignMessageRequest extends SignPayloadRequest {
     /*package*/ SignMessageRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
-                                   @NonNull String publicKey) {
+                                   @NonNull byte[] publicKey) {
         super(request, publicKey);
         if (request.type != MobileWalletAdapterServer.SignPayloadRequest.Type.Message) {
             throw new IllegalArgumentException("request should be a Message");

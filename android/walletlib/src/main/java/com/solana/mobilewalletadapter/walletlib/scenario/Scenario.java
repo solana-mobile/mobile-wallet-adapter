@@ -154,7 +154,7 @@ public abstract class Scenario {
 
         @Override
         public void signPayload(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
-            final String publicKey;
+            final byte[] publicKey;
             try {
                 publicKey = authTokenToPublicKey(request.authToken);
             } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
@@ -179,7 +179,7 @@ public abstract class Scenario {
         @Override
         public void signAndSendTransaction(
                 @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request) {
-            final String publicKey;
+            final byte[] publicKey;
             try {
                 publicKey = authTokenToPublicKey(request.authToken);
             } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
@@ -192,7 +192,7 @@ public abstract class Scenario {
         }
 
         @NonNull
-        private String authTokenToPublicKey(@NonNull String authToken)
+        private byte[] authTokenToPublicKey(@NonNull String authToken)
                 throws MobileWalletAdapterServer.MobileWalletAdapterServerException{
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(authToken);
 

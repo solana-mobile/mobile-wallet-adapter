@@ -10,7 +10,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 
 public class SignTransactionRequest extends SignPayloadRequest {
     /*package*/ SignTransactionRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
-                                       @NonNull String publicKey) {
+                                       @NonNull byte[] publicKey) {
         super(request, publicKey);
         if (request.type != MobileWalletAdapterServer.SignPayloadRequest.Type.Transaction) {
             throw new IllegalArgumentException("request should be a Transaction");
