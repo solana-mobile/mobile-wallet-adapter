@@ -1,0 +1,18 @@
+diff --git a/node_modules/@solana/wallet-adapter-react/package.json b/node_modules/@solana/wallet-adapter-react/package.json
+index 7a17b73..5daac86 100644
+--- a/node_modules/@solana/wallet-adapter-react/package.json
++++ b/node_modules/@solana/wallet-adapter-react/package.json
+@@ -10,8 +10,11 @@
+     "module": "lib/esm/index.mjs",
+     "types": "lib/types/index.d.ts",
+     "exports": {
+-        "import": "./lib/esm/index.mjs",
+-        "require": "./lib/cjs/index.js"
++        ".": {
++            "import": "./lib/esm/index.mjs",
++            "require": "./lib/cjs/index.js"
++        },
++        "./package.json": "./package.json"
+     },
+     "files": [
+         "lib",
