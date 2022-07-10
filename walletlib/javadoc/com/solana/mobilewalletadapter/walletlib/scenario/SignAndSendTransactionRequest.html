@@ -158,7 +158,7 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>protected <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<td class="colFirst"><code>protected byte[]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mPublicKey">mPublicKey</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -197,7 +197,7 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithNotCommitted(java.lang.String%5B%5D,boolean%5B%5D)">completeWithNotCommitted</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;signatures,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithNotCommitted(byte%5B%5D%5B%5D,boolean%5B%5D)">completeWithNotCommitted</a></span>&#8203;(byte[][]&nbsp;signatures,
                         boolean[]&nbsp;committed)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -208,7 +208,7 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithSignatures(java.lang.String%5B%5D)">completeWithSignatures</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;signatures)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithSignatures(byte%5B%5D%5B%5D)">completeWithSignatures</a></span>&#8203;(byte[][]&nbsp;signatures)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i6" class="altColor">
@@ -237,7 +237,7 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i11" class="rowColor">
-<td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<td class="colFirst"><code>byte[]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getPublicKey()">getPublicKey</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -284,7 +284,7 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 <li class="blockList">
 <h4>mPublicKey</h4>
 <pre>@NonNull
-protected final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> mPublicKey</pre>
+protected final&nbsp;byte[] mPublicKey</pre>
 </li>
 </ul>
 </li>
@@ -304,7 +304,7 @@ protected final&nbsp;<a href="https://d.android.com/reference/java/lang/String.h
 <li class="blockList">
 <h4>getPublicKey</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;getPublicKey()</pre>
+public&nbsp;byte[]&nbsp;getPublicKey()</pre>
 </li>
 </ul>
 <a id="getPayloads()">
@@ -357,14 +357,14 @@ public&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-ex
 public&nbsp;com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;getPreflightCommitmentLevel()</pre>
 </li>
 </ul>
-<a id="completeWithSignatures(java.lang.String[])">
+<a id="completeWithSignatures(byte[][])">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>completeWithSignatures</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;completeWithSignatures&#8203;(@NonNull @Size(min=1L)
-                                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;signatures)</pre>
+                                   byte[][]&nbsp;signatures)</pre>
 </li>
 </ul>
 <a id="completeWithDecline()">
@@ -386,14 +386,14 @@ public&nbsp;com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;
                                           boolean[]&nbsp;valid)</pre>
 </li>
 </ul>
-<a id="completeWithNotCommitted(java.lang.String[],boolean[])">
+<a id="completeWithNotCommitted(byte[][],boolean[])">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>completeWithNotCommitted</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;completeWithNotCommitted&#8203;(@NonNull @Size(min=1L)
-                                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;signatures,
+                                     byte[][]&nbsp;signatures,
                                      @NonNull @Size(min=1L)
                                      boolean[]&nbsp;committed)</pre>
 </li>

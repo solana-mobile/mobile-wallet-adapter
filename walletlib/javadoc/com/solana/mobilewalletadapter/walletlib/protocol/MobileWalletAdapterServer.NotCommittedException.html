@@ -185,7 +185,7 @@ extends <a href="MobileWalletAdapterServer.MobileWalletAdapterServerException.ht
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]</code></td>
+<td class="colFirst"><code>byte[][]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signatures">signatures</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -207,8 +207,8 @@ extends <a href="MobileWalletAdapterServer.MobileWalletAdapterServerException.ht
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,java.lang.String%5B%5D,boolean%5B%5D)">NotCommittedException</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;m,
-                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;signatures,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,byte%5B%5D%5B%5D,boolean%5B%5D)">NotCommittedException</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;m,
+                     byte[][]&nbsp;signatures,
                      boolean[]&nbsp;committed)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -274,7 +274,7 @@ extends <a href="MobileWalletAdapterServer.MobileWalletAdapterServerException.ht
 <h4>signatures</h4>
 <pre>@NonNull
 @Size(min=1L)
-public final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[] signatures</pre>
+public final&nbsp;byte[][] signatures</pre>
 </li>
 </ul>
 <a id="committed">
@@ -298,7 +298,7 @@ public final&nbsp;boolean[] committed</pre>
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(java.lang.String,java.lang.String[],boolean[])">
+<a id="&lt;init&gt;(java.lang.String,byte[][],boolean[])">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -307,7 +307,7 @@ public final&nbsp;boolean[] committed</pre>
 <pre>public&nbsp;NotCommittedException&#8203;(@NonNull
                              <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;m,
                              @NonNull @Size(min=1L)
-                             <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;signatures,
+                             byte[][]&nbsp;signatures,
                              @NonNull @Size(min=1L)
                              boolean[]&nbsp;committed)</pre>
 </li>

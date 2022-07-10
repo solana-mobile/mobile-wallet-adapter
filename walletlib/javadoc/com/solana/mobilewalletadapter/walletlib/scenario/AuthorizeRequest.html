@@ -159,8 +159,9 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithAuthorize(java.lang.String,android.net.Uri)">completeWithAuthorize</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;publicKey,
-                     <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithAuthorize(byte%5B%5D,android.net.Uri,byte%5B%5D)">completeWithAuthorize</a></span>&#8203;(byte[]&nbsp;publicKey,
+                     <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase,
+                     byte[]&nbsp;scope)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -244,16 +245,18 @@ public&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?is-ext
 public&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;getIconRelativeUri()</pre>
 </li>
 </ul>
-<a id="completeWithAuthorize(java.lang.String,android.net.Uri)">
+<a id="completeWithAuthorize(byte[],android.net.Uri,byte[])">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>completeWithAuthorize</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;completeWithAuthorize&#8203;(@NonNull
-                                  <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;publicKey,
+                                  byte[]&nbsp;publicKey,
                                   @Nullable
-                                  <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase)</pre>
+                                  <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase,
+                                  @Nullable
+                                  byte[]&nbsp;scope)</pre>
 </li>
 </ul>
 <a id="completeWithDecline()">

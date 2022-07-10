@@ -191,10 +191,11 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#issue(java.lang.String,android.net.Uri,android.net.Uri,java.lang.String)">issue</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#issue(java.lang.String,android.net.Uri,android.net.Uri,byte%5B%5D,byte%5B%5D)">issue</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
      <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;uri,
      <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;relativeIconUri,
-     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;publicKey)</code></th>
+     byte[]&nbsp;publicKey,
+     byte[]&nbsp;scope)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
@@ -313,7 +314,7 @@ public&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-ex
                           <a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</pre>
 </li>
 </ul>
-<a id="issue(java.lang.String,android.net.Uri,android.net.Uri,java.lang.String)">
+<a id="issue(java.lang.String,android.net.Uri,android.net.Uri,byte[],byte[])">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -327,7 +328,9 @@ public&nbsp;<a href="AuthRecord.html" title="class in com.solana.mobilewalletada
                         @NonNull
                         <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;relativeIconUri,
                         @NonNull
-                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;publicKey)</pre>
+                        byte[]&nbsp;publicKey,
+                        @Nullable
+                        byte[]&nbsp;scope)</pre>
 </li>
 </ul>
 <a id="reissue(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)">
