@@ -5,6 +5,8 @@
  * @format
  */
 
+const defaultSourceExts =
+  require('metro-config/src/defaults/defaults').sourceExts;
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 const getWorkspaces = require('get-yarn-workspaces');
 const path = require('path');
@@ -38,6 +40,13 @@ function getConfig(appDir) {
         // Resolve all react-native module imports to the locally-installed version
         'react-native': path.resolve(appDir, 'node_modules', 'react-native'),
       },
+      // Add `.cjs` to allowable extensions. See https://github.com/facebook/metro/issues/535
+      sourceExts: process.env.RN_SRC_EXT
+        ? [
+            ...process.env.RN_SRC_EXT.split(',').concat(defaultSourceExts),
+            'cjs',
+          ]
+        : [...defaultSourceExts, 'cjs'],
     },
   };
 }
