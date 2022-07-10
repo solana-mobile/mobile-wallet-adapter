@@ -6,12 +6,10 @@ package com.solana.mobilewalletadapter.fakewallet
 
 import android.app.Application
 import android.content.Intent
-import android.net.Uri
 import android.provider.Browser
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.solana.mobilewalletadapter.fakewallet.usecase.Base58EncodeUseCase
 import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -103,9 +101,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             if (authorized) {
                 val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
-                val publicKeyBase58 = Base58EncodeUseCase.invoke(publicKey.encoded)
-                Log.d(TAG, "Generated a new keypair (pub=$publicKeyBase58) for authorize request")
-                request.request.completeWithAuthorize(publicKeyBase58, null)
+                Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+                request.request.completeWithAuthorize(publicKey.encoded, null, null)
             } else {
                 request.request.completeWithDecline()
             }
@@ -193,11 +190,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signatures = Array(request.request.payloads.size) { i ->
                 try {
-                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signatureBase58
+                    SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signature
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                     valid[i] = false
-                    ""
+                    byteArrayOf()
                 }
             }
 
@@ -354,7 +351,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         class SignMessage(request: SignMessageRequest) : SignPayload(request)
         data class SignAndSendTransaction(
             override val request: SignAndSendTransactionRequest,
-            val signatures: Array<String>? = null
+            val signatures: Array<ByteArray>? = null
         ) : MobileWalletAdapterRemoteRequest(request)
 
     }

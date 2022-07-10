@@ -52,7 +52,7 @@ object SolanaSigningUseCase {
         val signedTransaction = transaction.clone()
         System.arraycopy(sig, 0, signedTransaction, numSignaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
 
-        return Result(signedTransaction, Base58EncodeUseCase(sig))
+        return Result(signedTransaction, sig)
     }
 
     fun signMessage(
@@ -70,7 +70,7 @@ object SolanaSigningUseCase {
         val signedMessage = message.copyOf(message.size + SIGNATURE_LEN)
         sig.copyInto(signedMessage, message.size)
 
-        return Result(signedMessage, Base58EncodeUseCase(sig))
+        return Result(signedMessage, sig)
     }
 
     private fun readCompactArrayLen(b: ByteArray, off: Int): Pair<Int, Int> {
@@ -102,6 +102,6 @@ object SolanaSigningUseCase {
 
     data class Result(
         val signedPayload: ByteArray,
-        val signatureBase58: String
+        val signature: ByteArray
     )
 }

@@ -15,17 +15,17 @@ public abstract class SignPayloadRequest extends ScenarioRequest {
     protected final MobileWalletAdapterServer.SignPayloadRequest mRequest;
 
     @NonNull
-    protected final String mPublicKey;
+    protected final byte[] mPublicKey;
 
     protected SignPayloadRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
-                                 @NonNull String publicKey) {
+                                 @NonNull byte[] publicKey) {
         super(request);
         mRequest = request;
         mPublicKey = publicKey;
     }
 
     @NonNull
-    public String getPublicKey() {
+    public byte[] getPublicKey() {
         return mPublicKey;
     }
 

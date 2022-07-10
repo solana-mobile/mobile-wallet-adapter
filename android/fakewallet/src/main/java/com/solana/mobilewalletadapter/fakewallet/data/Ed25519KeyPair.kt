@@ -13,9 +13,9 @@ import androidx.room.PrimaryKey
 internal data class Ed25519KeyPair(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(
-        name = "public_key_b58",
+        name = "public_key_b64",
         typeAffinity = ColumnInfo.TEXT
-    ) val publicKeyBase58: String,
+    ) val publicKeyBase64: String,
     @ColumnInfo(
         name = "private key",
         typeAffinity = ColumnInfo.BLOB

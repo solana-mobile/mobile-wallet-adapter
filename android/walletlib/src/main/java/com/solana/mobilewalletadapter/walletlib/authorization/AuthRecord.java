@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class AuthRecord {
@@ -23,7 +24,10 @@ public class AuthRecord {
     public final long expires;
 
     @NonNull
-    public final String publicKey;
+    public final byte[] publicKey;
+
+    @NonNull
+    public final byte[] scope;
 
     /*package*/ final int publicKeyId;
 
@@ -31,7 +35,8 @@ public class AuthRecord {
 
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
-                           @NonNull String publicKey,
+                           @NonNull byte[] publicKey,
+                           @NonNull byte[] scope,
                            @IntRange(from = 1) int publicKeyId,
                            @IntRange(from = 0) long issued,
                            @IntRange(from = 0) long expires) {
@@ -40,6 +45,7 @@ public class AuthRecord {
         this.id = id;
         this.identity = identity;
         this.publicKey = publicKey;
+        this.scope = scope;
         this.publicKeyId = publicKeyId;
         this.issued = issued;
         this.expires = expires;
@@ -87,7 +93,8 @@ public class AuthRecord {
         return "AuthRecord{" +
                 "id=" + id +
                 ", identity=" + identity +
-                ", publicKey='" + publicKey + '\'' +
+                ", publicKey=" + Arrays.toString(publicKey) +
+                ", scope=" + Arrays.toString(scope) +
                 ", issued=" + issued +
                 ", expires=" + expires +
                 ", mRevoked=" + mRevoked +

@@ -51,16 +51,20 @@ public class AuthorizeRequest extends ScenarioRequest {
         return mRequest.iconUri;
     }
 
-    public void completeWithAuthorize(@NonNull String publicKey, @Nullable Uri walletUriBase) {
-        mIoHandler.post(() -> completeWithAuthToken(publicKey, walletUriBase));
+    public void completeWithAuthorize(@NonNull byte[] publicKey,
+                                      @Nullable Uri walletUriBase,
+                                      @Nullable byte[] scope) {
+        mIoHandler.post(() -> completeWithAuthToken(publicKey, walletUriBase, scope));
     }
 
     // Note: runs in IO thread context
-    private void completeWithAuthToken(@NonNull String publicKey, @Nullable Uri walletUriBase) {
+    private void completeWithAuthToken(@NonNull byte[] publicKey,
+                                       @Nullable Uri walletUriBase,
+                                       @Nullable byte[] scope) {
         final String name = mRequest.identityName != null ? mRequest.identityName : "";
         final Uri uri = mRequest.identityUri != null ? mRequest.identityUri : Uri.EMPTY;
         final Uri relativeIconUri = mRequest.iconUri != null ? mRequest.iconUri : Uri.EMPTY;
-        final AuthRecord authRecord = mAuthRepository.issue(name, uri, relativeIconUri, publicKey);
+        final AuthRecord authRecord = mAuthRepository.issue(name, uri, relativeIconUri, publicKey, scope);
         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
 
         final String authToken = mAuthRepository.toAuthToken(authRecord);

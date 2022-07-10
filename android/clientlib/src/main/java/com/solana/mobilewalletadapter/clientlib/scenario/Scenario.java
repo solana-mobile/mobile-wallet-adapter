@@ -6,7 +6,6 @@ package com.solana.mobilewalletadapter.clientlib.scenario;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
