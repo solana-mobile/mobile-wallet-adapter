@@ -41,6 +41,7 @@
         "react-native": "^0.69.1"
     },
     "devDependencies": {
+        "@types/react-native": "^0.69.3",
         "agadoo": "^2.0.0"
     }
 }

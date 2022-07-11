@@ -22,7 +22,7 @@
         "@solana/wallet-adapter-react": "^0.15.7",
         "@solana/wallet-adapter-react-ui": "^0.9.7",
         "@solana/web3.js": "^1.36.0",
-        "@solana-mobile/wallet-adapter-mobile": "^0.0.0",
+        "@solana-mobile/wallet-adapter-mobile": "file:../../packages/wallet-adapter-mobile",
         "next": "^12.1.6",
         "notistack": "^2.0.5",
         "react": "^18.0.0",
@@ -31,6 +31,7 @@
     },
     "devDependencies": {
         "eslint-plugin-simple-import-sort": "^7.0.0",
-        "ngrok": "^4.3.1"
+        "ngrok": "^4.3.1",
+        "shx": "^0.3.4"
     }
 }
