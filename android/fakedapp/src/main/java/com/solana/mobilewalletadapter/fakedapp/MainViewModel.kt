@@ -10,16 +10,18 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
-import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
+import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
+import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
@@ -379,11 +381,10 @@ class MainViewModel : ViewModel() {
         action: (MobileWalletAdapterClient) -> T?
     ): T? {
         return mobileWalletAdapterClientSem.withPermit {
-            val localAssociation = LocalAssociationScenario(
-                Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
-                uriPrefix
-            )
-            sender.startActivityForResult(localAssociation.createAssociationIntent())
+            val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+
+            val creator = LocalAssociationIntentCreator()
+            sender.startActivityForResult(creator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
 
             return@withPermit withContext(Dispatchers.IO) {
                 val mobileWalletAdapterClient = try {
