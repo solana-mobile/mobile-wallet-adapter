@@ -9,6 +9,7 @@ pluginManagement {
         mavenCentral()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -16,10 +17,12 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
 rootProject.name = "mobile-wallet-adapter"
-include ':common'
-include ':walletlib'
+
 include ':clientlib'
+include ':clientlib-ktx'
+include ':common'
 include ':fakewallet'
 include ':fakedapp'
-include ':clientlib-ktx'
+include ':walletlib'
