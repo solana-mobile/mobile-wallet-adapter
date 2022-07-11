@@ -4,20 +4,15 @@
 
 package com.solana.mobilewalletadapter.clientlib.scenario;
 
-import android.content.Intent;
-import android.net.Uri;
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
-import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -37,7 +32,6 @@ public class LocalAssociationScenario extends Scenario {
     private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 100, 250, 500, 750 };
     private static final int CONNECT_TIMEOUT_MS = 200; // localhost connections should be very fast
 
-    private final Uri mEndpointSpecificUriPrefix;
     @WebSocketsTransportContract.LocalPortRange
     private final int mPort;
     @NonNull
@@ -53,16 +47,17 @@ public class LocalAssociationScenario extends Scenario {
     private NotifyingCompletableFuture<MobileWalletAdapterClient> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
     private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
-    public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs,
-                                    @Nullable Uri endpointSpecificUriPrefix) {
+    public int getPort() {
+        return mPort;
+    }
+
+    public MobileWalletAdapterSession getSession() {
+        return mMobileWalletAdapterSession;
+    }
+
+    public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs) {
         super(clientTimeoutMs);
 
-        if (endpointSpecificUriPrefix != null && (!endpointSpecificUriPrefix.isAbsolute() ||
-                !endpointSpecificUriPrefix.isHierarchical())) {
-            throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute and hierarchical");
-        }
-
-        mEndpointSpecificUriPrefix = endpointSpecificUriPrefix;
         mPort = new Random().nextInt(WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MAX -
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN + 1) +
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN;
@@ -79,33 +74,6 @@ public class LocalAssociationScenario extends Scenario {
                 mSessionStateCallbacks);
 
         Log.v(TAG, "Creating local association scenario for " + mWebSocketUri);
-    }
-
-    @NonNull
-    public Intent createAssociationIntent() {
-        final Uri.Builder dataUriBuilder;
-        if (mEndpointSpecificUriPrefix != null) {
-            dataUriBuilder = mEndpointSpecificUriPrefix.buildUpon()
-                    .clearQuery()
-                    .fragment(null);
-        } else {
-            dataUriBuilder = new Uri.Builder()
-                    .scheme(AssociationContract.SCHEME_MOBILE_WALLET_ADAPTER);
-        }
-        final byte[] associationPublicKey = mMobileWalletAdapterSession.getEncodedAssociationPublicKey();
-        final String associationToken = Base64.encodeToString(associationPublicKey,
-                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-        dataUriBuilder
-                .appendEncodedPath(AssociationContract.LOCAL_PATH_SUFFIX)
-                .appendQueryParameter(AssociationContract.PARAMETER_ASSOCIATION_TOKEN,
-                        associationToken)
-                .appendQueryParameter(AssociationContract.LOCAL_PARAMETER_PORT,
-                        Integer.toString(mPort));
-
-        return new Intent()
-                .setAction(Intent.ACTION_VIEW)
-                .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(dataUriBuilder.build());
     }
 
     @Override
