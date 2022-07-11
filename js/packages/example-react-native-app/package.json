@@ -7,13 +7,12 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "postinstall": "patch-package"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.12.1",
-    "@solana/wallet-adapter-base": "^0.9.7",
-    "@solana/wallet-adapter-react": "^0.15.6",
+    "@solana/wallet-adapter-base": "^0.9.8",
+    "@solana/wallet-adapter-react": "^0.15.7",
     "@solana-mobile/mobile-wallet-adapter-protocol": "^0.0.1-alpha.0",
     "@solana-mobile/wallet-adapter-mobile": "^0.0.1-alpha.0",
     "localstorage-polyfill": "^1.0.1",

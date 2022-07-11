@@ -4,8 +4,7 @@
   "scripts": {
     "install": "lerna bootstrap",
     "build": "lerna run build",
-    "clean": "lerna run clean",
-    "postinstall": "patch-package"
+    "clean": "lerna run clean"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^3.1.9",
@@ -19,7 +18,6 @@
     "eslint": "^8.17.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "lerna": "^4.0.0",
-    "patch-package": "^6.4.7",
     "rollup": "^2.75.6",
     "rollup-plugin-node-externals": "^4.0.0",
     "rollup-plugin-ts": "^3.0.2",
