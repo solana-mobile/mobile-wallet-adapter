@@ -1,3 +1,4 @@
+package com.solana.mobilewalletadapter.clientlib.scenario
 
 class ScenarioChooser {
 

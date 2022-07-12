@@ -26,12 +26,10 @@ fun LocalAssociationScenario.associationDetails(uri: Uri? = null) = AssociationD
 /**
  * ActivityResultCaller interface so that we can encapsulate and possibly use in better context in the future
  */
-internal class LocalAssociationIntentContract(
-    val creator: LocalAssociationIntentCreator
-) : ActivityResultContract<AssociationDetails, Unit>() {
+internal class LocalAssociationIntentContract : ActivityResultContract<AssociationDetails, Unit>() {
 
     override fun createIntent(context: Context, input: AssociationDetails): Intent {
-        return creator.createAssociationIntent(input.uriPrefix, input.port, input.session)
+        return LocalAssociationIntentCreator.createAssociationIntent(input.uriPrefix, input.port, input.session)
     }
 
     override fun parseResult(resultCode: Int, intent: Intent?) { }
