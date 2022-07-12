@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.result.ActivityResultCaller
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.*
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -20,12 +21,79 @@ fun LocalAssociationScenario.end() {
 class MobileWalletAdapter(
     private val resultCaller: ActivityResultCaller,
     private val scenarioType: ScenarioTypes = ScenarioTypes.Local,
-    private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS
+    private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val contract = LocalAssociationIntentContract(LocalAssociationIntentCreator())
     private val resultLauncher = resultCaller.registerForActivityResult(contract) { }
 
     private val scenarioChooser = ScenarioChooser()
+
+    suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
+        return withScenario(associate()) { client ->
+            withContext(ioDispatcher) {
+                client.authorize(identityUri, iconUri, identityName).get()
+                true
+            }
+        }
+    }
+
+    suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
+        return withScenario(associate()) { client ->
+            withContext(ioDispatcher) {
+                client.authorize(identityUri, iconUri, identityName).get()
+                true
+            }
+        }
+    }
+
+    suspend fun deauthorize(authToken: String): Boolean {
+        return withScenario(associate()) { client ->
+            withContext(Dispatchers.IO) {
+                client.deauthorize(authToken).get()
+                true
+            }
+        }
+    }
+
+    suspend fun getCapabilities(): MobileWalletAdapterClient.GetCapabilitiesResult {
+        return withScenario(associate()) { client ->
+            withContext(ioDispatcher) {
+                client.capabilities.get()
+            }
+        }
+    }
+
+    suspend fun signMessage(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadResult {
+        return withScenario(associate()) { client ->
+            withContext(ioDispatcher) {
+                client.signMessage(authToken, transactions).get()
+            }
+        }
+    }
+
+    suspend fun signTransaction(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadResult {
+        return withScenario(associate()) { client ->
+            withContext(ioDispatcher) {
+                client.signTransaction(authToken, transactions).get()
+            }
+        }
+    }
+
+    suspend fun signAndSendTransaction(authToken: String, transactions: Array<ByteArray>, params: TransactionParams = DefaultTestnet): MobileWalletAdapterClient.SignAndSendTransactionResult {
+        return withScenario(associate()) { client ->
+            withContext(ioDispatcher) {
+                client.signAndSendTransaction(
+                    authToken,
+                    transactions,
+                    params.commitmentLevel,
+                    params.cluster.name,
+                    params.skipPreflight,
+                    params.preflightCommitment
+                ).get()
+            }
+        }
+    }
 
     private fun associate(): LocalAssociationScenario {
         val scenario = scenarioChooser.chooseScenario<LocalAssociationScenario>(scenarioType, timeout)
@@ -36,36 +104,13 @@ class MobileWalletAdapter(
         return scenario
     }
 
-    suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
-        val scenario = associate()
+    private suspend fun <T> withScenario(scenario: LocalAssociationScenario, block: suspend (MobileWalletAdapterClient) -> T): T {
+        //TODO: Add unified try/catch handling
         val client = scenario.begin()
-
-        //TODO: Add try/catch handling
-        var authorized = false
-        authorized = withContext(Dispatchers.IO) {
-            client.authorize(identityUri, iconUri, identityName).get()
-            true
-        }
-
+        val result = block(client)
         scenario.end()
 
-        return authorized
-    }
-
-    suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
-        val scenario = associate()
-        val client = scenario.begin()
-
-        //TODO: Add try/catch handling
-        var reauthorize = false
-        reauthorize = withContext(Dispatchers.IO) {
-            client.authorize(identityUri, iconUri, identityName).get()
-            true
-        }
-
-        scenario.end()
-
-        return reauthorize
+        return result
     }
 
     companion object {
