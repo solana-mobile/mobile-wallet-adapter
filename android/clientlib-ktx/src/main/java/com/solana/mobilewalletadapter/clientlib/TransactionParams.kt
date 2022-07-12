@@ -16,6 +16,7 @@ open class TransactionParams(
     val preflightCommitment: CommitmentLevel?
 )
 
+//TODO: We can add other defaults as they become relevant
 object DefaultTestnet : TransactionParams(
     commitmentLevel = CommitmentLevel.Confirmed,
     cluster = RpcCluster.Testnet,
