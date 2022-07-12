@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
 package com.solana.mobilewalletadapter.clientlib.scenario;
 
 import android.content.Intent;
@@ -11,8 +15,10 @@ import com.solana.mobilewalletadapter.common.AssociationContract;
 
 public class LocalAssociationIntentCreator {
 
+    private LocalAssociationIntentCreator() { }
+
     @NonNull
-    public Intent createAssociationIntent(Uri endpointPrefix, int port, MobileWalletAdapterSession session) {
+    public static Intent createAssociationIntent(Uri endpointPrefix, int port, MobileWalletAdapterSession session) {
         if (endpointPrefix != null && (!endpointPrefix.isAbsolute() || !endpointPrefix.isHierarchical())) {
             throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute and hierarchical");
         }

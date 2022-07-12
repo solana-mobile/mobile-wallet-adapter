@@ -383,8 +383,7 @@ class MainViewModel : ViewModel() {
         return mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
-            val creator = LocalAssociationIntentCreator()
-            sender.startActivityForResult(creator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
+            sender.startActivityForResult(LocalAssociationIntentCreator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
 
             return@withPermit withContext(Dispatchers.IO) {
                 val mobileWalletAdapterClient = try {
