@@ -8,6 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
+fun LocalAssociationScenario.begin(): MobileWalletAdapterClient {
+    return start().get(MobileWalletAdapter.ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+}
+
+fun LocalAssociationScenario.end() {
+    close().get(MobileWalletAdapter.ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+}
+
 @Suppress("BlockingMethodInNonBlockingContext")
 class MobileWalletAdapter(
     private val resultCaller: ActivityResultCaller,
@@ -19,26 +27,48 @@ class MobileWalletAdapter(
 
     private val scenarioChooser = ScenarioChooser()
 
-    private fun associate(): MobileWalletAdapterClient {
-        TODO()
-    }
-
-    suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String) {
+    private fun associate(): LocalAssociationScenario {
         val scenario = scenarioChooser.chooseScenario<LocalAssociationScenario>(scenarioType, timeout)
         val details = scenario.associationDetails()
 
         resultLauncher.launch(details)
 
-        val client = scenario.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        return scenario
+    }
 
-        withContext(Dispatchers.IO) {
+    suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
+        val scenario = associate()
+        val client = scenario.begin()
+
+        //TODO: Add try/catch handling
+        var authorized = false
+        authorized = withContext(Dispatchers.IO) {
             client.authorize(identityUri, iconUri, identityName).get()
+            true
         }
 
-        scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        scenario.end()
+
+        return authorized
+    }
+
+    suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
+        val scenario = associate()
+        val client = scenario.begin()
+
+        //TODO: Add try/catch handling
+        var reauthorize = false
+        reauthorize = withContext(Dispatchers.IO) {
+            client.authorize(identityUri, iconUri, identityName).get()
+            true
+        }
+
+        scenario.end()
+
+        return reauthorize
     }
 
     companion object {
-        private const val ASSOCIATION_TIMEOUT_MS = 10000L
+        const val ASSOCIATION_TIMEOUT_MS = 10000L
     }
 }
