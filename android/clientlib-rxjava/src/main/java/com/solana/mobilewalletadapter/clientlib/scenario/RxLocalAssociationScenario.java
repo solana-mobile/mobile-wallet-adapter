@@ -4,7 +4,7 @@ import androidx.annotation.CheckResult;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
+import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -20,8 +20,9 @@ public class RxLocalAssociationScenario {
 
     @CheckResult
     @NonNull
-    public Single<MobileWalletAdapterClient> start() {
-        return Single.fromFuture(mLocalAssociationScenario.start());
+    public Single<RxMobileWalletAdapterClient> start() {
+        return Single.fromFuture(mLocalAssociationScenario.start())
+                .map(RxMobileWalletAdapterClient::new);
     }
 
     @CheckResult
