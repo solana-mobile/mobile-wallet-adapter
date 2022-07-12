@@ -10,7 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
-    "@react-native-community/async-storage": "^1.12.1",
+    "@react-native-async-storage/async-storage": "^1.17.7",
     "@solana-mobile/mobile-wallet-adapter-protocol": "file:../../packages/mobile-wallet-adapter-protocol",
     "@solana-mobile/wallet-adapter-mobile": "file:../../packages/wallet-adapter-mobile",
     "@solana/wallet-adapter-base": "^0.9.8",
