@@ -16,12 +16,10 @@ import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterCl
 import com.solana.mobilewalletadapter.clientlib.scenario.RxLocalAssociationScenario;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
-import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
