@@ -317,6 +317,10 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             }
         }
 
+        override fun onReauthorizeRequest(request: ReauthorizeRequest) {
+            request.completeWithReauthorize()
+        }
+
         override fun onSignTransactionRequest(request: SignTransactionRequest) {
             viewModelScope.launch {
                 replaceCurrentRequest(MobileWalletAdapterServiceRequest.SignTransaction(request))

@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
@@ -21,6 +22,8 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Scenario {
@@ -123,24 +126,48 @@ public abstract class Scenario {
                 return;
             }
 
-            final AuthRecord reissuedAuthRecord = mAuthRepository.reissue(authRecord);
-            if (reissuedAuthRecord == null) {
-                mIoHandler.post(() -> request.completeExceptionally(
-                        new MobileWalletAdapterServer.RequestDeclinedException(
-                                "auth_token not valid for reissue")));
-                return;
-            }
+            final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
+            future.notifyOnComplete(f -> {
+                try {
+                    final Boolean reauthorize = f.get(); // won't block
+                    if (!reauthorize) {
+                        mIoHandler.post(() -> request.completeExceptionally(
+                                new MobileWalletAdapterServer.RequestDeclinedException(
+                                        "app declined reauthorization request")));
+                        mAuthRepository.revoke(authRecord);
+                        return;
+                    }
 
-            final String authToken;
-            if (reissuedAuthRecord == authRecord) {
-                // Reissued same auth record; don't regenerate the token
-                authToken = request.authToken;
-            } else {
-                authToken = mAuthRepository.toAuthToken(reissuedAuthRecord);
-            }
+                    final AuthRecord reissuedAuthRecord = mAuthRepository.reissue(authRecord);
+                    if (reissuedAuthRecord == null) {
+                        // No need to explicitly revoke the old auth token; that is part of the
+                        // reissue method contract
+                        mIoHandler.post(() -> request.completeExceptionally(
+                                new MobileWalletAdapterServer.RequestDeclinedException(
+                                        "auth_token not valid for reissue")));
+                        return;
+                    }
 
-            mIoHandler.post(() -> request.complete(
-                    new MobileWalletAdapterServer.ReauthorizeResult(authToken)));
+                    final String authToken;
+                    if (reissuedAuthRecord == authRecord) {
+                        // Reissued same auth record; don't regenerate the token
+                        authToken = request.authToken;
+                    } else {
+                        authToken = mAuthRepository.toAuthToken(reissuedAuthRecord);
+                    }
+
+                    mIoHandler.post(() -> request.complete(
+                            new MobileWalletAdapterServer.ReauthorizeResult(authToken)));
+                } catch (ExecutionException e) {
+                    throw new RuntimeException("Unexpected exception while waiting for reauthorization", e);
+                } catch (InterruptedException | CancellationException e) {
+                    request.cancel(true);
+                }
+            });
+
+            mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(
+                    new ReauthorizeRequest(future, request.identityName, request.identityUri,
+                            request.iconUri, authRecord.scope)));
         }
 
         @Override
@@ -225,6 +252,7 @@ public abstract class Scenario {
 
         // Request callbacks
         void onAuthorizeRequest(@NonNull AuthorizeRequest request);
+        void onReauthorizeRequest(@NonNull ReauthorizeRequest request);
         void onSignTransactionRequest(@NonNull SignTransactionRequest request);
         void onSignMessageRequest(@NonNull SignMessageRequest request);
         void onSignAndSendTransactionRequest(@NonNull SignAndSendTransactionRequest request);
