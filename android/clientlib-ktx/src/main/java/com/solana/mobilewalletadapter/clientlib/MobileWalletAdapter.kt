@@ -7,8 +7,6 @@ import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
-import com.solana.mobilewalletadapter.clientlib.scenario.ScenarioChooser
-import com.solana.mobilewalletadapter.clientlib.scenario.ScenarioTypes
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -16,52 +14,39 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-fun LocalAssociationScenario.begin(): MobileWalletAdapterClient {
-    return start().get(MobileWalletAdapter.ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-}
-
-fun LocalAssociationScenario.end() {
-    close().get(MobileWalletAdapter.ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-}
-
-@Suppress("BlockingMethodInNonBlockingContext")
 class MobileWalletAdapter(
     private val resultCaller: ActivityResultCaller,
-    private val scenarioType: ScenarioTypes = ScenarioTypes.Local,
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val contract = LocalAssociationIntentContract()
     private val resultLauncher = resultCaller.registerForActivityResult(contract) { }
 
-    private val scenarioChooser = ScenarioChooser()
-
-    suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
+    suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): MobileWalletAdapterClient.AuthorizeResult {
         return withScenario(associate()) { client ->
             withContext(ioDispatcher) {
+                @Suppress("BlockingMethodInNonBlockingContext")
                 client.authorize(identityUri, iconUri, identityName).get()
-                true
             }
         }
     }
 
-    suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String): Boolean {
+    suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.ReauthorizeResult {
         return withScenario(associate()) { client ->
             withContext(ioDispatcher) {
-                client.authorize(identityUri, iconUri, identityName).get()
-                true
+                @Suppress("BlockingMethodInNonBlockingContext")
+                client.reauthorize(identityUri, iconUri, identityName, authToken).get()
             }
         }
     }
 
-    suspend fun deauthorize(authToken: String): Boolean {
-        return withScenario(associate()) { client ->
+    suspend fun deauthorize(authToken: String) {
+        withScenario(associate()) { client ->
             withContext(Dispatchers.IO) {
+                @Suppress("BlockingMethodInNonBlockingContext")
                 client.deauthorize(authToken).get()
-                true
             }
         }
     }
@@ -69,6 +54,7 @@ class MobileWalletAdapter(
     suspend fun getCapabilities(): MobileWalletAdapterClient.GetCapabilitiesResult {
         return withScenario(associate()) { client ->
             withContext(ioDispatcher) {
+                @Suppress("BlockingMethodInNonBlockingContext")
                 client.capabilities.get()
             }
         }
@@ -77,6 +63,7 @@ class MobileWalletAdapter(
     suspend fun signMessage(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadResult {
         return withScenario(associate()) { client ->
             withContext(ioDispatcher) {
+                @Suppress("BlockingMethodInNonBlockingContext")
                 client.signMessage(authToken, transactions).get()
             }
         }
@@ -85,6 +72,7 @@ class MobileWalletAdapter(
     suspend fun signTransaction(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadResult {
         return withScenario(associate()) { client ->
             withContext(ioDispatcher) {
+                @Suppress("BlockingMethodInNonBlockingContext")
                 client.signTransaction(authToken, transactions).get()
             }
         }
@@ -93,6 +81,7 @@ class MobileWalletAdapter(
     suspend fun signAndSendTransaction(authToken: String, transactions: Array<ByteArray>, params: TransactionParams = DefaultTestnet): MobileWalletAdapterClient.SignAndSendTransactionResult {
         return withScenario(associate()) { client ->
             withContext(ioDispatcher) {
+                @Suppress("BlockingMethodInNonBlockingContext")
                 client.signAndSendTransaction(
                     authToken,
                     transactions,
@@ -106,7 +95,7 @@ class MobileWalletAdapter(
     }
 
     private fun associate(): LocalAssociationScenario {
-        val scenario = scenarioChooser.chooseScenario<LocalAssociationScenario>(scenarioType, timeout)
+        val scenario = LocalAssociationScenario(timeout)
         val details = scenario.associationDetails()
 
         resultLauncher.launch(details)
@@ -120,18 +109,7 @@ class MobileWalletAdapter(
      */
     private suspend fun <T> withScenario(scenario: LocalAssociationScenario, block: suspend (MobileWalletAdapterClient) -> T): T {
         return try {
-            val client = try {
-                scenario.begin()
-            } catch (e: InterruptedException) {
-                Log.w(TAG, "Interrupted while waiting for local association to be ready")
-                throw e
-            } catch (e: TimeoutException) {
-                Log.e(TAG, "Timed out waiting for local association to be ready")
-                throw e
-            } catch (e: ExecutionException) {
-                Log.e(TAG, "Failed establishing local association with wallet", e.cause)
-                throw e
-            }
+            val client = scenario.begin()
 
             val result = block(client)
             scenario.end()
