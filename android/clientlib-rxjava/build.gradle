@@ -19,6 +19,8 @@ android {
 }
 
 dependencies {
+    compileOnly 'androidx.annotation:annotation:1.4.0'
+
     api(project(":clientlib"))
 
     implementation "io.reactivex.rxjava2:rxjava:2.2.21"
