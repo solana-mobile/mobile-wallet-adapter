@@ -12,11 +12,16 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadResult;
+import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.scenario.RxLocalAssociationScenario;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import io.reactivex.Completable;
 import io.reactivex.Single;
+import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
@@ -34,17 +39,9 @@ public class RxMobileWalletAdapter {
     public Single<AuthorizeResult> authorize(@Nullable Uri identityUri,
                                              @Nullable Uri iconUri,
                                              @Nullable String identityName) {
-        return mRxLocalAssociationScenario
-                .start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.authorize(identityUri, iconUri, identityName)
-                )
-                .zipWith(
-                        mRxLocalAssociationScenario.close().toSingle(() -> true),
-                        ((authorizeResult, b) -> authorizeResult)
-                );
+        return startExecuteAndClose(
+                (client) -> client.authorize(identityUri, iconUri, identityName)
+        );
     }
 
     @CheckResult
@@ -53,64 +50,34 @@ public class RxMobileWalletAdapter {
                                                  @Nullable Uri iconUri,
                                                  @Nullable String identityName,
                                                  @NonNull String authToken) {
-        return mRxLocalAssociationScenario
-                .start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.reauthorize(identityUri, iconUri, identityName, authToken)
-                )
-                .zipWith(
-                        mRxLocalAssociationScenario.close().toSingle(() -> true),
-                        ((authorizeResult, b) -> authorizeResult)
-                );
+        return startExecuteAndClose(
+                (client) -> client.reauthorize(identityUri, iconUri, identityName, authToken)
+        );
     }
 
     @CheckResult
     @NonNull
     public Completable deauthorize(@NonNull String authToken) {
-        return mRxLocalAssociationScenario
-                .start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMapCompletable(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.deauthorize(authToken)
-                )
-                .andThen(mRxLocalAssociationScenario.close());
+        return startExecuteAndClose((client) -> client.deauthorize(authToken).toSingle(() -> true))
+                .ignoreElement();
     }
 
     @CheckResult
     @NonNull
     public Single<SignPayloadResult> signTransaction(@NonNull String authToken,
                                                      @NonNull @Size(min = 1) byte[][] transactions) {
-        return mRxLocalAssociationScenario
-                .start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.signTransaction(authToken, transactions)
-                )
-                .zipWith(
-                        mRxLocalAssociationScenario.close().toSingle(() -> true),
-                        ((authorizeResult, b) -> authorizeResult)
-                );
+        return startExecuteAndClose(
+                (client) -> client.signTransaction(authToken, transactions)
+        );
     }
 
     @CheckResult
     @NonNull
     public Single<SignPayloadResult> signMessage(@NonNull String authToken,
                                                  @NonNull @Size(min = 1) byte[][] messages) {
-        return mRxLocalAssociationScenario
-                .start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.signMessage(authToken, messages)
-                )
-                .zipWith(
-                        mRxLocalAssociationScenario.close().toSingle(() -> true),
-                        ((authorizeResult, b) -> authorizeResult)
-                );
+        return startExecuteAndClose(
+                (client) -> client.signMessage(authToken, messages)
+        );
     }
 
     @CheckResult
@@ -121,19 +88,11 @@ public class RxMobileWalletAdapter {
                                                                        @Nullable String cluster,
                                                                        boolean skipPreflight,
                                                                        @Nullable CommitmentLevel preflightCommitmentLevel) {
-        return mRxLocalAssociationScenario
-                .start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.signAndSendTransaction(
-                                authToken, transactions, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel
-                        )
+        return startExecuteAndClose(
+                (client) -> client.signAndSendTransaction(
+                        authToken, transactions, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel
                 )
-                .zipWith(
-                        mRxLocalAssociationScenario.close().toSingle(() -> true),
-                        ((authorizeResult, b) -> authorizeResult)
-                );
+        );
     }
 
     @CheckResult
@@ -141,15 +100,17 @@ public class RxMobileWalletAdapter {
     public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
                                                                        @NonNull @Size(min = 1) byte[][] transactions,
                                                                        @NonNull CommitmentLevel commitmentLevel) {
+        return startExecuteAndClose(
+                (client) -> client.signAndSendTransaction(authToken, transactions, commitmentLevel)
+        );
+    }
+
+    private <T> Single<T> startExecuteAndClose(Function<RxMobileWalletAdapterClient, Single<T>> functionToExecute) {
         return mRxLocalAssociationScenario
                 .start()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(rxMobileWalletAdapterClient ->
-                        rxMobileWalletAdapterClient.signAndSendTransaction(
-                                authToken, transactions, commitmentLevel
-                        )
-                )
+                .flatMap(functionToExecute::apply)
                 .zipWith(
                         mRxLocalAssociationScenario.close().toSingle(() -> true),
                         ((authorizeResult, b) -> authorizeResult)
