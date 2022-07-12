@@ -24,6 +24,7 @@
     },
     "files": [
         "android",
+        "!android/build",
         "lib",
         "LICENSE"
     ],
