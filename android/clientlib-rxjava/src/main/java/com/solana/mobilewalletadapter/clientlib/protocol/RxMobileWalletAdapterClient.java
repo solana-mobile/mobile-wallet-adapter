@@ -2,6 +2,7 @@ package com.solana.mobilewalletadapter.clientlib.protocol;
 
 import android.net.Uri;
 
+import androidx.annotation.CheckResult;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +31,7 @@ public class RxMobileWalletAdapterClient {
         mMobileWalletAdapterClient = new MobileWalletAdapterClient(clientTimeoutMs);
     }
 
+    @CheckResult
     @NonNull
     public Single<AuthorizeResult> authorize(@Nullable Uri identityUri,
                                              @Nullable Uri iconUri,
@@ -42,6 +44,7 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    @CheckResult
     @NonNull
     public Single<ReauthorizeResult> reauthorize(@Nullable Uri identityUri,
                                                  @Nullable Uri iconUri,
@@ -55,6 +58,7 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    @CheckResult
     @NonNull
     public Completable deauthorize(@NonNull String authToken) {
         try {
@@ -65,6 +69,7 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    @CheckResult
     @NonNull
     public Single<SignPayloadResult> signTransaction(@NonNull String authToken,
                                                      @NonNull @Size(min = 1) byte[][] transactions) {
@@ -76,6 +81,7 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    @CheckResult
     @NonNull
     public Single<SignPayloadResult> signMessage(@NonNull String authToken,
                                                  @NonNull @Size(min = 1) byte[][] messages) {
@@ -87,6 +93,7 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    @CheckResult
     @NonNull
     public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
                                                                        @NonNull @Size(min = 1) byte[][] transactions,
@@ -104,6 +111,7 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    @CheckResult
     @NonNull
     public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
                                                                        @NonNull @Size(min = 1) byte[][] transactions,
