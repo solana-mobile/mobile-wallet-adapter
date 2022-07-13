@@ -109,9 +109,6 @@ public class RxMobileWalletAdapter {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(functionToExecute::apply)
-                .zipWith(
-                        mRxLocalAssociationScenario.close().toSingle(() -> true),
-                        ((authorizeResult, b) -> authorizeResult)
-                );
+                .doFinally(mRxLocalAssociationScenario::close);
     }
 }
