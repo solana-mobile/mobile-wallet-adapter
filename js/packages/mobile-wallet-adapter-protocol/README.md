@@ -9,17 +9,17 @@ If you are simply looking to integrate a JavaScript application with mobile wall
 Use this API to start a session:
 
 ```typescript
-import {withLocalWallet} from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol';
 
-await withLocalWallet(async (wallet) => {
+await transact(async (wallet) => {
     /* ... */
 });
 ```
 
-The callback you provide will be called once a session has been established with a wallet. It will recieve the `MobileWallet` API as an argument. You can call protocol-specified methods using this function. Whatever you return from this callback will be returned by `withLocalWallet`.
+The callback you provide will be called once a session has been established with a wallet. It will recieve the `MobileWallet` API as an argument. You can call protocol-specified methods using this function. Whatever you return from this callback will be returned by `transact`.
 
 ```typescript
-const signedPayloads = await withLocalWallet(async (wallet) => {
+const signedPayloads = await transact(async (wallet) => {
     const {signed_payloads} = await wallet('sign_message', {
         auth_token,
         payloads: [/* ... */],
@@ -36,7 +36,7 @@ You can catch exceptions at any level. See `errors.ts` for a list of exceptions 
 
 ```typescript
 try {
-    await withLocalWallet(async (wallet) => {
+    await transact(async (wallet) => {
         try {
             await wallet('sign_transaction', /* ... */);
         } catch (e) {
