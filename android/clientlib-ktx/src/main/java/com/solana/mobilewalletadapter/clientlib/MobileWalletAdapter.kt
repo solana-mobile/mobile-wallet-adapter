@@ -2,7 +2,6 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.net.Uri
 import android.util.Log
-import androidx.activity.result.ActivityResultCaller
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
@@ -17,12 +16,13 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
 
 class MobileWalletAdapter(
-    private val resultCaller: ActivityResultCaller,
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) {
-    private val contract = LocalAssociationIntentContract()
-    private val resultLauncher = resultCaller.registerForActivityResult(contract) { }
+): AutoCloseable {
+
+    override fun close() {
+
+    }
 
     suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): MobileWalletAdapterClient.AuthorizeResult {
         return withScenario(associate()) { client ->
@@ -98,7 +98,8 @@ class MobileWalletAdapter(
         val scenario = LocalAssociationScenario(timeout)
         val details = scenario.associationDetails()
 
-        resultLauncher.launch(details)
+        //LocalAssociationIntentCreator.createAssociationIntent(input.uriPrefix, input.port, input.session)
+        //resultLauncher.launch(details)
 
         return scenario
     }
