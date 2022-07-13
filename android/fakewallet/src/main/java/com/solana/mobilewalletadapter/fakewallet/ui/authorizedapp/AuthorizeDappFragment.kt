@@ -10,7 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.AppCompatImageView
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -24,6 +24,7 @@ import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAuthorizeDappBinding
+import com.solana.mobilewalletadapter.fakewallet.usecase.ClientTrustUseCase
 import kotlinx.coroutines.launch
 
 class AuthorizeDappFragment : Fragment() {
@@ -58,11 +59,20 @@ class AuthorizeDappFragment : Fragment() {
                                     request.request.iconRelativeUri!!.encodedPath
                                 )
                                 viewBinding.imageIcon.loadImage(uri.toString())
-
                             }
                             viewBinding.textName.text = request.request.identityName ?: "<no name>"
                             viewBinding.textUri.text =
                                 request.request.identityUri?.toString() ?: "<no URI>"
+                            viewBinding.textVerificationState.setText(
+                                when (request.sourceVerificationState) {
+                                    is ClientTrustUseCase.VerificationInProgress -> R.string.str_verification_in_progress
+                                    is ClientTrustUseCase.NotVerifiable -> R.string.str_verification_not_verifiable
+                                    is ClientTrustUseCase.VerificationFailed -> R.string.str_verification_failed
+                                    is ClientTrustUseCase.VerificationSucceeded -> R.string.str_verification_succeeded
+                                }
+                            )
+                            viewBinding.textVerificationScope.text =
+                                request.sourceVerificationState.authorizationScope
                         }
                         else -> {
                             this@AuthorizeDappFragment.request = null
@@ -100,16 +110,18 @@ class AuthorizeDappFragment : Fragment() {
     }
 }
 
-fun AppCompatImageView.loadImage(imgUrl: String?) {
+private fun ImageView.loadImage(imgUrl: String?) {
     imgUrl?.let { url ->
         val imageLoader =
-            ImageLoader.Builder(this.context)
+            ImageLoader.Builder(context)
                 .components {
                     add(SvgDecoder.Factory())
                 }.build()
         val request = ImageRequest.Builder(context).apply {
             data(url)
-        }.target(this).build()
+        }.target(onSuccess = { drawable ->
+            setImageDrawable(drawable)
+        }).build()
 
         imageLoader.enqueue(request)
     }
