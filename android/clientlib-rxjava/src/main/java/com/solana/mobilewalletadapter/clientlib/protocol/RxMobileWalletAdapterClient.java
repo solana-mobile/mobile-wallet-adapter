@@ -31,6 +31,10 @@ public class RxMobileWalletAdapterClient {
         mMobileWalletAdapterClient = new MobileWalletAdapterClient(clientTimeoutMs);
     }
 
+    public RxMobileWalletAdapterClient(@NonNull MobileWalletAdapterClient mobileWalletAdapterClient) {
+        mMobileWalletAdapterClient = mobileWalletAdapterClient;
+    }
+
     @CheckResult
     @NonNull
     public Single<AuthorizeResult> authorize(@Nullable Uri identityUri,
