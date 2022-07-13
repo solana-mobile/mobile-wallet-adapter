@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.fakedapp
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -18,6 +17,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenari
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,11 +36,17 @@ class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
+    private val compositeDisposable = CompositeDisposable()
+
     private val mobileWalletAdapterClientSem =
         Semaphore(1) // allow only a single MWA connection at a time
 
-    @SuppressLint("CheckResult") // TODO Dispose properly onCleared?
-    suspend fun authorize(sender: ActivityResultSender) {
+    override fun onCleared() {
+        compositeDisposable.dispose()
+        super.onCleared()
+    }
+
+    fun authorize(sender: ActivityResultSender) {
         RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, sender).apply {
             authorize(
                 Uri.parse("https://solana.com"),
@@ -60,51 +66,27 @@ class MainViewModel : ViewModel() {
                     when (throwable) {
                         is ExecutionException -> {
                             when (val cause = throwable.cause) {
-                                is IOException -> Log.e(
-                                    TAG,
-                                    "IO error while sending authorize",
-                                    cause
-                                )
+                                is IOException -> Log.e(TAG, "IO error while sending authorize", cause)
                                 is TimeoutException ->
-                                    Log.e(
-                                        TAG,
-                                        "Timed out while waiting for authorize result",
-                                        cause
-                                    )
+                                    Log.e(TAG, "Timed out while waiting for authorize result", cause)
                                 is JsonRpc20Client.JsonRpc20RemoteException ->
                                     when (cause.code) {
                                         ProtocolContract.ERROR_AUTHORIZATION_FAILED ->
                                             Log.e(TAG, "Not authorized", cause)
                                         else ->
-                                            Log.e(
-                                                TAG,
-                                                "Remote exception for authorize",
-                                                cause
-                                            )
+                                            Log.e(TAG, "Remote exception for authorize", cause)
                                     }
                                 is JsonRpc20Client.JsonRpc20Exception ->
-                                    Log.e(
-                                        TAG,
-                                        "JSON-RPC client exception for authorize",
-                                        cause
-                                    )
+                                    Log.e(TAG, "JSON-RPC client exception for authorize", cause)
                                 else -> throw throwable
                             }
                         }
-                        is CancellationException -> Log.e(
-                            TAG,
-                            "authorize request was cancelled",
-                            throwable
-                        )
-                        is InterruptedException -> Log.e(
-                            TAG,
-                            "authorize request was interrupted",
-                            throwable
-                        )
+                        is CancellationException -> Log.e(TAG, "authorize request was cancelled", throwable)
+                        is InterruptedException -> Log.e(TAG, "authorize request was interrupted", throwable)
                         else -> Log.e(TAG, "something went wrong", throwable)
                     }
                 }
-            )
+            ).apply { compositeDisposable.add(this) }
         }
     }
 
