@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 
 import androidx.annotation.CheckResult;
@@ -12,6 +13,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadResult;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.scenario.RxLocalAssociationScenario;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
@@ -30,6 +32,15 @@ public class RxMobileWalletAdapter {
 
     public RxMobileWalletAdapter(@IntRange(from = 0) int clientTimeoutMs) {
         this.mRxLocalAssociationScenario = new RxLocalAssociationScenario(clientTimeoutMs);
+    }
+
+    public int getPort() {
+        return mRxLocalAssociationScenario.getPort();
+    }
+
+    @Nullable
+    public MobileWalletAdapterSession getSession() {
+        return mRxLocalAssociationScenario.getSession();
     }
 
     @CheckResult
