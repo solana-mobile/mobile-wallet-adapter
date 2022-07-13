@@ -1,7 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 
 import { SolanaMobileWalletAdapterProtocolJsonRpcError } from '../../errors';
-import { MobileWallet, WalletAssociationConfig } from '../../types';
+import { MobileWalletAPI, WalletAssociationConfig } from '../../types';
 
 const LINKING_ERROR =
     `The package 'solana-mobile-wallet-adapter-protocol' doesn't seem to be linked. Make sure: \n\n` +
@@ -27,8 +27,8 @@ const SolanaMobileWalletAdapter =
               },
           );
 
-export default async function withLocalWallet<TReturn>(
-    callback: (wallet: MobileWallet) => TReturn,
+export async function transact<TReturn>(
+    callback: (walletAPI: MobileWalletAPI) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     try {

@@ -10,7 +10,7 @@ import generateECDHKeypair from './generateECDHKeypair';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
 import { startSession } from './startSession';
-import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types';
+import { AssociationKeypair, MobileWalletAPI, WalletAssociationConfig } from './types';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     maxAttempts: 34,
@@ -42,8 +42,8 @@ function assertSecureContext() {
     }
 }
 
-export default async function withLocalWallet<TReturn>(
-    callback: (wallet: MobileWallet) => TReturn,
+export async function transact<TReturn>(
+    callback: (walletAPI: MobileWalletAPI) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     assertSecureContext();
@@ -120,7 +120,7 @@ export default async function withLocalWallet<TReturn>(
                         state.ecdhPrivateKey,
                     );
                     state = { __type: 'connected', sharedSecret };
-                    const wallet: MobileWallet = async (method, params) => {
+                    const walletAPI: MobileWalletAPI = async (method, params) => {
                         const id = nextJsonRpcMessageId++;
                         socket.send(
                             await encryptJsonRpcMessage(
@@ -138,7 +138,7 @@ export default async function withLocalWallet<TReturn>(
                         });
                     };
                     try {
-                        resolve(await callback(wallet));
+                        resolve(await callback(walletAPI));
                     } catch (e) {
                         reject(e);
                     } finally {
