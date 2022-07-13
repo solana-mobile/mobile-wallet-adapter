@@ -33,12 +33,17 @@ public class RxMobileWalletAdapter {
     @NonNull
     private final ActivityResultSender mActivityResultSender;
 
+    @Nullable
+    private final Uri mEndpointPrefix;
+
     public RxMobileWalletAdapter(
             @IntRange(from = 0) int clientTimeoutMs,
-            @NonNull ActivityResultSender activityResultSender
+            @NonNull ActivityResultSender activityResultSender,
+            @Nullable Uri endpointPrefix
     ) {
         this.mRxLocalAssociationScenario = new RxLocalAssociationScenario(clientTimeoutMs);
         this.mActivityResultSender = activityResultSender;
+        this.mEndpointPrefix = endpointPrefix;
     }
 
     public int getPort() {
@@ -125,7 +130,7 @@ public class RxMobileWalletAdapter {
         // Launch the Association intent
         mActivityResultSender.launch(
                 LocalAssociationIntentCreator.createAssociationIntent(
-                        null, getPort(), getSession() // TODO prefix
+                        mEndpointPrefix, getPort(), getSession()
                 )
         );
 

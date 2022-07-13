@@ -47,7 +47,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun authorize(sender: ActivityResultSender) {
-        RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, sender).apply {
+        RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, sender, null).apply {
             authorize(
                 Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
