@@ -321,26 +321,10 @@ class MainViewModel : ViewModel() {
                     Log.e(TAG, "Transaction payload invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(
-                            TAG,
-                            "Reauthorization required",
-                            cause
-                        )
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(
-                            TAG,
-                            "Auth token invalid",
-                            cause
-                        )
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(
-                            TAG,
-                            "User did not authorize signing",
-                            cause
-                        )
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(
-                            TAG,
-                            "Too many payloads to sign",
-                            cause
-                        )
+                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
                         else -> Log.e(TAG, "Remote exception for sign_transaction", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
@@ -375,26 +359,10 @@ class MainViewModel : ViewModel() {
                     Log.e(TAG, "Message payload invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(
-                            TAG,
-                            "Reauthorization required",
-                            cause
-                        )
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(
-                            TAG,
-                            "Auth token invalid",
-                            cause
-                        )
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(
-                            TAG,
-                            "User did not authorize signing",
-                            cause
-                        )
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(
-                            TAG,
-                            "Too many payloads to sign",
-                            cause
-                        )
+                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
                         else -> Log.e(TAG, "Remote exception for sign_message", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
@@ -428,11 +396,7 @@ class MainViewModel : ViewModel() {
                 is IOException ->
                     Log.e(TAG, "IO error while sending sign_and_send_transaction", cause)
                 is TimeoutException ->
-                    Log.e(
-                        TAG,
-                        "Timed out while waiting for sign_and_send_transaction result",
-                        cause
-                    )
+                    Log.e(TAG, "Timed out while waiting for sign_and_send_transaction result", cause)
                 is MobileWalletAdapterClient.InvalidPayloadException ->
                     Log.e(TAG, "Transaction payload invalid", cause)
                 is MobileWalletAdapterClient.NotCommittedException -> {
@@ -441,26 +405,10 @@ class MainViewModel : ViewModel() {
                 }
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(
-                            TAG,
-                            "Reauthorization required",
-                            cause
-                        )
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(
-                            TAG,
-                            "Auth token invalid",
-                            cause
-                        )
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(
-                            TAG,
-                            "User did not authorize signing",
-                            cause
-                        )
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(
-                            TAG,
-                            "Too many payloads to sign",
-                            cause
-                        )
+                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
                         else -> Log.e(TAG, "Remote exception for sign_and_send_transaction", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
@@ -484,13 +432,7 @@ class MainViewModel : ViewModel() {
         return mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
-            sender.startActivityForResult(
-                LocalAssociationIntentCreator.createAssociationIntent(
-                    uriPrefix,
-                    localAssociation.port,
-                    localAssociation.session
-                )
-            )
+            sender.startActivityForResult(LocalAssociationIntentCreator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
 
             return@withPermit withContext(Dispatchers.IO) {
                 val mobileWalletAdapterClient = try {
