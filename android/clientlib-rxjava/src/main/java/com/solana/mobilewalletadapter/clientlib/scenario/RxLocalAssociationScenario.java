@@ -3,7 +3,9 @@ package com.solana.mobilewalletadapter.clientlib.scenario;
 import androidx.annotation.CheckResult;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;
 
 import io.reactivex.Completable;
@@ -29,5 +31,14 @@ public class RxLocalAssociationScenario {
     @NonNull
     public Completable close() {
         return Completable.fromFuture(mLocalAssociationScenario.close());
+    }
+
+    public int getPort() {
+        return mLocalAssociationScenario.getPort();
+    }
+
+    @Nullable
+    public MobileWalletAdapterSession getSession() {
+        return mLocalAssociationScenario.getSession();
     }
 }
