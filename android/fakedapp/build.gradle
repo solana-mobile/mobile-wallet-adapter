@@ -50,4 +50,5 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3'
     implementation project(path: ':clientlib')
+    implementation project(path: ':clientlib-ktx')
 }
