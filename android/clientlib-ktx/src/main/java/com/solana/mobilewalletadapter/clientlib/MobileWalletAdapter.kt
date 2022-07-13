@@ -23,7 +23,7 @@ class MobileWalletAdapter(
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T) {
+    suspend fun transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> Unit) {
         try {
             withContext(ioDispatcher) {
                 val scenario = LocalAssociationScenario(timeout)
