@@ -9,6 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.RxMobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
@@ -35,50 +36,77 @@ class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
-    private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
+    private val mobileWalletAdapterClientSem =
+        Semaphore(1) // allow only a single MWA connection at a time
 
     @SuppressLint("CheckResult") // TODO Dispose properly onCleared?
-    suspend fun authorize(sender: StartActivityForResultSender) {
-        rxLocalAssociateAndExecute(sender) {
-            it.authorize(
-                Uri.parse("https://solana.com"),
-                Uri.parse("favicon.ico"),
-                "Solana"
-            ).subscribe (
-                { result ->
-                    Log.d(TAG, "Authorized: $result")
-                    _uiState.update {
-                        it.copy(
-                            authToken = result.authToken,
-                            publicKeyBase58 = result.publicKey
-                        )
-                    }
-                },
-                { throwable ->
-                    when (throwable) {
-                        is ExecutionException -> {
-                            when (val cause = throwable.cause) {
-                                is IOException -> Log.e(TAG, "IO error while sending authorize", cause)
-                                is TimeoutException ->
-                                    Log.e(TAG, "Timed out while waiting for authorize result", cause)
-                                is JsonRpc20Client.JsonRpc20RemoteException ->
-                                    when (cause.code) {
-                                        ProtocolContract.ERROR_AUTHORIZATION_FAILED ->
-                                            Log.e(TAG, "Not authorized", cause)
-                                        else ->
-                                            Log.e(TAG, "Remote exception for authorize", cause)
-                                    }
-                                is JsonRpc20Client.JsonRpc20Exception ->
-                                    Log.e(TAG, "JSON-RPC client exception for authorize", cause)
-                                else -> throw throwable
-                            }
+    suspend fun authorize(sender: ActivityResultSender) {
+        mobileWalletAdapterClientSem.withPermit {
+            RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, sender).apply {
+                authorize(
+                    Uri.parse("https://solana.com"),
+                    Uri.parse("favicon.ico"),
+                    "Solana"
+                ).subscribe(
+                    { result ->
+                        Log.d(TAG, "Authorized: $result")
+                        _uiState.update {
+                            it.copy(
+                                authToken = result.authToken,
+                                publicKeyBase58 = result.publicKey
+                            )
                         }
-                        is CancellationException -> Log.e(TAG, "authorize request was cancelled", throwable)
-                        is InterruptedException -> Log.e(TAG, "authorize request was interrupted", throwable)
-                        else -> Log.e(TAG, "something went wrong", throwable)
+                    },
+                    { throwable ->
+                        when (throwable) {
+                            is ExecutionException -> {
+                                when (val cause = throwable.cause) {
+                                    is IOException -> Log.e(
+                                        TAG,
+                                        "IO error while sending authorize",
+                                        cause
+                                    )
+                                    is TimeoutException ->
+                                        Log.e(
+                                            TAG,
+                                            "Timed out while waiting for authorize result",
+                                            cause
+                                        )
+                                    is JsonRpc20Client.JsonRpc20RemoteException ->
+                                        when (cause.code) {
+                                            ProtocolContract.ERROR_AUTHORIZATION_FAILED ->
+                                                Log.e(TAG, "Not authorized", cause)
+                                            else ->
+                                                Log.e(
+                                                    TAG,
+                                                    "Remote exception for authorize",
+                                                    cause
+                                                )
+                                        }
+                                    is JsonRpc20Client.JsonRpc20Exception ->
+                                        Log.e(
+                                            TAG,
+                                            "JSON-RPC client exception for authorize",
+                                            cause
+                                        )
+                                    else -> throw throwable
+                                }
+                            }
+                            is CancellationException -> Log.e(
+                                TAG,
+                                "authorize request was cancelled",
+                                throwable
+                            )
+                            is InterruptedException -> Log.e(
+                                TAG,
+                                "authorize request was interrupted",
+                                throwable
+                            )
+                            else -> Log.e(TAG, "something went wrong", throwable)
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
 
@@ -313,10 +341,26 @@ class MainViewModel : ViewModel() {
                     Log.e(TAG, "Transaction payload invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
+                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(
+                            TAG,
+                            "Reauthorization required",
+                            cause
+                        )
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(
+                            TAG,
+                            "Auth token invalid",
+                            cause
+                        )
+                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(
+                            TAG,
+                            "User did not authorize signing",
+                            cause
+                        )
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(
+                            TAG,
+                            "Too many payloads to sign",
+                            cause
+                        )
                         else -> Log.e(TAG, "Remote exception for sign_transaction", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
@@ -351,10 +395,26 @@ class MainViewModel : ViewModel() {
                     Log.e(TAG, "Message payload invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
+                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(
+                            TAG,
+                            "Reauthorization required",
+                            cause
+                        )
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(
+                            TAG,
+                            "Auth token invalid",
+                            cause
+                        )
+                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(
+                            TAG,
+                            "User did not authorize signing",
+                            cause
+                        )
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(
+                            TAG,
+                            "Too many payloads to sign",
+                            cause
+                        )
                         else -> Log.e(TAG, "Remote exception for sign_message", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
@@ -388,7 +448,11 @@ class MainViewModel : ViewModel() {
                 is IOException ->
                     Log.e(TAG, "IO error while sending sign_and_send_transaction", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_and_send_transaction result", cause)
+                    Log.e(
+                        TAG,
+                        "Timed out while waiting for sign_and_send_transaction result",
+                        cause
+                    )
                 is MobileWalletAdapterClient.InvalidPayloadException ->
                     Log.e(TAG, "Transaction payload invalid", cause)
                 is MobileWalletAdapterClient.NotCommittedException -> {
@@ -397,10 +461,26 @@ class MainViewModel : ViewModel() {
                 }
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
+                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(
+                            TAG,
+                            "Reauthorization required",
+                            cause
+                        )
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(
+                            TAG,
+                            "Auth token invalid",
+                            cause
+                        )
+                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(
+                            TAG,
+                            "User did not authorize signing",
+                            cause
+                        )
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(
+                            TAG,
+                            "Too many payloads to sign",
+                            cause
+                        )
                         else -> Log.e(TAG, "Remote exception for sign_and_send_transaction", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
@@ -416,25 +496,6 @@ class MainViewModel : ViewModel() {
         return signatures
     }
 
-    private suspend fun rxLocalAssociateAndExecute(
-        sender: StartActivityForResultSender,
-        uriPrefix: Uri? = null,
-        rxAction: (RxMobileWalletAdapter) -> Unit
-    ) {
-        mobileWalletAdapterClientSem.withPermit {
-            RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS).apply {
-                sender.startActivityForResult(
-                    LocalAssociationIntentCreator.createAssociationIntent(
-                        uriPrefix,
-                        this.port,
-                        this.session
-                    )
-                )
-                rxAction(this)
-            }
-        }
-    }
-
     private suspend fun <T> localAssociateAndExecute(
         sender: StartActivityForResultSender,
         uriPrefix: Uri? = null,
@@ -443,7 +504,13 @@ class MainViewModel : ViewModel() {
         return mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
-            sender.startActivityForResult(LocalAssociationIntentCreator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
+            sender.startActivityForResult(
+                LocalAssociationIntentCreator.createAssociationIntent(
+                    uriPrefix,
+                    localAssociation.port,
+                    localAssociation.session
+                )
+            )
 
             return@withPermit withContext(Dispatchers.IO) {
                 val mobileWalletAdapterClient = try {

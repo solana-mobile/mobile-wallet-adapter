@@ -15,6 +15,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;
+import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator;
 import com.solana.mobilewalletadapter.clientlib.scenario.RxLocalAssociationScenario;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 
@@ -30,8 +31,15 @@ public class RxMobileWalletAdapter {
     @NonNull
     private final RxLocalAssociationScenario mRxLocalAssociationScenario;
 
-    public RxMobileWalletAdapter(@IntRange(from = 0) int clientTimeoutMs) {
+    @NonNull
+    private final ActivityResultSender mActivityResultSender;
+
+    public RxMobileWalletAdapter(
+            @IntRange(from = 0) int clientTimeoutMs,
+            @NonNull ActivityResultSender activityResultSender
+    ) {
         this.mRxLocalAssociationScenario = new RxLocalAssociationScenario(clientTimeoutMs);
+        this.mActivityResultSender = activityResultSender;
     }
 
     public int getPort() {
@@ -115,6 +123,14 @@ public class RxMobileWalletAdapter {
     }
 
     private <T> Single<T> startExecuteAndClose(Function<RxMobileWalletAdapterClient, Single<T>> functionToExecute) {
+        // Launch the Association intent
+        mActivityResultSender.launch(
+                LocalAssociationIntentCreator.createAssociationIntent(
+                        null, getPort(), getSession() // TODO prefix
+                )
+        );
+
+        // Return the chain of [Single] (start->execute->close)
         return mRxLocalAssociationScenario
                 .start()
                 .subscribeOn(Schedulers.io())
