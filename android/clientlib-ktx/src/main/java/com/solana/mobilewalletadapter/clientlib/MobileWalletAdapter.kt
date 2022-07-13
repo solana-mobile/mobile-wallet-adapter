@@ -47,7 +47,7 @@ class MobileWalletAdapter(
                 }
 
                 adapterOperations.client = client
-                val result = block(adapterOperations)
+                block(adapterOperations)
 
                 @Suppress("BlockingMethodInNonBlockingContext")
                 scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
