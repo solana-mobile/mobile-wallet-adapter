@@ -8,5 +8,5 @@ import android.content.Intent;
  */
 public interface ActivityResultSender {
 
-    public void launch(Intent intent);
+    void launch(Intent intent);
 }

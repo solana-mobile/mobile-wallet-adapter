@@ -1,6 +1,5 @@
 package com.solana.mobilewalletadapter.clientlib;
 
-import android.annotation.SuppressLint;
 import android.net.Uri;
 
 import androidx.annotation.CheckResult;
@@ -122,7 +121,7 @@ public class RxMobileWalletAdapter {
         );
     }
 
-    private <T> Single<T> startExecuteAndClose(Function<RxMobileWalletAdapterClient, Single<T>> functionToExecute) {
+    private synchronized <T> Single<T> startExecuteAndClose(Function<RxMobileWalletAdapterClient, Single<T>> functionToExecute) {
         // Launch the Association intent
         mActivityResultSender.launch(
                 LocalAssociationIntentCreator.createAssociationIntent(

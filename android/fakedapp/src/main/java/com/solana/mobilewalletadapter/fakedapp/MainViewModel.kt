@@ -41,72 +41,70 @@ class MainViewModel : ViewModel() {
 
     @SuppressLint("CheckResult") // TODO Dispose properly onCleared?
     suspend fun authorize(sender: ActivityResultSender) {
-        mobileWalletAdapterClientSem.withPermit {
-            RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, sender).apply {
-                authorize(
-                    Uri.parse("https://solana.com"),
-                    Uri.parse("favicon.ico"),
-                    "Solana"
-                ).subscribe(
-                    { result ->
-                        Log.d(TAG, "Authorized: $result")
-                        _uiState.update {
-                            it.copy(
-                                authToken = result.authToken,
-                                publicKeyBase58 = result.publicKey
-                            )
-                        }
-                    },
-                    { throwable ->
-                        when (throwable) {
-                            is ExecutionException -> {
-                                when (val cause = throwable.cause) {
-                                    is IOException -> Log.e(
+        RxMobileWalletAdapter(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, sender).apply {
+            authorize(
+                Uri.parse("https://solana.com"),
+                Uri.parse("favicon.ico"),
+                "Solana"
+            ).subscribe(
+                { result ->
+                    Log.d(TAG, "Authorized: $result")
+                    _uiState.update {
+                        it.copy(
+                            authToken = result.authToken,
+                            publicKeyBase58 = result.publicKey
+                        )
+                    }
+                },
+                { throwable ->
+                    when (throwable) {
+                        is ExecutionException -> {
+                            when (val cause = throwable.cause) {
+                                is IOException -> Log.e(
+                                    TAG,
+                                    "IO error while sending authorize",
+                                    cause
+                                )
+                                is TimeoutException ->
+                                    Log.e(
                                         TAG,
-                                        "IO error while sending authorize",
+                                        "Timed out while waiting for authorize result",
                                         cause
                                     )
-                                    is TimeoutException ->
-                                        Log.e(
-                                            TAG,
-                                            "Timed out while waiting for authorize result",
-                                            cause
-                                        )
-                                    is JsonRpc20Client.JsonRpc20RemoteException ->
-                                        when (cause.code) {
-                                            ProtocolContract.ERROR_AUTHORIZATION_FAILED ->
-                                                Log.e(TAG, "Not authorized", cause)
-                                            else ->
-                                                Log.e(
-                                                    TAG,
-                                                    "Remote exception for authorize",
-                                                    cause
-                                                )
-                                        }
-                                    is JsonRpc20Client.JsonRpc20Exception ->
-                                        Log.e(
-                                            TAG,
-                                            "JSON-RPC client exception for authorize",
-                                            cause
-                                        )
-                                    else -> throw throwable
-                                }
+                                is JsonRpc20Client.JsonRpc20RemoteException ->
+                                    when (cause.code) {
+                                        ProtocolContract.ERROR_AUTHORIZATION_FAILED ->
+                                            Log.e(TAG, "Not authorized", cause)
+                                        else ->
+                                            Log.e(
+                                                TAG,
+                                                "Remote exception for authorize",
+                                                cause
+                                            )
+                                    }
+                                is JsonRpc20Client.JsonRpc20Exception ->
+                                    Log.e(
+                                        TAG,
+                                        "JSON-RPC client exception for authorize",
+                                        cause
+                                    )
+                                else -> throw throwable
                             }
-                            is CancellationException -> Log.e(
-                                TAG,
-                                "authorize request was cancelled",
-                                throwable
-                            )
-                            is InterruptedException -> Log.e(
-                                TAG,
-                                "authorize request was interrupted",
-                                throwable
-                            )
-                            else -> Log.e(TAG, "something went wrong", throwable)
                         }
+                        is CancellationException -> Log.e(
+                            TAG,
+                            "authorize request was cancelled",
+                            throwable
+                        )
+                        is InterruptedException -> Log.e(
+                            TAG,
+                            "authorize request was interrupted",
+                            throwable
+                        )
+                        else -> Log.e(TAG, "something went wrong", throwable)
                     }
-                )
-            }
+                }
+            )
         }
     }
 
