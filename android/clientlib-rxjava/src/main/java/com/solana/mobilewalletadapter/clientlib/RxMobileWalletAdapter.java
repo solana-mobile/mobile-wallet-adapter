@@ -155,13 +155,13 @@ public class RxMobileWalletAdapter {
             return mRxLocalAssociationScenario
                     .start()
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
                     .flatMap(functionToExecute::apply)
                     .doFinally(() -> {
                                 mRxLocalAssociationScenario.close().blockingAwait(mClientTimeoutMs, TimeUnit.MILLISECONDS);
                                 mSemaphore.release();
                             }
-                    );
+                    )
+                    .observeOn(AndroidSchedulers.mainThread());
         } catch (InterruptedException e) {
             return Single.error(e);
         }
