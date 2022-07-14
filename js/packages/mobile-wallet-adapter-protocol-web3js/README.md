@@ -1,0 +1,3 @@
+# `@solana-mobile/mobile-wallet-adapter-protocol-web3js`
+
+This is a convenience wrapper that makes it easy to use common primitives from [@solana/web3.js](https://github.com/solana-labs/solana-web3.js) – such as `Transaction` and `Uint8Array` – with [@solana-mobile/mobile-wallet-adapter-protocol](https://github.com/solana-mobile/mobile-wallet-adapter/tree/main/js/packages/mobile-wallet-adapter-protocol).
