@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -122,21 +122,20 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li><a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li><a href="ScenarioRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">com.solana.mobilewalletadapter.walletlib.scenario.ScenarioRequest</a></li>
-<li>
-<ul class="inheritance">
 <li>com.solana.mobilewalletadapter.walletlib.scenario.AuthorizeRequest</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
+<dl>
+<dt>All Implemented Interfaces:</dt>
+<dd><code><a href="ScenarioRequest.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">ScenarioRequest</a></code></dd>
+</dl>
 <hr>
 <pre>public class <span class="typeNameLabel">AuthorizeRequest</span>
-extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">ScenarioRequest</a></pre>
+extends <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></pre>
 </li>
 </ul>
 </div>
@@ -159,39 +158,37 @@ extends <a href="ScenarioRequest.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#cancel()">cancel</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithAuthorize(byte%5B%5D,android.net.Uri,byte%5B%5D)">completeWithAuthorize</a></span>&#8203;(byte[]&nbsp;publicKey,
                      <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase,
                      byte[]&nbsp;scope)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithDecline()">completeWithDecline</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIconRelativeUri()">getIconRelativeUri</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIdentityName()">getIdentityName</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIdentityUri()">getIdentityUri</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
-<ul class="blockList">
-<li class="blockList"><a id="methods.inherited.from.class.com.solana.mobilewalletadapter.walletlib.scenario.ScenarioRequest">
-<!--   -->
-</a>
-<h3>Methods inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="ScenarioRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">ScenarioRequest</a></h3>
-<code><a href="ScenarioRequest.html#cancel()">cancel</a></code></li>
-</ul>
 <ul class="blockList">
 <li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
 <!--   -->
@@ -262,10 +259,23 @@ public&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?is-ext
 <a id="completeWithDecline()">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>completeWithDecline</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;completeWithDecline()</pre>
+</li>
+</ul>
+<a id="cancel()">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>cancel</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;cancel()</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="ScenarioRequest.html#cancel()">cancel</a></code>&nbsp;in interface&nbsp;<code><a href="ScenarioRequest.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">ScenarioRequest</a></code></dd>
+</dl>
 </li>
 </ul>
 </li>
