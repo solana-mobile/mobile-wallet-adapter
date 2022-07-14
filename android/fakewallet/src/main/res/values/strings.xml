@@ -10,6 +10,8 @@
 
     <!-- Authorize dapp fragment strings -->
     <string name="label_authorize_dapp">Authorize dapp</string>
+    <string name="label_verification_state">Status:</string>
+    <string name="label_verification_scope">Scope:</string>
 
     <!-- Sign Payload fragment strings -->
     <string name="label_sign_transaction">Sign transaction(s)</string>
@@ -29,4 +31,10 @@
     <!-- Common strings -->
     <string name="label_authorize">Authorize</string>
     <string name="label_decline">Decline</string>
+
+    <!-- Client verification states -->
+    <string name="str_verification_in_progress">Verification in progress</string>
+    <string name="str_verification_succeeded">Verification successful</string>
+    <string name="str_verification_failed">Verification failed</string>
+    <string name="str_verification_not_verifiable">Client not verifiable</string>
 </resources>

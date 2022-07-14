@@ -7,7 +7,7 @@ android {
     compileSdk 32
 
     defaultConfig {
-        minSdk 23
+        minSdk 24
         targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -29,11 +29,16 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    buildFeatures {
+        buildConfig = false
+    }
 }
 
 dependencies {
     api(project(":clientlib"))
     implementation 'androidx.core:core-ktx:1.8.0'
+    implementation "androidx.activity:activity-ktx:1.5.0"
 
     testImplementation 'junit:junit:4.13.2'
 

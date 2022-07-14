@@ -43,7 +43,7 @@ export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
-export interface MobileWallet {
+export interface MobileWalletAPI {
     (method: 'authorize', params: { identity: AppIdentity }): Promise<
         Readonly<{
             auth_token: AuthToken;

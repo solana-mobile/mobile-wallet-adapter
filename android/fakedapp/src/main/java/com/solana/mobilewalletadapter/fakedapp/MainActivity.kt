@@ -31,10 +31,13 @@ class MainActivity : AppCompatActivity() {
                     viewBinding.btnDeauthorize.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignTxnX3.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignTxnX20.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignMsgX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignMsgX3.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignMsgX20.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignAndSendTxnX1.isEnabled = uiState.hasAuthToken
                     viewBinding.btnSignAndSendTxnX3.isEnabled = uiState.hasAuthToken
+                    viewBinding.btnSignAndSendTxnX20.isEnabled = uiState.hasAuthToken
                 }
             }
         }
