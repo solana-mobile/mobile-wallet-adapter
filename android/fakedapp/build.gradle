@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.solana.mobilewalletadapter.fakedapp"
-        minSdk 24
+        minSdk 23
         targetSdk 31
         versionCode 1
         versionName "1.0"
@@ -50,7 +50,4 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3'
     implementation project(path: ':clientlib')
-
-    implementation "io.reactivex.rxjava2:rxjava:2.2.21"
-    implementation project(path: ':clientlib-rxjava')
 }

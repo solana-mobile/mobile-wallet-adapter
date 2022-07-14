@@ -6,13 +6,12 @@ package com.solana.mobilewalletadapter.fakedapp
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 
@@ -97,14 +96,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val intentSender = object : MainViewModel.StartActivityForResultSender, ActivityResultSender {
+    private val intentSender = object : MainViewModel.StartActivityForResultSender {
         override fun startActivityForResult(intent: Intent) {
-            try {
-                this@MainActivity.startActivityForResult(intent, 0)
-            } catch (_: ActivityNotFoundException) {}
-        }
-
-        override fun launch(intent: Intent?) {
             try {
                 this@MainActivity.startActivityForResult(intent, 0)
             } catch (_: ActivityNotFoundException) {}
