@@ -36,9 +36,6 @@ public class RxMobileWalletAdapter {
     @NonNull
     private final RxLocalAssociationScenario mRxLocalAssociationScenario;
 
-    @NonNull
-    private final ActivityResultSender mActivityResultSender;
-
     @Nullable
     private final Uri mEndpointPrefix;
 
@@ -50,104 +47,22 @@ public class RxMobileWalletAdapter {
 
     public RxMobileWalletAdapter(
             @IntRange(from = 0) int clientTimeoutMs,
-            @NonNull ActivityResultSender activityResultSender,
             @Nullable Uri endpointPrefix
     ) {
         this.mClientTimeoutMs = clientTimeoutMs;
         this.mRxLocalAssociationScenario = new RxLocalAssociationScenario(clientTimeoutMs);
-        this.mActivityResultSender = activityResultSender;
         this.mEndpointPrefix = endpointPrefix;
     }
 
-    public int getPort() {
-        return mRxLocalAssociationScenario.getPort();
-    }
-
-    @Nullable
-    public MobileWalletAdapterSession getSession() {
-        return mRxLocalAssociationScenario.getSession();
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<AuthorizeResult> authorize(@Nullable Uri identityUri,
-                                             @Nullable Uri iconUri,
-                                             @Nullable String identityName) {
-        return startExecuteAndClose(
-                (client) -> client.authorize(identityUri, iconUri, identityName)
-        );
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<ReauthorizeResult> reauthorize(@Nullable Uri identityUri,
-                                                 @Nullable Uri iconUri,
-                                                 @Nullable String identityName,
-                                                 @NonNull String authToken) {
-        return startExecuteAndClose(
-                (client) -> client.reauthorize(identityUri, iconUri, identityName, authToken)
-        );
-    }
-
-    @CheckResult
-    @NonNull
-    public Completable deauthorize(@NonNull String authToken) {
-        return startExecuteAndClose((client) -> client.deauthorize(authToken).toSingle(() -> true))
-                .ignoreElement();
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<SignPayloadResult> signTransaction(@NonNull String authToken,
-                                                     @NonNull @Size(min = 1) byte[][] transactions) {
-        return startExecuteAndClose(
-                (client) -> client.signTransaction(authToken, transactions)
-        );
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<SignPayloadResult> signMessage(@NonNull String authToken,
-                                                 @NonNull @Size(min = 1) byte[][] messages) {
-        return startExecuteAndClose(
-                (client) -> client.signMessage(authToken, messages)
-        );
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
-                                                                       @NonNull @Size(min = 1) byte[][] transactions,
-                                                                       @NonNull CommitmentLevel commitmentLevel,
-                                                                       @Nullable String cluster,
-                                                                       boolean skipPreflight,
-                                                                       @Nullable CommitmentLevel preflightCommitmentLevel) {
-        return startExecuteAndClose(
-                (client) -> client.signAndSendTransaction(
-                        authToken, transactions, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel
-                )
-        );
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
-                                                                       @NonNull @Size(min = 1) byte[][] transactions,
-                                                                       @NonNull CommitmentLevel commitmentLevel) {
-        return startExecuteAndClose(
-                (client) -> client.signAndSendTransaction(authToken, transactions, commitmentLevel)
-        );
-    }
-
     @SuppressLint("CheckResult")
-    private synchronized <T> Single<T> startExecuteAndClose(Function<RxMobileWalletAdapterClient, Single<T>> functionToExecute) {
+    public Single<RxMobileWalletAdapterClient> transact(@NonNull ActivityResultSender activityResultSender) {
         try {
             mSemaphore.acquire();
 
             // Launch the Association intent
-            mActivityResultSender.launch(
+            activityResultSender.launch(
                     LocalAssociationIntentCreator.createAssociationIntent(
-                            mEndpointPrefix, getPort(), getSession()
+                            mEndpointPrefix, mRxLocalAssociationScenario.getPort(), mRxLocalAssociationScenario.getSession()
                     )
             );
 
@@ -155,13 +70,12 @@ public class RxMobileWalletAdapter {
             return mRxLocalAssociationScenario
                     .start()
                     .subscribeOn(Schedulers.io())
-                    .flatMap(functionToExecute::apply)
+                    .observeOn(Schedulers.io())
                     .doFinally(() -> {
                                 mRxLocalAssociationScenario.close().blockingAwait(mClientTimeoutMs, TimeUnit.MILLISECONDS);
                                 mSemaphore.release();
                             }
-                    )
-                    .observeOn(AndroidSchedulers.mainThread());
+                    );
         } catch (InterruptedException e) {
             return Single.error(e);
         }
