@@ -22,9 +22,9 @@ export type AssociationKeypair = CryptoKeyPair;
  * use it later to invoke privileged methods.
  */
 export type AuthorizationResult = Readonly<{
-    authToken: string;
-    publicKey: string;
-    walletUriBase: string;
+    auth_token: AuthToken;
+    pub_key: string;
+    wallet_uri_base: string;
 }>;
 
 export type AuthToken = string;
@@ -43,13 +43,7 @@ export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
-export type AuthorizeAPI = (apiCall: { method: 'authorize'; identity: AppIdentity }) => Promise<
-    Readonly<{
-        auth_token: AuthToken;
-        pub_key: string;
-        wallet_uri_base: string;
-    }>
->;
+export type AuthorizeAPI = (apiCall: { method: 'authorize'; identity: AppIdentity }) => Promise<AuthorizationResult>;
 export type CloneAuthorizationAPI = (apiCall: {
     method: 'clone_authorization';
     auth_token: AuthToken;

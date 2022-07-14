@@ -56,7 +56,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     get publicKey(): PublicKey | null {
         if (this._publicKey == null && this._authorizationResult != null) {
-            this._publicKey = new PublicKey(this._authorizationResult.publicKey);
+            this._publicKey = new PublicKey(this._authorizationResult.pub_key);
         }
         return this._publicKey ? this._publicKey : null;
     }
@@ -108,9 +108,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
                 }
                 this.handleAuthorizationResult({
-                    authToken: auth_token,
-                    publicKey: base58PublicKey,
-                    walletUriBase: wallet_uri_base,
+                    auth_token,
+                    pub_key: base58PublicKey,
+                    wallet_uri_base: wallet_uri_base,
                 }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.emit(
                     'connect',
@@ -138,12 +138,12 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         try {
             const { auth_token } = await walletAPI({
                 method: 'reauthorize',
-                auth_token: currentAuthorizationResult.authToken,
+                auth_token: currentAuthorizationResult.auth_token,
             });
-            if (currentAuthorizationResult.authToken !== auth_token) {
+            if (currentAuthorizationResult.auth_token !== auth_token) {
                 this.handleAuthorizationResult({
                     ...currentAuthorizationResult,
-                    authToken: auth_token,
+                    auth_token,
                 }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
             }
             return auth_token;
@@ -161,7 +161,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     private async transact<TReturn>(callback: (walletAPI: Web3MobileWalletAPI) => TReturn): Promise<TReturn> {
-        const walletUriBase = this._authorizationResult?.walletUriBase;
+        const walletUriBase = this._authorizationResult?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         return await transact(callback, config);
     }
