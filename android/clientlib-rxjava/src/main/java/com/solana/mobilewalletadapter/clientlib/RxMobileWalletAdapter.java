@@ -3,29 +3,18 @@ package com.solana.mobilewalletadapter.clientlib;
 import android.annotation.SuppressLint;
 import android.net.Uri;
 
-import androidx.annotation.CheckResult;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.Size;
 
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizeResult;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeResult;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionResult;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadResult;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator;
 import com.solana.mobilewalletadapter.clientlib.scenario.RxLocalAssociationScenario;
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
-import io.reactivex.Completable;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class RxMobileWalletAdapter {
