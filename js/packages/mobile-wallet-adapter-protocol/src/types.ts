@@ -62,12 +62,6 @@ export type ReauthorizeAPI = (apiCall: {
     method: 'reauthorize';
     auth_token: AuthToken;
 }) => Promise<Readonly<{ auth_token: AuthToken }>>;
-export type SignAndSendTransactionAPI = (apiCall: {
-    method: 'sign_and_send_transaction';
-    auth_token: AuthToken;
-    commitment: 'confirmed' | 'finalized' | 'processed';
-    payloads: Base64EncodedTransaction[];
-}) => Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
 export type SignMessageAPI = (apiCall: {
     method: 'sign_message';
     auth_token: AuthToken;
@@ -78,12 +72,18 @@ export type SignTransactionAPI = (apiCall: {
     auth_token: AuthToken;
     payloads: Base64EncodedTransaction[];
 }) => Promise<Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>>;
+export type SignAndSendTransactionAPI = (apiCall: {
+    method: 'sign_and_send_transaction';
+    auth_token: AuthToken;
+    commitment: 'confirmed' | 'finalized' | 'processed';
+    payloads: Base64EncodedTransaction[];
+}) => Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
 
 export interface MobileWalletAPI
     extends AuthorizeAPI,
         CloneAuthorizationAPI,
         DeauthorizeAPI,
         ReauthorizeAPI,
-        SignAndSendTransactionAPI,
         SignMessageAPI,
-        SignTransactionAPI {}
+        SignTransactionAPI,
+        SignAndSendTransactionAPI {}
