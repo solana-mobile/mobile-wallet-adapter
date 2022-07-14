@@ -120,7 +120,7 @@ export async function transact<TReturn>(
                         state.ecdhPrivateKey,
                     );
                     state = { __type: 'connected', sharedSecret };
-                    const walletAPI: MobileWalletAPI = async (method, params) => {
+                    const walletAPI: MobileWalletAPI = async ({ method, ...params }) => {
                         const id = nextJsonRpcMessageId++;
                         socket.send(
                             await encryptJsonRpcMessage(
