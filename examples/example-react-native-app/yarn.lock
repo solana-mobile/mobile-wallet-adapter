@@ -1350,16 +1350,23 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@solana-mobile/mobile-wallet-adapter-protocol@^0.0.1-alpha.1", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
-  version "0.0.1-alpha.1"
+"@solana-mobile/mobile-wallet-adapter-protocol-web3js@^0.0.1-alpha.3":
+  version "0.0.1-alpha.3"
+  resolved "https://registry.yarnpkg.com/@solana-mobile/mobile-wallet-adapter-protocol-web3js/-/mobile-wallet-adapter-protocol-web3js-0.0.1-alpha.3.tgz#544f63ed8a8692211917fd8308eb7f162f70f1aa"
+  integrity sha512-wuhrA9McaL40TaueqQlZ+b+cxx8LwFnGNEaIeFtarlk6GgaPSc0XpV8p+pcmZPTbWMB8+P7ycrFxyQJdLxDx/g==
+  dependencies:
+    "@solana-mobile/mobile-wallet-adapter-protocol" "^0.0.1-alpha.3"
+
+"@solana-mobile/mobile-wallet-adapter-protocol@^0.0.1-alpha.3", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
+  version "0.0.1-alpha.3"
   dependencies:
     react-native "^0.69.1"
 
 "@solana-mobile/wallet-adapter-mobile@file:../../js/packages/wallet-adapter-mobile":
-  version "0.0.1-alpha.2"
+  version "0.0.1-alpha.3"
   dependencies:
     "@react-native-async-storage/async-storage" "^1.17.7"
-    "@solana-mobile/mobile-wallet-adapter-protocol" "^0.0.1-alpha.1"
+    "@solana-mobile/mobile-wallet-adapter-protocol-web3js" "^0.0.1-alpha.3"
     "@solana/wallet-adapter-base" "^0.9.8"
     "@solana/web3.js" "^1.20.0"
 
