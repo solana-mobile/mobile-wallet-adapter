@@ -16,13 +16,14 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-**Version: 0.1.0**
+**Version: 0.2.0**
 
 ## Changelog
 
 | Version | Description |
 | ------- | ----------- |
 | 0.1.0   | Initial draft |
+| 0.2.0   | Updates based on wallet adapter feedback |
 
 # Non-normative front matter
 
@@ -264,11 +265,14 @@ After [session establishment](#session-establishment) completes, the wallet endp
 
 After the [session establishment](#session-establishment) process completes, every message received by an endpoint is expected to be encrypted with AES-128-GCM (as specified by [NIST SP 800-38D](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf)). The sending endpoint should prepare the encrypted message by concatenating:
 
+- the message sequence number, a 4-byte big-endian unsigned integer
 - a random 12-byte IV (which should be newly generated for each encrypted message)
-- the AES-128-GCM message ciphertext, encrypted using the private key created during [session establishment](#session-establishment) and the random IV
+- the AES-128-GCM message ciphertext, encrypted using the private key created during [session establishment](#session-establishment) and the random IV, and including the 4-byte message sequence number as additional authorized data (AAD)
 - the 16-byte authentication tag generated during AES-128-GCM encryption
 
 After decrypting the ciphertext with the shared secret generated during [session establishment](#session-establishment) and verifying the authentication tag, the receiving endpoint should further interpret it as a [JSON-RPC 2.0](https://www.jsonrpc.org/specification) message.
+
+The message sequence number is monotonically increasing, and starts at 1 when session establishment completes. Each endpoint maintains its own independent sequence number, and increments it each time an encrypted message is created and sent. On receipt of an encrypted message, each endpoint should ensure that the sequence number is greater than that of the previous message received (other than for the first message received). If the value is less than or equal to the previously observed sequence number, the encrypted message should be discarded and the connection closed.
 
 #### Non-normative commentary
 
@@ -302,14 +306,17 @@ authorize
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
+    "cluster": "<cluster>",
 }
 ```
 
 where:
 
-- `dapp_uri`: (Optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
-- `dapp_icon_relative_path`: (Optional) a relative path (from dapp_uri) to an image asset file of an icon identifying the dapp endpoint making this authorization request
-- `dapp_name`: (Optional) the display name for this dapp endpoint
+- `identity`: a JSON object, containing:
+  - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
+  - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
+  - `name`: (optional) the display name for this dapp endpoint
+- `cluster`: (optional) if set, the Solana network cluster with which the dapp endpoint intends to interact; supported values include `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `mainnet-beta`.
 
 ###### Result
 {: .no_toc }
@@ -317,7 +324,7 @@ where:
 ```
 {
     “auth_token”: “<auth_token>”,
-    “pub_key”: “<public_key>
+    “addresses”: [“<address>", ...]
     “wallet_uri_base”: “<wallet_uri_base>”,
 }
 ```
@@ -325,7 +332,7 @@ where:
 where:
 
 - `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to `reauthorize` access to [Signing methods](#privileged-methods).
-- `public_key`: the base58-encoded public key for the account
+- `addresses`: one or more base64-encoded addresses, for the accounts to which this auth token corresponds
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 
 ###### Errors
@@ -333,15 +340,19 @@ where:
 
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_AUTHORIZATION_FAILED` if the wallet endpoint did not authorize access to the requested privileged methods
+- `ERROR_CLUSTER_NOT_SUPPORTED` if the wallet endpoint does not support the requested Solana cluster
 
 ##### Description
-This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris).
+
+This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods, along with addresses for all authorized accounts. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris).
 
 The returned `auth_token` is an opaque string with meaning only to the wallet endpoint which created it. It is recommended that the wallet endpoint include a mechanism to authenticate the contents of auth tokens it issues (for e.g., with an HMAC, or by encryption with a secret symmetric key).
 
 The lifetime of the returned `auth_token` is not defined. If a privileged method returns `ERROR_REAUTHORIZE`, the dapp endpoint should call the [`reauthorize`](#reauthorize) method to renew the token.
 
-Dapp endpoints should make every effort possible to [verify the authenticity](#dapp-identity-verification) of the presented identity. While the `dapp_uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
+Dapp endpoints should make every effort possible to [verify the authenticity](#dapp-identity-verification) of the presented identity. While the `uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
+
+The `cluster` parameter allows the dapp endpoint to select a specific Solana cluster with which to interact. This is relevant for both [`sign_transactions`](#sign_transactions), where a wallet may refuse to sign transactions without a currently valid blockhash, and for [`sign_and_send_transactions`](#sign_and_send_transactions), where the wallet endpoint must know which cluster to submit the transactions to. This parameter would normally be used to select a cluster other than `mainnet-beta` for dapp development and testing purposes. Under normal circumstances, this field should be omitted, in which case the wallet endpoint will interact with the `mainnet-beta` cluster.
 
 #### deauthorize
 
@@ -419,12 +430,16 @@ where:
 ```
 {
     “auth_token”: “<auth_token>”,
+    "addresses": [“<address>", ...]
+    “wallet_uri_base”: “<wallet_uri_base>”,
 }
 ```
 
 where:
 
 - `auth_token`: as defined for [`authorize`](#authorize)
+- `addresses`: (optional) if set, as defined for [`authorize`](#authorize). If not set, the previously provided `addresses` values should be retained.
+- `wallet_uri_base`: (optional) if set, as defined for [`authorize`](#authorize). If not set, the previously provided `wallet_uri_base` value should be retained.
 
 ###### Errors
 {: .no_toc }
@@ -435,6 +450,8 @@ where:
 ##### Description
 
 This method attempts to renew the specified `auth_token`. The meaning of renew is an implementation detail of the wallet endpoint; it may return the same token, issue a new token, or refuse to renew the token. If the result is `ERROR_AUTHORIZATION_FAILED`, the token could not be renewed. A new token will need to be requested with the [`authorize`](#authorize) method. If a new `auth_token` is returned, the dapp endpoint should assume that the old `auth_token` is no longer valid and discard it.
+
+In addition to the reauthorized auth token, the wallet endpoint may optionally return updated values for `addresses` and `wallet_uri_base`, overriding any previously provided values. This allows a wallet endpoint to modify the set of addresses for an already-issued auth token, without requiring the dapp endpoint to restart the authorization process.
 
 #### clone_authorization
 
@@ -450,12 +467,34 @@ clone_authorization
 ###### Params
 {: .no_toc }
 
-See [`reauthorize`](#reauthorize)
+```
+{
+    “identity”: {
+        “uri”: “<dapp_uri>”,
+        “icon”: “<dapp_icon_relative_path>”,
+        “name”: “<dapp_name>”,
+    },
+    “auth_token”: “<auth_token>”,
+}
+```
+
+where:
+
+- `identity`: see [`authorize`](#authorize)
+- `auth_token`: an opaque string previously returned by a call to [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization)
 
 ###### Result
 {: .no_toc }
 
-See [`reauthorize`](#reauthorize)
+```
+{
+    “auth_token”: “<auth_token>”,
+}
+```
+
+where:
+
+- `auth_token`: as defined for [`authorize`](#authorize)
 
 ###### Errors
 {: .no_toc }
@@ -501,7 +540,7 @@ get_capabilities
 ```
 {
     "supports_clone_authorization": <supports_clone_authorization>,
-    "supports_sign_and_send_transaction": <supports_sign_and_send_transaction>,
+    "supports_sign_and_send_transactions": <supports_sign_and_send_transactions>,
     "max_transactions_per_request": <max_transactions_per_request>,
     "max_messages_per_request": <max_messages_per_request>,
 }
@@ -510,9 +549,9 @@ get_capabilities
 where:
 
 - `supports_clone_authorization`: `true` if the [`clone_authorization`](#clone_authorization) method is supported, otherwise `false`
-- `supports_sign_and_send_transaction`: `true` if the [`sign_and_send_transaction`](#sign_and_send_transaction) method is supported, otherwise `false`
-- `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transaction`](#sign_transaction) or [`sign_and_send_transaction`](#sign_and_send_transaction) request. If absent, the implementation doesn't publish a specific limit for this parameter.
-- `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_message`](#sign_message) request. If absent, the implementation doesn't publish a specific limit for this parameter.
+- `supports_sign_and_send_transactions`: `true` if the [`sign_and_send_transactions`](#sign_and_send_transactions) method is supported, otherwise `false`
+- `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transactions`](#sign_transactions) or [`sign_and_send_transactions`](#sign_and_send_transactions) request. If absent, the implementation doesn't publish a specific limit for this parameter.
+- `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_messages`](#sign_messages) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 
 ###### Errors
 {: .no_toc }
@@ -525,7 +564,7 @@ This method can be used to enumerate the capabilities and limits of a wallet end
 
 ### Privileged methods
 
-#### sign_transaction
+#### sign_transactions
 
 ##### JSON-RPC method specification
 
@@ -533,7 +572,7 @@ This method can be used to enumerate the capabilities and limits of a wallet end
 {: .no_toc }
 
 ```
-sign_transaction
+sign_transactions
 ```
 
 ###### Params
@@ -548,8 +587,8 @@ sign_transaction
 
 where:
 
-- `auth_token`: an `auth_token` returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_transaction` was requested
-- `transaction`: one or more base64-encoded transaction payloads to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `auth_token`: an `auth_token` returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_transactions` was requested
+- `payloads`: one or more base64-encoded transaction payloads to sign
 
 ###### Result
 {: .no_toc }
@@ -562,14 +601,14 @@ where:
 
 where:
 
-- `signed_transaction`: the corresponding base64-encoded signed transaction payloads, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
+- `signed_payloads`: the corresponding base64-encoded signed transaction payloads
 
 ###### Errors
 {: .no_toc }
 
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_REAUTHORIZE` if `auth_token` requires [`reauthorization`](#reauthorize)
-- `ERROR_AUTHORIZATION_FAILED` if the `auth_token` is invalid, or not authorized for `sign_transaction`
+- `ERROR_AUTHORIZATION_FAILED` if the `auth_token` is invalid, or not authorized for `sign_transactions`
 - `ERROR_INVALID_PAYLOAD`
 
   ```
@@ -580,16 +619,16 @@ where:
 
   if any transaction does not represent a valid transaction for signing, where:
 
-    - `transaction_valid`: an array of booleans with the same length as payloads indicating which are valid
+    - `valid`: an array of booleans with the same length as payloads indicating which are valid
 
 - `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign these transactions for any reason
 - `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
 
-The wallet endpoint should attempt to simulate the transactions provided by data and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private key for the authorized account, and return the signed transactions to the dapp endpoint.
+The wallet endpoint should attempt to simulate the transactions provided by data and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private keys for the requested authorized account addresses, and return the signed transactions to the dapp endpoint.
 
-#### sign_and_send_transaction
+#### sign_and_send_transactions
 
 ##### JSON-RPC method specification
 
@@ -597,7 +636,7 @@ The wallet endpoint should attempt to simulate the transactions provided by data
 {: .no_toc }
 
 ```
-sign_and_send_transaction
+sign_and_send_transactions
 ```
 
 ###### Params
@@ -607,21 +646,18 @@ sign_and_send_transaction
 {
     “auth_token”: “<auth_token>”,
     “payloads”: [“<transaction>”, ...],
-    “commitment”: “<commitment_level>”,
-    "cluster": "<cluster>",
-    "skip_preflight": <skip_preflight>,
-    "preflight_commitment": "<preflight_commitment>",
+    "options": {
+        “commitment”: “<commitment_level>”,
+    }
 }
 ```
 
 where:
 
-- `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_and_send_transaction` was requested
-- `transaction`: one or more base64-encoded transaction payload to sign, each with a maximum pre-encoding size of `MAX_TRANSACTION_SZ`
-- `commitment_level`: one of `processed`, `confirmed`, or `finalized`
-- `cluster`: (optional) if set, the Solana network cluster to send the signed transaction(s) to; supported values include `mainnet_beta`, `testnet`, `devnet`. If not set, the wallet endpoint determines which cluster to send transactions to.
-- `skip_preflight`: (optional) see the JSON-RPC [sendTransaction](https://docs.solana.com/developing/clients/jsonrpc-api#sendtransaction) API. If not set, defaults to `false`.
-- `preflight_commitment`: (optional) see the JSON-RPC [sendTransaction](https://docs.solana.com/developing/clients/jsonrpc-api#sendtransaction) API. If not set, defaults to `finalized`.
+- `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_and_send_transactions` was requested
+- `payloads`: one or more base64-encoded transaction payload to sign
+- `options`: a JSON object, containing:
+  - `commitment`: (optional) if set, one of `processed`, `confirmed`, or `finalized`, specifying the desired commitment level that must be reached for this request to be successful. If not set, defaults to `confirmed`.
 
 ###### Result
 {: .no_toc }
@@ -634,15 +670,15 @@ where:
 
 where:
 
-- `transaction_signature`: the corresponding base58-encoded transaction signatures
+- `signatures`: the corresponding base64-encoded transaction signatures
 
 ###### Errors
 {: .no_toc }
 
 - `-32602` (Invalid params) if the params object does not match the format defined above
-- `-32601` (Method not found) if `sign_and_send_transaction` is not supported by this wallet endpoint
+- `-32601` (Method not found) if `sign_and_send_transactions` is not supported by this wallet endpoint
 - `ERROR_REAUTHORIZE` if `auth_token` requires [`reauthorization`](#reauthorize)
-- `ERROR_AUTHORIZATION_FAILED` if the `auth_token` is invalid, or not authorized for `sign_and_send_transaction`
+- `ERROR_AUTHORIZATION_FAILED` if the `auth_token` is invalid, or not authorized for `sign_and_send_transactions`
 - `ERROR_INVALID_PAYLOAD`
 
   ```
@@ -666,7 +702,7 @@ where:
 
   if the requested commitment level was not reached for any of the signed transactions, where:
 
-  - `transaction_signature`: as defined for a successful result
+  - `signatures`: as defined for a successful result
   - `commitment_reached`: for each entry in `signatures`, a boolean indicating whether the desired commitment level was reached
 - `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
@@ -674,19 +710,19 @@ where:
 
 _Implementation of this method by a wallet endpoint is optional._
 
-The wallet endpoint should attempt to simulate the transactions provided by `payloads` and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private key for the authorized account, submit them to the network, wait for the requested commitment level to be reached, and return the transaction signatures to the dapp endpoint.
+The wallet endpoint should attempt to simulate the transactions provided by `payloads` and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private keys for the authorized addresses, submit them to the network, wait for the requested commitment level to be reached, and return the transaction signatures to the dapp endpoint.
 
-Several options are available to customize how transactions are sent to the Solana network. `cluster` can be used to select which [Solana cluster](https://docs.solana.com/clusters) transactions should be submitted to. This can be used to send transactions to the [devnet](https://docs.solana.com/cluster/rpc-endpoints#devnet) or [testnet](https://docs.solana.com/cluster/rpc-endpoints#testnet) cluster, for example, during app development. `skip_preflight` and `preflight_commitment` allow configuration of preflight checks for the signed transaction(s).
+`options` allows customization of how the wallet endpoint processes the transactions it sends to the Solana network. `commitment` controls what level of transaction confirmation the wallet endpoint should wait for before returning a successful result to the dapp endpoint.
 
 ###### Non-normative commentary
 
 This method is optional, to support signing-only wallet endpoints which do not have any form of network connectivity.
 
-it does not allow the dapp endpoint to specify the network RPC server to submit the transaction to; that is at the discretion of the wallet endpoint. If this is a detail that matters to the dapp endpoint, it should instead use the `sign_transaction` method and submit the transaction to a network RPC server of its choosing.
+it does not allow the dapp endpoint to specify the network RPC server to submit the transaction to; that is at the discretion of the wallet endpoint. If this is a detail that matters to the dapp endpoint, it should instead use the `sign_transactions` method and submit the transaction to a network RPC server of its choosing.
 
 It is recommended that dapp endpoints verify that the reported commitment level was actually reached for each transaction, to minimize the risks presented by malicious wallet endpoints.
 
-#### sign_message
+#### sign_messages
 
 ##### JSON-RPC method specification
 
@@ -694,7 +730,7 @@ It is recommended that dapp endpoints verify that the reported commitment level 
 {: .no_toc }
 
 ```
-sign_message
+sign_messages
 ```
 
 ###### Params
@@ -703,14 +739,16 @@ sign_message
 ```
 {
     “auth_token”: “<auth_token>”,
+    "address": "<address>",
     “payloads”: [“<message>”, ...],
 }
 ```
 
 where:
 
-- `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_message` was requested
-- `message`: one or more base64url-encoded message payloads to sign
+- `auth_token`: an auth_token returned by [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization) for which access to `sign_messages` was requested
+- `address`: the base64-encoded address of the account which should be used to sign `message`. This should be one of the addresses returned by [`authorize`](#authorize) or [`reauthorize`](#reauthorize) for `auth_token`.
+- `payloads`: one or more base64url-encoded message payloads to sign
 
 ###### Result
 {: .no_toc }
@@ -723,14 +761,14 @@ where:
 
 where:
 
-- `signed_message`: the corresponding base64-encoded signed message payloads
+- `signed_payloads`: the corresponding base64-encoded signed message payloads
 
 ###### Errors
 {: .no_toc }
 
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_REAUTHORIZE` if auth_token requires [`reauthorization`](#reauthorize)
-- `ERROR_AUTHORIZATION_FAILED` if the auth_token is invalid, or not authorized for `sign_message`
+- `ERROR_AUTHORIZATION_FAILED` if the auth_token is invalid, or not authorized for `sign_messages`
 - `ERROR_INVALID_PAYLOAD`
 
   ```
@@ -743,11 +781,11 @@ where:
 
   - `message_valid`: an array of booleans with the same length as `payloads` indicating which are valid
 - `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign these messages for any reason
-- - `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all messages due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
+- `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all messages due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
 
-The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account, and return the signed messages to the dapp endpoint.
+The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account address, and return the signed messages to the dapp endpoint.
 
 ### Constants
 
@@ -760,10 +798,9 @@ const ERROR_INVALID_PAYLOAD = -3
 const ERROR_NOT_SIGNED = -4
 const ERROR_NOT_COMMITTED = -5
 const ERROR_TOO_MANY_PAYLOADS = -6
+const ERROR_CLUSTER_NOT_SUPPORTED = -7
 
 const ERROR_ATTEST_ORIGIN_ANDROID = -100
-
-const MAX_TRANSACTION_SZ = 1232
 ```
 
 ### Illustrative diagrams
@@ -940,3 +977,15 @@ On a disconnection:
 Entries in the half open data set should be removed, and the connection closed, if still present in this set  X seconds after being added. Entries in the fully open data set should be removed, and both connections closed, if still present in this list X seconds after being added.
 
 To ensure that all active connections are maintained, the reflector shall ensure that periodic [`PING`](https://datatracker.ietf.org/doc/html/rfc6455#section-5.5.2) frames are sent to each connection.
+
+# Support for other chains
+
+While the initial version of this specification is designed to support the Solana network, future support for other chain types is envisioned. This could be accomplished with:
+
+- modified association URIs (using schemes of the form `newchain-wallet://` instead of `solana-wallet://`)
+- modified parameters to the RPC methods
+  - `authorize` would have a different set of chain identifiers
+  - `get_capabilities` would be used to express domain-specific capabilities relevant to the chain
+  - `sign_and_send_transactions` would use chain-specific shapes for the `options` object
+
+The specifics of the application of Mobile Wallet Adapter to each additional chain would be captured either with an update to this specification, or an extension accompanying this specification, as appropriate.
