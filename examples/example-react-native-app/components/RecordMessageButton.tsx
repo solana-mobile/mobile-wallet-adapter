@@ -1,5 +1,5 @@
 import {WalletAdapterNetwork} from '@solana/wallet-adapter-base';
-import {useConnection, useWallet} from '@solana/wallet-adapter-react';
+import {useConnection} from '@solana/wallet-adapter-react';
 import {
   PublicKey,
   RpcResponseAndContext,
@@ -7,11 +7,14 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import React, {ReactNode, useState} from 'react';
+import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import React, {useContext, useState} from 'react';
 import {Linking, StyleSheet, View} from 'react-native';
-import {Button, Dialog, Paragraph, Portal, Snackbar} from 'react-native-paper';
+import {Button, Dialog, Paragraph, Portal} from 'react-native-paper';
 
+import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
+import {SnackbarContext} from './SnackbarProvider';
 
 type Props = Readonly<{
   children?: React.ReactNode;
@@ -19,13 +22,9 @@ type Props = Readonly<{
 }>;
 
 export default function RecordMessageButton({children, message}: Props) {
-  //   const {enqueueSnackbar} = useSnackbar();
+  const {authorization} = useAuthorization();
   const {connection} = useConnection();
-  const {publicKey, sendTransaction} = useWallet();
-  const [snackbarProps, setSnackbarProps] = useState<
-    | (Partial<React.ComponentProps<typeof Snackbar>> & {children: ReactNode})
-    | null
-  >(null);
+  const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =
     useState(false);
   const [recordingInProgress, setRecordingInProgress] = useState(false);
@@ -35,7 +34,7 @@ export default function RecordMessageButton({children, message}: Props) {
     ): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
       const memoProgramTransaction = new Transaction({
         ...(await connection.getLatestBlockhash()),
-        feePayer: publicKey,
+        feePayer: authorization!.publicKey,
       }).add(
         new TransactionInstruction({
           data: messageBuffer,
@@ -45,14 +44,17 @@ export default function RecordMessageButton({children, message}: Props) {
           ),
         }),
       );
-      const signature = await sendTransaction(
-        memoProgramTransaction,
-        connection,
-      );
+      const [signature] = await transact(async walletAPI => {
+        return await walletAPI({
+          method: 'sign_and_send_transaction',
+          auth_token: authorization!.auth_token,
+          connection,
+          transactions: [memoProgramTransaction],
+        });
+      });
       return [signature, await connection.confirmTransaction(signature)];
     },
-    setSnackbarProps,
-    [connection, publicKey, sendTransaction],
+    [connection],
   );
   return (
     <>
@@ -61,11 +63,7 @@ export default function RecordMessageButton({children, message}: Props) {
           disabled={!message}
           loading={recordingInProgress}
           onPress={async () => {
-            if (
-              recordingInProgress ||
-              publicKey == null ||
-              sendTransaction == null
-            ) {
+            if (recordingInProgress || authorization?.publicKey == null) {
               return;
             }
             setRecordingInProgress(true);
@@ -118,14 +116,6 @@ export default function RecordMessageButton({children, message}: Props) {
         </Button>
       </View>
       <Portal>
-        <Snackbar
-          children={null}
-          onDismiss={() => {
-            setSnackbarProps(null);
-          }}
-          visible={snackbarProps != null}
-          {...snackbarProps}
-        />
         <Dialog
           onDismiss={() => {
             setRecordMessageTutorialOpen(false);

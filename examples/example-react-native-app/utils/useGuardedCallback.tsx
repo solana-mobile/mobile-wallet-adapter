@@ -1,12 +1,12 @@
-import React, {ReactNode, useCallback} from 'react';
+import {useCallback, useContext} from 'react';
+
+import {SnackbarContext} from '../components/SnackbarProvider';
 
 export default function useGuardedCallback<TArgs extends Array<any>, TReturn>(
   cb: (...args: TArgs) => TReturn,
-  setSnackbarProps: React.Dispatch<
-    React.SetStateAction<{children: ReactNode} | null>
-  >,
   dependencies?: Array<any>,
 ) {
+  const setSnackbarProps = useContext(SnackbarContext);
   return useCallback(
     async (...args: TArgs) => {
       try {

@@ -1350,10 +1350,8 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@solana-mobile/mobile-wallet-adapter-protocol-web3js@^0.0.1-alpha.3":
+"@solana-mobile/mobile-wallet-adapter-protocol-web3js@file:../../js/packages/mobile-wallet-adapter-protocol-web3js":
   version "0.0.1-alpha.3"
-  resolved "https://registry.yarnpkg.com/@solana-mobile/mobile-wallet-adapter-protocol-web3js/-/mobile-wallet-adapter-protocol-web3js-0.0.1-alpha.3.tgz#544f63ed8a8692211917fd8308eb7f162f70f1aa"
-  integrity sha512-wuhrA9McaL40TaueqQlZ+b+cxx8LwFnGNEaIeFtarlk6GgaPSc0XpV8p+pcmZPTbWMB8+P7ycrFxyQJdLxDx/g==
   dependencies:
     "@solana-mobile/mobile-wallet-adapter-protocol" "^0.0.1-alpha.3"
 
@@ -1361,14 +1359,6 @@
   version "0.0.1-alpha.3"
   dependencies:
     react-native "^0.69.1"
-
-"@solana-mobile/wallet-adapter-mobile@file:../../js/packages/wallet-adapter-mobile":
-  version "0.0.1-alpha.3"
-  dependencies:
-    "@react-native-async-storage/async-storage" "^1.17.7"
-    "@solana-mobile/mobile-wallet-adapter-protocol-web3js" "^0.0.1-alpha.3"
-    "@solana/wallet-adapter-base" "^0.9.8"
-    "@solana/web3.js" "^1.20.0"
 
 "@solana/buffer-layout@^4.0.0":
   version "4.0.0"
@@ -1391,7 +1381,7 @@
   dependencies:
     "@solana/wallet-adapter-base" "^0.9.9"
 
-"@solana/web3.js@^1.20.0":
+"@solana/web3.js@^1.48.0":
   version "1.48.0"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.48.0.tgz#331281b2d80640431fb3b6fdc6b704ec325917aa"
   integrity sha512-Gb6XvdhGjGI7CdAXLmlMIEvEYvrwqc78JOtwCsSrTqzz7Ek/BhJpZ/Cv89gxRDrWxf6kHegAfaN2FxwuYMmDZQ==
@@ -2932,9 +2922,9 @@ ee-first@1.1.1:
   integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
 electron-to-chromium@^1.4.188:
-  version "1.4.189"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.189.tgz#4e5b221dc44e09e9dddc9abbc6457857dee7ba25"
-  integrity sha512-dQ6Zn4ll2NofGtxPXaDfY2laIa6NyCQdqXYHdwH90GJQW0LpJJib0ZU/ERtbb0XkBEmUD2eJtagbOie3pdMiPg==
+  version "1.4.190"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.190.tgz#c356196bd469cec230fe78e666b4d8628f12eb8a"
+  integrity sha512-dDW9D5xT+ODGh9rlK2sQeJR0xgV1nrNn3/K4IV8k74QbmKN61dm5GKMSwerdpTpazrrkK6wwcgjGBoQ/Nx6L5A==
 
 elliptic@^6.5.4:
   version "6.5.4"

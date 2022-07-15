@@ -1,105 +1,47 @@
-import {useWallet} from '@solana/wallet-adapter-react';
-import {SolanaMobileWalletAdapterWalletName} from '@solana-mobile/wallet-adapter-mobile';
-import React, {useEffect, useState} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet} from 'react-native';
-import {
-  Appbar,
-  Divider,
-  Portal,
-  Text,
-  TextInput,
-  useTheme,
-} from 'react-native-paper';
+import {ConnectionProvider} from '@solana/wallet-adapter-react';
+import {clusterApiUrl} from '@solana/web3.js';
+import React, {Suspense} from 'react';
+import {ActivityIndicator, SafeAreaView, StyleSheet, View} from 'react-native';
+import {Provider as PaperProvider} from 'react-native-paper';
 
-import AccountInfo from './components/AccountInfo';
-import ConnectButton from './components/ConnectButton';
-import DisconnectButton from './components/DisconnectButton';
-import FundAccountButton from './components/FundAccountButton';
-import RecordMessageButton from './components/RecordMessageButton';
-import SignMessageButton from './components/SignMessageButton';
-import Shell from './Shell';
+import SnackbarProvider from './components/SnackbarProvider';
+import MainScreen from './screens/MainScreen';
 
-function AppImpl() {
-  const {publicKey, select, wallet} = useWallet();
-  const {colors} = useTheme();
-  const [memoText, setMemoText] = useState('');
-  useEffect(() => {
-    if (wallet?.adapter.name !== SolanaMobileWalletAdapterWalletName) {
-      select(SolanaMobileWalletAdapterWalletName);
-    }
-  }, [select, wallet]);
-  if (wallet == null) {
-    return null;
-  }
-  return (
-    <>
-      <SafeAreaView style={styles.shell}>
-        <Appbar.Header elevated mode="center-aligned">
-          <Appbar.Content title="React Native dApp" />
-        </Appbar.Header>
-        <Portal.Host>
-          <ScrollView contentContainerStyle={styles.container}>
-            {publicKey ? (
-              <>
-                <Text variant="bodyLarge">
-                  Write a message to record on the blockchain.
-                </Text>
-                <Divider style={styles.spacer} />
-                <TextInput
-                  disabled={publicKey == null}
-                  label="What's on your mind?"
-                  onChangeText={text => {
-                    setMemoText(text);
-                  }}
-                  style={styles.textInput}
-                  value={memoText}
-                />
-                <Divider style={styles.spacer} />
-                <RecordMessageButton message={memoText}>
-                  Record Message
-                </RecordMessageButton>
-                <Divider style={styles.spacer} />
-                <SignMessageButton message={memoText}>
-                  Sign Message
-                </SignMessageButton>
-                <Divider style={styles.spacer} />
-                <FundAccountButton>Fund Account (devnet)</FundAccountButton>
-                <Divider style={styles.spacer} />
-                <DisconnectButton buttonColor={colors.error} mode="contained">
-                  Disconnect
-                </DisconnectButton>
-              </>
-            ) : (
-              <ConnectButton mode="contained">Connect</ConnectButton>
-            )}
-          </ScrollView>
-          {publicKey ? <AccountInfo publicKey={publicKey} /> : null}
-        </Portal.Host>
-      </SafeAreaView>
-    </>
-  );
-}
+const DEVNET_ENDPOINT = /*#__PURE__*/ clusterApiUrl('devnet');
 
 export default function App() {
   return (
-    <Shell>
-      <AppImpl />
-    </Shell>
+    <ConnectionProvider endpoint={DEVNET_ENDPOINT}>
+      <SafeAreaView style={styles.shell}>
+        <PaperProvider>
+          <SnackbarProvider>
+            <Suspense
+              fallback={
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator
+                    size="large"
+                    style={styles.loadingIndicator}
+                  />
+                </View>
+              }>
+              <MainScreen />
+            </Suspense>
+          </SnackbarProvider>
+        </PaperProvider>
+      </SafeAreaView>
+    </ConnectionProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  loadingContainer: {
+    height: '100%',
+    justifyContent: 'center',
+  },
+  loadingIndicator: {
+    marginVertical: 'auto',
   },
   shell: {
     height: '100%',
-  },
-  spacer: {
-    marginVertical: 16,
-    width: '100%',
-  },
-  textInput: {
-    width: '100%',
   },
 });
