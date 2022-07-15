@@ -1,12 +1,16 @@
 package com.solanamobile.ktxclientsample.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
@@ -20,10 +24,13 @@ fun SampleScreen(
     val viewState = viewmodel.viewState.collectAsState().value
 
     Column(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
     ) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
             text = "Ktx Client Sample",
             style = MaterialTheme.typography.h4
         )
@@ -31,10 +38,29 @@ fun SampleScreen(
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                viewmodel.connectToWallet(intentSender)
+                if (!viewState.isConnected) {
+                    viewmodel.connectToWallet(intentSender)
+                } else {
+                    viewmodel.disconnect(intentSender)
+                }
             }
         ) {
-            Text("Connect to Wallet")
+            Text(
+                text = if (!viewState.isConnected) "Connect to Wallet" else "Disconnect from Wallet"
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .background(Color.LightGray)
+                .fillMaxWidth()
+        ) {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = "Address: ${ viewState.userAddress }"
+            )
         }
 
         Divider(
