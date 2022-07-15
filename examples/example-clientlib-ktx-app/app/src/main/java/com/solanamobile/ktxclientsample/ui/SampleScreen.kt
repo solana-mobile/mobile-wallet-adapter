@@ -52,7 +52,13 @@ fun SampleScreen(
 
         Box(
             modifier = Modifier
-                .background(Color.LightGray)
+                .background(
+                    if (viewState.isConnected) {
+                        Color.Green
+                    } else {
+                        Color.LightGray
+                    }
+                )
                 .fillMaxWidth()
         ) {
             Text(
