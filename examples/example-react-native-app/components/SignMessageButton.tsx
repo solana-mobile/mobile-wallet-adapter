@@ -1,16 +1,11 @@
-import {useWallet} from '@solana/wallet-adapter-react';
-import React, {ReactNode, useState} from 'react';
+import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import React, {useContext, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {
-  Button,
-  Dialog,
-  Paragraph,
-  Portal,
-  Snackbar,
-  Text,
-} from 'react-native-paper';
+import {Button, Dialog, Paragraph, Portal, Text} from 'react-native-paper';
 
+import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
+import {SnackbarContext} from './SnackbarProvider';
 
 type Props = Readonly<{
   children?: React.ReactNode;
@@ -22,32 +17,31 @@ function getBase64StringFromByteArray(byteArray: Uint8Array): string {
 }
 
 export default function SignMessageButton({children, message}: Props) {
-  const {publicKey, signMessage} = useWallet();
-  const [snackbarProps, setSnackbarProps] = useState<
-    | (Partial<React.ComponentProps<typeof Snackbar>> & {children: ReactNode})
-    | null
-  >(null);
+  const {authorization} = useAuthorization();
   const [previewSignature, setPreviewSignature] = useState<Uint8Array | null>(
     null,
   );
   const [previewSignatureDialogOpen, setPreviewSignatureDialogOpen] =
     useState(false);
+  const setSnackbarProps = useContext(SnackbarContext);
   const [signMessageTutorialOpen, setSignMessageTutorialOpen] = useState(false);
-  const signMessageGuarded = useGuardedCallback(
-    async buffer => {
-      return await signMessage!(buffer);
-    },
-    setSnackbarProps,
-    [signMessage],
-  );
+  const signMessageGuarded = useGuardedCallback(async buffer => {
+    const [signature] = await transact(async walletAPI => {
+      return await walletAPI({
+        method: 'sign_message',
+        auth_token: authorization!.auth_token,
+        byteArrays: [buffer],
+      });
+    });
+    return signature;
+  }, []);
   return (
     <>
-      {/* <ButtonGroup fullWidth={true} variant="outlined"> */}
       <View style={styles.buttonGroup}>
         <Button
           disabled={!message}
           onPress={async () => {
-            if (publicKey == null) {
+            if (authorization?.publicKey == null) {
               return;
             }
             const messageBuffer = new Uint8Array(
@@ -80,14 +74,6 @@ export default function SignMessageButton({children, message}: Props) {
         </Button>
       </View>
       <Portal>
-        <Snackbar
-          children={null}
-          onDismiss={() => {
-            setSnackbarProps(null);
-          }}
-          visible={snackbarProps != null}
-          {...snackbarProps}
-        />
         <Dialog
           onDismiss={() => {
             setSignMessageTutorialOpen(false);

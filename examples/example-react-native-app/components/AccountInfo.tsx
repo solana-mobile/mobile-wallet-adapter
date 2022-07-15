@@ -11,7 +11,7 @@ type Props = Readonly<{
 
 export default function AccountInfo({publicKey}: Props) {
   const publicKeyBase58String = useMemo(
-    () => publicKey?.toBase58(),
+    () => publicKey.toBase58(),
     [publicKey],
   );
   return (

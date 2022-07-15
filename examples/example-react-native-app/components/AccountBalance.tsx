@@ -1,9 +1,9 @@
-import {useConnection, useWallet} from '@solana/wallet-adapter-react';
+import {useConnection} from '@solana/wallet-adapter-react';
 import {LAMPORTS_PER_SOL, PublicKey} from '@solana/web3.js';
-import React, {useCallback, useEffect, useMemo} from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Subheading, Text} from 'react-native-paper';
-import useSWR, {mutate} from 'swr';
+import useSWR from 'swr';
 
 type Props = Readonly<{
   publicKey: PublicKey;
@@ -27,17 +27,6 @@ export default function AccountBalance({publicKey}: Props) {
       ),
     [lamports],
   );
-  const {wallet} = useWallet();
-  useEffect(() => {
-    if (wallet) {
-      wallet.adapter.on('disconnect', () => {
-        mutate('accountBalance', 0, {revalidate: false});
-      });
-      return () => {
-        wallet.adapter.off('disconnect');
-      };
-    }
-  }, [wallet]);
   return (
     <View style={styles.container}>
       <Subheading>Balance: </Subheading>
