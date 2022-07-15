@@ -13,6 +13,7 @@ import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
 import com.solana.mobilewalletadapter.common.crypto.HKDF;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -39,6 +40,7 @@ import javax.crypto.spec.SecretKeySpec;
 public abstract class MobileWalletAdapterSessionCommon implements MessageReceiver, MessageSender {
     private static final String TAG = MobileWalletAdapterSessionCommon.class.getSimpleName();
 
+    private static final int SEQ_NUM_LENGTH_BYTES = 4;
     private static final int AES_IV_LENGTH_BYTES = 12;
     private static final int AES_TAG_LENGTH_BYTES = 16;
 
@@ -51,6 +53,8 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     private State mState = State.WAITING_FOR_CONNECTION;
     private KeyPair mECDHKeypair;
     private SecretKey mCachedEncryptionKey;
+    private int mSeqNumberTx;
+    private int mSeqNumberRx;
 
     protected MobileWalletAdapterSessionCommon(@NonNull MessageReceiver decryptedPayloadReceiver,
                                                @Nullable StateCallbacks stateCallbacks) {
@@ -171,6 +175,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             throw new IllegalStateException("Cannot decrypt, no session key has been established");
         }
 
+        final byte[] seqNum = new byte[SEQ_NUM_LENGTH_BYTES];
+        ByteBuffer.wrap(seqNum).putInt(++mSeqNumberTx); // Big-endian
+
         try {
             final Cipher aesCipher = Cipher.getInstance("AES/GCM/NoPadding");
             final byte[] iv = new byte[AES_IV_LENGTH_BYTES];
@@ -178,10 +185,13 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(
                     AES_TAG_LENGTH_BYTES * 8, iv);
             aesCipher.init(Cipher.ENCRYPT_MODE, mCachedEncryptionKey, gcmParameterSpec);
-            final byte[] ciphertext = Arrays.copyOf(iv, AES_IV_LENGTH_BYTES +
-                    aesCipher.getOutputSize(payload.length));
-            aesCipher.doFinal(payload, 0, payload.length, ciphertext, AES_IV_LENGTH_BYTES);
-            return ciphertext;
+            aesCipher.updateAAD(seqNum, 0, SEQ_NUM_LENGTH_BYTES);
+            final byte[] encryptedMessage = Arrays.copyOf(seqNum, SEQ_NUM_LENGTH_BYTES +
+                    AES_IV_LENGTH_BYTES + aesCipher.getOutputSize(payload.length));
+            System.arraycopy(iv, 0, encryptedMessage, SEQ_NUM_LENGTH_BYTES, AES_IV_LENGTH_BYTES);
+            aesCipher.doFinal(payload, 0, payload.length, encryptedMessage,
+                    SEQ_NUM_LENGTH_BYTES + AES_IV_LENGTH_BYTES);
+            return encryptedMessage;
         } catch (InvalidAlgorithmParameterException | NoSuchPaddingException |
                 IllegalBlockSizeException | ShortBufferException | NoSuchAlgorithmException |
                 BadPaddingException | InvalidKeyException e) {
@@ -195,13 +205,20 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
             throw new IllegalStateException("Cannot decrypt, no session key has been established");
         }
 
+        final int seqNum = ByteBuffer.wrap(payload, 0, SEQ_NUM_LENGTH_BYTES).getInt(); // Big-endian
+        if (seqNum <= mSeqNumberRx) {
+            throw new SessionMessageException("Encrypted messages has invalid sequence number");
+        }
+        mSeqNumberRx = seqNum;
+
         try {
             final Cipher aesCipher = Cipher.getInstance("AES/GCM/NoPadding");
             final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(
-                    AES_TAG_LENGTH_BYTES * 8, payload, 0, AES_IV_LENGTH_BYTES);
+                    AES_TAG_LENGTH_BYTES * 8, payload, SEQ_NUM_LENGTH_BYTES, AES_IV_LENGTH_BYTES);
             aesCipher.init(Cipher.DECRYPT_MODE, mCachedEncryptionKey, gcmParameterSpec);
-            return aesCipher.doFinal(payload, AES_IV_LENGTH_BYTES,
-                    payload.length - AES_IV_LENGTH_BYTES);
+            aesCipher.updateAAD(payload, 0, SEQ_NUM_LENGTH_BYTES);
+            return aesCipher.doFinal(payload, SEQ_NUM_LENGTH_BYTES + AES_IV_LENGTH_BYTES,
+                    payload.length - SEQ_NUM_LENGTH_BYTES - AES_IV_LENGTH_BYTES);
         } catch (InvalidAlgorithmParameterException | NoSuchPaddingException |
                 IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException |
                 InvalidKeyException e) {
@@ -261,6 +278,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new UnsupportedOperationException("Failed generating an ECDH secret", e);
         }
+
+        mSeqNumberTx = 0;
+        mSeqNumberRx = 0;
 
         mState = State.ENCRYPTED_SESSION;
 

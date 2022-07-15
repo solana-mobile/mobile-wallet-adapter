@@ -1,6 +1,7 @@
 import { SolanaMobileWalletAdapterProtocolError } from './errors';
 import { SharedSecret } from './parseHelloRsp';
 
+const SEQUENCE_NUMBER_BYTES = 4;
 const INITIALIZATION_VECTOR_BYTES = 12;
 
 type JSONRPCResponse<TMessage> = {
@@ -11,24 +12,29 @@ type JSONRPCResponse<TMessage> = {
 
 export async function encryptJsonRpcMessage(jsonRpcMessage: unknown, sharedSecret: SharedSecret) {
     const plaintext = JSON.stringify(jsonRpcMessage);
+    const sequenceNumber = new Uint8Array(SEQUENCE_NUMBER_BYTES);
     const initializationVector = new Uint8Array(INITIALIZATION_VECTOR_BYTES);
+    // TODO: populate sequence number (big-endian)
     crypto.getRandomValues(initializationVector);
     const ciphertext = await crypto.subtle.encrypt(
-        getAlgorithmParams(initializationVector),
+        getAlgorithmParams(sequenceNumber, initializationVector),
         sharedSecret,
         Buffer.from(plaintext),
     );
     const response = new Uint8Array(initializationVector.byteLength + ciphertext.byteLength);
-    response.set(new Uint8Array(initializationVector), 0);
-    response.set(new Uint8Array(ciphertext), initializationVector.byteLength);
+    response.set(new Uint8Array(sequenceNumber), 0);
+    response.set(new Uint8Array(initializationVector), sequenceNumber.byteLength);
+    response.set(new Uint8Array(ciphertext), sequenceNumber.byteLength + initializationVector.byteLength);
     return response;
 }
 
 export async function decryptJsonRpcMessage<TMessage>(message: ArrayBuffer, sharedSecret: SharedSecret) {
-    const initializationVector = message.slice(0, INITIALIZATION_VECTOR_BYTES);
-    const ciphertext = message.slice(INITIALIZATION_VECTOR_BYTES);
+    const sequenceNumber = message.slice(0, SEQUENCE_NUMBER_BYTES);
+    // TODO: verify sequence number (big-endian)
+    const initializationVector = message.slice(SEQUENCE_NUMBER_BYTES, SEQUENCE_NUMBER_BYTES + INITIALIZATION_VECTOR_BYTES);
+    const ciphertext = message.slice(SEQUENCE_NUMBER_BYTES + INITIALIZATION_VECTOR_BYTES);
     const plaintextBuffer = await crypto.subtle.decrypt(
-        getAlgorithmParams(initializationVector),
+        getAlgorithmParams(sequenceNumber, initializationVector),
         sharedSecret,
         ciphertext,
     );
@@ -44,8 +50,9 @@ export async function decryptJsonRpcMessage<TMessage>(message: ArrayBuffer, shar
     return jsonRpcMessage as JSONRPCResponse<TMessage>;
 }
 
-function getAlgorithmParams(initializationVector: ArrayBuffer) {
+function getAlgorithmParams(sequenceNumber: ArrayBuffer, initializationVector: ArrayBuffer) {
     return {
+        additionalData: sequenceNumber,
         iv: initializationVector,
         name: 'AES-GCM',
         tagLength: 128, // 16 byte tag => 128 bits
