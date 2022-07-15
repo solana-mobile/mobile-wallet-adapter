@@ -1351,19 +1351,12 @@
     "@sinonjs/commons" "^1.7.0"
 
 "@solana-mobile/mobile-wallet-adapter-protocol-web3js@file:../../js/packages/mobile-wallet-adapter-protocol-web3js":
-  version "0.0.1-alpha.3"
+  version "0.0.1-alpha.5"
   dependencies:
-    "@solana-mobile/mobile-wallet-adapter-protocol" "^0.0.1-alpha.3"
+    "@solana-mobile/mobile-wallet-adapter-protocol" "^0.0.1-alpha.5"
 
-"@solana-mobile/mobile-wallet-adapter-protocol@^0.0.1-alpha.3":
-  version "0.0.1-alpha.4"
-  resolved "https://registry.yarnpkg.com/@solana-mobile/mobile-wallet-adapter-protocol/-/mobile-wallet-adapter-protocol-0.0.1-alpha.4.tgz#7396196cd57a81492c367ef3debaa29563f1ff03"
-  integrity sha512-k5ghtv630P8kzTro6/tx7ATEsvIqvskjrPsGHTy7zIyAz3oggErtV/AdDfN0eUFEVmcobOUhEh9C6jLh0iHdKw==
-  dependencies:
-    react-native "^0.69.1"
-
-"@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
-  version "0.0.1-alpha.3"
+"@solana-mobile/mobile-wallet-adapter-protocol@^0.0.1-alpha.5", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
+  version "0.0.1-alpha.5"
   dependencies:
     react-native "^0.69.1"
 
