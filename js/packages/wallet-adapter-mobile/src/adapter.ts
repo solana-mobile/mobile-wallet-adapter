@@ -241,7 +241,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     const [signedMessage] = await walletAPI({
                         method: 'sign_message',
                         auth_token: freshAuthToken,
-                        byteArrays: [message],
+                        payloads: [message],
                     });
                     const signature = signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES);
                     return signature;

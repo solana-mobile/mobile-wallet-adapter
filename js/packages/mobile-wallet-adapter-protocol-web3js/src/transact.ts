@@ -21,7 +21,7 @@ export interface Web3MobileWalletAPI extends AuthorizeAPI, CloneAuthorizationAPI
     (apiCall: { method: 'sign_transaction'; auth_token: AuthToken; transactions: Transaction[] }): Promise<
         Transaction[]
     >;
-    (apiCall: { method: 'sign_message'; auth_token: AuthToken; byteArrays: Uint8Array[] }): Promise<Uint8Array[]>;
+    (apiCall: { method: 'sign_message'; auth_token: AuthToken; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
 }
 
 function getBase64StringFromByteArray(byteArray: Uint8Array): string {
@@ -97,7 +97,7 @@ export async function transact<TReturn>(
                     return signatures as TransactionSignature[];
                 }
                 case 'sign_message': {
-                    const payloads = apiCall.byteArrays.map(getBase64StringFromByteArray);
+                    const payloads = apiCall.payloads.map(getBase64StringFromByteArray);
                     const { signed_payloads: base64EncodedSignedMessages } = await walletAPI({
                         method: 'sign_message',
                         auth_token: apiCall.auth_token,

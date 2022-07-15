@@ -30,7 +30,7 @@ export default function SignMessageButton({children, message}: Props) {
       return await walletAPI({
         method: 'sign_message',
         auth_token: authorization!.auth_token,
-        byteArrays: [buffer],
+        payloads: [buffer],
       });
     });
     return signature;
