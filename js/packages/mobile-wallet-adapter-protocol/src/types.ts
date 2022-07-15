@@ -43,35 +43,47 @@ export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
-export type AuthorizeAPI = (apiCall: { method: 'authorize'; identity: AppIdentity }) => Promise<AuthorizationResult>;
-export type CloneAuthorizationAPI = (apiCall: {
-    method: 'clone_authorization';
-    auth_token: AuthToken;
-}) => Promise<Readonly<{ auth_token: AuthToken }>>;
-export type DeauthorizeAPI = (apiCall: {
-    method: 'deauthorize';
-    auth_token: AuthToken;
-}) => Promise<Readonly<Record<string, never>>>;
-export type ReauthorizeAPI = (apiCall: {
-    method: 'reauthorize';
-    auth_token: AuthToken;
-}) => Promise<Readonly<{ auth_token: AuthToken }>>;
-export type SignMessageAPI = (apiCall: {
-    method: 'sign_message';
-    auth_token: AuthToken;
-    payloads: Base64EncodedMessage[];
-}) => Promise<Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>>;
-export type SignTransactionAPI = (apiCall: {
-    method: 'sign_transaction';
-    auth_token: AuthToken;
-    payloads: Base64EncodedTransaction[];
-}) => Promise<Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>>;
-export type SignAndSendTransactionAPI = (apiCall: {
-    method: 'sign_and_send_transaction';
-    auth_token: AuthToken;
-    commitment: 'confirmed' | 'finalized' | 'processed';
-    payloads: Base64EncodedTransaction[];
-}) => Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
+export type AuthorizeAPI = (method: 'authorize', params: { identity: AppIdentity }) => Promise<AuthorizationResult>;
+export type CloneAuthorizationAPI = (
+    method: 'clone_authorization',
+    params: {
+        auth_token: AuthToken;
+    },
+) => Promise<Readonly<{ auth_token: AuthToken }>>;
+export type DeauthorizeAPI = (
+    method: 'deauthorize',
+    params: {
+        auth_token: AuthToken;
+    },
+) => Promise<Readonly<Record<string, never>>>;
+export type ReauthorizeAPI = (
+    method: 'reauthorize',
+    params: {
+        auth_token: AuthToken;
+    },
+) => Promise<Readonly<{ auth_token: AuthToken }>>;
+export type SignMessageAPI = (
+    method: 'sign_message',
+    params: {
+        auth_token: AuthToken;
+        payloads: Base64EncodedMessage[];
+    },
+) => Promise<Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>>;
+export type SignTransactionAPI = (
+    method: 'sign_transaction',
+    params: {
+        auth_token: AuthToken;
+        payloads: Base64EncodedTransaction[];
+    },
+) => Promise<Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>>;
+export type SignAndSendTransactionAPI = (
+    method: 'sign_and_send_transaction',
+    params: {
+        auth_token: AuthToken;
+        commitment: 'confirmed' | 'finalized' | 'processed';
+        payloads: Base64EncodedTransaction[];
+    },
+) => Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
 
 export interface MobileWalletAPI
     extends AuthorizeAPI,

@@ -33,7 +33,7 @@ export async function transact<TReturn>(
 ): Promise<TReturn> {
     try {
         await SolanaMobileWalletAdapter.startSession(config);
-        return await callback(async ({ method, ...params }) => {
+        return await callback(async (method, params) => {
             try {
                 return await SolanaMobileWalletAdapter.invoke(method, params);
             } catch (e) {

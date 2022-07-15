@@ -10,19 +10,36 @@ import {
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
-export interface Web3MobileWalletAPI extends AuthorizeAPI, CloneAuthorizationAPI, DeauthorizeAPI, ReauthorizeAPI {
-    (apiCall: {
-        method: 'sign_and_send_transaction';
-        auth_token: AuthToken;
-        connection: Connection;
-        fee_payer?: PublicKey;
-        transactions: Transaction[];
-    }): Promise<TransactionSignature[]>;
-    (apiCall: { method: 'sign_transaction'; auth_token: AuthToken; transactions: Transaction[] }): Promise<
+interface Web3SignAndSendTransactionAPI {
+    (
+        method: 'sign_and_send_transaction',
+        params: {
+            auth_token: AuthToken;
+            connection: Connection;
+            fee_payer?: PublicKey;
+            transactions: Transaction[];
+        },
+    ): Promise<TransactionSignature[]>;
+}
+
+interface Web3SignTransactionAPI {
+    (method: 'sign_transaction', params: { auth_token: AuthToken; transactions: Transaction[] }): Promise<
         Transaction[]
     >;
-    (apiCall: { method: 'sign_message'; auth_token: AuthToken; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
 }
+
+interface Web3SignMessageAPI {
+    (method: 'sign_message', params: { auth_token: AuthToken; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
+}
+
+export interface Web3MobileWalletAPI
+    extends AuthorizeAPI,
+        CloneAuthorizationAPI,
+        DeauthorizeAPI,
+        ReauthorizeAPI,
+        Web3SignAndSendTransactionAPI,
+        Web3SignTransactionAPI,
+        Web3SignMessageAPI {}
 
 function getBase64StringFromByteArray(byteArray: Uint8Array): string {
     return window.btoa(String.fromCharCode.call(null, ...byteArray));
@@ -42,7 +59,7 @@ export async function transact<TReturn>(
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     const augmentedCallback: (walletAPI: MobileWalletAPI) => TReturn = (walletAPI) => {
-        const augmentedAPI = (async (apiCall) => {
+        const augmentedAPI = (async (...args) => {
             let latestBlockhashPromise: ReturnType<InstanceType<typeof Connection>['getLatestBlockhash']>;
             async function getLatestBlockhash(connection: Connection) {
                 if (latestBlockhashPromise == null) {
@@ -52,23 +69,17 @@ export async function transact<TReturn>(
                 }
                 return await latestBlockhashPromise;
             }
-            switch (apiCall.method) {
-                case 'authorize':
-                    return await walletAPI(apiCall);
-                case 'clone_authorization':
-                    return await walletAPI(apiCall);
-                case 'deauthorize':
-                    return await walletAPI(apiCall);
-                case 'reauthorize':
-                    return await walletAPI(apiCall);
+            const [method] = args;
+            switch (method) {
                 case 'sign_and_send_transaction': {
+                    const params = args[1] as Parameters<Web3SignAndSendTransactionAPI>[1];
                     const payloads = await Promise.all(
-                        apiCall.transactions.map(async (transaction) => {
+                        params.transactions.map(async (transaction) => {
                             if (transaction.feePayer == null) {
-                                transaction.feePayer = apiCall.fee_payer;
+                                transaction.feePayer = params.fee_payer;
                             }
                             if (transaction.recentBlockhash == null) {
-                                const { blockhash } = await getLatestBlockhash(apiCall.connection);
+                                const { blockhash } = await getLatestBlockhash(params.connection);
                                 transaction.recentBlockhash = blockhash;
                             }
                             const serializedTransaction = transaction.serialize({
@@ -79,35 +90,35 @@ export async function transact<TReturn>(
                         }),
                     );
                     let targetCommitment: 'confirmed' | 'finalized' | 'processed';
-                    switch (apiCall.connection.commitment) {
+                    switch (params.connection.commitment) {
                         case 'confirmed':
                         case 'finalized':
                         case 'processed':
-                            targetCommitment = apiCall.connection.commitment;
+                            targetCommitment = params.connection.commitment;
                             break;
                         default:
                             targetCommitment = 'finalized';
                     }
-                    const { signatures } = await walletAPI({
-                        method: 'sign_and_send_transaction',
-                        auth_token: apiCall.auth_token,
+                    const { signatures } = await walletAPI('sign_and_send_transaction', {
+                        auth_token: params.auth_token,
                         commitment: targetCommitment,
                         payloads,
                     });
                     return signatures as TransactionSignature[];
                 }
                 case 'sign_message': {
-                    const payloads = apiCall.payloads.map(getBase64StringFromByteArray);
-                    const { signed_payloads: base64EncodedSignedMessages } = await walletAPI({
-                        method: 'sign_message',
-                        auth_token: apiCall.auth_token,
+                    const params = args[1] as Parameters<Web3SignMessageAPI>[1];
+                    const payloads = params.payloads.map(getBase64StringFromByteArray);
+                    const { signed_payloads: base64EncodedSignedMessages } = await walletAPI('sign_message', {
+                        auth_token: params.auth_token,
                         payloads,
                     });
                     const signedMessages = base64EncodedSignedMessages.map(getByteArrayFromBase64String);
                     return signedMessages;
                 }
                 case 'sign_transaction': {
-                    const serializedTransactions = apiCall.transactions.map((transaction) =>
+                    const params = args[1] as Parameters<Web3SignTransactionAPI>[1];
+                    const serializedTransactions = params.transactions.map((transaction) =>
                         transaction.serialize({
                             requireAllSignatures: false,
                             verifySignatures: false,
@@ -116,9 +127,8 @@ export async function transact<TReturn>(
                     const payloads = serializedTransactions.map((serializedTransaction) =>
                         serializedTransaction.toString('base64'),
                     );
-                    const { signed_payloads: base64EncodedCompiledTransactions } = await walletAPI({
-                        method: 'sign_transaction',
-                        auth_token: apiCall.auth_token,
+                    const { signed_payloads: base64EncodedCompiledTransactions } = await walletAPI('sign_transaction', {
+                        auth_token: params.auth_token,
                         payloads,
                     });
                     const compiledTransactions = base64EncodedCompiledTransactions.map(getByteArrayFromBase64String);
@@ -126,8 +136,7 @@ export async function transact<TReturn>(
                     return transactions;
                 }
                 default:
-                    // If this switch is exhausive, this should be unreachable.
-                    return ((_: never) => undefined)(apiCall);
+                    return await walletAPI(...(args as Parameters<MobileWalletAPI>));
             }
         }) as Web3MobileWalletAPI;
         return callback(augmentedAPI);

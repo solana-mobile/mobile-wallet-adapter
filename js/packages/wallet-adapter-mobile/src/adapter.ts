@@ -101,7 +101,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     auth_token,
                     pub_key: base58PublicKey,
                     wallet_uri_base,
-                } = await walletAPI({ method: 'authorize', identity: this._appIdentity });
+                } = await walletAPI('authorize', { identity: this._appIdentity });
                 try {
                     this._publicKey = new PublicKey(base58PublicKey);
                 } catch (e) {
@@ -136,8 +136,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         currentAuthorizationResult: AuthorizationResult,
     ): Promise<AuthToken> {
         try {
-            const { auth_token } = await walletAPI({
-                method: 'reauthorize',
+            const { auth_token } = await walletAPI('reauthorize', {
                 auth_token: currentAuthorizationResult.auth_token,
             });
             if (currentAuthorizationResult.auth_token !== auth_token) {
@@ -178,8 +177,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 return await this.transact(async (walletAPI) => {
                     const freshAuthToken = await this.performReauthorization(walletAPI, authorizationResult);
-                    const signedTransactions = await walletAPI({
-                        method: 'sign_transaction',
+                    const signedTransactions = await walletAPI('sign_transaction', {
                         auth_token: freshAuthToken,
                         transactions,
                     });
@@ -204,8 +202,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 return await this.transact(async (walletAPI) => {
                     const freshAuthToken = await this.performReauthorization(walletAPI, authorizationResult);
-                    const signatures = await walletAPI({
-                        method: 'sign_and_send_transaction',
+                    const signatures = await walletAPI('sign_and_send_transaction', {
                         auth_token: freshAuthToken,
                         fee_payer: this.publicKey || undefined,
                         connection,
@@ -238,8 +235,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 return await this.transact(async (walletAPI) => {
                     const freshAuthToken = await this.performReauthorization(walletAPI, authorizationResult);
-                    const [signedMessage] = await walletAPI({
-                        method: 'sign_message',
+                    const [signedMessage] = await walletAPI('sign_message', {
                         auth_token: freshAuthToken,
                         payloads: [message],
                     });
