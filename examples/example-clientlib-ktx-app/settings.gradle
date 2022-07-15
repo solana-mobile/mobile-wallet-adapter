@@ -18,3 +18,9 @@ dependencyResolutionManagement {
 rootProject.name = "Ktx Client Sample"
 
 include ':app'
+include ':common'
+project(":common").projectDir = new File("../../android/common")
+include ':clientlib'
+project(":clientlib").projectDir = new File("../../android/clientlib")
+include ':clientlib-ktx'
+project(":clientlib-ktx").projectDir = new File("../../android/clientlib-ktx")
