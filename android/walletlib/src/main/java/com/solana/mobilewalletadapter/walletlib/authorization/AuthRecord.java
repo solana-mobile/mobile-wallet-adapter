@@ -56,12 +56,6 @@ public class AuthRecord {
         return (now < issued || now > expires);
     }
 
-    public boolean isAuthorized() {
-        synchronized (this) {
-            return !mRevoked;
-        }
-    }
-
     /*package*/ void setRevoked() {
         synchronized (this) {
             mRevoked = true;

@@ -324,7 +324,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             } catch (ExecutionException e) {
                 final Throwable cause = e.getCause();
                 if (
-                    cause instanceof AuthTokenNotValidException ||
+                    cause instanceof AuthorizationNotValidException ||
                     cause instanceof RequestDeclinedException
                 ) {
                     handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "reauthorize request failed", null);
@@ -514,17 +514,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     private static abstract class SignRequest<T extends SignResult> extends RequestFuture<T> {
         @NonNull
-        public final String authToken;
-
-        @NonNull
         @Size(min = 1)
         public final byte[][] payloads;
 
         private SignRequest(@Nullable Object id,
-                            @NonNull String authToken,
                             @NonNull @Size(min = 1) byte[][] payloads) {
             super(id);
-            this.authToken = authToken;
             this.payloads = payloads;
         }
 
@@ -555,7 +550,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignRequest{" +
                     "id=" + id +
-                    ", authToken='" + authToken + '\'' +
                     ", payloads=" + Arrays.toString(payloads) +
                     ", super=" + super.toString() +
                     '}';
@@ -574,9 +568,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         protected SignPayloadsRequest(@Nullable Object id,
                                       @NonNull Type type,
-                                      @NonNull String authToken,
                                       @NonNull byte[][] payloads) {
-            super(id, authToken, payloads);
+            super(id, payloads);
             this.type = type;
         }
 
@@ -644,12 +637,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final JSONObject o = (JSONObject) params;
 
-        final String authToken = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
-        if (authToken.isEmpty()) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "request must contain an auth_token", null);
-            return;
-        }
-
         final byte[][] payloads;
         try {
             payloads = unpackPayloadsArray(o);
@@ -663,7 +650,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final SignPayloadsRequest request = new SignPayloadsRequest(id, type, authToken, payloads);
+        final SignPayloadsRequest request = new SignPayloadsRequest(id, type, payloads);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadsComplete(f)));
         mMethodHandlers.signPayloads(request);
     }
@@ -679,9 +666,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 final Throwable cause = e.getCause();
                 if (cause instanceof RequestDeclinedException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_NOT_SIGNED, "sign request declined", null);
-                } else if (cause instanceof ReauthorizationRequiredException) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_REAUTHORIZE, "auth_token requires reauthorization", null);
-                } else if (cause instanceof AuthTokenNotValidException) {
+                } else if (cause instanceof AuthorizationNotValidException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "auth_token not valid for signing", null);
                 } else if (cause instanceof InvalidPayloadsException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_INVALID_PAYLOADS, "payloads invalid for signing",
@@ -763,13 +748,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final CommitmentLevel preflightCommitmentLevel;
 
         private SignAndSendTransactionsRequest(@Nullable Object id,
-                                               @NonNull String authToken,
                                                @NonNull @Size(min = 1) byte[][] transactions,
                                                @NonNull CommitmentLevel commitmentLevel,
                                                @Nullable String cluster,
                                                boolean skipPreflight,
                                                @NonNull CommitmentLevel preflightCommitmentLevel) {
-            super(id, authToken, transactions);
+            super(id, transactions);
             this.commitmentLevel = commitmentLevel;
             this.cluster = cluster;
             this.skipPreflight = skipPreflight;
@@ -832,12 +816,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final JSONObject o = (JSONObject) params;
 
-        final String authToken = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
-        if (authToken.isEmpty()) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "request must contain an auth_token", null);
-            return;
-        }
-
         final byte[][] payloads;
         try {
             payloads = unpackPayloadsArray(o);
@@ -876,7 +854,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         final SignAndSendTransactionsRequest request = new SignAndSendTransactionsRequest(
-                id, authToken, payloads, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel);
+                id, payloads, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionsComplete(f)));
         mMethodHandlers.signAndSendTransactions(request);
     }
@@ -892,9 +870,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 final Throwable cause = e.getCause();
                 if (cause instanceof RequestDeclinedException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_NOT_SIGNED, "sign request declined", null);
-                } else if (cause instanceof ReauthorizationRequiredException) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_REAUTHORIZE, "auth_token requires reauthorization", null);
-                } else if (cause instanceof AuthTokenNotValidException) {
+                } else if (cause instanceof AuthorizationNotValidException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "auth_token not valid for signing", null);
                 } else if (cause instanceof InvalidPayloadsException) {
                     final InvalidPayloadsException e2 = (InvalidPayloadsException) cause;
@@ -973,12 +949,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public RequestDeclinedException(@NonNull String m) { super(m); }
     }
 
-    public static class ReauthorizationRequiredException extends MobileWalletAdapterServerException {
-        public ReauthorizationRequiredException(@NonNull String m) { super(m); }
-    }
-
-    public static class AuthTokenNotValidException extends MobileWalletAdapterServerException {
-        public AuthTokenNotValidException(@NonNull String m) { super (m); }
+    public static class AuthorizationNotValidException extends MobileWalletAdapterServerException {
+        public AuthorizationNotValidException(@NonNull String m) { super (m); }
     }
 
     public static class InvalidPayloadsException extends MobileWalletAdapterServerException {

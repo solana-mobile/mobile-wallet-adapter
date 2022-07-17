@@ -20,8 +20,6 @@ public class ProtocolContract {
     // METHOD_REAUTHORIZE returns a RESULT_AUTH_TOKEN
 
     public static final String METHOD_CLONE_AUTHORIZATION = "clone_authorization";
-    // METHOD_CLONE_AUTHORIZATION takes an optional PARAMETER_IDENTITY
-    // METHOD_CLONE_AUTHORIZATION takes a PARAMETER_AUTH_TOKEN
     // METHOD_CLONE_AUTHORIZATION returns a RESULT_AUTH_TOKEN
 
     public static final String METHOD_GET_CAPABILITIES = "get_capabilities";
@@ -31,12 +29,10 @@ public class ProtocolContract {
     public static final String RESULT_MAX_MESSAGES_PER_REQUEST = "max_messages_per_request"; // type: Number
 
     public static final String METHOD_SIGN_TRANSACTIONS = "sign_transactions";
-    // METHOD_SIGN_TRANSACTIONS takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_TRANSACTIONS takes a PARAMETER_PAYLOADS
     // METHOD_SIGN_TRANSACTIONS returns a RESULT_SIGNED_PAYLOADS
 
     public static final String METHOD_SIGN_AND_SEND_TRANSACTIONS = "sign_and_send_transactions";
-    // METHOD_SIGN_AND_SEND_TRANSACTIONS takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_AND_SEND_TRANSACTIONS takes a PARAMETER_PAYLOADS
     public static final String PARAMETER_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values)
     public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
@@ -45,7 +41,6 @@ public class ProtocolContract {
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base58-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGES = "sign_messages";
-    // METHOD_SIGN_MESSAGES takes a PARAMETER_AUTH_TOKEN
     // METHOD_SIGN_MESSAGES takes a PARAMETER_PAYLOADS
     // METHOD_SIGN_MESSAGES returns a RESULT_SIGNED_PAYLOADS
 
@@ -64,12 +59,11 @@ public class ProtocolContract {
 
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)
 
-    public static final int ERROR_REAUTHORIZE = -1;
-    public static final int ERROR_AUTHORIZATION_FAILED = -2;
-    public static final int ERROR_INVALID_PAYLOADS = -3;
-    public static final int ERROR_NOT_SIGNED = -4;
-    public static final int ERROR_NOT_COMMITTED = -5;
-    public static final int ERROR_TOO_MANY_PAYLOADS = -6;
+    public static final int ERROR_AUTHORIZATION_FAILED = -1;
+    public static final int ERROR_INVALID_PAYLOADS = -2;
+    public static final int ERROR_NOT_SIGNED = -3;
+    public static final int ERROR_NOT_COMMITTED = -4;
+    public static final int ERROR_TOO_MANY_PAYLOADS = -5;
     public static final int ERROR_ATTEST_ORIGIN_ANDROID = -100;
 
     public static final String DATA_INVALID_PAYLOADS_VALID = "valid"; // Type: JSON array of Boolean
