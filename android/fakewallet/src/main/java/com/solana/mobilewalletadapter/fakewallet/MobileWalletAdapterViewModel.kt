@@ -143,18 +143,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithDecline()
     }
 
-    fun signPayloadsSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignPayloads) {
-        if (rejectStaleRequest(request)) {
-            return
-        }
-        request.request.completeWithReauthorizationRequired()
-    }
-
     fun signPayloadsSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
-        request.request.completeWithAuthTokenNotValid()
+        request.request.completeWithAuthorizationNotValid()
     }
 
     fun signPayloadsSimulateInvalidPayloads(request: MobileWalletAdapterServiceRequest.SignPayloads) {
@@ -215,18 +208,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithDecline()
     }
 
-    fun signAndSendTransactionsSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
-        if (rejectStaleRequest(request)) {
-            return
-        }
-        request.request.completeWithReauthorizationRequired()
-    }
-
     fun signAndSendTransactionsSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
-        request.request.completeWithAuthTokenNotValid()
+        request.request.completeWithAuthorizationNotValid()
     }
 
     fun signAndSendTransactionsSimulateInvalidPayloads(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {

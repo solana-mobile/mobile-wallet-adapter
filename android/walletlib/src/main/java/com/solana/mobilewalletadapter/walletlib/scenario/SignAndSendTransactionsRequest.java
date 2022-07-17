@@ -9,7 +9,6 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
-import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
@@ -89,15 +88,8 @@ public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityReques
                 "Number of payloads provided for signing exceeds implementation limit"));
     }
 
-    @VisibleForTesting
-    public void completeWithReauthorizationRequired() {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.ReauthorizationRequiredException(
-                "auth_token requires reauthorization"));
-    }
-
-    @VisibleForTesting
-    public void completeWithAuthTokenNotValid() {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.AuthTokenNotValidException(
-                "auth_token not valid for signing of these payloads"));
+    public void completeWithAuthorizationNotValid() {
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.AuthorizationNotValidException(
+                "auth_token not valid for signing of this payload"));
     }
 }

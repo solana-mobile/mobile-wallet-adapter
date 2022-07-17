@@ -58,10 +58,6 @@ class SignPayloadFragment : Fragment() {
                                 activityViewModel.signPayloadsDeclined(request)
                             }
 
-                            viewBinding.btnSimulateReauthorize.setOnClickListener {
-                                activityViewModel.signPayloadsSimulateReauthorizationRequired(request)
-                            }
-
                             viewBinding.btnSimulateAuthorizationFailed.setOnClickListener {
                                 activityViewModel.signPayloadsSimulateAuthTokenInvalid(request)
                             }
@@ -91,10 +87,6 @@ class SignPayloadFragment : Fragment() {
 
                             viewBinding.btnDecline.setOnClickListener {
                                 activityViewModel.signAndSendTransactionsDeclined(request)
-                            }
-
-                            viewBinding.btnSimulateReauthorize.setOnClickListener {
-                                activityViewModel.signAndSendTransactionsSimulateReauthorizationRequired(request)
                             }
 
                             viewBinding.btnSimulateAuthorizationFailed.setOnClickListener {

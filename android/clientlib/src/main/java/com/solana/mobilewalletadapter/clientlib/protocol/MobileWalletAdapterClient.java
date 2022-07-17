@@ -431,12 +431,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
     @NonNull
     private NotifyOnCompleteFuture<Object> signPayloads(@NonNull String method,
-                                                        @NonNull String authToken,
                                                         @NonNull @Size(min = 1) byte[][] payloads)
             throws IOException {
-        if (authToken.isEmpty()) {
-            throw new IllegalArgumentException("authToken cannot be empty");
-        }
         for (byte[] p : payloads) {
             if (p == null || p.length == 0) {
                 throw new IllegalArgumentException("payloads must be null or empty");
@@ -446,7 +442,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(payloads);
         final JSONObject signPayloads = new JSONObject();
         try {
-            signPayloads.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
             signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
@@ -642,11 +637,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignPayloadsFuture signTransactions(@NonNull String authToken,
-                                               @NonNull @Size(min = 1) byte[][] transactions)
+    public SignPayloadsFuture signTransactions(@NonNull @Size(min = 1) byte[][] transactions)
             throws IOException {
         return new SignPayloadsFuture(
-                signPayloads(ProtocolContract.METHOD_SIGN_TRANSACTIONS, authToken, transactions),
+                signPayloads(ProtocolContract.METHOD_SIGN_TRANSACTIONS, transactions),
                 transactions.length);
     }
 
@@ -655,11 +649,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignPayloadsFuture signMessages(@NonNull String authToken,
-                                           @NonNull @Size(min = 1) byte[][] messages)
+    public SignPayloadsFuture signMessages(@NonNull @Size(min = 1) byte[][] messages)
             throws IOException {
         return new SignPayloadsFuture(
-                signPayloads(ProtocolContract.METHOD_SIGN_MESSAGES, authToken, messages),
+                signPayloads(ProtocolContract.METHOD_SIGN_MESSAGES, messages),
                 messages.length);
     }
 
@@ -668,16 +661,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull String authToken,
-                                                                 @NonNull @Size(min = 1) byte[][] transactions,
+    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
                                                                  @NonNull CommitmentLevel commitmentLevel,
                                                                  @Nullable String cluster,
                                                                  boolean skipPreflight,
                                                                  @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException {
-        if (authToken.isEmpty()) {
-            throw new IllegalArgumentException("authToken cannot be empty");
-        }
         for (byte[] t : transactions) {
             if (t == null || t.length == 0) {
                 throw new IllegalArgumentException("transactions must be null or empty");
@@ -687,7 +676,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
         final JSONObject signAndSendTransactions = new JSONObject();
         try {
-            signAndSendTransactions.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
             signAndSendTransactions.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
             signAndSendTransactions.put(ProtocolContract.PARAMETER_COMMITMENT,
                     commitmentLevel.commitmentLevel);
@@ -710,11 +698,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     @NonNull
-    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull String authToken,
-                                                                 @NonNull @Size(min = 1) byte[][] transactions,
+    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
                                                                  @NonNull CommitmentLevel commitmentLevel)
             throws IOException {
-        return signAndSendTransactions(authToken, transactions, commitmentLevel, null, false, null);
+        return signAndSendTransactions(transactions, commitmentLevel, null, false, null);
     }
 
     public static class SignAndSendTransactionsFuture

@@ -5,75 +5,77 @@
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import android.net.Uri;
-import android.os.Handler;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
-import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
-import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
 public class AuthorizeRequest extends BaseScenarioRequest {
     private static final String TAG = AuthorizeRequest.class.getSimpleName();
 
     @NonNull
-    private final Handler mIoHandler;
+    private final NotifyingCompletableFuture<Result> mRequest;
 
-    @NonNull
-    private final AuthRepository mAuthRepository;
+    @Nullable
+    protected final String mIdentityName;
 
-    @NonNull
-    private final MobileWalletAdapterServer.AuthorizeRequest mRequest;
+    @Nullable
+    protected final Uri mIdentityUri;
 
-    /*package*/ AuthorizeRequest(@NonNull Handler ioHandler,
-                                 @NonNull AuthRepository authRepository,
-                                 @NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
+    @Nullable
+    protected final Uri mIconUri;
+
+    /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
+                                 @Nullable String identityName,
+                                 @Nullable Uri identityUri,
+                                 @Nullable Uri iconUri) {
         super(request);
-        mIoHandler = ioHandler;
-        mAuthRepository = authRepository;
         mRequest = request;
+        mIdentityName = identityName;
+        mIdentityUri = identityUri;
+        mIconUri = iconUri;
     }
 
     @Nullable
     public String getIdentityName() {
-        return mRequest.identityName;
+        return mIdentityName;
     }
 
     @Nullable
     public Uri getIdentityUri() {
-        return mRequest.identityUri;
+        return mIdentityUri;
     }
 
     @Nullable
     public Uri getIconRelativeUri() {
-        return mRequest.iconUri;
+        return mIconUri;
     }
 
     public void completeWithAuthorize(@NonNull byte[] publicKey,
                                       @Nullable Uri walletUriBase,
                                       @Nullable byte[] scope) {
-        mIoHandler.post(() -> completeWithAuthToken(publicKey, walletUriBase, scope));
-    }
-
-    // Note: runs in IO thread context
-    private void completeWithAuthToken(@NonNull byte[] publicKey,
-                                       @Nullable Uri walletUriBase,
-                                       @Nullable byte[] scope) {
-        final String name = mRequest.identityName != null ? mRequest.identityName : "";
-        final Uri uri = mRequest.identityUri != null ? mRequest.identityUri : Uri.EMPTY;
-        final Uri relativeIconUri = mRequest.iconUri != null ? mRequest.iconUri : Uri.EMPTY;
-        final AuthRecord authRecord = mAuthRepository.issue(name, uri, relativeIconUri, publicKey, scope);
-        Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
-
-        final String authToken = mAuthRepository.toAuthToken(authRecord);
-        mRequest.complete(new MobileWalletAdapterServer.AuthorizeResult(
-                authToken, publicKey, walletUriBase));
+        mRequest.complete(new Result(publicKey, walletUriBase, scope));
     }
 
     public void completeWithDecline() {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
-                "authorize request declined"));
+        mRequest.complete(null);
+    }
+
+    /*package*/ static class Result {
+        @NonNull
+        /*package*/ final byte[] publicKey;
+        @Nullable
+        /*package*/ final Uri walletUriBase;
+        @Nullable
+        /*package*/ final byte[] scope;
+
+        private Result(@NonNull byte[] publicKey,
+                       @Nullable Uri walletUriBase,
+                       @Nullable byte[] scope) {
+            this.publicKey = publicKey;
+            this.walletUriBase = walletUriBase;
+            this.scope = scope;
+        }
     }
 }

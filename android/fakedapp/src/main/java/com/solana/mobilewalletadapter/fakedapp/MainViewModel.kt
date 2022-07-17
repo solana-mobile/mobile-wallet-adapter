@@ -93,6 +93,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val signedTransactions = localAssociateAndExecute(sender) { client ->
+            val authorized = doReauthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
             val blockhash = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
@@ -130,20 +134,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val signedTransactions = localAssociateAndExecute(sender) { client ->
             val authorized = doAuthorize(client)
-            if (authorized) {
-                val blockhash = try {
-                    latestBlockhash.await()
-                } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
-                    Log.e(TAG, "Failed retrieving latest blockhash", e)
-                    return@localAssociateAndExecute null
-                }
-                val transactions = Array(1) {
-                    MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
-                }
-                doSignTransactions(client, transactions)
-            } else {
-                null
+            if (!authorized) {
+                return@localAssociateAndExecute null
             }
+            val blockhash = try {
+                latestBlockhash.await()
+            } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
+                Log.e(TAG, "Failed retrieving latest blockhash", e)
+                return@localAssociateAndExecute null
+            }
+            val transactions = Array(1) {
+                MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
+            }
+            doSignTransactions(client, transactions)
         }
 
         if (signedTransactions != null) {
@@ -166,6 +169,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun signMessages(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
         val signedMessages = localAssociateAndExecute(sender) { client ->
+            val authorized = doReauthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
             val messages = Array(numMessages) {
                 Random.nextBytes(16384)
             }
@@ -181,6 +188,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val signatures = localAssociateAndExecute(sender) { client ->
+            val authorized = doReauthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
             val blockhash = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
@@ -354,7 +365,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ): Array<ByteArray>? {
         var signedTransactions: Array<ByteArray>? = null
         try {
-            val result = client.signTransactions(uiState.value.authToken!!, transactions).get()
+            val result = client.signTransactions(transactions).get()
             Log.d(TAG, "Signed transaction(s): $result")
             signedTransactions = result.signedPayloads
         } catch (e: ExecutionException) {
@@ -366,8 +377,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e(TAG, "Transaction payloads invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Authorization invalid, authorization or reauthorization required", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
                         else -> Log.e(TAG, "Remote exception for sign_transactions", cause)
@@ -392,7 +402,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ): Array<ByteArray>? {
         var signedMessages: Array<ByteArray>? = null
         try {
-            val result = client.signMessages(uiState.value.authToken!!, messages).get()
+            val result = client.signMessages(messages).get()
             Log.d(TAG, "Signed message(s): $result")
             signedMessages = result.signedPayloads
         } catch (e: ExecutionException) {
@@ -404,8 +414,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e(TAG, "Message payloads invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Authorization invalid, authorization or reauthorization required", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
                         else -> Log.e(TAG, "Remote exception for sign_messages", cause)
@@ -431,7 +440,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         var signatures: Array<String>? = null
         try {
             val result = client.signAndSendTransactions(
-                uiState.value.authToken!!,
                 transactions,
                 CommitmentLevel.Confirmed,
                 ProtocolContract.CLUSTER_TESTNET,
@@ -453,8 +461,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Authorization invalid, authorization or reauthorization required", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
                         else -> Log.e(TAG, "Remote exception for sign_and_send_transactions", cause)

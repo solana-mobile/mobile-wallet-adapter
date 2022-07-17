@@ -48,27 +48,26 @@ class LocalAdapterOperations(
         }
     }
 
-    override suspend fun signMessages(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
+    override suspend fun signMessages(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.signMessages(authToken, transactions)?.get()
+            client?.signMessages(transactions)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
 
-    override suspend fun signTransactions(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
+    override suspend fun signTransactions(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.signTransactions(authToken, transactions)?.get()
+            client?.signTransactions(transactions)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
 
-    override suspend fun signAndSendTransactions(authToken: String, transactions: Array<ByteArray>, params: TransactionParams): MobileWalletAdapterClient.SignAndSendTransactionsResult {
+    override suspend fun signAndSendTransactions(transactions: Array<ByteArray>, params: TransactionParams): MobileWalletAdapterClient.SignAndSendTransactionsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.signAndSendTransactions(
-                authToken,
                 transactions,
                 params.commitmentLevel,
                 params.cluster.name,

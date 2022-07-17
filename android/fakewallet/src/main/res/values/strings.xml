@@ -17,7 +17,6 @@
     <string name="label_sign_transactions">Sign transaction(s)</string>
     <string name="label_sign_messages">Sign message(s)</string>
     <string name="label_num_txns">Num payloads:</string>
-    <string name="label_simulate_reauthorize">Simulate reauthorization req\'d</string>
     <string name="label_simulate_authorization_failed">Simulate auth token invalid</string>
     <string name="label_simulate_invalid_payloads">Simulate first payload invalid</string>
     <string name="label_simulate_too_many_payloads">Simulate too many payloads</string>

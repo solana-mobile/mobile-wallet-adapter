@@ -5,11 +5,14 @@
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
@@ -42,6 +45,11 @@ public abstract class Scenario {
     protected final Callbacks mCallbacks;
     @NonNull
     protected final AuthRepository mAuthRepository;
+
+    private final Object mLock = new Object();
+    @Nullable
+    @GuardedBy("mLock")
+    private AuthRecord mActiveAuthorization = null;
 
     protected Scenario(@NonNull Context context,
                        @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
@@ -93,6 +101,9 @@ public abstract class Scenario {
         public void onSessionClosed() {
             Log.d(TAG, "MobileWalletAdapter session terminated");
             if (mClientCount.decrementAndGet() == 0) {
+                synchronized (mLock) {
+                    mActiveAuthorization = null;
+                }
                 mIoHandler.post(mCallbacks::onScenarioServingComplete);
                 mIoHandler.post(mAuthRepository::stop);
             }
@@ -102,6 +113,9 @@ public abstract class Scenario {
         public void onSessionError() {
             Log.w(TAG, "MobileWalletAdapter session error");
             if (mClientCount.decrementAndGet() == 0) {
+                synchronized (mLock) {
+                    mActiveAuthorization = null;
+                }
                 mIoHandler.post(mCallbacks::onScenarioServingComplete);
                 mIoHandler.post(mAuthRepository::stop);
             }
@@ -112,25 +126,67 @@ public abstract class Scenario {
             new MobileWalletAdapterServer.MethodHandlers() {
         @Override
         public void authorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
-            mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(
-                    new AuthorizeRequest(mIoHandler, mAuthRepository, request)));
+            final NotifyingCompletableFuture<AuthorizeRequest.Result> future = new NotifyingCompletableFuture<>();
+            future.notifyOnComplete(f -> mIoHandler.post(() -> { // Note: run in IO thread context
+                try {
+                    final AuthorizeRequest.Result authorize = f.get(); // won't block
+
+                    if (authorize != null) {
+                        final String name = request.identityName != null ? request.identityName : "";
+                        final Uri uri = request.identityUri != null ? request.identityUri : Uri.EMPTY;
+                        final Uri relativeIconUri = request.iconUri != null ? request.iconUri : Uri.EMPTY;
+                        final AuthRecord authRecord = mAuthRepository.issue(
+                                name, uri, relativeIconUri, authorize.publicKey, authorize.scope);
+                        Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
+                        synchronized (mLock) {
+                            mActiveAuthorization = authRecord;
+                        }
+
+                        final String authToken = mAuthRepository.toAuthToken(authRecord);
+                        request.complete(new MobileWalletAdapterServer.AuthorizeResult(
+                                authToken, authorize.publicKey, authorize.walletUriBase));
+                    } else {
+                        synchronized (mLock) {
+                            mActiveAuthorization = null;
+                        }
+                        request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
+                                "authorize request declined"));
+                    }
+                } catch (ExecutionException | InterruptedException e) {
+                    throw new RuntimeException("Unexpected exception while waiting for authorization", e);
+                } catch (CancellationException e) {
+                    synchronized (mLock) {
+                        mActiveAuthorization = null;
+                    }
+                    request.cancel(true);
+                }
+            }));
+
+            mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
+                    future, request.identityName, request.identityUri, request.iconUri)));
         }
 
         @Override
         public void reauthorize(@NonNull MobileWalletAdapterServer.ReauthorizeRequest request) {
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
             if (authRecord == null) {
+                synchronized (mLock) {
+                    mActiveAuthorization = null;
+                }
                 mIoHandler.post(() -> request.completeExceptionally(
-                        new MobileWalletAdapterServer.AuthTokenNotValidException(
+                        new MobileWalletAdapterServer.AuthorizationNotValidException(
                                 "auth_token not valid for this request")));
                 return;
             }
 
             final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
-            future.notifyOnComplete(f -> {
+            future.notifyOnComplete(f -> mIoHandler.post(() -> { // Note: run in IO thread context
                 try {
                     final Boolean reauthorize = f.get(); // won't block
                     if (!reauthorize) {
+                        synchronized (mLock) {
+                            mActiveAuthorization = null;
+                        }
                         mIoHandler.post(() -> request.completeExceptionally(
                                 new MobileWalletAdapterServer.RequestDeclinedException(
                                         "app declined reauthorization request")));
@@ -142,10 +198,16 @@ public abstract class Scenario {
                     if (reissuedAuthRecord == null) {
                         // No need to explicitly revoke the old auth token; that is part of the
                         // reissue method contract
+                        synchronized (mLock) {
+                            mActiveAuthorization = null;
+                        }
                         mIoHandler.post(() -> request.completeExceptionally(
                                 new MobileWalletAdapterServer.RequestDeclinedException(
                                         "auth_token not valid for reissue")));
                         return;
+                    }
+                    synchronized (mLock) {
+                        mActiveAuthorization = reissuedAuthRecord;
                     }
 
                     final String authToken;
@@ -158,16 +220,19 @@ public abstract class Scenario {
 
                     mIoHandler.post(() -> request.complete(
                             new MobileWalletAdapterServer.ReauthorizeResult(authToken)));
-                } catch (ExecutionException e) {
+                } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException("Unexpected exception while waiting for reauthorization", e);
-                } catch (InterruptedException | CancellationException e) {
+                } catch (CancellationException e) {
+                    synchronized (mLock) {
+                        mActiveAuthorization = null;
+                    }
                     request.cancel(true);
                 }
-            });
+            }));
 
-            mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(
-                    new ReauthorizeRequest(future, request.identityName, request.identityUri,
-                            request.iconUri, authRecord.scope)));
+            mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(new ReauthorizeRequest(
+                    future, request.identityName, request.identityUri, request.iconUri,
+                    authRecord.scope)));
         }
 
         @Override
@@ -176,16 +241,23 @@ public abstract class Scenario {
             if (authRecord != null) {
                 mAuthRepository.revoke(authRecord);
             }
+            synchronized (mLock) {
+                if (mActiveAuthorization == authRecord) {
+                    mActiveAuthorization = null;
+                }
+            }
             mIoHandler.post(() -> request.complete(null));
         }
 
         @Override
         public void signPayloads(@NonNull MobileWalletAdapterServer.SignPayloadsRequest request) {
             final AuthRecord authRecord;
-            try {
-                authRecord = authTokenToAuthRecord(request.authToken);
-            } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
-                mIoHandler.post(() -> request.completeExceptionally(e));
+            synchronized (mLock) {
+                authRecord = mActiveAuthorization;
+            }
+            if (authRecord == null || authRecord.isRevoked()) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
                 return;
             }
 
@@ -213,10 +285,12 @@ public abstract class Scenario {
         public void signAndSendTransactions(
                 @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request) {
             final AuthRecord authRecord;
-            try {
-                authRecord = authTokenToAuthRecord(request.authToken);
-            } catch (MobileWalletAdapterServer.MobileWalletAdapterServerException e) {
-                mIoHandler.post(() -> request.completeExceptionally(e));
+            synchronized (mLock) {
+                authRecord = mActiveAuthorization;
+            }
+            if (authRecord == null || authRecord.isRevoked()) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
                 return;
             }
 
@@ -224,20 +298,6 @@ public abstract class Scenario {
                     new SignAndSendTransactionsRequest(request, authRecord.identity.name,
                             authRecord.identity.uri, authRecord.identity.relativeIconUri,
                             authRecord.scope, authRecord.publicKey)));
-        }
-
-        @NonNull
-        private AuthRecord authTokenToAuthRecord(@NonNull String authToken)
-                throws MobileWalletAdapterServer.MobileWalletAdapterServerException{
-            final AuthRecord authRecord = mAuthRepository.fromAuthToken(authToken);
-
-            if (authRecord == null || !authRecord.isAuthorized()) {
-                throw new MobileWalletAdapterServer.AuthTokenNotValidException("auth_token not valid for this request");
-            } else if (authRecord.isExpired()) {
-                throw new MobileWalletAdapterServer.ReauthorizationRequiredException("auth_token requires reauthorization");
-            }
-
-            return authRecord;
         }
     };
 
