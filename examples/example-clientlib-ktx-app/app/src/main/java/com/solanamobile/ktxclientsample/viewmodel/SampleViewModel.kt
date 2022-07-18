@@ -22,8 +22,6 @@ class SampleViewModel @Inject constructor(
     private val walletAdapter: MobileWalletAdapter
 ): ViewModel() {
 
-    private var token = "" //TODO: BAD!
-
     private val _state = MutableStateFlow(SampleViewState())
 
     val viewState: StateFlow<SampleViewState>
@@ -33,7 +31,6 @@ class SampleViewModel @Inject constructor(
         viewModelScope.launch {
             walletAdapter.transact(sender) {
                 val result = authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
-                token = result.authToken
 
                 _state.update {
                     _state.value.copy(
@@ -48,7 +45,7 @@ class SampleViewModel @Inject constructor(
     fun disconnect(sender: ActivityResultSender) {
         viewModelScope.launch {
             walletAdapter.transact(sender) {
-                deauthorize(token)
+                //deauthorize()
 
                 _state.update {
                     _state.value.copy(
