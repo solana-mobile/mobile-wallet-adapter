@@ -34,7 +34,7 @@ export default function RecordMessageButton({children, message}: Props) {
       messageBuffer: Buffer,
     ): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
       const [signature] = await transact(async wallet => {
-        const [{authToken, publicKey}, latestBlockhash] = await Promise.all([
+        const [publicKey, latestBlockhash] = await Promise.all([
           authorizeSession(wallet),
           connection.getLatestBlockhash(),
         ]);
@@ -51,7 +51,6 @@ export default function RecordMessageButton({children, message}: Props) {
           }),
         );
         return await wallet.signAndSendTransactions({
-          auth_token: authToken,
           connection,
           transactions: [memoProgramTransaction],
         });

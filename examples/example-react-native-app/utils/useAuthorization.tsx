@@ -65,23 +65,20 @@ export default function useAuthorization() {
   );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      let freshAuthToken: string;
       let freshPublicKey: PublicKey;
       if (cachedAuthorization?.auth_token) {
-        const reauthorizationResult = await wallet.reauthorize({
+        await wallet.reauthorize({
           auth_token: cachedAuthorization?.auth_token,
         });
-        freshAuthToken = reauthorizationResult.auth_token;
         freshPublicKey = publicKey!;
       } else {
         const authorizationResult = await wallet.authorize({
           identity: APP_IDENTITY,
         });
-        freshAuthToken = authorizationResult.auth_token;
         freshPublicKey = new PublicKey(authorizationResult.pub_key);
         setAuthorization(authorizationResult);
       }
-      return {authToken: freshAuthToken, publicKey: freshPublicKey};
+      return freshPublicKey;
     },
     [cachedAuthorization, publicKey, setAuthorization],
   );
