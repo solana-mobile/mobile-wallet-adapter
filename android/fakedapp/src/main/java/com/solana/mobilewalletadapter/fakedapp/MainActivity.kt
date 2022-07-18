@@ -29,18 +29,20 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.uiState.collect { uiState ->
-                    viewBinding.btnReauthorize.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnDeauthorize.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnRequestAirdrop.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignTxnX1.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignTxnX3.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignTxnX20.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignMsgX1.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignMsgX3.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignMsgX20.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignAndSendTxnX1.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignAndSendTxnX3.isEnabled = uiState.hasAuthToken
-                    viewBinding.btnSignAndSendTxnX20.isEnabled = uiState.hasAuthToken
+                    uiState.hasAuthToken.let { isAuthorized ->
+                        viewBinding.btnReauthorize.isEnabled = isAuthorized
+                        viewBinding.btnDeauthorize.isEnabled = isAuthorized
+                        viewBinding.btnRequestAirdrop.isEnabled = isAuthorized
+                        viewBinding.btnSignTxnX1.isEnabled = isAuthorized
+                        viewBinding.btnSignTxnX3.isEnabled = isAuthorized
+                        viewBinding.btnSignTxnX20.isEnabled = isAuthorized
+                        viewBinding.btnSignMsgX1.isEnabled = isAuthorized
+                        viewBinding.btnSignMsgX3.isEnabled = isAuthorized
+                        viewBinding.btnSignMsgX20.isEnabled = isAuthorized
+                        viewBinding.btnSignAndSendTxnX1.isEnabled = isAuthorized
+                        viewBinding.btnSignAndSendTxnX3.isEnabled = isAuthorized
+                        viewBinding.btnSignAndSendTxnX20.isEnabled = isAuthorized
+                    }
 
                     if (uiState.messages.isNotEmpty()) {
                         val message = uiState.messages.first()
@@ -59,65 +61,63 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.btnGetCapabilities.setOnClickListener {
-            lifecycleScope.launch { viewModel.getCapabilities(intentSender) }
+            viewModel.getCapabilities(intentSender)
         }
 
         viewBinding.btnAuthorize.setOnClickListener {
-            lifecycleScope.launch { viewModel.authorize(intentSender) }
+            viewModel.authorize(intentSender)
         }
 
         viewBinding.btnReauthorize.setOnClickListener {
-            lifecycleScope.launch { viewModel.reauthorize(intentSender) }
+            viewModel.reauthorize(intentSender)
         }
 
         viewBinding.btnDeauthorize.setOnClickListener {
-            lifecycleScope.launch { viewModel.deauthorize(intentSender) }
+            viewModel.deauthorize(intentSender)
         }
 
         viewBinding.btnRequestAirdrop.setOnClickListener {
-            lifecycleScope.launch {
-                viewModel.requestAirdrop()
-            }
+            viewModel.requestAirdrop()
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {
-            lifecycleScope.launch { viewModel.signTransaction(intentSender, 1) }
+            viewModel.signTransaction(intentSender, 1)
         }
 
         viewBinding.btnSignTxnX3.setOnClickListener {
-            lifecycleScope.launch { viewModel.signTransaction(intentSender, 3) }
+            viewModel.signTransaction(intentSender, 3)
         }
 
         viewBinding.btnSignTxnX20.setOnClickListener {
-            lifecycleScope.launch { viewModel.signTransaction(intentSender, 20) }
+            viewModel.signTransaction(intentSender, 20)
         }
 
         viewBinding.btnAuthorizeSign.setOnClickListener {
-            lifecycleScope.launch { viewModel.authorizeAndSignTransaction(intentSender) }
+            viewModel.authorizeAndSignTransaction(intentSender)
         }
 
         viewBinding.btnSignMsgX1.setOnClickListener {
-            lifecycleScope.launch { viewModel.signMessage(intentSender, 1) }
+            viewModel.signMessage(intentSender, 1)
         }
 
         viewBinding.btnSignMsgX3.setOnClickListener {
-            lifecycleScope.launch { viewModel.signMessage(intentSender, 3) }
+            viewModel.signMessage(intentSender, 3)
         }
 
         viewBinding.btnSignMsgX20.setOnClickListener {
-            lifecycleScope.launch { viewModel.signMessage(intentSender, 20) }
+            viewModel.signMessage(intentSender, 20)
         }
 
         viewBinding.btnSignAndSendTxnX1.setOnClickListener {
-            lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 1) }
+            viewModel.signAndSendTransaction(intentSender, 1)
         }
 
         viewBinding.btnSignAndSendTxnX3.setOnClickListener {
-            lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 3) }
+            viewModel.signAndSendTransaction(intentSender, 3)
         }
 
         viewBinding.btnSignAndSendTxnX20.setOnClickListener {
-            lifecycleScope.launch { viewModel.signAndSendTransaction(intentSender, 20) }
+            viewModel.signAndSendTransaction(intentSender, 20)
         }
     }
 

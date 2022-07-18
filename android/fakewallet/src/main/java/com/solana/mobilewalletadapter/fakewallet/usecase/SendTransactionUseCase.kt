@@ -34,6 +34,9 @@ object SendTransactionUseCase {
             // Send all transactions and accumulate transaction signatures
             val signatures = Array<String?>(transactions.size) { null }
             transactions.forEachIndexed { i, transaction ->
+                val transactionBase64 = Base64.encodeToString(transaction, Base64.NO_WRAP)
+                Log.d(TAG, "Sending transaction: '$transactionBase64'")
+
                 val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -43,7 +46,7 @@ object SendTransactionUseCase {
                 conn.outputStream.use { outputStream ->
                     outputStream.write(
                         createSendTransactionRequest(
-                            transaction,
+                            transactionBase64,
                             skipPreflight,
                             preflightCommitment
                         ).encodeToByteArray()
@@ -111,7 +114,7 @@ object SendTransactionUseCase {
     }
 
     private fun createSendTransactionRequest(
-        transaction: ByteArray,
+        transactionBase64: String,
         skipPreflight: Boolean,
         preflightCommitment: CommitmentLevel?
     ): String {
@@ -123,8 +126,7 @@ object SendTransactionUseCase {
         val arr = JSONArray()
 
         // Parameter 0 - base64-encoded transaction
-        val transactionBase64 = Base64.encode(transaction, Base64.NO_WRAP)
-        arr.put(String(transactionBase64))
+        arr.put(transactionBase64)
 
         // Parameter 1 - options
         val opt = JSONObject()

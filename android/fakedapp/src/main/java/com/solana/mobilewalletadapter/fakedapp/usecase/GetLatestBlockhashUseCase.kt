@@ -47,7 +47,11 @@ object GetLatestBlockhashUseCase {
         jo.put("jsonrpc", "2.0")
         jo.put("id", 1)
         jo.put("method", "getLatestBlockhash")
-        jo.put("params", JSONArray())
+        val config = JSONObject()
+        config.put("commitment", "finalized")
+        val arr = JSONArray()
+        arr.put(config)
+        jo.put("params", arr)
 
         return jo.toString()
     }

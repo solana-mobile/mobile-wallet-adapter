@@ -26,6 +26,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -42,7 +43,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
 
-    suspend fun authorize(sender: StartActivityForResultSender) {
+    fun authorize(sender: StartActivityForResultSender) = viewModelScope.launch {
         val result = localAssociateAndExecute(sender) { client ->
             doAuthorize(client)
         }
@@ -50,7 +51,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         showMessage(if (result == true) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    suspend fun reauthorize(sender: StartActivityForResultSender) {
+    fun reauthorize(sender: StartActivityForResultSender) = viewModelScope.launch {
         val result = localAssociateAndExecute(sender) { client ->
             doReauthorize(client)
         }
@@ -58,7 +59,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         showMessage(if (result == true) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    suspend fun deauthorize(sender: StartActivityForResultSender) {
+    fun deauthorize(sender: StartActivityForResultSender) = viewModelScope.launch {
         val result = localAssociateAndExecute(sender) { client ->
             doDeauthorize(client)
         }
@@ -66,7 +67,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         showMessage(if (result == true) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    suspend fun getCapabilities(sender: StartActivityForResultSender) {
+    fun getCapabilities(sender: StartActivityForResultSender) = viewModelScope.launch {
         val result = localAssociateAndExecute(sender) { client ->
             doGetCapabilities(client)
         }
@@ -74,7 +75,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         showMessage(if (result != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    suspend fun requestAirdrop() {
+    fun requestAirdrop() = viewModelScope.launch {
         try {
             RequestAirdropUseCase(TESTNET_RPC_URI, _uiState.value.publicKeyBase58!!)
             Log.d(TAG, "Airdrop request sent")
@@ -85,7 +86,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
+    fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
@@ -121,7 +122,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun authorizeAndSignTransaction(sender: StartActivityForResultSender) {
+    fun authorizeAndSignTransaction(sender: StartActivityForResultSender) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
@@ -162,7 +163,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    suspend fun signMessage(sender: StartActivityForResultSender, numMessages: Int) {
+    fun signMessage(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
         val signedMessages = localAssociateAndExecute(sender) { client ->
             val messages = Array(numMessages) {
                 Random.nextBytes(16384)
@@ -173,7 +174,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         showMessage(if (signedMessages != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    suspend fun signAndSendTransaction(sender: StartActivityForResultSender, numTransactions: Int) {
+    fun signAndSendTransaction(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
