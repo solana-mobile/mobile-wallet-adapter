@@ -1,8 +1,15 @@
+import createSequenceNumberVector, { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector';
 import { SolanaMobileWalletAdapterProtocolError } from './errors';
 import { SharedSecret } from './parseHelloRsp';
 
-const SEQUENCE_NUMBER_BYTES = 4;
 const INITIALIZATION_VECTOR_BYTES = 12;
+
+interface JSONRPCRequest<TParams> {
+    id: number;
+    jsonrpc: '2.0';
+    method: string;
+    params: TParams;
+}
 
 type JSONRPCResponse<TMessage> = {
     id: number;
@@ -10,31 +17,37 @@ type JSONRPCResponse<TMessage> = {
     result: TMessage;
 };
 
-export async function encryptJsonRpcMessage(jsonRpcMessage: unknown, sharedSecret: SharedSecret) {
+export async function encryptJsonRpcMessage<TParams>(
+    jsonRpcMessage: JSONRPCRequest<TParams>,
+    sharedSecret: SharedSecret,
+) {
     const plaintext = JSON.stringify(jsonRpcMessage);
-    const sequenceNumber = new Uint8Array(SEQUENCE_NUMBER_BYTES);
+    const sequenceNumberVector = createSequenceNumberVector(jsonRpcMessage.id);
     const initializationVector = new Uint8Array(INITIALIZATION_VECTOR_BYTES);
-    // TODO: populate sequence number (big-endian)
     crypto.getRandomValues(initializationVector);
     const ciphertext = await crypto.subtle.encrypt(
-        getAlgorithmParams(sequenceNumber, initializationVector),
+        getAlgorithmParams(sequenceNumberVector, initializationVector),
         sharedSecret,
         Buffer.from(plaintext),
     );
-    const response = new Uint8Array(initializationVector.byteLength + ciphertext.byteLength);
-    response.set(new Uint8Array(sequenceNumber), 0);
-    response.set(new Uint8Array(initializationVector), sequenceNumber.byteLength);
-    response.set(new Uint8Array(ciphertext), sequenceNumber.byteLength + initializationVector.byteLength);
+    const response = new Uint8Array(
+        sequenceNumberVector.byteLength + initializationVector.byteLength + ciphertext.byteLength,
+    );
+    response.set(new Uint8Array(sequenceNumberVector), 0);
+    response.set(new Uint8Array(initializationVector), sequenceNumberVector.byteLength);
+    response.set(new Uint8Array(ciphertext), sequenceNumberVector.byteLength + initializationVector.byteLength);
     return response;
 }
 
 export async function decryptJsonRpcMessage<TMessage>(message: ArrayBuffer, sharedSecret: SharedSecret) {
-    const sequenceNumber = message.slice(0, SEQUENCE_NUMBER_BYTES);
-    // TODO: verify sequence number (big-endian)
-    const initializationVector = message.slice(SEQUENCE_NUMBER_BYTES, SEQUENCE_NUMBER_BYTES + INITIALIZATION_VECTOR_BYTES);
+    const sequenceNumberVector = message.slice(0, SEQUENCE_NUMBER_BYTES);
+    const initializationVector = message.slice(
+        SEQUENCE_NUMBER_BYTES,
+        SEQUENCE_NUMBER_BYTES + INITIALIZATION_VECTOR_BYTES,
+    );
     const ciphertext = message.slice(SEQUENCE_NUMBER_BYTES + INITIALIZATION_VECTOR_BYTES);
     const plaintextBuffer = await crypto.subtle.decrypt(
-        getAlgorithmParams(sequenceNumber, initializationVector),
+        getAlgorithmParams(sequenceNumberVector, initializationVector),
         sharedSecret,
         ciphertext,
     );

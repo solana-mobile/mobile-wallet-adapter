@@ -1,4 +1,5 @@
 import createHelloReq from './createHelloReq';
+import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector';
 import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
@@ -44,6 +45,11 @@ function assertSecureContext() {
     }
 }
 
+function getSequenceNumberFromByteArray(byteArray: ArrayBuffer): number {
+    const view = new DataView(byteArray);
+    return view.getUint32(0, /* littleEndian */ false);
+}
+
 export async function transact<TReturn>(
     callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
@@ -53,6 +59,7 @@ export async function transact<TReturn>(
     const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
     const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
     let nextJsonRpcMessageId = 1;
+    let lastKnownInboundSequenceNumber = 0;
     let state: State = { __type: 'disconnected' };
     return new Promise((resolve, reject) => {
         let attempts = 0;
@@ -113,6 +120,12 @@ export async function transact<TReturn>(
             switch (state.__type) {
                 case 'connected':
                     try {
+                        const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
+                        const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                        if (sequenceNumber <= lastKnownInboundSequenceNumber) {
+                            throw new Error('Encrypted message has invalid sequence number');
+                        }
+                        lastKnownInboundSequenceNumber = sequenceNumber;
                         const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                         const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
                         delete jsonRpcResponsePromises[jsonRpcMessage.id];
