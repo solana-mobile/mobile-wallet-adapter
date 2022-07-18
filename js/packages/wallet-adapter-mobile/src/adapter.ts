@@ -176,9 +176,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             const authorizationResult = this.assertIsAuthorized();
             try {
                 return await this.transact(async (wallet) => {
-                    const freshAuthToken = await this.performReauthorization(wallet, authorizationResult);
+                    await this.performReauthorization(wallet, authorizationResult);
                     const signedTransactions = await wallet.signTransactions({
-                        auth_token: freshAuthToken,
                         transactions,
                     });
                     return signedTransactions;
@@ -201,9 +200,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             const authorizationResult = this.assertIsAuthorized();
             try {
                 return await this.transact(async (wallet) => {
-                    const freshAuthToken = await this.performReauthorization(wallet, authorizationResult);
+                    await this.performReauthorization(wallet, authorizationResult);
                     const signatures = await wallet.signAndSendTransactions({
-                        auth_token: freshAuthToken,
                         fee_payer: this.publicKey || undefined,
                         connection,
                         transactions: [transaction],
@@ -234,9 +232,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             const authorizationResult = this.assertIsAuthorized();
             try {
                 return await this.transact(async (wallet) => {
-                    const freshAuthToken = await this.performReauthorization(wallet, authorizationResult);
+                    await this.performReauthorization(wallet, authorizationResult);
                     const [signedMessage] = await wallet.signMessages({
-                        auth_token: freshAuthToken,
                         payloads: [message],
                     });
                     const signature = signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES);

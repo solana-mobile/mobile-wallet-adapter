@@ -57,19 +57,16 @@ export interface ReauthorizeAPI {
 }
 export interface SignMessagesAPI {
     signMessages(params: {
-        auth_token: AuthToken;
         payloads: Base64EncodedMessage[];
     }): Promise<Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>>;
 }
 export interface SignTransactionsAPI {
     signTransactions(params: {
-        auth_token: AuthToken;
         payloads: Base64EncodedTransaction[];
     }): Promise<Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>>;
 }
 export interface SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        auth_token: AuthToken;
         commitment: 'confirmed' | 'finalized' | 'processed';
         payloads: Base64EncodedTransaction[];
     }): Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;

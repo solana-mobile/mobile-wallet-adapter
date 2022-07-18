@@ -1,7 +1,6 @@
 import { Connection, PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import {
     AuthorizeAPI,
-    AuthToken,
     CloneAuthorizationAPI,
     DeauthorizeAPI,
     MobileWallet,
@@ -9,12 +8,10 @@ import {
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-
 import { fromUint8Array, toUint8Array } from './base64Utils';
 
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        auth_token: AuthToken;
         connection: Connection;
         fee_payer?: PublicKey;
         transactions: Transaction[];
@@ -22,11 +19,11 @@ interface Web3SignAndSendTransactionsAPI {
 }
 
 interface Web3SignTransactionsAPI {
-    signTransactions(params: { auth_token: AuthToken; transactions: Transaction[] }): Promise<Transaction[]>;
+    signTransactions(params: { transactions: Transaction[] }): Promise<Transaction[]>;
 }
 
 interface Web3SignMessagesAPI {
-    signMessages(params: { auth_token: AuthToken; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
+    signMessages(params: { payloads: Uint8Array[] }): Promise<Uint8Array[]>;
 }
 
 export interface Web3MobileWallet
@@ -89,7 +86,6 @@ export async function transact<TReturn>(
                                         targetCommitment = 'finalized';
                                 }
                                 const { signatures } = await wallet.signAndSendTransactions({
-                                    auth_token: params.auth_token,
                                     commitment: targetCommitment,
                                     payloads,
                                 });
@@ -100,7 +96,6 @@ export async function transact<TReturn>(
                             target[p] = async function (params: Parameters<Web3MobileWallet['signMessages']>[0]) {
                                 const payloads = params.payloads.map(fromUint8Array);
                                 const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessages({
-                                    auth_token: params.auth_token,
                                     payloads,
                                 });
                                 const signedMessages = base64EncodedSignedMessages.map(toUint8Array);
@@ -120,7 +115,6 @@ export async function transact<TReturn>(
                                 );
                                 const { signed_payloads: base64EncodedCompiledTransactions } =
                                     await wallet.signTransactions({
-                                        auth_token: params.auth_token,
                                         payloads,
                                     });
                                 const compiledTransactions = base64EncodedCompiledTransactions.map(toUint8Array);
