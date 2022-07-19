@@ -5,6 +5,7 @@
 package com.solana.mobilewalletadapter.fakedapp
 
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -479,7 +480,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
-            sender.startActivityForResult(LocalAssociationIntentCreator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
+            val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+                uriPrefix,
+                localAssociation.port,
+                localAssociation.session
+            )
+            try {
+                sender.startActivityForResult(associationIntent)
+            } catch (e: ActivityNotFoundException) {
+                Log.e(TAG, "Failed to start intent=$associationIntent", e)
+                showMessage(R.string.msg_no_wallet_found)
+                return@withPermit null
+            }
 
             return@withPermit withContext(Dispatchers.IO) {
                 val mobileWalletAdapterClient = try {
@@ -508,7 +520,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     interface StartActivityForResultSender {
-        fun startActivityForResult(intent: Intent)
+        fun startActivityForResult(intent: Intent) // throws ActivityNotFoundException
     }
 
     data class UiState(
