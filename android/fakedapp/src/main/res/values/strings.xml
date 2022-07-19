@@ -10,6 +10,7 @@
     <string name="msg_airdrop_request_sent">Airdrop request sent; check block explorer for result</string>
     <string name="msg_airdrop_failed">Airdrop request failed; check logcat for details</string>
     <string name="msg_signature_verification_failed">One or more signatures incorrect; check logcat for details</string>
+    <string name="msg_no_wallet_found">Please install a wallet app which supports Mobile Wallet Adapter</string>
 
     <string name="label_get_capabilities">Get capabilities</string>
     <string name="label_authorize">Authorize</string>

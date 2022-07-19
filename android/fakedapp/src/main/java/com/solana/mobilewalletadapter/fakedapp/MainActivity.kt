@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.fakedapp
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -123,9 +122,7 @@ class MainActivity : AppCompatActivity() {
 
     private val intentSender = object : MainViewModel.StartActivityForResultSender {
         override fun startActivityForResult(intent: Intent) {
-            try {
-                this@MainActivity.startActivityForResult(intent, 0)
-            } catch (_: ActivityNotFoundException) {}
+            this@MainActivity.startActivityForResult(intent, 0)
         }
     }
 }
