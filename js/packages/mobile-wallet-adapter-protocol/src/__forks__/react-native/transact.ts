@@ -1,7 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 
 import { SolanaMobileWalletAdapterProtocolJsonRpcError } from '../../errors';
-import { MobileWalletAPI, WalletAssociationConfig } from '../../types';
+import { MobileWallet, WalletAssociationConfig } from '../../types';
 
 const LINKING_ERROR =
     `The package 'solana-mobile-wallet-adapter-protocol' doesn't seem to be linked. Make sure: \n\n` +
@@ -28,26 +28,44 @@ const SolanaMobileWalletAdapter =
           );
 
 export async function transact<TReturn>(
-    callback: (walletAPI: MobileWalletAPI) => TReturn,
+    callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     try {
         await SolanaMobileWalletAdapter.startSession(config);
-        return await callback(async (method, params) => {
-            try {
-                return await SolanaMobileWalletAdapter.invoke(method, params);
-            } catch (e) {
-                if (e instanceof Error && (e as any).code === 'JSON_RPC_ERROR') {
-                    const details = (e as any).userInfo as Readonly<{ jsonRpcErrorCode: number }>;
-                    throw new SolanaMobileWalletAdapterProtocolJsonRpcError<any>(
-                        0 /* jsonRpcMessageId */,
-                        details.jsonRpcErrorCode,
-                        e.message,
-                    );
+        const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
+            get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
+                if (target[p] == null) {
+                    const method = p
+                        .toString()
+                        .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+                        .toLowerCase();
+                    target[p] = async function (params: Parameters<MobileWallet[TMethodName]>[0]) {
+                        try {
+                            return await SolanaMobileWalletAdapter.invoke(method, params);
+                        } catch (e) {
+                            if (e instanceof Error && (e as any).code === 'JSON_RPC_ERROR') {
+                                const details = (e as any).userInfo as Readonly<{ jsonRpcErrorCode: number }>;
+                                throw new SolanaMobileWalletAdapterProtocolJsonRpcError<any>(
+                                    0 /* jsonRpcMessageId */,
+                                    details.jsonRpcErrorCode,
+                                    e.message,
+                                );
+                            }
+                            throw e;
+                        }
+                    } as MobileWallet[TMethodName];
                 }
-                throw e;
-            }
+                return target[p];
+            },
+            defineProperty() {
+                return false;
+            },
+            deleteProperty() {
+                return false;
+            },
         });
+        return await callback(wallet);
     } finally {
         await SolanaMobileWalletAdapter.endSession();
     }

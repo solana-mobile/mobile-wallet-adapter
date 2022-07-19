@@ -16,8 +16,8 @@ export default function ConnectButton(props: Props) {
         return;
       }
       setAuthorizationInProgress(true);
-      const authorizationResult = await transact(async walletAPI => {
-        return await walletAPI('authorize', {
+      const authorizationResult = await transact(async wallet => {
+        return await wallet.authorize({
           identity: {name: 'React Native dApp'},
         });
       });
