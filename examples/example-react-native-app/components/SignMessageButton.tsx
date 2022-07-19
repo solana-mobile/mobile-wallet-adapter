@@ -26,8 +26,8 @@ export default function SignMessageButton({children, message}: Props) {
   const setSnackbarProps = useContext(SnackbarContext);
   const [signMessageTutorialOpen, setSignMessageTutorialOpen] = useState(false);
   const signMessageGuarded = useGuardedCallback(async buffer => {
-    const [signature] = await transact(async walletAPI => {
-      return await walletAPI('sign_message', {
+    const [signature] = await transact(async wallet => {
+      return await wallet.signMessage({
         auth_token: authorization!.auth_token,
         payloads: [buffer],
       });

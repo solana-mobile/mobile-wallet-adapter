@@ -20,7 +20,7 @@ The callback you provide will be called once a session has been established with
 
 ```typescript
 const signedPayloads = await transact(async (wallet) => {
-    const {signed_payloads} = await wallet('sign_message', {
+    const {signed_payloads} = await wallet.signMessage({
         auth_token,
         payloads: [/* ... */],
     });
@@ -38,11 +38,11 @@ You can catch exceptions at any level. See `errors.ts` for a list of exceptions 
 try {
     await transact(async (wallet) => {
         try {
-            await wallet('sign_transaction', /* ... */);
+            await wallet.signTransaction(/* ... */);
         } catch (e) {
             if (e instanceof SolanaMobileWalletAdapterProtocolReauthorizeError) {
                 console.error('The auth token has gone stale');
-                await wallet('reauthorize', {auth_token});
+                await wallet.reauthorize({auth_token});
                 // Retry...
             }
             throw e;

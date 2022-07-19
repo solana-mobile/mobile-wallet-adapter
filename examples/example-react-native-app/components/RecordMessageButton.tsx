@@ -44,8 +44,8 @@ export default function RecordMessageButton({children, message}: Props) {
           ),
         }),
       );
-      const [signature] = await transact(async walletAPI => {
-        return await walletAPI('sign_and_send_transaction', {
+      const [signature] = await transact(async wallet => {
+        return await wallet.signAndSendTransaction({
           auth_token: authorization!.auth_token,
           connection,
           transactions: [memoProgramTransaction],

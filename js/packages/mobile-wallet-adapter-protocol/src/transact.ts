@@ -10,7 +10,7 @@ import generateECDHKeypair from './generateECDHKeypair';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
 import { startSession } from './startSession';
-import { AssociationKeypair, MobileWalletAPI, WalletAssociationConfig } from './types';
+import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     maxAttempts: 34,
@@ -43,7 +43,7 @@ function assertSecureContext() {
 }
 
 export async function transact<TReturn>(
-    callback: (walletAPI: MobileWalletAPI) => TReturn,
+    callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     assertSecureContext();
@@ -120,25 +120,42 @@ export async function transact<TReturn>(
                         state.ecdhPrivateKey,
                     );
                     state = { __type: 'connected', sharedSecret };
-                    const walletAPI: MobileWalletAPI = async (method, params) => {
-                        const id = nextJsonRpcMessageId++;
-                        socket.send(
-                            await encryptJsonRpcMessage(
-                                {
-                                    id,
-                                    jsonrpc: '2.0',
-                                    method,
-                                    params,
-                                },
-                                sharedSecret,
-                            ),
-                        );
-                        return new Promise((resolve, reject) => {
-                            jsonRpcResponsePromises[id] = { resolve, reject };
-                        });
-                    };
+                    const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
+                        get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
+                            if (target[p] == null) {
+                                const method = p
+                                    .toString()
+                                    .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+                                    .toLowerCase();
+                                target[p] = async function (params: Parameters<MobileWallet[TMethodName]>[0]) {
+                                    const id = nextJsonRpcMessageId++;
+                                    socket.send(
+                                        await encryptJsonRpcMessage(
+                                            {
+                                                id,
+                                                jsonrpc: '2.0',
+                                                method,
+                                                params,
+                                            },
+                                            sharedSecret,
+                                        ),
+                                    );
+                                    return new Promise((resolve, reject) => {
+                                        jsonRpcResponsePromises[id] = { resolve, reject };
+                                    });
+                                } as MobileWallet[TMethodName];
+                            }
+                            return target[p];
+                        },
+                        defineProperty() {
+                            return false;
+                        },
+                        deleteProperty() {
+                            return false;
+                        },
+                    });
                     try {
-                        resolve(await callback(walletAPI));
+                        resolve(await callback(wallet));
                     } catch (e) {
                         reject(e);
                     } finally {
