@@ -31,8 +31,10 @@ export async function transact<TReturn>(
     callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
+    let didSuccessfullyConnect = false;
     try {
         await SolanaMobileWalletAdapter.startSession(config);
+        didSuccessfullyConnect = true;
         const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
             get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
                 if (target[p] == null) {
@@ -67,6 +69,8 @@ export async function transact<TReturn>(
         });
         return await callback(wallet);
     } finally {
-        await SolanaMobileWalletAdapter.endSession();
+        if (didSuccessfullyConnect) {
+            await SolanaMobileWalletAdapter.endSession();
+        }
     }
 }
