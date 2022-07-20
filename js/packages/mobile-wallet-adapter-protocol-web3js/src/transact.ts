@@ -10,6 +10,8 @@ import {
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
+import { fromUint8Array, toUint8Array } from './base64Utils';
+
 interface Web3SignAndSendTransactionAPI {
     signAndSendTransaction(params: {
         auth_token: AuthToken;
@@ -35,19 +37,6 @@ export interface Web3MobileWallet
         Web3SignAndSendTransactionAPI,
         Web3SignTransactionAPI,
         Web3SignMessageAPI {}
-
-function getBase64StringFromByteArray(byteArray: Uint8Array): string {
-    return window.btoa(String.fromCharCode.call(null, ...byteArray));
-}
-
-function getByteArrayFromBase64String(base64EncodedByteArray: string): Uint8Array {
-    return new Uint8Array(
-        window
-            .atob(base64EncodedByteArray)
-            .split('')
-            .map((c) => c.charCodeAt(0)),
-    );
-}
 
 export async function transact<TReturn>(
     callback: (wallet: Web3MobileWallet) => TReturn,
@@ -109,12 +98,12 @@ export async function transact<TReturn>(
                             break;
                         case 'signMessage':
                             target[p] = async function (params: Parameters<Web3MobileWallet['signMessage']>[0]) {
-                                const payloads = params.payloads.map(getBase64StringFromByteArray);
+                                const payloads = params.payloads.map(fromUint8Array);
                                 const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessage({
                                     auth_token: params.auth_token,
                                     payloads,
                                 });
-                                const signedMessages = base64EncodedSignedMessages.map(getByteArrayFromBase64String);
+                                const signedMessages = base64EncodedSignedMessages.map(toUint8Array);
                                 return signedMessages;
                             } as Web3MobileWallet[TMethodName];
                             break;
@@ -134,8 +123,7 @@ export async function transact<TReturn>(
                                         auth_token: params.auth_token,
                                         payloads,
                                     });
-                                const compiledTransactions =
-                                    base64EncodedCompiledTransactions.map(getByteArrayFromBase64String);
+                                const compiledTransactions = base64EncodedCompiledTransactions.map(toUint8Array);
                                 const transactions = compiledTransactions.map(Transaction.from);
                                 return transactions;
                             } as Web3MobileWallet[TMethodName];
