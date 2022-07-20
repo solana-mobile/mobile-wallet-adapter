@@ -1,6 +1,5 @@
 {
   "name": "@solana-mobile/example-react-native-app",
-  "version": "0.0.1-alpha.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
