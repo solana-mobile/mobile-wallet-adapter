@@ -1,6 +1,6 @@
 # `@solana-mobile/mobile-wallet-adapter-protocol`
 
-This is a reference implementation of the [Mobile Wallet Adapter specification](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md) in JavaScript. Use this to start a session with a mobile wallet in which you can issue API calls to it (eg. `sign_message`) as per the spec.
+This is a reference implementation of the [Mobile Wallet Adapter specification](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md) in JavaScript. Use this to start a session with a mobile wallet in which you can issue API calls to it (eg. `sign_messages`) as per the spec.
 
 If you are simply looking to integrate a JavaScript application with mobile wallets, see [`@solana-mobile/wallet-adapter-mobile`](https://www.npmjs.com/package/@solana-mobile/wallet-adapter-mobile) instead.
 
@@ -20,7 +20,7 @@ The callback you provide will be called once a session has been established with
 
 ```typescript
 const signedPayloads = await transact(async (wallet) => {
-    const {signed_payloads} = await wallet.signMessage({
+    const {signed_payloads} = await wallet.signMessages({
         auth_token,
         payloads: [/* ... */],
     });
@@ -38,7 +38,7 @@ You can catch exceptions at any level. See `errors.ts` for a list of exceptions 
 try {
     await transact(async (wallet) => {
         try {
-            await wallet.signTransaction(/* ... */);
+            await wallet.signTransactions(/* ... */);
         } catch (e) {
             if (
                 e instanceof SolanaMobileWalletAdapterProtocolError &&

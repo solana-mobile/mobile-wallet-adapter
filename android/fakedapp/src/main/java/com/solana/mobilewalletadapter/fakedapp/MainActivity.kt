@@ -80,43 +80,43 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {
-            viewModel.signTransaction(intentSender, 1)
+            viewModel.signTransactions(intentSender, 1)
         }
 
         viewBinding.btnSignTxnX3.setOnClickListener {
-            viewModel.signTransaction(intentSender, 3)
+            viewModel.signTransactions(intentSender, 3)
         }
 
         viewBinding.btnSignTxnX20.setOnClickListener {
-            viewModel.signTransaction(intentSender, 20)
+            viewModel.signTransactions(intentSender, 20)
         }
 
         viewBinding.btnAuthorizeSign.setOnClickListener {
-            viewModel.authorizeAndSignTransaction(intentSender)
+            viewModel.authorizeAndSignTransactions(intentSender)
         }
 
         viewBinding.btnSignMsgX1.setOnClickListener {
-            viewModel.signMessage(intentSender, 1)
+            viewModel.signMessages(intentSender, 1)
         }
 
         viewBinding.btnSignMsgX3.setOnClickListener {
-            viewModel.signMessage(intentSender, 3)
+            viewModel.signMessages(intentSender, 3)
         }
 
         viewBinding.btnSignMsgX20.setOnClickListener {
-            viewModel.signMessage(intentSender, 20)
+            viewModel.signMessages(intentSender, 20)
         }
 
         viewBinding.btnSignAndSendTxnX1.setOnClickListener {
-            viewModel.signAndSendTransaction(intentSender, 1)
+            viewModel.signAndSendTransactions(intentSender, 1)
         }
 
         viewBinding.btnSignAndSendTxnX3.setOnClickListener {
-            viewModel.signAndSendTransaction(intentSender, 3)
+            viewModel.signAndSendTransactions(intentSender, 3)
         }
 
         viewBinding.btnSignAndSendTxnX20.setOnClickListener {
-            viewModel.signAndSendTransaction(intentSender, 20)
+            viewModel.signAndSendTransactions(intentSender, 20)
         }
     }
 

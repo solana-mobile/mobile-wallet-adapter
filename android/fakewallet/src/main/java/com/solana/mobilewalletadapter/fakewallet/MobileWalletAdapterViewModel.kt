@@ -12,7 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.fakewallet.usecase.ClientTrustUseCase
-import com.solana.mobilewalletadapter.fakewallet.usecase.SendTransactionUseCase
+import com.solana.mobilewalletadapter.fakewallet.usecase.SendTransactionsUseCase
 import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -99,7 +99,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    fun signPayloadSimulateSign(request: MobileWalletAdapterServiceRequest.SignPayload) {
+    fun signPayloadsSimulateSign(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -110,7 +110,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signedPayloads = when (request) {
-                is MobileWalletAdapterServiceRequest.SignTransaction ->
+                is MobileWalletAdapterServiceRequest.SignTransactions ->
                     Array(request.request.payloads.size) { i ->
                         try {
                             SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signedPayload
@@ -120,7 +120,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                             byteArrayOf()
                         }
                     }
-                is MobileWalletAdapterServiceRequest.SignMessage ->
+                is MobileWalletAdapterServiceRequest.SignMessages ->
                     Array(request.request.payloads.size) { i ->
                         SolanaSigningUseCase.signMessage(request.request.payloads[i], keypair).signedPayload
                     }
@@ -136,28 +136,28 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    fun signPayloadDeclined(request: MobileWalletAdapterServiceRequest.SignPayload) {
+    fun signPayloadsDeclined(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithDecline()
     }
 
-    fun signPayloadSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignPayload) {
+    fun signPayloadsSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithReauthorizationRequired()
     }
 
-    fun signPayloadSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignPayload) {
+    fun signPayloadsSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithAuthTokenNotValid()
     }
 
-    fun signPayloadSimulateInvalidPayload(request: MobileWalletAdapterServiceRequest.SignPayload) {
+    fun signPayloadsSimulateInvalidPayloads(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -165,14 +165,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithInvalidPayloads(valid)
     }
 
-    fun signPayloadSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignPayload) {
+    fun signPayloadsSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithTooManyPayloads()
     }
 
-    fun signAndSendTransactionSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         viewModelScope.launch {
             val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
             check(keypair != null) { "Unknown public key for signing request" }
@@ -208,28 +208,28 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    fun signAndSendTransactionDeclined(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsDeclined(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithDecline()
     }
 
-    fun signAndSendTransactionSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsSimulateReauthorizationRequired(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithReauthorizationRequired()
     }
 
-    fun signAndSendTransactionSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsSimulateAuthTokenInvalid(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
         request.request.completeWithAuthTokenNotValid()
     }
 
-    fun signAndSendTransactionSimulateInvalidPayload(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsSimulateInvalidPayloads(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -237,7 +237,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithInvalidSignatures(valid)
     }
 
-    fun signAndSendTransactionCommitmentReached(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsCommitmentReached(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -247,7 +247,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithSignatures(request.signatures!!)
     }
 
-    fun signAndSendTransactionCommitmentNotReached(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsCommitmentNotReached(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -258,7 +258,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithNotCommitted(request.signatures!!, committed)
     }
 
-    fun signAndSendTransactionSend(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsSend(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -270,7 +270,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             request.signatures!!
 
             try {
-                val commitmentReached = SendTransactionUseCase(
+                val commitmentReached = SendTransactionsUseCase(
                     request.endpointUri,
                     request.signedTransactions,
                     request.request.commitmentLevel,
@@ -283,10 +283,10 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 } else {
                     request.request.completeWithNotCommitted(request.signatures, commitmentReached)
                 }
-            } catch (e: SendTransactionUseCase.InvalidTransactionsException) {
+            } catch (e: SendTransactionsUseCase.InvalidTransactionsException) {
                 Log.e(TAG, "Failed submitting transactions via RPC", e)
                 request.request.completeWithInvalidSignatures(e.valid)
-            } catch (e: SendTransactionUseCase.CannotVerifySignaturesException) {
+            } catch (e: SendTransactionsUseCase.CannotVerifySignaturesException) {
                 Log.e(TAG, "Failed verifying transaction committment reached via RPC", e)
                 request.request.completeWithNotCommitted(
                     request.signatures,
@@ -295,7 +295,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    fun signAndSendTransactionSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignAndSendTransaction) {
+    fun signAndSendTransactionsSimulateTooManyPayloads(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
@@ -424,26 +424,26 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             }
         }
 
-        override fun onSignTransactionRequest(request: SignTransactionRequest) {
+        override fun onSignTransactionsRequest(request: SignTransactionsRequest) {
             if (verifyPrivilegedMethodSource(request)) {
-                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignTransaction(request))
+                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignTransactions(request))
             } else {
                 request.completeWithDecline()
             }
         }
 
-        override fun onSignMessageRequest(request: SignMessageRequest) {
+        override fun onSignMessagesRequest(request: SignMessagesRequest) {
             if (verifyPrivilegedMethodSource(request)) {
-                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignMessage(request))
+                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignMessages(request))
             } else {
                 request.completeWithDecline()
             }
         }
 
-        override fun onSignAndSendTransactionRequest(request: SignAndSendTransactionRequest) {
+        override fun onSignAndSendTransactionsRequest(request: SignAndSendTransactionsRequest) {
             if (verifyPrivilegedMethodSource(request)) {
                 val endpointUri = clusterToRpcUri(request.cluster)
-                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignAndSendTransaction(request, endpointUri))
+                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignAndSendTransactions(request, endpointUri))
             } else {
                 request.completeWithDecline()
             }
@@ -466,11 +466,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             override val request: AuthorizeRequest,
             val sourceVerificationState: ClientTrustUseCase.VerificationState
         ) : MobileWalletAdapterRemoteRequest(request)
-        sealed class SignPayload(override val request: SignPayloadRequest) : MobileWalletAdapterRemoteRequest(request)
-        data class SignTransaction(override val request: SignTransactionRequest) : SignPayload(request)
-        data class SignMessage(override val request: SignMessageRequest) : SignPayload(request)
-        data class SignAndSendTransaction(
-            override val request: SignAndSendTransactionRequest,
+        sealed class SignPayloads(override val request: SignPayloadsRequest) : MobileWalletAdapterRemoteRequest(request)
+        data class SignTransactions(override val request: SignTransactionsRequest) : SignPayloads(request)
+        data class SignMessages(override val request: SignMessagesRequest) : SignPayloads(request)
+        data class SignAndSendTransactions(
+            override val request: SignAndSendTransactionsRequest,
             val endpointUri: Uri,
             val signedTransactions: Array<ByteArray>? = null,
             val signatures: Array<ByteArray>? = null

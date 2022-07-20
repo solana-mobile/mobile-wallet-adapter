@@ -180,7 +180,7 @@ public abstract class Scenario {
         }
 
         @Override
-        public void signPayload(@NonNull MobileWalletAdapterServer.SignPayloadRequest request) {
+        public void signPayloads(@NonNull MobileWalletAdapterServer.SignPayloadsRequest request) {
             final AuthRecord authRecord;
             try {
                 authRecord = authTokenToAuthRecord(request.authToken);
@@ -192,13 +192,13 @@ public abstract class Scenario {
             final Runnable r;
             switch (request.type) {
                 case Transaction:
-                    r = () -> mCallbacks.onSignTransactionRequest(new SignTransactionRequest(
+                    r = () -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
                             request, authRecord.identity.name, authRecord.identity.uri,
                             authRecord.identity.relativeIconUri, authRecord.scope,
                             authRecord.publicKey));
                     break;
                 case Message:
-                    r = () -> mCallbacks.onSignMessageRequest(new SignMessageRequest(request,
+                    r = () -> mCallbacks.onSignMessagesRequest(new SignMessagesRequest(request,
                             authRecord.identity.name, authRecord.identity.uri,
                             authRecord.identity.relativeIconUri, authRecord.scope,
                             authRecord.publicKey));
@@ -210,8 +210,8 @@ public abstract class Scenario {
         }
 
         @Override
-        public void signAndSendTransaction(
-                @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request) {
+        public void signAndSendTransactions(
+                @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request) {
             final AuthRecord authRecord;
             try {
                 authRecord = authTokenToAuthRecord(request.authToken);
@@ -220,8 +220,8 @@ public abstract class Scenario {
                 return;
             }
 
-            mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionRequest(
-                    new SignAndSendTransactionRequest(request, authRecord.identity.name,
+            mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionsRequest(
+                    new SignAndSendTransactionsRequest(request, authRecord.identity.name,
                             authRecord.identity.uri, authRecord.identity.relativeIconUri,
                             authRecord.scope, authRecord.publicKey)));
         }
@@ -253,8 +253,8 @@ public abstract class Scenario {
         // Request callbacks
         void onAuthorizeRequest(@NonNull AuthorizeRequest request);
         void onReauthorizeRequest(@NonNull ReauthorizeRequest request);
-        void onSignTransactionRequest(@NonNull SignTransactionRequest request);
-        void onSignMessageRequest(@NonNull SignMessageRequest request);
-        void onSignAndSendTransactionRequest(@NonNull SignAndSendTransactionRequest request);
+        void onSignTransactionsRequest(@NonNull SignTransactionsRequest request);
+        void onSignMessagesRequest(@NonNull SignMessagesRequest request);
+        void onSignAndSendTransactionsRequest(@NonNull SignAndSendTransactionsRequest request);
     }
 }

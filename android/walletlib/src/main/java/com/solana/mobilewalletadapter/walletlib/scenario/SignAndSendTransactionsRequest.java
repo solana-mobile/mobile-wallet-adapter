@@ -14,15 +14,15 @@ import androidx.annotation.VisibleForTesting;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest {
+public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityRequest {
     @NonNull
-    private final MobileWalletAdapterServer.SignAndSendTransactionRequest mRequest;
+    private final MobileWalletAdapterServer.SignAndSendTransactionsRequest mRequest;
 
     @NonNull
     protected final byte[] mPublicKey;
 
-    /*package*/ SignAndSendTransactionRequest(
-            @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request,
+    /*package*/ SignAndSendTransactionsRequest(
+            @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request,
             @Nullable String identityName,
             @Nullable Uri identityUri,
             @Nullable Uri iconUri,
@@ -64,7 +64,7 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
     }
 
     public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
-        mRequest.complete(new MobileWalletAdapterServer.SignatureResult(signatures));
+        mRequest.complete(new MobileWalletAdapterServer.SignaturesResult(signatures));
     }
 
     public void completeWithDecline() {
@@ -73,7 +73,7 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
     }
 
     public void completeWithInvalidSignatures(@NonNull @Size(min = 1) boolean[] valid) {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.InvalidPayloadException(
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.InvalidPayloadsException(
                 "One or more invalid payloads provided", valid));
     }
 
@@ -98,6 +98,6 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
     @VisibleForTesting
     public void completeWithAuthTokenNotValid() {
         mRequest.completeExceptionally(new MobileWalletAdapterServer.AuthTokenNotValidException(
-                "auth_token not valid for signing of this payload"));
+                "auth_token not valid for signing of these payloads"));
     }
 }

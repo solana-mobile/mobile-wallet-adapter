@@ -13,10 +13,10 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.DeauthorizeFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeResult;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionResult;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadResult;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsFuture;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsResult;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsFuture;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsResult;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 
 import io.reactivex.Completable;
@@ -75,11 +75,11 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<SignPayloadResult> signTransaction(@NonNull String authToken,
-                                                     @NonNull @Size(min = 1) byte[][] transactions) {
+    public Single<SignPayloadsResult> signTransactions(@NonNull String authToken,
+                                                       @NonNull @Size(min = 1) byte[][] transactions) {
         try {
-            SignPayloadFuture signPayloadFuture = mMobileWalletAdapterClient.signTransaction(authToken, transactions);
-            return Single.fromFuture(signPayloadFuture);
+            SignPayloadsFuture signPayloadsFuture = mMobileWalletAdapterClient.signTransactions(authToken, transactions);
+            return Single.fromFuture(signPayloadsFuture);
         } catch (Exception e) {
             return Single.error(e);
         }
@@ -87,11 +87,11 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<SignPayloadResult> signMessage(@NonNull String authToken,
-                                                 @NonNull @Size(min = 1) byte[][] messages) {
+    public Single<SignPayloadsResult> signMessages(@NonNull String authToken,
+                                                   @NonNull @Size(min = 1) byte[][] messages) {
         try {
-            SignPayloadFuture signPayloadFuture = mMobileWalletAdapterClient.signMessage(authToken, messages);
-            return Single.fromFuture(signPayloadFuture);
+            SignPayloadsFuture signPayloadsFuture = mMobileWalletAdapterClient.signMessages(authToken, messages);
+            return Single.fromFuture(signPayloadsFuture);
         } catch (Exception e) {
             return Single.error(e);
         }
@@ -99,17 +99,17 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
-                                                                       @NonNull @Size(min = 1) byte[][] transactions,
-                                                                       @NonNull CommitmentLevel commitmentLevel,
-                                                                       @Nullable String cluster,
-                                                                       boolean skipPreflight,
-                                                                       @Nullable CommitmentLevel preflightCommitmentLevel) {
+    public Single<SignAndSendTransactionsResult> signAndSendTransactions(@NonNull String authToken,
+                                                                         @NonNull @Size(min = 1) byte[][] transactions,
+                                                                         @NonNull CommitmentLevel commitmentLevel,
+                                                                         @Nullable String cluster,
+                                                                         boolean skipPreflight,
+                                                                         @Nullable CommitmentLevel preflightCommitmentLevel) {
         try {
-            SignAndSendTransactionFuture signAndSendTransactionFuture = mMobileWalletAdapterClient.signAndSendTransaction(
+            SignAndSendTransactionsFuture signAndSendTransactionsFuture = mMobileWalletAdapterClient.signAndSendTransactions(
                     authToken, transactions, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel
             );
-            return Single.fromFuture(signAndSendTransactionFuture);
+            return Single.fromFuture(signAndSendTransactionsFuture);
         } catch (Exception e) {
             return Single.error(e);
         }
@@ -117,14 +117,14 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<SignAndSendTransactionResult> signAndSendTransaction(@NonNull String authToken,
-                                                                       @NonNull @Size(min = 1) byte[][] transactions,
-                                                                       @NonNull CommitmentLevel commitmentLevel) {
+    public Single<SignAndSendTransactionsResult> signAndSendTransactions(@NonNull String authToken,
+                                                                         @NonNull @Size(min = 1) byte[][] transactions,
+                                                                         @NonNull CommitmentLevel commitmentLevel) {
         try {
-            SignAndSendTransactionFuture signAndSendTransactionFuture = mMobileWalletAdapterClient.signAndSendTransaction(
+            SignAndSendTransactionsFuture signAndSendTransactionsFuture = mMobileWalletAdapterClient.signAndSendTransactions(
                     authToken, transactions, commitmentLevel
             );
-            return Single.fromFuture(signAndSendTransactionFuture);
+            return Single.fromFuture(signAndSendTransactionsFuture);
         } catch (Exception e) {
             return Single.error(e);
         }
