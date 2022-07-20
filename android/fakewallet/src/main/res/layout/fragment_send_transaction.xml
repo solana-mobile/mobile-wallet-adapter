@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="@string/label_send_transaction"
+        android:text="@string/label_send_transactions"
         android:textSize="12pt"
         android:textAllCaps="true"/>
 

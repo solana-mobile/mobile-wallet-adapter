@@ -87,7 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
+    fun signTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
@@ -102,7 +102,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val transactions = Array(numTransactions) {
                 MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
             }
-            doSignTransaction(client, transactions)
+            doSignTransactions(client, transactions)
         }
 
         if (signedTransactions != null) {
@@ -123,7 +123,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun authorizeAndSignTransaction(sender: StartActivityForResultSender) = viewModelScope.launch {
+    fun authorizeAndSignTransactions(sender: StartActivityForResultSender) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
@@ -140,7 +140,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val transactions = Array(1) {
                     MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
                 }
-                doSignTransaction(client, transactions)
+                doSignTransactions(client, transactions)
             } else {
                 null
             }
@@ -164,18 +164,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signMessage(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
+    fun signMessages(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
         val signedMessages = localAssociateAndExecute(sender) { client ->
             val messages = Array(numMessages) {
                 Random.nextBytes(16384)
             }
-            doSignMessage(client, messages)
+            doSignMessages(client, messages)
         }
 
         showMessage(if (signedMessages != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    fun signAndSendTransaction(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
+    fun signAndSendTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
@@ -190,7 +190,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val transactions = Array(numTransactions) {
                 MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
             }
-            doSignAndSendTransaction(client, transactions)
+            doSignAndSendTransactions(client, transactions)
         }
 
         showMessage(if (signatures != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
@@ -348,89 +348,89 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // NOTE: blocks and waits for completion of remote method call
-    private fun doSignTransaction(
+    private fun doSignTransactions(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
     ): Array<ByteArray>? {
         var signedTransactions: Array<ByteArray>? = null
         try {
-            val result = client.signTransaction(uiState.value.authToken!!, transactions).get()
+            val result = client.signTransactions(uiState.value.authToken!!, transactions).get()
             Log.d(TAG, "Signed transaction(s): $result")
             signedTransactions = result.signedPayloads
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
-                is IOException -> Log.e(TAG, "IO error while sending sign_transaction", cause)
+                is IOException -> Log.e(TAG, "IO error while sending sign_transactions", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_transaction result", cause)
-                is MobileWalletAdapterClient.InvalidPayloadException ->
-                    Log.e(TAG, "Transaction payload invalid", cause)
+                    Log.e(TAG, "Timed out while waiting for sign_transactions result", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException ->
+                    Log.e(TAG, "Transaction payloads invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
                         ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
                         ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception for sign_transaction", cause)
+                        else -> Log.e(TAG, "Remote exception for sign_transactions", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
-                    Log.e(TAG, "JSON-RPC client exception for sign_transaction", cause)
+                    Log.e(TAG, "JSON-RPC client exception for sign_transactions", cause)
                 else -> throw e
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_transaction request was cancelled", e)
+            Log.e(TAG, "sign_transactions request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "sign_transaction request was interrupted", e)
+            Log.e(TAG, "sign_transactions request was interrupted", e)
         }
 
         return signedTransactions
     }
 
     // NOTE: blocks and waits for completion of remote method call
-    private fun doSignMessage(
+    private fun doSignMessages(
         client: MobileWalletAdapterClient,
         messages: Array<ByteArray>
     ): Array<ByteArray>? {
         var signedMessages: Array<ByteArray>? = null
         try {
-            val result = client.signMessage(uiState.value.authToken!!, messages).get()
+            val result = client.signMessages(uiState.value.authToken!!, messages).get()
             Log.d(TAG, "Signed message(s): $result")
             signedMessages = result.signedPayloads
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
-                is IOException -> Log.e(TAG, "IO error while sending sign_message", cause)
+                is IOException -> Log.e(TAG, "IO error while sending sign_messages", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_message result", cause)
-                is MobileWalletAdapterClient.InvalidPayloadException ->
-                    Log.e(TAG, "Message payload invalid", cause)
+                    Log.e(TAG, "Timed out while waiting for sign_messages result", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException ->
+                    Log.e(TAG, "Message payloads invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
                         ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
                         ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception for sign_message", cause)
+                        else -> Log.e(TAG, "Remote exception for sign_messages", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
-                    Log.e(TAG, "JSON-RPC client exception for sign_message", cause)
+                    Log.e(TAG, "JSON-RPC client exception for sign_messages", cause)
                 else -> throw e
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_message request was cancelled", e)
+            Log.e(TAG, "sign_messages request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "sign_message request was interrupted", e)
+            Log.e(TAG, "sign_messages request was interrupted", e)
         }
 
         return signedMessages
     }
 
     // NOTE: blocks and waits for completion of remote method call
-    private fun doSignAndSendTransaction(
+    private fun doSignAndSendTransactions(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
     ): Array<String>? {
         var signatures: Array<String>? = null
         try {
-            val result = client.signAndSendTransaction(
+            val result = client.signAndSendTransactions(
                 uiState.value.authToken!!,
                 transactions,
                 CommitmentLevel.Confirmed,
@@ -443,11 +443,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
                 is IOException ->
-                    Log.e(TAG, "IO error while sending sign_and_send_transaction", cause)
+                    Log.e(TAG, "IO error while sending sign_and_send_transactions", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_and_send_transaction result", cause)
-                is MobileWalletAdapterClient.InvalidPayloadException ->
-                    Log.e(TAG, "Transaction payload invalid", cause)
+                    Log.e(TAG, "Timed out while waiting for sign_and_send_transactions result", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException ->
+                    Log.e(TAG, "Transaction payloads invalid", cause)
                 is MobileWalletAdapterClient.NotCommittedException -> {
                     Log.e(TAG, "Commitment not reached for all transactions", cause)
                 }
@@ -457,16 +457,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception for sign_and_send_transaction", cause)
+                        else -> Log.e(TAG, "Remote exception for sign_and_send_transactions", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
-                    Log.e(TAG, "JSON-RPC client exception for sign_and_send_transaction", cause)
+                    Log.e(TAG, "JSON-RPC client exception for sign_and_send_transactions", cause)
                 else -> throw e
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_and_send_transaction request was cancelled", e)
+            Log.e(TAG, "sign_and_send_transactions request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "sign_and_send_transaction request was interrupted", e)
+            Log.e(TAG, "sign_and_send_transactions request was interrupted", e)
         }
 
         return signatures

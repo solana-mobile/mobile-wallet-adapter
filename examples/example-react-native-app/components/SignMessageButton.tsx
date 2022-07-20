@@ -24,7 +24,7 @@ export default function SignMessageButton({children, message}: Props) {
   const [signMessageTutorialOpen, setSignMessageTutorialOpen] = useState(false);
   const signMessageGuarded = useGuardedCallback(async buffer => {
     const [signature] = await transact(async wallet => {
-      return await wallet.signMessage({
+      return await wallet.signMessages({
         auth_token: authorization!.auth_token,
         payloads: [buffer],
       });

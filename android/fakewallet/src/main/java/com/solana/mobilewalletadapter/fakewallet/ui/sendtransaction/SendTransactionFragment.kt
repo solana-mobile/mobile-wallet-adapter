@@ -23,7 +23,7 @@ class SendTransactionFragment : Fragment() {
     private val activityViewModel: MobileWalletAdapterViewModel by activityViewModels()
     private lateinit var viewBinding: FragmentSendTransactionBinding
 
-    private var request: MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest.SignAndSendTransaction? = null
+    private var request: MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest.SignAndSendTransactions? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,7 +40,7 @@ class SendTransactionFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 activityViewModel.mobileWalletAdapterServiceEvents.collect { request ->
                     when (request) {
-                        is MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest.SignAndSendTransaction -> {
+                        is MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest.SignAndSendTransactions -> {
                             this@SendTransactionFragment.request = request
                             viewBinding.textDesiredCommitment.text = request.request.commitmentLevel.toString()
                             viewBinding.textCluster.text = request.request.cluster ?: "<unspecified>"
@@ -62,15 +62,15 @@ class SendTransactionFragment : Fragment() {
         }
 
         viewBinding.btnSimulateCommitmentReached.setOnClickListener {
-            activityViewModel.signAndSendTransactionCommitmentReached(request!!)
+            activityViewModel.signAndSendTransactionsCommitmentReached(request!!)
         }
 
         viewBinding.btnSimulateCommitmentNotReached.setOnClickListener {
-            activityViewModel.signAndSendTransactionCommitmentNotReached(request!!)
+            activityViewModel.signAndSendTransactionsCommitmentNotReached(request!!)
         }
 
         viewBinding.btnSendTransactionToCluster.setOnClickListener {
-            activityViewModel.signAndSendTransactionSend(request!!)
+            activityViewModel.signAndSendTransactionsSend(request!!)
         }
     }
 }

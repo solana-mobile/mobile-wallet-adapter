@@ -177,7 +177,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 return await this.transact(async (wallet) => {
                     const freshAuthToken = await this.performReauthorization(wallet, authorizationResult);
-                    const signedTransactions = await wallet.signTransaction({
+                    const signedTransactions = await wallet.signTransactions({
                         auth_token: freshAuthToken,
                         transactions,
                     });
@@ -202,7 +202,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 return await this.transact(async (wallet) => {
                     const freshAuthToken = await this.performReauthorization(wallet, authorizationResult);
-                    const signatures = await wallet.signAndSendTransaction({
+                    const signatures = await wallet.signAndSendTransactions({
                         auth_token: freshAuthToken,
                         fee_payer: this.publicKey || undefined,
                         connection,
@@ -235,7 +235,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 return await this.transact(async (wallet) => {
                     const freshAuthToken = await this.performReauthorization(wallet, authorizationResult);
-                    const [signedMessage] = await wallet.signMessage({
+                    const [signedMessage] = await wallet.signMessages({
                         auth_token: freshAuthToken,
                         payloads: [message],
                     });

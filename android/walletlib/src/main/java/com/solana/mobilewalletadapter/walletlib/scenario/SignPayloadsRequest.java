@@ -13,19 +13,19 @@ import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public abstract class SignPayloadRequest extends BaseVerifiableIdentityRequest {
+public abstract class SignPayloadsRequest extends BaseVerifiableIdentityRequest {
     @NonNull
-    protected final MobileWalletAdapterServer.SignPayloadRequest mRequest;
+    protected final MobileWalletAdapterServer.SignPayloadsRequest mRequest;
 
     @NonNull
     protected final byte[] mPublicKey;
 
-    protected SignPayloadRequest(@NonNull MobileWalletAdapterServer.SignPayloadRequest request,
-                                 @Nullable String identityName,
-                                 @Nullable Uri identityUri,
-                                 @Nullable Uri iconUri,
-                                 @NonNull byte[] authorizationScope,
-                                 @NonNull byte[] publicKey) {
+    protected SignPayloadsRequest(@NonNull MobileWalletAdapterServer.SignPayloadsRequest request,
+                                  @Nullable String identityName,
+                                  @Nullable Uri identityUri,
+                                  @Nullable Uri iconUri,
+                                  @NonNull byte[] authorizationScope,
+                                  @NonNull byte[] publicKey) {
         super(request, identityName, identityUri, iconUri, authorizationScope);
         mRequest = request;
         mPublicKey = publicKey;
@@ -43,7 +43,7 @@ public abstract class SignPayloadRequest extends BaseVerifiableIdentityRequest {
     }
 
     public void completeWithSignedPayloads(@NonNull @Size(min = 1) byte[][] signedPayloads) {
-        mRequest.complete(new MobileWalletAdapterServer.SignedPayloadResult(signedPayloads));
+        mRequest.complete(new MobileWalletAdapterServer.SignedPayloadsResult(signedPayloads));
     }
 
     public void completeWithDecline() {
@@ -52,7 +52,7 @@ public abstract class SignPayloadRequest extends BaseVerifiableIdentityRequest {
     }
 
     public void completeWithInvalidPayloads(@NonNull @Size(min = 1) boolean[] valid) {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.InvalidPayloadException(
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.InvalidPayloadsException(
                 "One or more invalid payloads provided", valid));
     }
 
@@ -70,6 +70,6 @@ public abstract class SignPayloadRequest extends BaseVerifiableIdentityRequest {
     @VisibleForTesting
     public void completeWithAuthTokenNotValid() {
         mRequest.completeExceptionally(new MobileWalletAdapterServer.AuthTokenNotValidException(
-                "auth_token not valid for signing of this payload"));
+                "auth_token not valid for signing of these payloads"));
     }
 }

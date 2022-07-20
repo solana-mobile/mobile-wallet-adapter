@@ -55,20 +55,20 @@ export interface DeauthorizeAPI {
 export interface ReauthorizeAPI {
     reauthorize(params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
 }
-export interface SignMessageAPI {
-    signMessage(params: {
+export interface SignMessagesAPI {
+    signMessages(params: {
         auth_token: AuthToken;
         payloads: Base64EncodedMessage[];
     }): Promise<Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>>;
 }
-export interface SignTransactionAPI {
-    signTransaction(params: {
+export interface SignTransactionsAPI {
+    signTransactions(params: {
         auth_token: AuthToken;
         payloads: Base64EncodedTransaction[];
     }): Promise<Readonly<{ signed_payloads: Base64EncodedSignedTransaction[] }>>;
 }
-export interface SignAndSendTransactionAPI {
-    signAndSendTransaction(params: {
+export interface SignAndSendTransactionsAPI {
+    signAndSendTransactions(params: {
         auth_token: AuthToken;
         commitment: 'confirmed' | 'finalized' | 'processed';
         payloads: Base64EncodedTransaction[];
@@ -80,6 +80,6 @@ export interface MobileWallet
         CloneAuthorizationAPI,
         DeauthorizeAPI,
         ReauthorizeAPI,
-        SignMessageAPI,
-        SignTransactionAPI,
-        SignAndSendTransactionAPI {}
+        SignMessagesAPI,
+        SignTransactionsAPI,
+        SignAndSendTransactionsAPI {}

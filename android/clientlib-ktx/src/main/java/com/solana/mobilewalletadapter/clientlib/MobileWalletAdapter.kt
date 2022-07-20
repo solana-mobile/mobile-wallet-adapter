@@ -76,8 +76,8 @@ class MobileWalletAdapter(
                     Log.e(TAG, "JSON-RPC client exception", cause)
                     throw e
                 }
-                is MobileWalletAdapterClient.InvalidPayloadException -> {
-                    Log.e(TAG, "Transaction payload invalid", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException -> {
+                    Log.e(TAG, "Transaction payloads invalid", cause)
                     throw e
                 }
                 is MobileWalletAdapterClient.NotCommittedException -> {

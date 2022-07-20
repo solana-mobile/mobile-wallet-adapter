@@ -12,8 +12,8 @@ import {
 
 import { fromUint8Array, toUint8Array } from './base64Utils';
 
-interface Web3SignAndSendTransactionAPI {
-    signAndSendTransaction(params: {
+interface Web3SignAndSendTransactionsAPI {
+    signAndSendTransactions(params: {
         auth_token: AuthToken;
         connection: Connection;
         fee_payer?: PublicKey;
@@ -21,12 +21,12 @@ interface Web3SignAndSendTransactionAPI {
     }): Promise<TransactionSignature[]>;
 }
 
-interface Web3SignTransactionAPI {
-    signTransaction(params: { auth_token: AuthToken; transactions: Transaction[] }): Promise<Transaction[]>;
+interface Web3SignTransactionsAPI {
+    signTransactions(params: { auth_token: AuthToken; transactions: Transaction[] }): Promise<Transaction[]>;
 }
 
-interface Web3SignMessageAPI {
-    signMessage(params: { auth_token: AuthToken; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
+interface Web3SignMessagesAPI {
+    signMessages(params: { auth_token: AuthToken; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
 }
 
 export interface Web3MobileWallet
@@ -34,9 +34,9 @@ export interface Web3MobileWallet
         CloneAuthorizationAPI,
         DeauthorizeAPI,
         ReauthorizeAPI,
-        Web3SignAndSendTransactionAPI,
-        Web3SignTransactionAPI,
-        Web3SignMessageAPI {}
+        Web3SignAndSendTransactionsAPI,
+        Web3SignTransactionsAPI,
+        Web3SignMessagesAPI {}
 
 export async function transact<TReturn>(
     callback: (wallet: Web3MobileWallet) => TReturn,
@@ -47,9 +47,9 @@ export async function transact<TReturn>(
             get<TMethodName extends keyof Web3MobileWallet>(target: Web3MobileWallet, p: TMethodName) {
                 if (target[p] == null) {
                     switch (p) {
-                        case 'signAndSendTransaction':
+                        case 'signAndSendTransactions':
                             target[p] = async function (
-                                params: Parameters<Web3MobileWallet['signAndSendTransaction']>[0],
+                                params: Parameters<Web3MobileWallet['signAndSendTransactions']>[0],
                             ) {
                                 let latestBlockhashPromise: ReturnType<
                                     InstanceType<typeof Connection>['getLatestBlockhash']
@@ -88,7 +88,7 @@ export async function transact<TReturn>(
                                     default:
                                         targetCommitment = 'finalized';
                                 }
-                                const { signatures } = await wallet.signAndSendTransaction({
+                                const { signatures } = await wallet.signAndSendTransactions({
                                     auth_token: params.auth_token,
                                     commitment: targetCommitment,
                                     payloads,
@@ -96,10 +96,10 @@ export async function transact<TReturn>(
                                 return signatures as TransactionSignature[];
                             } as Web3MobileWallet[TMethodName];
                             break;
-                        case 'signMessage':
-                            target[p] = async function (params: Parameters<Web3MobileWallet['signMessage']>[0]) {
+                        case 'signMessages':
+                            target[p] = async function (params: Parameters<Web3MobileWallet['signMessages']>[0]) {
                                 const payloads = params.payloads.map(fromUint8Array);
-                                const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessage({
+                                const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessages({
                                     auth_token: params.auth_token,
                                     payloads,
                                 });
@@ -107,8 +107,8 @@ export async function transact<TReturn>(
                                 return signedMessages;
                             } as Web3MobileWallet[TMethodName];
                             break;
-                        case 'signTransaction':
-                            target[p] = async function (params: Parameters<Web3MobileWallet['signTransaction']>[0]) {
+                        case 'signTransactions':
+                            target[p] = async function (params: Parameters<Web3MobileWallet['signTransactions']>[0]) {
                                 const serializedTransactions = params.transactions.map((transaction) =>
                                     transaction.serialize({
                                         requireAllSignatures: false,
@@ -119,7 +119,7 @@ export async function transact<TReturn>(
                                     serializedTransaction.toString('base64'),
                                 );
                                 const { signed_payloads: base64EncodedCompiledTransactions } =
-                                    await wallet.signTransaction({
+                                    await wallet.signTransactions({
                                         auth_token: params.auth_token,
                                         payloads,
                                     });

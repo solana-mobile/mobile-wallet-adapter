@@ -353,7 +353,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public static class GetCapabilitiesResult {
         public final boolean supportsCloneAuthorization;
 
-        public final boolean supportsSignAndSendTransaction;
+        public final boolean supportsSignAndSendTransactions;
 
         @IntRange(from = 0)
         public final int maxTransactionsPerSigningRequest;
@@ -362,11 +362,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public final int maxMessagesPerSigningRequest;
 
         private GetCapabilitiesResult(boolean supportsCloneAuthorization,
-                                      boolean supportsSignAndSendTransaction,
+                                      boolean supportsSignAndSendTransactions,
                                       @IntRange(from = 0) int maxTransactionsPerSigningRequest,
                                       @IntRange(from = 0) int maxMessagesPerSigningRequest) {
             this.supportsCloneAuthorization = supportsCloneAuthorization;
-            this.supportsSignAndSendTransaction = supportsSignAndSendTransaction;
+            this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
             this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
             this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
         }
@@ -376,7 +376,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public String toString() {
             return "GetCapabilitiesResult{" +
                     "supportsCloneAuthorization=" + supportsCloneAuthorization +
-                    ", supportsSignAndSendTransaction=" + supportsSignAndSendTransaction +
+                    ", supportsSignAndSendTransactions=" + supportsSignAndSendTransactions +
                     ", maxTransactionsPerSigningRequest=" + maxTransactionsPerSigningRequest +
                     ", maxMessagesPerSigningRequest=" + maxMessagesPerSigningRequest +
                     '}';
@@ -401,12 +401,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final JSONObject jo = (JSONObject) o;
 
             final boolean supportsCloneAuthorization;
-            final boolean supportsSignAndSendTransaction;
+            final boolean supportsSignAndSendTransactions;
             final int maxTransactionsPerSigningRequest;
             final int maxMessagesPerSigningRequest;
             try {
                 supportsCloneAuthorization = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION);
-                supportsSignAndSendTransaction = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTION);
+                supportsSignAndSendTransactions = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS);
                 maxTransactionsPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, 0);
                 maxMessagesPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, 0);
             } catch (JSONException e) {
@@ -414,7 +414,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
 
             return new GetCapabilitiesResult(supportsCloneAuthorization,
-                    supportsSignAndSendTransaction,
+                    supportsSignAndSendTransactions,
                     maxTransactionsPerSigningRequest,
                     maxMessagesPerSigningRequest);
         }
@@ -430,9 +430,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    private NotifyOnCompleteFuture<Object> signPayload(@NonNull String method,
-                                                       @NonNull String authToken,
-                                                       @NonNull @Size(min = 1) byte[][] payloads)
+    private NotifyOnCompleteFuture<Object> signPayloads(@NonNull String method,
+                                                        @NonNull String authToken,
+                                                        @NonNull @Size(min = 1) byte[][] payloads)
             throws IOException {
         if (authToken.isEmpty()) {
             throw new IllegalArgumentException("authToken cannot be empty");
@@ -443,11 +443,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
-        final JSONArray payloadArr = JsonPack.packByteArraysToBase64PayloadsArray(payloads);
+        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(payloads);
         final JSONObject signPayloads = new JSONObject();
         try {
             signPayloads.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
-            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
+            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
         }
@@ -545,37 +545,37 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         return strings;
     }
 
-    public static class SignPayloadResult {
+    public static class SignPayloadsResult {
         @NonNull
         @Size(min = 1)
         public final byte[][] signedPayloads;
 
-        public SignPayloadResult(@NonNull @Size(min = 1) byte[][] signedPayloads) {
+        public SignPayloadsResult(@NonNull @Size(min = 1) byte[][] signedPayloads) {
             this.signedPayloads = signedPayloads;
         }
 
         @NonNull
         @Override
         public String toString() {
-            return "SignPayloadResult{signedPayloads=" + Arrays.toString(signedPayloads) + '}';
+            return "SignPayloadsResult{signedPayloads=" + Arrays.toString(signedPayloads) + '}';
         }
     }
 
-    public static class SignPayloadFuture
-            extends JsonRpc20MethodResultFuture<SignPayloadResult>
-            implements NotifyOnCompleteFuture<SignPayloadResult> {
+    public static class SignPayloadsFuture
+            extends JsonRpc20MethodResultFuture<SignPayloadsResult>
+            implements NotifyOnCompleteFuture<SignPayloadsResult> {
         @IntRange(from = 1)
         private final int mExpectedNumSignedPayloads;
 
-        private SignPayloadFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
-                                  @IntRange(from = 1) int expectedNumSignedPayloads) {
+        private SignPayloadsFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
+                                   @IntRange(from = 1) int expectedNumSignedPayloads) {
             super(methodCallFuture);
             mExpectedNumSignedPayloads = expectedNumSignedPayloads;
         }
 
         @NonNull
         @Override
-        protected SignPayloadResult processResult(@Nullable Object o)
+        protected SignPayloadsResult processResult(@Nullable Object o)
                 throws JsonRpc20InvalidResponseException {
             if (!(o instanceof JSONObject)) {
                 throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
@@ -583,17 +583,17 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final JSONObject jo = (JSONObject) o;
             final byte[][] signedPayloads = unpackResponsePayloadArray(jo,
                     ProtocolContract.RESULT_SIGNED_PAYLOADS, mExpectedNumSignedPayloads);
-            return new SignPayloadResult(signedPayloads);
+            return new SignPayloadsResult(signedPayloads);
         }
 
         @Nullable
         @Override
         protected JsonRpc20Exception processRemoteException(@NonNull JsonRpc20RemoteException remoteException) {
-            if (remoteException.code != ProtocolContract.ERROR_INVALID_PAYLOAD) {
+            if (remoteException.code != ProtocolContract.ERROR_INVALID_PAYLOADS) {
                 return null;
             }
             try {
-                return new InvalidPayloadException(remoteException.getMessage(),
+                return new InvalidPayloadsException(remoteException.getMessage(),
                         remoteException.data, mExpectedNumSignedPayloads);
             } catch (JsonRpc20InvalidResponseException e) {
                 return e;
@@ -601,21 +601,21 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         @Override
-        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignPayloadResult>> cb) {
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignPayloadsResult>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
     }
 
-    public static class InvalidPayloadException extends JsonRpc20RemoteException {
+    public static class InvalidPayloadsException extends JsonRpc20RemoteException {
         @NonNull
         @Size(min = 1)
         public final boolean[] validPayloads;
 
-        private InvalidPayloadException(@NonNull String message,
-                                        @Nullable String data,
-                                        @IntRange(from = 1) int expectedNumSignedPayloads)
+        private InvalidPayloadsException(@NonNull String message,
+                                         @Nullable String data,
+                                         @IntRange(from = 1) int expectedNumSignedPayloads)
                 throws JsonRpc20InvalidResponseException {
-            super(ProtocolContract.ERROR_INVALID_PAYLOAD, message, data);
+            super(ProtocolContract.ERROR_INVALID_PAYLOADS, message, data);
 
             if (data == null) {
                 throw new JsonRpc20InvalidResponseException("data should not be null");
@@ -624,10 +624,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             try {
                 o = new JSONObject(data);
             } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException("data is not a valid ERROR_INVALID_PAYLOAD result");
+                throw new JsonRpc20InvalidResponseException("data is not a valid ERROR_INVALID_PAYLOADS result");
             }
             validPayloads = unpackResponseBooleanArray(o,
-                    ProtocolContract.DATA_INVALID_PAYLOAD_VALID, expectedNumSignedPayloads);
+                    ProtocolContract.DATA_INVALID_PAYLOADS_VALID, expectedNumSignedPayloads);
         }
 
         @NonNull
@@ -638,42 +638,42 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     // =============================================================================================
-    // sign_transaction
+    // sign_transactions
     // =============================================================================================
 
     @NonNull
-    public SignPayloadFuture signTransaction(@NonNull String authToken,
-                                             @NonNull @Size(min = 1) byte[][] transactions)
+    public SignPayloadsFuture signTransactions(@NonNull String authToken,
+                                               @NonNull @Size(min = 1) byte[][] transactions)
             throws IOException {
-        return new SignPayloadFuture(
-                signPayload(ProtocolContract.METHOD_SIGN_TRANSACTION, authToken, transactions),
+        return new SignPayloadsFuture(
+                signPayloads(ProtocolContract.METHOD_SIGN_TRANSACTIONS, authToken, transactions),
                 transactions.length);
     }
 
     // =============================================================================================
-    // sign_message
+    // sign_messages
     // =============================================================================================
 
     @NonNull
-    public SignPayloadFuture signMessage(@NonNull String authToken,
-                                         @NonNull @Size(min = 1) byte[][] messages)
+    public SignPayloadsFuture signMessages(@NonNull String authToken,
+                                           @NonNull @Size(min = 1) byte[][] messages)
             throws IOException {
-        return new SignPayloadFuture(
-                signPayload(ProtocolContract.METHOD_SIGN_MESSAGE, authToken, messages),
+        return new SignPayloadsFuture(
+                signPayloads(ProtocolContract.METHOD_SIGN_MESSAGES, authToken, messages),
                 messages.length);
     }
 
     // =============================================================================================
-    // sign_and_send_transaction
+    // sign_and_send_transactions
     // =============================================================================================
 
     @NonNull
-    public SignAndSendTransactionFuture signAndSendTransaction(@NonNull String authToken,
-                                                               @NonNull @Size(min = 1) byte[][] transactions,
-                                                               @NonNull CommitmentLevel commitmentLevel,
-                                                               @Nullable String cluster,
-                                                               boolean skipPreflight,
-                                                               @Nullable CommitmentLevel preflightCommitmentLevel)
+    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull String authToken,
+                                                                 @NonNull @Size(min = 1) byte[][] transactions,
+                                                                 @NonNull CommitmentLevel commitmentLevel,
+                                                                 @Nullable String cluster,
+                                                                 boolean skipPreflight,
+                                                                 @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException {
         if (authToken.isEmpty()) {
             throw new IllegalArgumentException("authToken cannot be empty");
@@ -684,54 +684,54 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
-        final JSONArray payloadArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
-        final JSONObject signAndSendTransaction = new JSONObject();
+        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
+        final JSONObject signAndSendTransactions = new JSONObject();
         try {
-            signAndSendTransaction.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
-            signAndSendTransaction.put(ProtocolContract.PARAMETER_PAYLOADS, payloadArr);
-            signAndSendTransaction.put(ProtocolContract.PARAMETER_COMMITMENT,
+            signAndSendTransactions.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken);
+            signAndSendTransactions.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
+            signAndSendTransactions.put(ProtocolContract.PARAMETER_COMMITMENT,
                     commitmentLevel.commitmentLevel);
-            signAndSendTransaction.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
+            signAndSendTransactions.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
             if (skipPreflight) {
-                signAndSendTransaction.put(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, true);
+                signAndSendTransactions.put(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, true);
             }
             if (preflightCommitmentLevel != null) {
-                signAndSendTransaction.put(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT,
+                signAndSendTransactions.put(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT,
                         preflightCommitmentLevel.commitmentLevel);
             }
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
         }
 
-        return new SignAndSendTransactionFuture(
-                methodCall(ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTION,
-                        signAndSendTransaction, mClientTimeoutMs),
+        return new SignAndSendTransactionsFuture(
+                methodCall(ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS,
+                        signAndSendTransactions, mClientTimeoutMs),
                 transactions.length);
     }
 
     @NonNull
-    public SignAndSendTransactionFuture signAndSendTransaction(@NonNull String authToken,
-                                                               @NonNull @Size(min = 1) byte[][] transactions,
-                                                               @NonNull CommitmentLevel commitmentLevel)
+    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull String authToken,
+                                                                 @NonNull @Size(min = 1) byte[][] transactions,
+                                                                 @NonNull CommitmentLevel commitmentLevel)
             throws IOException {
-        return signAndSendTransaction(authToken, transactions, commitmentLevel, null, false, null);
+        return signAndSendTransactions(authToken, transactions, commitmentLevel, null, false, null);
     }
 
-    public static class SignAndSendTransactionFuture
-            extends JsonRpc20MethodResultFuture<SignAndSendTransactionResult>
-            implements NotifyOnCompleteFuture<SignAndSendTransactionResult> {
+    public static class SignAndSendTransactionsFuture
+            extends JsonRpc20MethodResultFuture<SignAndSendTransactionsResult>
+            implements NotifyOnCompleteFuture<SignAndSendTransactionsResult> {
         @IntRange(from = 1)
         private final int mExpectedNumSignatures;
 
-        private SignAndSendTransactionFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
-                                             @IntRange(from = 1) int expectedNumSignatures) {
+        private SignAndSendTransactionsFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
+                                              @IntRange(from = 1) int expectedNumSignatures) {
             super(methodCallFuture);
             mExpectedNumSignatures = expectedNumSignatures;
         }
 
         @NonNull
         @Override
-        protected SignAndSendTransactionResult processResult(@Nullable Object o)
+        protected SignAndSendTransactionsResult processResult(@Nullable Object o)
                 throws JsonRpc20InvalidResponseException {
             if (!(o instanceof JSONObject)) {
                 throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
@@ -739,7 +739,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final JSONObject jo = (JSONObject) o;
             final String[] signatures = unpackResponseStringArray(jo,
                     ProtocolContract.RESULT_SIGNATURES, mExpectedNumSignatures);
-            return new SignAndSendTransactionResult(signatures);
+            return new SignAndSendTransactionsResult(signatures);
         }
 
         @Nullable
@@ -747,8 +747,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         protected JsonRpc20Exception processRemoteException(@NonNull JsonRpc20RemoteException remoteException) {
             try {
                 switch (remoteException.code) {
-                    case ProtocolContract.ERROR_INVALID_PAYLOAD:
-                        return new InvalidPayloadException(remoteException.getMessage(),
+                    case ProtocolContract.ERROR_INVALID_PAYLOADS:
+                        return new InvalidPayloadsException(remoteException.getMessage(),
                                 remoteException.data, mExpectedNumSignatures);
 
                     case ProtocolContract.ERROR_NOT_COMMITTED:
@@ -762,24 +762,24 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
 
         @Override
-        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignAndSendTransactionResult>> cb) {
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignAndSendTransactionsResult>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
     }
 
-    public static class SignAndSendTransactionResult {
+    public static class SignAndSendTransactionsResult {
         @NonNull
         @Size(min = 1)
         public final String[] signatures;
 
-        public SignAndSendTransactionResult(@NonNull @Size(min = 1) String[] signatures) {
+        public SignAndSendTransactionsResult(@NonNull @Size(min = 1) String[] signatures) {
             this.signatures = signatures;
         }
 
         @NonNull
         @Override
         public String toString() {
-            return "SignAndSendTransactionResult{signatures=" + Arrays.toString(signatures) + '}';
+            return "SignAndSendTransactionsResult{signatures=" + Arrays.toString(signatures) + '}';
         }
     }
 
