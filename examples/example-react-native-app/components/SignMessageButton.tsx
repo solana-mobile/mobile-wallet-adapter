@@ -1,4 +1,5 @@
 import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import {fromUint8Array} from 'js-base64';
 import React, {useContext, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Button, Dialog, Paragraph, Portal, Text} from 'react-native-paper';
@@ -11,10 +12,6 @@ type Props = Readonly<{
   children?: React.ReactNode;
   message: string;
 }>;
-
-function getBase64StringFromByteArray(byteArray: Uint8Array): string {
-  return globalThis.btoa(String.fromCharCode.call(null, ...byteArray));
-}
 
 export default function SignMessageButton({children, message}: Props) {
   const {authorization} = useAuthorization();
@@ -101,9 +98,7 @@ export default function SignMessageButton({children, message}: Props) {
           <Dialog.Content>
             <Paragraph>
               <Text>
-                {previewSignature
-                  ? getBase64StringFromByteArray(previewSignature)
-                  : null}
+                {previewSignature ? fromUint8Array(previewSignature) : null}
               </Text>
             </Paragraph>
             <Dialog.Actions>
