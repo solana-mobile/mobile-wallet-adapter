@@ -59,6 +59,7 @@ public class ProtocolContract {
 
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)
 
+    // Keep these in sync with `mobile-wallet-adapter-protocol/src/errors.ts`.
     public static final int ERROR_AUTHORIZATION_FAILED = -1;
     public static final int ERROR_INVALID_PAYLOADS = -2;
     public static final int ERROR_NOT_SIGNED = -3;
