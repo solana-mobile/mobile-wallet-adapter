@@ -14,7 +14,7 @@ type Props = Readonly<{
 }>;
 
 export default function SignMessageButton({children, message}: Props) {
-  const {authorization} = useAuthorization();
+  const {authorizeSession} = useAuthorization();
   const [previewSignature, setPreviewSignature] = useState<Uint8Array | null>(
     null,
   );
@@ -22,24 +22,25 @@ export default function SignMessageButton({children, message}: Props) {
     useState(false);
   const setSnackbarProps = useContext(SnackbarContext);
   const [signMessageTutorialOpen, setSignMessageTutorialOpen] = useState(false);
-  const signMessageGuarded = useGuardedCallback(async buffer => {
-    const [signature] = await transact(async wallet => {
-      return await wallet.signMessages({
-        auth_token: authorization!.auth_token,
-        payloads: [buffer],
+  const signMessageGuarded = useGuardedCallback(
+    async buffer => {
+      const [signature] = await transact(async wallet => {
+        const {authToken} = await authorizeSession(wallet);
+        return await wallet.signMessages({
+          auth_token: authToken,
+          payloads: [buffer],
+        });
       });
-    });
-    return signature;
-  }, []);
+      return signature;
+    },
+    [authorizeSession],
+  );
   return (
     <>
       <View style={styles.buttonGroup}>
         <Button
           disabled={!message}
           onPress={async () => {
-            if (authorization?.publicKey == null) {
-              return;
-            }
             const messageBuffer = new Uint8Array(
               message.split('').map(c => c.charCodeAt(0)),
             );
@@ -57,7 +58,7 @@ export default function SignMessageButton({children, message}: Props) {
               });
             }
           }}
-          mode="contained"
+          mode="outlined"
           style={styles.actionButton}>
           {children}
         </Button>

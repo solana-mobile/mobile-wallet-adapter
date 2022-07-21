@@ -23,7 +23,7 @@ type Props = Readonly<{
 }>;
 
 export default function RecordMessageButton({children, message}: Props) {
-  const {authorization} = useAuthorization();
+  const {authorizeSession} = useAuthorization();
   const {connection} = useConnection();
   const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =
@@ -33,28 +33,32 @@ export default function RecordMessageButton({children, message}: Props) {
     async (
       messageBuffer: Buffer,
     ): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
-      const memoProgramTransaction = new Transaction({
-        ...(await connection.getLatestBlockhash()),
-        feePayer: authorization!.publicKey,
-      }).add(
-        new TransactionInstruction({
-          data: messageBuffer,
-          keys: [],
-          programId: new PublicKey(
-            'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
-          ),
-        }),
-      );
       const [signature] = await transact(async wallet => {
+        const [{authToken, publicKey}, latestBlockhash] = await Promise.all([
+          authorizeSession(wallet),
+          connection.getLatestBlockhash(),
+        ]);
+        const memoProgramTransaction = new Transaction({
+          ...latestBlockhash,
+          feePayer: publicKey,
+        }).add(
+          new TransactionInstruction({
+            data: messageBuffer,
+            keys: [],
+            programId: new PublicKey(
+              'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
+            ),
+          }),
+        );
         return await wallet.signAndSendTransactions({
-          auth_token: authorization!.auth_token,
+          auth_token: authToken,
           connection,
           transactions: [memoProgramTransaction],
         });
       });
       return [signature, await connection.confirmTransaction(signature)];
     },
-    [connection],
+    [authorizeSession, connection],
   );
   return (
     <>
@@ -63,7 +67,7 @@ export default function RecordMessageButton({children, message}: Props) {
           disabled={!message}
           loading={recordingInProgress}
           onPress={async () => {
-            if (recordingInProgress || authorization?.publicKey == null) {
+            if (recordingInProgress) {
               return;
             }
             setRecordingInProgress(true);
