@@ -85,7 +85,5 @@ public class ProtocolContract {
     public static final String CLUSTER_TESTNET = "testnet";
     public static final String CLUSTER_DEVNET = "devnet";
 
-    public static final int TRANSACTION_MAX_SIZE_BYTES = 1232;
-
     private ProtocolContract() {}
 }
