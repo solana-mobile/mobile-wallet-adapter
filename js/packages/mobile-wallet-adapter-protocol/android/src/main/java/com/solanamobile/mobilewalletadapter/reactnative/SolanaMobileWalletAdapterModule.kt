@@ -76,7 +76,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
             }
             promise.resolve(true)
         } catch (e: ActivityNotFoundException) {
-            Log.e(name, "Found no activity capable of responding to session establishment request", e)
+            Log.e(name, "Found no installed wallet that supports the mobile wallet protocol", e)
             cleanup()
             promise.reject("ERROR_WALLET_NOT_FOUND", e)
         } catch (e: TimeoutCancellationException) {
