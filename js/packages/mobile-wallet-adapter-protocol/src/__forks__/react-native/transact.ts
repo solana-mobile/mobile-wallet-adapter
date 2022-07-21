@@ -1,7 +1,9 @@
 import { NativeModules, Platform } from 'react-native';
 
-import { SolanaMobileWalletAdapterProtocolError } from '../../errors';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors';
 import { MobileWallet, WalletAssociationConfig } from '../../types';
+
+type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };
 
 const LINKING_ERROR =
     `The package 'solana-mobile-wallet-adapter-protocol' doesn't seem to be linked. Make sure: \n\n` +
@@ -27,6 +29,40 @@ const SolanaMobileWalletAdapter =
               },
           );
 
+function getErrorMessage(e: ReactNativeError): string {
+    switch (e.code) {
+        case 'ERROR_WALLET_NOT_FOUND':
+            return 'Found no installed wallet that supports the mobile wallet protocol.';
+        default:
+            return e.message;
+    }
+}
+
+function handleError(e: any): never {
+    if (e instanceof Error) {
+        const reactNativeError: ReactNativeError = e;
+        switch (reactNativeError.code) {
+            case undefined:
+                throw e;
+            case 'JSON_RPC_ERROR': {
+                const details = reactNativeError.userInfo as Readonly<{ jsonRpcErrorCode: number }>;
+                throw new SolanaMobileWalletAdapterProtocolError(
+                    0 /* jsonRpcMessageId */,
+                    details.jsonRpcErrorCode,
+                    e.message,
+                );
+            }
+            default:
+                throw new SolanaMobileWalletAdapterError<any>(
+                    reactNativeError.code,
+                    getErrorMessage(reactNativeError),
+                    reactNativeError.userInfo,
+                );
+        }
+    }
+    throw e;
+}
+
 export async function transact<TReturn>(
     callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
@@ -46,15 +82,7 @@ export async function transact<TReturn>(
                         try {
                             return await SolanaMobileWalletAdapter.invoke(method, params);
                         } catch (e) {
-                            if (e instanceof Error && (e as any).code === 'JSON_RPC_ERROR') {
-                                const details = (e as any).userInfo as Readonly<{ jsonRpcErrorCode: number }>;
-                                throw new SolanaMobileWalletAdapterProtocolError<any>(
-                                    0 /* jsonRpcMessageId */,
-                                    details.jsonRpcErrorCode,
-                                    e.message,
-                                );
-                            }
-                            throw e;
+                            return handleError(e);
                         }
                     } as MobileWallet[TMethodName];
                 }
@@ -68,6 +96,8 @@ export async function transact<TReturn>(
             },
         });
         return await callback(wallet);
+    } catch (e) {
+        return handleError(e);
     } finally {
         if (didSuccessfullyConnect) {
             await SolanaMobileWalletAdapter.endSession();

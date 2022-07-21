@@ -1,5 +1,6 @@
 package com.solanamobile.mobilewalletadapter.reactnative
 
+import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.os.Looper
 import android.util.Log
@@ -74,6 +75,10 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 semConnectedOrFailed.acquire()
             }
             promise.resolve(true)
+        } catch (e: ActivityNotFoundException) {
+            Log.e(name, "Found no activity capable of responding to session establishment request", e)
+            cleanup()
+            promise.reject("ERROR_WALLET_NOT_FOUND", e)
         } catch (e: TimeoutCancellationException) {
             Log.e(name, "Timed out waiting for local association to be ready", e)
             cleanup()
