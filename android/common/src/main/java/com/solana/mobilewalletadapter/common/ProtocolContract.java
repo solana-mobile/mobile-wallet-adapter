@@ -81,7 +81,7 @@ public class ProtocolContract {
     public static final String COMMITMENT_CONFIRMED = "confirmed";
     public static final String COMMITMENT_FINALIZED = "finalized";
 
-    public static final String CLUSTER_MAINNET_BETA = "mainnet_beta";
+    public static final String CLUSTER_MAINNET_BETA = "mainnet-beta";
     public static final String CLUSTER_TESTNET = "testnet";
     public static final String CLUSTER_DEVNET = "devnet";
 
