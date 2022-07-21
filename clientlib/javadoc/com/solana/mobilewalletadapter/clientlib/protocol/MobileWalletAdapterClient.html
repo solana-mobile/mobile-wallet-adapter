@@ -299,15 +299,13 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransactions(java.lang.String,byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransactions</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                       byte[][]&nbsp;transactions,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransactions</a></span>&#8203;(byte[][]&nbsp;transactions,
                        com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransactions(java.lang.String,byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransactions</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                       byte[][]&nbsp;transactions,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">signAndSendTransactions</a></span>&#8203;(byte[][]&nbsp;transactions,
                        com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel,
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;cluster,
                        boolean&nbsp;skipPreflight,
@@ -316,14 +314,12 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(java.lang.String,byte%5B%5D%5B%5D)">signMessages</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-            byte[][]&nbsp;messages)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(byte%5B%5D%5B%5D)">signMessages</a></span>&#8203;(byte[][]&nbsp;messages)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactions(java.lang.String,byte%5B%5D%5B%5D)">signTransactions</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                byte[][]&nbsp;transactions)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactions(byte%5B%5D%5B%5D)">signTransactions</a></span>&#8203;(byte[][]&nbsp;transactions)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -450,16 +446,14 @@ public&nbsp;<a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title
 </dl>
 </li>
 </ul>
-<a id="signTransactions(java.lang.String,byte[][])">
+<a id="signTransactions(byte[][])">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>signTransactions</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a>&nbsp;signTransactions&#8203;(@NonNull
-                                                                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                     @NonNull @Size(min=1L)
+public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a>&nbsp;signTransactions&#8203;(@NonNull @Size(min=1L)
                                                                      byte[][]&nbsp;transactions)
                                                               throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
@@ -468,16 +462,14 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="c
 </dl>
 </li>
 </ul>
-<a id="signMessages(java.lang.String,byte[][])">
+<a id="signMessages(byte[][])">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>signMessages</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a>&nbsp;signMessages&#8203;(@NonNull
-                                                                 <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                 @NonNull @Size(min=1L)
+public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a>&nbsp;signMessages&#8203;(@NonNull @Size(min=1L)
                                                                  byte[][]&nbsp;messages)
                                                           throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
@@ -486,16 +478,14 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="c
 </dl>
 </li>
 </ul>
-<a id="signAndSendTransactions(java.lang.String,byte[][],com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">
+<a id="signAndSendTransactions(byte[][],com.solana.mobilewalletadapter.common.protocol.CommitmentLevel,java.lang.String,boolean,com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>signAndSendTransactions</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a>&nbsp;signAndSendTransactions&#8203;(@NonNull
-                                                                                       <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                                       @NonNull @Size(min=1L)
+public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a>&nbsp;signAndSendTransactions&#8203;(@NonNull @Size(min=1L)
                                                                                        byte[][]&nbsp;transactions,
                                                                                        @NonNull
                                                                                        com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel,
@@ -511,16 +501,14 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.htm
 </dl>
 </li>
 </ul>
-<a id="signAndSendTransactions(java.lang.String,byte[][],com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">
+<a id="signAndSendTransactions(byte[][],com.solana.mobilewalletadapter.common.protocol.CommitmentLevel)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>signAndSendTransactions</h4>
 <pre class="methodSignature">@NonNull
-public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a>&nbsp;signAndSendTransactions&#8203;(@NonNull
-                                                                                       <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
-                                                                                       @NonNull @Size(min=1L)
+public&nbsp;<a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a>&nbsp;signAndSendTransactions&#8203;(@NonNull @Size(min=1L)
                                                                                        byte[][]&nbsp;transactions,
                                                                                        @NonNull
                                                                                        com.solana.mobilewalletadapter.common.protocol.CommitmentLevel&nbsp;commitmentLevel)
