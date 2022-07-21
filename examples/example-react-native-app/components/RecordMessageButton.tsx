@@ -11,6 +11,7 @@ import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import React, {useContext, useState} from 'react';
 import {Linking, StyleSheet, View} from 'react-native';
 import {Button, Dialog, Paragraph, Portal} from 'react-native-paper';
+import {TextEncoder} from 'text-encoding';
 
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
@@ -68,7 +69,7 @@ export default function RecordMessageButton({children, message}: Props) {
             setRecordingInProgress(true);
             try {
               const result = await recordMessageGuarded(
-                new (globalThis as any).TextEncoder().encode(message) as Buffer,
+                new TextEncoder().encode(message) as Buffer,
               );
               if (result) {
                 const [signature, response] = result;
