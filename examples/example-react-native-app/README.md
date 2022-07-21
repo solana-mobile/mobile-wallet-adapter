@@ -2,7 +2,7 @@
 
 This demonstrates how you can use the mobile wallet adapter protocol in a React Native app.
 
-https://user-images.githubusercontent.com/13243/180092228-f499c2ec-17fb-4fb9-9806-67468d15ee27.mp4
+https://user-images.githubusercontent.com/13243/180274282-f2cf9f89-b625-4c98-82f8-42b6f49badc1.mp4
 
 ## Features
 
