@@ -1,9 +1,8 @@
 import createHelloReq from './createHelloReq';
 import {
-    SolanaMobileWalletAdapterProtocolJsonRpcError,
-    SolanaMobileWalletAdapterProtocolSessionClosedError,
-    SolanaMobileWalletAdapterProtocolSessionEstablishmentError,
-    SolanaMobileWalletAdapterSecureContextRequiredError,
+    SolanaMobileWalletAdapterError,
+    SolanaMobileWalletAdapterErrorCode,
+    SolanaMobileWalletAdapterProtocolError,
 } from './errors';
 import generateAssociationKeypair from './generateAssociationKeypair';
 import generateECDHKeypair from './generateECDHKeypair';
@@ -38,7 +37,10 @@ type State =
 
 function assertSecureContext() {
     if (typeof window === 'undefined' || window.isSecureContext !== true) {
-        throw new SolanaMobileWalletAdapterSecureContextRequiredError();
+        throw new SolanaMobileWalletAdapterError(
+            SolanaMobileWalletAdapterErrorCode.ERROR_SECURE_CONTEXT_REQUIRED,
+            'The mobile wallet adapter protocol must be used in a secure context (`https`).',
+        );
     }
 }
 
@@ -79,14 +81,26 @@ export async function transact<TReturn>(
             if (evt.wasClean) {
                 state = { __type: 'disconnected' };
             } else {
-                reject(new SolanaMobileWalletAdapterProtocolSessionClosedError(evt.code, evt.reason));
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session dropped unexpectedly (${evt.code}: ${evt.reason}).`,
+                        { closeEvent: evt },
+                    ),
+                );
             }
             disposeSocket();
         };
         const handleError = async (_evt: Event) => {
             disposeSocket();
             if (++attempts >= WEBSOCKET_CONNECTION_CONFIG.maxAttempts) {
-                reject(new SolanaMobileWalletAdapterProtocolSessionEstablishmentError(sessionPort));
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_ESTABLISHMENT_FAILED,
+                        `Failed to connect to the wallet websocket on port ${sessionPort}.`,
+                        { port: sessionPort },
+                    ),
+                );
             } else {
                 await new Promise((resolve) => {
                     retryWaitTimeoutId = window.setTimeout(resolve, WEBSOCKET_CONNECTION_CONFIG.retryDelayMs);
@@ -104,7 +118,7 @@ export async function transact<TReturn>(
                         delete jsonRpcResponsePromises[jsonRpcMessage.id];
                         responsePromise.resolve(jsonRpcMessage.result);
                     } catch (e) {
-                        if (e instanceof SolanaMobileWalletAdapterProtocolJsonRpcError) {
+                        if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                             const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
                             delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                             responsePromise.reject(e);

@@ -1,6 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 
-import { SolanaMobileWalletAdapterProtocolJsonRpcError } from '../../errors';
+import { SolanaMobileWalletAdapterProtocolError } from '../../errors';
 import { MobileWallet, WalletAssociationConfig } from '../../types';
 
 const LINKING_ERROR =
@@ -48,7 +48,7 @@ export async function transact<TReturn>(
                         } catch (e) {
                             if (e instanceof Error && (e as any).code === 'JSON_RPC_ERROR') {
                                 const details = (e as any).userInfo as Readonly<{ jsonRpcErrorCode: number }>;
-                                throw new SolanaMobileWalletAdapterProtocolJsonRpcError<any>(
+                                throw new SolanaMobileWalletAdapterProtocolError<any>(
                                     0 /* jsonRpcMessageId */,
                                     details.jsonRpcErrorCode,
                                     e.message,

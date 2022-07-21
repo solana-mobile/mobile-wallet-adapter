@@ -1,56 +1,50 @@
-export class SolanaMobileWalletAdapterSecureContextRequiredError extends Error {
-    constructor() {
-        super('The mobile wallet adapter protocol must be used in a secure context (`https`).');
-        this.name = 'SolanaMobileWalletAdapterSecureContextRequiredError';
-    }
-}
+// Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
+export const SolanaMobileWalletAdapterErrorCode = {
+    ERROR_ASSOCIATION_PORT_OUT_OF_RANGE: 'ERROR_ASSOCIATION_PORT_OUT_OF_RANGE',
+    ERROR_FORBIDDEN_WALLET_BASE_URL: 'ERROR_FORBIDDEN_WALLET_BASE_URL',
+    ERROR_SECURE_CONTEXT_REQUIRED: 'ERROR_SECURE_CONTEXT_REQUIRED',
+    ERROR_SESSION_CLOSED: 'ERROR_SESSION_CLOSED',
+    ERROR_SESSION_ESTABLISHMENT_FAILED: 'ERROR_SESSION_ESTABLISHMENT_FAILED',
+    ERROR_WALLET_NOT_FOUND: 'ERROR_WALLET_NOT_FOUND',
+} as const;
+type SolanaMobileWalletAdapterErrorCodeEnum =
+    typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode];
 
-export class SolanaMobileWalletAdapterForbiddenWalletBaseURLError extends Error {
-    constructor() {
-        super('Base URLs supplied by wallets must be valid `https` URLs');
-        this.name = 'SolanaMobileWalletAdapterForbiddenWalletBaseURLError';
-    }
-}
+type ErrorDataTypeMap = {
+    [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_PORT_OUT_OF_RANGE]: {
+        port: number;
+    };
+    [SolanaMobileWalletAdapterErrorCode.ERROR_FORBIDDEN_WALLET_BASE_URL]: undefined;
+    [SolanaMobileWalletAdapterErrorCode.ERROR_SECURE_CONTEXT_REQUIRED]: undefined;
+    [SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED]: {
+        closeEvent: CloseEvent;
+    };
+    [SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_ESTABLISHMENT_FAILED]: {
+        port: number;
+    };
+    [SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND]: undefined;
+};
 
-export class SolanaMobileWalletAdapterWalletNotInstalledError extends Error {
-    constructor() {
-        super(`Found no installed wallet that supports the mobile wallet protocol.`);
-        this.name = 'SolanaMobileWalletAdapterWalletNotInstalledError';
-    }
-}
-
-export class SolanaMobileWalletAdapterProtocolSessionEstablishmentError extends Error {
-    constructor(port: number) {
-        super(`Failed to connect to the wallet websocket on port ${port}.`);
-        this.name = 'SolanaMobileWalletAdapterProtocolSessionEstablishmentError';
-    }
-}
-
-export class SolanaMobileWalletAdapterProtocolAssociationPortOutOfRangeError extends Error {
-    constructor(port: number) {
-        super(`Association port number must be between 49152 and 65535. ${port} given.`);
-        this.name = 'SolanaMobileWalletAdapterProtocolAssociationPortOutOfRangeError';
-    }
-}
-
-export class SolanaMobileWalletAdapterProtocolSessionClosedError extends Error {
-    constructor(code: number, reason: string) {
-        super(`The wallet session dropped unexpectedly (${code}: ${reason}).`);
-        this.name = 'SolanaMobileWalletAdapterProtocolSessionClosedError';
-    }
-}
-
-export class SolanaMobileWalletAdapterProtocolReauthorizeError extends Error {
-    constructor() {
-        super('The auth token provided has gone stale and needs reauthorization.');
-        this.name = 'SolanaMobileWalletAdapterProtocolReauthorizeError';
+export class SolanaMobileWalletAdapterError<TErrorCode extends SolanaMobileWalletAdapterErrorCodeEnum> extends Error {
+    data: ErrorDataTypeMap[TErrorCode] | undefined;
+    code: TErrorCode;
+    constructor(
+        ...args: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
+            ? [code: TErrorCode, message: string, data: ErrorDataTypeMap[TErrorCode]]
+            : [code: TErrorCode, message: string]
+    ) {
+        const [code, message, data] = args;
+        super(message);
+        this.code = code;
+        this.data = data;
+        this.name = 'SolanaMobileWalletAdapterError';
     }
 }
 
 type JSONRPCErrorCode = number;
 
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
-export const SolanaMobileWalletAdapterProtocolError = {
+export const SolanaMobileWalletAdapterProtocolErrorCode = {
     ERROR_REAUTHORIZE: -1,
     ERROR_AUTHORIZATION_FAILED: -2,
     ERROR_INVALID_PAYLOAD: -3,
@@ -58,42 +52,43 @@ export const SolanaMobileWalletAdapterProtocolError = {
     ERROR_NOT_COMMITTED: -5,
     ERROR_ATTEST_ORIGIN_ANDROID: -100,
 } as const;
-type SolanaMobileWalletAdapterProtocolErrorEnum =
-    typeof SolanaMobileWalletAdapterProtocolError[keyof typeof SolanaMobileWalletAdapterProtocolError];
+type SolanaMobileWalletAdapterProtocolErrorCodeEnum =
+    typeof SolanaMobileWalletAdapterProtocolErrorCode[keyof typeof SolanaMobileWalletAdapterProtocolErrorCode];
 
-type ErrorDataTypeMap = {
-    [SolanaMobileWalletAdapterProtocolError.ERROR_ATTEST_ORIGIN_ANDROID]: {
+type ProtocolErrorDataTypeMap = {
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_REAUTHORIZE]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_AUTHORIZATION_FAILED]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_INVALID_PAYLOAD]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_SIGNED]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_COMMITTED]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_ATTEST_ORIGIN_ANDROID]: {
         attest_origin_uri: string;
         challenge: string;
         context: string;
     };
 };
 
-export class SolanaMobileWalletAdapterProtocolJsonRpcError<TErrorCode extends keyof ErrorDataTypeMap> extends Error {
-    data: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown> ? ErrorDataTypeMap[TErrorCode] : undefined;
-    code: SolanaMobileWalletAdapterProtocolErrorEnum | JSONRPCErrorCode;
+export class SolanaMobileWalletAdapterProtocolError<
+    TErrorCode extends SolanaMobileWalletAdapterProtocolErrorCodeEnum,
+> extends Error {
+    data: ProtocolErrorDataTypeMap[TErrorCode] | undefined;
+    code: TErrorCode | JSONRPCErrorCode;
     jsonRpcMessageId: number;
     constructor(
-        ...args: ErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
+        ...args: ProtocolErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
             ? [
                   jsonRpcMessageId: number,
-                  code: SolanaMobileWalletAdapterProtocolErrorEnum | JSONRPCErrorCode,
+                  code: TErrorCode | JSONRPCErrorCode,
                   message: string,
-                  data: ErrorDataTypeMap[TErrorCode],
+                  data: ProtocolErrorDataTypeMap[TErrorCode],
               ]
-            : [
-                  jsonRpcMessageId: number,
-                  code: SolanaMobileWalletAdapterProtocolErrorEnum | JSONRPCErrorCode,
-                  message: string,
-              ]
+            : [jsonRpcMessageId: number, code: TErrorCode | JSONRPCErrorCode, message: string]
     ) {
         const [jsonRpcMessageId, code, message, data] = args;
         super(message);
         this.code = code;
-        this.data = data as ErrorDataTypeMap[TErrorCode] extends Record<string, unknown>
-            ? ErrorDataTypeMap[TErrorCode]
-            : undefined;
+        this.data = data;
         this.jsonRpcMessageId = jsonRpcMessageId;
-        this.name = 'SolanaNativeWalletAdapterJsonRpcError';
+        this.name = 'SolanaMobileWalletAdapterProtocolError';
     }
 }
