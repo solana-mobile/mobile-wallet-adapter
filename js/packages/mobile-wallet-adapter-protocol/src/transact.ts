@@ -103,9 +103,8 @@ export async function transact<TReturn>(
             if (++attempts >= WEBSOCKET_CONNECTION_CONFIG.maxAttempts) {
                 reject(
                     new SolanaMobileWalletAdapterError(
-                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_ESTABLISHMENT_FAILED,
+                        SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
                         `Failed to connect to the wallet websocket on port ${sessionPort}.`,
-                        { port: sessionPort },
                     ),
                 );
             } else {
