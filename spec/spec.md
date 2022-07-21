@@ -16,7 +16,7 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-**Version: 0.2.0**
+**Version: 0.2.1**
 
 ## Changelog
 
@@ -24,6 +24,7 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 | ------- | ----------- |
 | 0.1.0   | Initial draft |
 | 0.2.0   | Updates based on wallet adapter feedback |
+| 0.2.1   | Fix a few missed pluralizations |
 
 # Non-normative front matter
 
@@ -609,7 +610,7 @@ where:
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_REAUTHORIZE` if `auth_token` requires [`reauthorization`](#reauthorize)
 - `ERROR_AUTHORIZATION_FAILED` if the `auth_token` is invalid, or not authorized for `sign_transactions`
-- `ERROR_INVALID_PAYLOAD`
+- `ERROR_INVALID_PAYLOADS`
 
   ```
   “data”: {
@@ -679,7 +680,7 @@ where:
 - `-32601` (Method not found) if `sign_and_send_transactions` is not supported by this wallet endpoint
 - `ERROR_REAUTHORIZE` if `auth_token` requires [`reauthorization`](#reauthorize)
 - `ERROR_AUTHORIZATION_FAILED` if the `auth_token` is invalid, or not authorized for `sign_and_send_transactions`
-- `ERROR_INVALID_PAYLOAD`
+- `ERROR_INVALID_PAYLOADS`
 
   ```
   “data”: {
@@ -769,7 +770,7 @@ where:
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_REAUTHORIZE` if auth_token requires [`reauthorization`](#reauthorize)
 - `ERROR_AUTHORIZATION_FAILED` if the auth_token is invalid, or not authorized for `sign_messages`
-- `ERROR_INVALID_PAYLOAD`
+- `ERROR_INVALID_PAYLOADS`
 
   ```
   “data”: {
@@ -794,7 +795,7 @@ The protocol defines the following constants:
 ```
 const ERROR_REAUTHORIZE = -1
 const ERROR_AUTHORIZATION_FAILED = -2
-const ERROR_INVALID_PAYLOAD = -3
+const ERROR_INVALID_PAYLOADS = -3
 const ERROR_NOT_SIGNED = -4
 const ERROR_NOT_COMMITTED = -5
 const ERROR_TOO_MANY_PAYLOADS = -6
