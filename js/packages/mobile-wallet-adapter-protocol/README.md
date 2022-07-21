@@ -40,7 +40,10 @@ try {
         try {
             await wallet.signTransaction(/* ... */);
         } catch (e) {
-            if (e instanceof SolanaMobileWalletAdapterProtocolReauthorizeError) {
+            if (
+                e instanceof SolanaMobileWalletAdapterProtocolError &&
+                e.code === SolanaMobileWalletAdapterProtocolErrorCode.ERROR_REAUTHORIZE
+            ) {
                 console.error('The auth token has gone stale');
                 await wallet.reauthorize({auth_token});
                 // Retry...
@@ -49,7 +52,10 @@ try {
         }
     });
 } catch(e) {
-    if (e instanceof SolanaMobileWalletAdapterWalletNotInstalledError) {
+    if (
+        e instanceof SolanaMobileWalletAdapterError &&
+        e.code === SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND
+    ) {
         /* ... */
     }
     throw e;
