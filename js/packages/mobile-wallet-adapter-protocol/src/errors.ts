@@ -47,7 +47,7 @@ type JSONRPCErrorCode = number;
 export const SolanaMobileWalletAdapterProtocolErrorCode = {
     ERROR_REAUTHORIZE: -1,
     ERROR_AUTHORIZATION_FAILED: -2,
-    ERROR_INVALID_PAYLOAD: -3,
+    ERROR_INVALID_PAYLOADS: -3,
     ERROR_NOT_SIGNED: -4,
     ERROR_NOT_COMMITTED: -5,
     ERROR_ATTEST_ORIGIN_ANDROID: -100,
@@ -58,7 +58,7 @@ type SolanaMobileWalletAdapterProtocolErrorCodeEnum =
 type ProtocolErrorDataTypeMap = {
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_REAUTHORIZE]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_AUTHORIZATION_FAILED]: undefined;
-    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_INVALID_PAYLOAD]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_INVALID_PAYLOADS]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_SIGNED]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_COMMITTED]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_ATTEST_ORIGIN_ANDROID]: {

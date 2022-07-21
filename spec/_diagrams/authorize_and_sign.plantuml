@@ -16,9 +16,9 @@ activate Dapp
 == Authorize for transaction signing ==
 
 Dapp -> Dapp : <i>i</i> = DappIdentity()
-Dapp -> Wallet ++-- : authorize {<i>i</i>, ["sign_transaction"]}
+Dapp -> Wallet ++-- : authorize {<i>i</i>, ["sign_transactions"]}
 Wallet -> Wallet : validate Dapp identity <i>i</i>
-Wallet -> Wallet : Generate new auth token\n<i>at</i> = GenerateAuthToken(<i>i</i>, ["sign_transaction"])
+Wallet -> Wallet : Generate new auth token\n<i>at</i> = GenerateAuthToken(<i>i</i>, ["sign_transactions"])
 Wallet -> Wallet : <i>pub</i> = base58encode(GetPublicKey())
 alt if wallet endpoint has an endpoint-specific URI
     Wallet -> Wallet : <i>uri</i> = EndpointBaseURI() 
@@ -29,10 +29,10 @@ Dapp -> Dapp : Store(<i>at</i>, <i>pub</i>, <i>uri</i>)
 == Submit transaction for signing ==
 
 Dapp -> Dapp : <i>t</i> = CreateTransaction(<i>pub</i>, ...)
-Dapp -> Wallet ++-- : sign_transaction {<i>at</i>, <i>t</i>}
+Dapp -> Wallet ++-- : sign_transactions {<i>at</i>, <i>t</i>}
 Wallet -> Wallet : validate auth token <i>at</i>
 Wallet -> Wallet : validate transaction <i>t</i>
-Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransaction(<i>t</i>)
+Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransactions(<i>t</i>)
 Wallet --> Dapp ++-- : response {<i>st</i>}
 
 == Submit signed transaction to network ==
