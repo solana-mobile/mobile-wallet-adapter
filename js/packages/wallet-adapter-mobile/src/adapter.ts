@@ -1,5 +1,5 @@
 import { Web3MobileWallet, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import { AppIdentity, AuthorizationResult, AuthToken } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { AppIdentity, AuthorizationResult, AuthToken, Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
@@ -13,7 +13,15 @@ import {
     WalletSignMessageError,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
+import {
+    clusterApiUrl,
+    Connection,
+    Message,
+    PublicKey,
+    SendOptions,
+    Transaction,
+    TransactionSignature,
+} from '@solana/web3.js';
 import getIsSupported from './getIsSupported';
 
 export interface AuthorizationResultCache {
@@ -25,6 +33,24 @@ export interface AuthorizationResultCache {
 export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
+
+/**
+ * Infer the cluster from an RPC URL.
+ */
+function getClusterFromURL(urlString: string): Cluster {
+    const url = new URL(urlString);
+    const isHttps = url.protocol === 'https';
+    const devnetUrl = new URL(clusterApiUrl('devnet', isHttps));
+    if (devnetUrl.hostname === url.hostname) {
+        return 'devnet';
+    }
+    const testnetUrl = new URL(clusterApiUrl('testnet', isHttps));
+    if (testnetUrl.hostname === url.hostname) {
+        return 'testnet';
+    }
+    return 'mainnet-beta';
+}
+
 export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     name = SolanaMobileWalletAdapterWalletName;
     url = 'https://solanamobile.com';
@@ -105,11 +131,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             }
             try {
                 await this.transact(async (wallet) => {
-                    const {
-                        addresses,
-                        auth_token,
-                        wallet_uri_base,
-                    } = await wallet.authorize({ identity: this._appIdentity });
+                    const { addresses, auth_token, wallet_uri_base } = await wallet.authorize({
+                        identity: this._appIdentity,
+                    });
                     try {
                         this._publicKey = new PublicKey(addresses[0]); // TODO(#44): support multiple addresses
                     } catch (e) {
@@ -206,7 +230,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 return await this.transact(async (wallet) => {
                     await this.performReauthorization(wallet, authorizationResult);
                     const signatures = await wallet.signAndSendTransactions({
-                        fee_payer: this.publicKey || undefined,
+                        // FIXME: Acquire this from the `AuthorizationResult` when it's introduced there.
+                        cluster: getClusterFromURL(connection.rpcEndpoint),
+                        fee_payer: transaction.feePayer,
                         connection,
                         transactions: [transaction],
                     });

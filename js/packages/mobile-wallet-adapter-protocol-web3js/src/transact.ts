@@ -2,16 +2,20 @@ import { Connection, PublicKey, Transaction, TransactionSignature } from '@solan
 import {
     AuthorizeAPI,
     CloneAuthorizationAPI,
+    Cluster,
     DeauthorizeAPI,
+    Finality,
     MobileWallet,
     ReauthorizeAPI,
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+
 import { fromUint8Array, toUint8Array } from './base64Utils';
 
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
+        cluster: Cluster;
         connection: Connection;
         fee_payer?: PublicKey;
         transactions: Transaction[];
@@ -45,27 +49,40 @@ export async function transact<TReturn>(
                 if (target[p] == null) {
                     switch (p) {
                         case 'signAndSendTransactions':
-                            target[p] = async function (
-                                params: Parameters<Web3MobileWallet['signAndSendTransactions']>[0],
-                            ) {
+                            target[p] = async function ({
+                                connection,
+                                fee_payer: feePayer,
+                                transactions,
+                                ...rest
+                            }: Parameters<Web3MobileWallet['signAndSendTransactions']>[0]) {
                                 let latestBlockhashPromise: ReturnType<
                                     InstanceType<typeof Connection>['getLatestBlockhash']
                                 >;
-                                async function getLatestBlockhash(connection: Connection) {
+                                let targetCommitment: Finality;
+                                switch (connection.commitment) {
+                                    case 'confirmed':
+                                    case 'finalized':
+                                    case 'processed':
+                                        targetCommitment = connection.commitment;
+                                        break;
+                                    default:
+                                        targetCommitment = 'finalized';
+                                }
+                                function getLatestBlockhashPromise() {
                                     if (latestBlockhashPromise == null) {
                                         latestBlockhashPromise = connection.getLatestBlockhash({
-                                            commitment: connection.commitment,
+                                            commitment: targetCommitment,
                                         });
                                     }
-                                    return await latestBlockhashPromise;
+                                    return latestBlockhashPromise;
                                 }
                                 const payloads = await Promise.all(
-                                    params.transactions.map(async (transaction) => {
+                                    transactions.map(async (transaction) => {
                                         if (transaction.feePayer == null) {
-                                            transaction.feePayer = params.fee_payer;
+                                            transaction.feePayer = feePayer;
                                         }
                                         if (transaction.recentBlockhash == null) {
-                                            const { blockhash } = await getLatestBlockhash(params.connection);
+                                            const { blockhash } = await getLatestBlockhashPromise();
                                             transaction.recentBlockhash = blockhash;
                                         }
                                         const serializedTransaction = transaction.serialize({
@@ -75,17 +92,8 @@ export async function transact<TReturn>(
                                         return serializedTransaction.toString('base64');
                                     }),
                                 );
-                                let targetCommitment: 'confirmed' | 'finalized' | 'processed';
-                                switch (params.connection.commitment) {
-                                    case 'confirmed':
-                                    case 'finalized':
-                                    case 'processed':
-                                        targetCommitment = params.connection.commitment;
-                                        break;
-                                    default:
-                                        targetCommitment = 'finalized';
-                                }
                                 const { signatures } = await wallet.signAndSendTransactions({
+                                    ...rest,
                                     commitment: targetCommitment,
                                     payloads,
                                 });
@@ -93,18 +101,25 @@ export async function transact<TReturn>(
                             } as Web3MobileWallet[TMethodName];
                             break;
                         case 'signMessages':
-                            target[p] = async function (params: Parameters<Web3MobileWallet['signMessages']>[0]) {
-                                const payloads = params.payloads.map(fromUint8Array);
+                            target[p] = async function ({
+                                payloads,
+                                ...rest
+                            }: Parameters<Web3MobileWallet['signMessages']>[0]) {
+                                const base64EncodedPayloads = payloads.map(fromUint8Array);
                                 const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessages({
-                                    payloads,
+                                    ...rest,
+                                    payloads: base64EncodedPayloads,
                                 });
                                 const signedMessages = base64EncodedSignedMessages.map(toUint8Array);
                                 return signedMessages;
                             } as Web3MobileWallet[TMethodName];
                             break;
                         case 'signTransactions':
-                            target[p] = async function (params: Parameters<Web3MobileWallet['signTransactions']>[0]) {
-                                const serializedTransactions = params.transactions.map((transaction) =>
+                            target[p] = async function ({
+                                transactions,
+                                ...rest
+                            }: Parameters<Web3MobileWallet['signTransactions']>[0]) {
+                                const serializedTransactions = transactions.map((transaction) =>
                                     transaction.serialize({
                                         requireAllSignatures: false,
                                         verifySignatures: false,
@@ -115,11 +130,12 @@ export async function transact<TReturn>(
                                 );
                                 const { signed_payloads: base64EncodedCompiledTransactions } =
                                     await wallet.signTransactions({
+                                        ...rest,
                                         payloads,
                                     });
                                 const compiledTransactions = base64EncodedCompiledTransactions.map(toUint8Array);
-                                const transactions = compiledTransactions.map(Transaction.from);
-                                return transactions;
+                                const signedTransactions = compiledTransactions.map(Transaction.from);
+                                return signedTransactions;
                             } as Web3MobileWallet[TMethodName];
                             break;
                         default: {

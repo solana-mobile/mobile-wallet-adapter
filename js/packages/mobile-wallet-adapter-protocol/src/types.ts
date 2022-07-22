@@ -41,6 +41,10 @@ type Base64EncodedSignedTransaction = string;
 
 type Base64EncodedTransaction = string;
 
+export type Cluster = 'devnet' | 'testnet' | 'mainnet-beta';
+
+export type Finality = 'confirmed' | 'finalized' | 'processed';
+
 export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
@@ -69,7 +73,8 @@ export interface SignTransactionsAPI {
 }
 export interface SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        commitment: 'confirmed' | 'finalized' | 'processed';
+        cluster: Cluster;
+        commitment: Finality;
         payloads: Base64EncodedTransaction[];
     }): Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
 }
