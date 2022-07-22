@@ -6,21 +6,37 @@ import {
   DeauthorizeAPI,
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import {useCallback, useMemo} from 'react';
+import {useCallback} from 'react';
 import useSWR from 'swr';
 
 const STORAGE_KEY = 'cachedAuthorization';
 
-async function authorizationFetcher(
-  storageKey: string,
-): Promise<AuthorizationResult | null> {
+function getDataFromAuthorizationResult(
+  authorizationResult: AuthorizationResult,
+) {
+  return {
+    authorization: authorizationResult,
+    publicKey: getPublicKeyFromAuthorizationResult(authorizationResult),
+  };
+}
+
+function getPublicKeyFromAuthorizationResult(
+  authorizationResult: AuthorizationResult,
+): PublicKey {
+  return new PublicKey(authorizationResult.addresses[0]); // TODO(#44): support multiple addresses
+}
+
+async function authorizationFetcher(storageKey: string) {
   try {
     const serializedValue = await AsyncStorage.getItem(storageKey);
     if (!serializedValue) {
       return null;
     }
-    return JSON.parse(serializedValue) as AuthorizationResult;
+    const authorization = JSON.parse(serializedValue) as AuthorizationResult;
+    return getDataFromAuthorizationResult(authorization);
   } catch {
+    // Presume the data in storage is corrupt and erase it.
+    await AsyncStorage.removeItem(STORAGE_KEY);
     return null;
   }
 }
@@ -30,13 +46,9 @@ export const APP_IDENTITY = {
 };
 
 export default function useAuthorization() {
-  const {data: cachedAuthorization, mutate} = useSWR(
-    STORAGE_KEY,
-    authorizationFetcher,
-    {
-      suspense: true,
-    },
-  );
+  const {data, mutate} = useSWR(STORAGE_KEY, authorizationFetcher, {
+    suspense: true,
+  });
   const setAuthorization = useCallback(
     (authorizationResult: AuthorizationResult | null) => {
       mutate(
@@ -46,55 +58,51 @@ export default function useAuthorization() {
               STORAGE_KEY,
               JSON.stringify(authorizationResult),
             );
+            return getDataFromAuthorizationResult(authorizationResult);
           } else {
             await AsyncStorage.removeItem(STORAGE_KEY);
+            return null;
           }
-          return authorizationResult ?? undefined;
         },
-        {optimisticData: authorizationResult},
+        {
+          optimisticData: authorizationResult
+            ? getDataFromAuthorizationResult(authorizationResult)
+            : null,
+        },
       );
     },
     [mutate],
   );
-  const publicKey = useMemo(
-    () =>
-      cachedAuthorization
-        ? new PublicKey(cachedAuthorization.addresses[0]) // TODO(#44): support multiple addresses
-        : undefined,
-    [cachedAuthorization],
-  );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      let freshPublicKey: PublicKey;
-      if (cachedAuthorization?.auth_token) {
+      if (data) {
         await wallet.reauthorize({
-          auth_token: cachedAuthorization?.auth_token,
+          auth_token: data.authorization.auth_token,
         });
-        freshPublicKey = publicKey!;
+        return data.publicKey;
       } else {
         const authorizationResult = await wallet.authorize({
           identity: APP_IDENTITY,
         });
-        freshPublicKey = new PublicKey(authorizationResult.addresses[0]); // TODO(#44): support multiple addresses
         setAuthorization(authorizationResult);
+        return getPublicKeyFromAuthorizationResult(authorizationResult);
       }
-      return freshPublicKey;
     },
-    [cachedAuthorization, publicKey, setAuthorization],
+    [data, setAuthorization],
   );
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
-      if (cachedAuthorization?.auth_token == null) {
+      if (data?.authorization.auth_token == null) {
         return;
       }
-      await wallet.deauthorize({auth_token: cachedAuthorization?.auth_token});
+      await wallet.deauthorize({auth_token: data.authorization.auth_token});
       setAuthorization(null);
     },
-    [cachedAuthorization, setAuthorization],
+    [data?.authorization.auth_token, setAuthorization],
   );
   return {
     authorizeSession,
     deauthorizeSession,
-    publicKey,
+    publicKey: data?.publicKey ?? null,
   };
 }
