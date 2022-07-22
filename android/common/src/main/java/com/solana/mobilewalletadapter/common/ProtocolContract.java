@@ -38,7 +38,7 @@ public class ProtocolContract {
     public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
     public static final String PARAMETER_SKIP_PREFLIGHT = "skip_preflight"; // type: Boolean
     public static final String PARAMETER_PREFLIGHT_COMMITMENT = "preflight_commitment"; // type: String (one of the COMMITMENT_* values)
-    public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base58-encoded payload signatures)
+    public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base64-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGES = "sign_messages";
     // METHOD_SIGN_MESSAGES takes a PARAMETER_PAYLOADS
@@ -54,7 +54,7 @@ public class ProtocolContract {
     public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of String (base64-encoded payloads)
 
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
-    public static final String RESULT_ADDRESSES = "addresses"; // type: JSON array of String (base58-encoded addresses)
+    public static final String RESULT_ADDRESSES = "addresses"; // type: JSON array of String (base64-encoded addresses)
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
 
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)
