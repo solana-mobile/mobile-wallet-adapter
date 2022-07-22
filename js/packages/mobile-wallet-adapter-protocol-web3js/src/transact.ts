@@ -96,6 +96,7 @@ export async function transact<TReturn>(
                                     ...rest,
                                     commitment: targetCommitment,
                                     payloads,
+                                    preflight_commitment: targetCommitment,
                                 });
                                 return signatures as TransactionSignature[];
                             } as Web3MobileWallet[TMethodName];
