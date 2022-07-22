@@ -8,7 +8,7 @@ public class ProtocolContract {
     public static final String METHOD_AUTHORIZE = "authorize";
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY
     // METHOD_AUTHORIZE returns a RESULT_AUTH_TOKEN
-    // METHOD_AUTHORIZE returns a RESULT_PUBLIC_KEY
+    // METHOD_AUTHORIZE returns a RESULT_ADDRESSES
     // METHOD_AUTHORIZE returns an optional RESULT_WALLET_URI_BASE
 
     public static final String METHOD_DEAUTHORIZE = "deauthorize";
@@ -54,7 +54,7 @@ public class ProtocolContract {
     public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of String (base64-encoded payloads)
 
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
-    public static final String RESULT_PUBLIC_KEY = "pub_key"; // type: String (base58-encoded public key)
+    public static final String RESULT_ADDRESSES = "addresses"; // type: JSON array of String (base58-encoded addresses)
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
 
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)

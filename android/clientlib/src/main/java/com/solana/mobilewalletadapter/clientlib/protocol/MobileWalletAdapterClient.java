@@ -203,9 +203,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
             final String publicKey;
             try {
-                publicKey = jo.getString(ProtocolContract.RESULT_PUBLIC_KEY);
+                final JSONArray addresses = jo.getJSONArray(ProtocolContract.RESULT_ADDRESSES);
+                publicKey = addresses.getString(0); // TODO(#44): support multiple addresses
             } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException("expected a public key");
+                throw new JsonRpc20InvalidResponseException("expected one or more addresses");
             }
 
             final String walletUriBaseStr = jo.has(ProtocolContract.RESULT_WALLET_URI_BASE) ?
