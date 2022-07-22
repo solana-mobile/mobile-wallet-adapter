@@ -78,7 +78,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun requestAirdrop() = viewModelScope.launch {
         try {
-            RequestAirdropUseCase(TESTNET_RPC_URI, _uiState.value.publicKeyBase58!!)
+            RequestAirdropUseCase(TESTNET_RPC_URI, _uiState.value.publicKey!!)
             Log.d(TAG, "Airdrop request sent")
             showMessage(R.string.msg_airdrop_request_sent)
         } catch (e: RequestAirdropUseCase.AirdropFailedException) {
@@ -104,7 +104,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(numTransactions) {
-                MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
+                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
             doSignTransactions(client, transactions)
         }
@@ -112,7 +112,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (signedTransactions != null) {
             val verified = signedTransactions.map { txn ->
                 try {
-                    MemoTransactionUseCase.verify(uiState.value.publicKeyBase58!!, txn)
+                    MemoTransactionUseCase.verify(uiState.value.publicKey!!, txn)
                     true
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -144,7 +144,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(1) {
-                MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
+                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
             doSignTransactions(client, transactions)
         }
@@ -152,7 +152,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (signedTransactions != null) {
             val verified = signedTransactions.map { txn ->
                 try {
-                    MemoTransactionUseCase.verify(uiState.value.publicKeyBase58!!, txn)
+                    MemoTransactionUseCase.verify(uiState.value.publicKey!!, txn)
                     true
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -199,7 +199,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(numTransactions) {
-                MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
+                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
             doSignAndSendTransactions(client, transactions)
         }
@@ -233,7 +233,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     authToken = result.authToken,
-                    publicKeyBase58 = result.publicKey
+                    publicKey = result.publicKey
                 )
             }
             authorized = true
@@ -436,8 +436,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun doSignAndSendTransactions(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
-    ): Array<String>? {
-        var signatures: Array<String>? = null
+    ): Array<ByteArray>? {
+        var signatures: Array<ByteArray>? = null
         try {
             val result = client.signAndSendTransactions(
                 transactions,
@@ -532,10 +532,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     data class UiState(
         val authToken: String? = null,
-        val publicKeyBase58: String? = null,
+        val publicKey: ByteArray? = null,
         val messages: List<String> = emptyList()
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as UiState
+
+            if (authToken != other.authToken) return false
+            if (publicKey != null) {
+                if (other.publicKey == null) return false
+                if (!publicKey.contentEquals(other.publicKey)) return false
+            } else if (other.publicKey != null) return false
+            if (messages != other.messages) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = authToken?.hashCode() ?: 0
+            result = 31 * result + (publicKey?.contentHashCode() ?: 0)
+            result = 31 * result + messages.hashCode()
+            return result
+        }
     }
 
     companion object {

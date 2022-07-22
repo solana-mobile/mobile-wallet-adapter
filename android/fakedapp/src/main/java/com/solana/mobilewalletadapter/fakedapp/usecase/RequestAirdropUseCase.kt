@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets
 // NOT suitable for production use.
 object RequestAirdropUseCase {
     @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO
-    suspend operator fun invoke(rpcUri: Uri, publicKey: String) {
+    suspend operator fun invoke(rpcUri: Uri, publicKey: ByteArray) {
         withContext(Dispatchers.IO) {
             val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
@@ -33,15 +33,15 @@ object RequestAirdropUseCase {
             if (conn.responseCode != HttpURLConnection.HTTP_OK) {
                 throw AirdropFailedException("Connection failed, response code=${conn.responseCode}")
             }
-            val signature = conn.inputStream.use { inputStream ->
+            val signatureBase58 = conn.inputStream.use { inputStream ->
                 val response = inputStream.readBytes().toString(StandardCharsets.UTF_8)
                 parseAirdropResponse(response)
             }
-            Log.d(TAG, "requestAirdrop pubKey=$publicKey, signature=$signature")
+            Log.d(TAG, "requestAirdrop pubKey=${Base58EncodeUseCase(publicKey)}, signature(base58)=$signatureBase58")
         }
     }
 
-    private fun createRequestAirdropRequest(publicKey: String): String {
+    private fun createRequestAirdropRequest(publicKey: ByteArray): String {
         val jo = JSONObject()
         jo.put("jsonrpc", "2.0")
         jo.put("id", 1)
@@ -50,7 +50,7 @@ object RequestAirdropUseCase {
         val arr = JSONArray()
 
         // Parameter 0 - base58-encoded public key
-        arr.put(publicKey)
+        arr.put(Base58EncodeUseCase(publicKey))
 
         // Parameter 1 - lamports
         arr.put(AIRDROP_LAMPORTS)

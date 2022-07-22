@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.protocol;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.IntRange;
@@ -16,7 +17,6 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
-import com.solana.mobilewalletadapter.common.util.Base58;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
@@ -179,11 +179,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
             assert(result != null); // checked in AuthorizeRequest.complete()
 
+            final String publicKeyBase64 = Base64.encodeToString(result.publicKey, Base64.NO_WRAP);
+
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
                 final JSONArray addresses = new JSONArray(); // TODO(#44): support multiple addresses
-                addresses.put(Base58.encode(result.publicKey));
+                addresses.put(publicKeyBase64);
                 o.put(ProtocolContract.RESULT_ADDRESSES, addresses);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
@@ -899,12 +901,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadsRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignPayloadsRequest.complete()
 
-            final String[] signaturesBase58 = new String[result.signatures.length];
+            final String[] signaturesBase64 = new String[result.signatures.length];
             for (int i = 0; i < result.signatures.length; i++) {
-                signaturesBase58[i] = Base58.encode(result.signatures[i]);
+                signaturesBase64[i] = Base64.encodeToString(result.signatures[i], Base64.NO_WRAP);
             }
 
-            final JSONArray signatures = JsonPack.packStrings(signaturesBase58);
+            final JSONArray signatures = JsonPack.packStrings(signaturesBase64);
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
@@ -921,12 +923,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     @NonNull
     private String createNotCommittedData(@NonNull @Size(min = 1) byte[][] signatures,
                                           @NonNull @Size(min = 1) boolean[] committed) {
-        final String[] signaturesBase58 = new String[signatures.length];
+        final String[] signaturesBase64 = new String[signatures.length];
         for (int i = 0; i < signatures.length; i++) {
-            signaturesBase58[i] = Base58.encode(signatures[i]);
+            signaturesBase64[i] = Base64.encodeToString(signatures[i], Base64.NO_WRAP);
         }
 
-        final JSONArray signaturesArr = JsonPack.packStrings(signaturesBase58);
+        final JSONArray signaturesArr = JsonPack.packStrings(signaturesBase64);
         final JSONArray committedArr = JsonPack.packBooleans(committed);
         final JSONObject o = new JSONObject();
         try {

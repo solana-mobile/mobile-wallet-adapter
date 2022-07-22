@@ -12,26 +12,25 @@ import kotlin.random.Random
 // NOTE: this is just a minimal implementation of this Solana transaction, for testing purposes. It
 // is NOT suitable for production use.
 object MemoTransactionUseCase {
-    fun create(publicKeyBase58: String, latestBlockhash: ByteArray): ByteArray {
-        val transaction = MEMO_TRANSACTION_TEMPLATE.clone()
-        val publicKeyBytes = Base58DecodeUseCase(publicKeyBase58)
-        assert(publicKeyBytes.size == ACCOUNT_PUBLIC_KEY_LEN) { "Invalid public key length for a Solana transaction" }
-        System.arraycopy(publicKeyBytes, 0, transaction, ACCOUNT_PUBLIC_KEY_OFFSET, publicKeyBytes.size)
+    fun create(publicKey: ByteArray, latestBlockhash: ByteArray): ByteArray {
+        assert(publicKey.size == ACCOUNT_PUBLIC_KEY_LEN) { "Invalid public key length for a Solana transaction" }
         assert(latestBlockhash.size == BLOCKHASH_LEN) { "Invalid blockhash length for a Solana transaction" }
+
+        val transaction = MEMO_TRANSACTION_TEMPLATE.clone()
+        System.arraycopy(publicKey, 0, transaction, ACCOUNT_PUBLIC_KEY_OFFSET, publicKey.size)
         System.arraycopy(latestBlockhash, 0, transaction, BLOCKHASH_OFFSET, latestBlockhash.size)
         for (i in 0 until SUFFIX_DIGITS_LEN) {
             transaction[SUFFIX_DIGITS_OFFSET + i] = ('0'.code + Random.nextInt(10)).toByte()
         }
-        Log.d(TAG, "Created memo transaction for publickKey=$publicKeyBase58, latestBlockhash=${latestBlockhash.contentToString()}")
+        Log.d(TAG, "Created memo transaction for publicKey(base58)=${Base58EncodeUseCase(publicKey)}, latestBlockhash(base58)=${Base58EncodeUseCase(latestBlockhash)}")
         return transaction
     }
 
-    fun verify(publicKeyBase58: String, signedTransaction: ByteArray) {
-        val publicKeyBytes = Base58DecodeUseCase(publicKeyBase58)
-        assert(publicKeyBytes.size == ACCOUNT_PUBLIC_KEY_LEN) { "Invalid public key length for a Solana transaction" }
+    fun verify(publicKey: ByteArray, signedTransaction: ByteArray) {
+        assert(publicKey.size == ACCOUNT_PUBLIC_KEY_LEN) { "Invalid public key length for a Solana transaction" }
+        require(signedTransaction.size == MEMO_TRANSACTION_TEMPLATE.size) { "Unexpected signed transaction size" }
 
         // First, check that the provided transaction wasn't mangled by the wallet
-        require(signedTransaction.size == MEMO_TRANSACTION_TEMPLATE.size) { "Unexpected signed transaction size" }
         val unsignedTransaction = signedTransaction.clone()
         unsignedTransaction.fill(0, SIGNATURE_OFFSET, SIGNATURE_OFFSET + SIGNATURE_LEN)
         unsignedTransaction.fill(0, ACCOUNT_PUBLIC_KEY_OFFSET, ACCOUNT_PUBLIC_KEY_OFFSET + ACCOUNT_PUBLIC_KEY_LEN)
@@ -39,16 +38,16 @@ object MemoTransactionUseCase {
         unsignedTransaction.fill(0, SUFFIX_DIGITS_OFFSET, SUFFIX_DIGITS_OFFSET + SUFFIX_DIGITS_LEN)
         require(unsignedTransaction.contentEquals(MEMO_TRANSACTION_TEMPLATE)) { "Signed memo transaction does not match the one sent" }
         val signedTransactionAccount = signedTransaction.copyOfRange(ACCOUNT_PUBLIC_KEY_OFFSET, ACCOUNT_PUBLIC_KEY_OFFSET + ACCOUNT_PUBLIC_KEY_LEN)
-        require(signedTransactionAccount.contentEquals(publicKeyBytes)) { "Invalid signing account in transaction" }
+        require(signedTransactionAccount.contentEquals(publicKey)) { "Invalid signing account in transaction" }
 
-        val publicKey = Ed25519PublicKeyParameters(publicKeyBytes, 0)
+        val publicKeyParams = Ed25519PublicKeyParameters(publicKey, 0)
         val signer = Ed25519Signer()
-        signer.init(false, publicKey)
+        signer.init(false, publicKeyParams)
         signer.update(signedTransaction, HEADER_OFFSET, signedTransaction.size - HEADER_OFFSET)
         val signature = signedTransaction.copyOfRange(SIGNATURE_OFFSET, SIGNATURE_OFFSET + SIGNATURE_LEN)
         val verified = signer.verifySignature(signature)
         require(verified) { "Transaction signature is invalid" }
-        Log.d(TAG, "Verified memo transaction signature for publickKey=$publicKeyBase58")
+        Log.d(TAG, "Verified memo transaction signature for publicKey(base58)=${Base58EncodeUseCase(publicKey)}")
     }
 
     // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It

@@ -154,12 +154,12 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @NonNull
         public final String authToken;
         @NonNull
-        public final String publicKey;
+        public final byte[] publicKey;
         @Nullable
         public final Uri walletUriBase;
 
         private AuthorizeResult(@NonNull String authToken,
-                                @NonNull String publicKey,
+                                @NonNull byte[] publicKey,
                                 @Nullable Uri walletUriBase) {
             this.authToken = authToken;
             this.publicKey = publicKey;
@@ -170,8 +170,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @Override
         public String toString() {
             return "AuthorizeResult{" +
-                    "authToken='<REDACTED>'" +
-                    ", publicKey='" + publicKey + '\'' +
+                    "authToken=<REDACTED>" +
+                    ", publicKey=" + Arrays.toString(publicKey) +
                     ", walletUriBase=" + walletUriBase +
                     '}';
         }
@@ -201,10 +201,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 throw new JsonRpc20InvalidResponseException("expected an auth_token");
             }
 
-            final String publicKey;
+            final byte[] publicKey;
             try {
-                final JSONArray addresses = jo.getJSONArray(ProtocolContract.RESULT_ADDRESSES);
-                publicKey = addresses.getString(0); // TODO(#44): support multiple addresses
+                final byte[][] addresses = JsonPack.unpackBase64PayloadsArrayToByteArrays(
+                        jo.getJSONArray(ProtocolContract.RESULT_ADDRESSES));
+                publicKey = addresses[0]; // TODO(#44): support multiple addresses
             } catch (JSONException e) {
                 throw new JsonRpc20InvalidResponseException("expected one or more addresses");
             }
@@ -511,36 +512,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         return valid;
     }
 
-    @NonNull
-    @Size(min = 1)
-    private static String[] unpackResponseStringArray(@NonNull JSONObject jo,
-                                                      @NonNull String paramName,
-                                                      @IntRange(from = 1) int numExpectedStrings)
-            throws JsonRpc20InvalidResponseException {
-        assert(numExpectedStrings > 0); // checked with inputs to sign*
-
-        final JSONArray arr;
-        try {
-            arr = jo.getJSONArray(paramName);
-        } catch (JSONException e) {
-            throw new JsonRpc20InvalidResponseException("JSON object does not contain a valid array");
-        }
-        final int numValid = arr.length();
-        if (numValid != numExpectedStrings) {
-            throw new JsonRpc20InvalidResponseException(paramName + " should contain " +
-                    numExpectedStrings + " entries; actual=" + numValid);
-        }
-
-        final String[] strings;
-        try {
-            strings = JsonPack.unpackStrings(arr);
-        } catch (JSONException e) {
-            throw new JsonRpc20InvalidResponseException(paramName + " must be an array of Strings");
-        }
-
-        return strings;
-    }
-
     public static class SignPayloadsResult {
         @NonNull
         @Size(min = 1)
@@ -725,7 +696,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
             }
             final JSONObject jo = (JSONObject) o;
-            final String[] signatures = unpackResponseStringArray(jo,
+            final byte[][] signatures = unpackResponsePayloadArray(jo,
                     ProtocolContract.RESULT_SIGNATURES, mExpectedNumSignatures);
             return new SignAndSendTransactionsResult(signatures);
         }
@@ -758,9 +729,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public static class SignAndSendTransactionsResult {
         @NonNull
         @Size(min = 1)
-        public final String[] signatures;
+        public final byte[][] signatures;
 
-        public SignAndSendTransactionsResult(@NonNull @Size(min = 1) String[] signatures) {
+        public SignAndSendTransactionsResult(@NonNull @Size(min = 1) byte[][] signatures) {
             this.signatures = signatures;
         }
 
@@ -774,7 +745,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public static class NotCommittedException extends JsonRpc20RemoteException {
         @NonNull
         @Size(min = 1)
-        public final String[] signatures;
+        public final byte[][] signatures;
 
         @NonNull
         @Size(min = 1)
@@ -796,7 +767,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 throw new JsonRpc20InvalidResponseException("data is not a valid ERROR_NOT_COMMITTED result");
             }
 
-            signatures = unpackResponseStringArray(o,
+            signatures = unpackResponsePayloadArray(o,
                     ProtocolContract.DATA_NOT_COMMITTED_SIGNATURES, expectedNumSignatures);
             commitment = unpackResponseBooleanArray(o,
                     ProtocolContract.DATA_NOT_COMMITTED_COMMITMENT, expectedNumSignatures);
