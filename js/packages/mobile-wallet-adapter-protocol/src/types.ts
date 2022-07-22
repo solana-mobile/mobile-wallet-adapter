@@ -22,8 +22,8 @@ export type AssociationKeypair = CryptoKeyPair;
  * use it later to invoke privileged methods.
  */
 export type AuthorizationResult = Readonly<{
-    auth_token: AuthToken;
     addresses: Base58EncodedAddress[];
+    auth_token: AuthToken;
     wallet_uri_base: string;
 }>;
 
