@@ -22,14 +22,14 @@ export type AssociationKeypair = CryptoKeyPair;
  * use it later to invoke privileged methods.
  */
 export type AuthorizationResult = Readonly<{
-    addresses: Base58EncodedAddress[];
+    addresses: Base64EncodedAddress[];
     auth_token: AuthToken;
     wallet_uri_base: string;
 }>;
 
 export type AuthToken = string;
 
-type Base58EncodedAddress = string;
+export type Base64EncodedAddress = string;
 
 type Base58EncodedSignature = string;
 
