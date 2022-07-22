@@ -76,6 +76,7 @@ export interface SignAndSendTransactionsAPI {
         cluster: Cluster;
         commitment: Finality;
         payloads: Base64EncodedTransaction[];
+        preflight_commitment: Finality;
     }): Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
 }
 
