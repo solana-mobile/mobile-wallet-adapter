@@ -23,11 +23,13 @@ export type AssociationKeypair = CryptoKeyPair;
  */
 export type AuthorizationResult = Readonly<{
     auth_token: AuthToken;
-    pub_key: string;
+    addresses: Base58EncodedAddress[];
     wallet_uri_base: string;
 }>;
 
 export type AuthToken = string;
+
+type Base58EncodedAddress = string;
 
 type Base58EncodedSignature = string;
 

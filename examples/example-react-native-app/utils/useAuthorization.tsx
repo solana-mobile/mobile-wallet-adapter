@@ -59,7 +59,7 @@ export default function useAuthorization() {
   const publicKey = useMemo(
     () =>
       cachedAuthorization
-        ? new PublicKey(cachedAuthorization.pub_key)
+        ? new PublicKey(cachedAuthorization.addresses[0]) // TODO(#44): support multiple addresses
         : undefined,
     [cachedAuthorization],
   );
@@ -75,7 +75,7 @@ export default function useAuthorization() {
         const authorizationResult = await wallet.authorize({
           identity: APP_IDENTITY,
         });
-        freshPublicKey = new PublicKey(authorizationResult.pub_key);
+        freshPublicKey = new PublicKey(authorizationResult.addresses[0]); // TODO(#44): support multiple addresses
         setAuthorization(authorizationResult);
       }
       return freshPublicKey;

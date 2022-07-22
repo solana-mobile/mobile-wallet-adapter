@@ -56,7 +56,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     get publicKey(): PublicKey | null {
         if (this._publicKey == null && this._authorizationResult != null) {
-            this._publicKey = new PublicKey(this._authorizationResult.pub_key);
+            this._publicKey = new PublicKey(this._authorizationResult.addresses[0]); // TODO(#44): support multiple addresses
         }
         return this._publicKey ? this._publicKey : null;
     }
@@ -107,17 +107,17 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 await this.transact(async (wallet) => {
                     const {
                         auth_token,
-                        pub_key: base58PublicKey,
+                        addresses,
                         wallet_uri_base,
                     } = await wallet.authorize({ identity: this._appIdentity });
                     try {
-                        this._publicKey = new PublicKey(base58PublicKey);
+                        this._publicKey = new PublicKey(addresses[0]); // TODO(#44): support multiple addresses
                     } catch (e) {
                         throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
                     }
                     this.handleAuthorizationResult({
                         auth_token,
-                        pub_key: base58PublicKey,
+                        addresses,
                         wallet_uri_base: wallet_uri_base,
                     }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                     this.emit(
