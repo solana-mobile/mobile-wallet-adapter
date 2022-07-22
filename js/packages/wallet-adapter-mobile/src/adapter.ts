@@ -106,8 +106,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 await this.transact(async (wallet) => {
                     const {
-                        auth_token,
                         addresses,
+                        auth_token,
                         wallet_uri_base,
                     } = await wallet.authorize({ identity: this._appIdentity });
                     try {
@@ -116,8 +116,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                         throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
                     }
                     this.handleAuthorizationResult({
-                        auth_token,
                         addresses,
+                        auth_token,
                         wallet_uri_base: wallet_uri_base,
                     }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                     this.emit(
