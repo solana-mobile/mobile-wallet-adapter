@@ -3,9 +3,11 @@ import {PublicKey} from '@solana/web3.js';
 import {
   AuthorizationResult,
   AuthorizeAPI,
+  Base64EncodedAddress,
   DeauthorizeAPI,
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {toUint8Array} from 'js-base64';
 import {useCallback} from 'react';
 import useSWR from 'swr';
 
@@ -23,7 +25,10 @@ function getDataFromAuthorizationResult(
 function getPublicKeyFromAuthorizationResult(
   authorizationResult: AuthorizationResult,
 ): PublicKey {
-  return new PublicKey(authorizationResult.addresses[0]); // TODO(#44): support multiple addresses
+  return getPublicKeyFromAddress(
+    // TODO(#44): support multiple addresses
+    authorizationResult.addresses[0],
+  );
 }
 
 async function authorizationFetcher(storageKey: string) {
@@ -39,6 +44,11 @@ async function authorizationFetcher(storageKey: string) {
     await AsyncStorage.removeItem(STORAGE_KEY);
     return null;
   }
+}
+
+function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
+  const publicKeyByteArray = toUint8Array(address);
+  return new PublicKey(publicKeyByteArray);
 }
 
 export const APP_IDENTITY = {

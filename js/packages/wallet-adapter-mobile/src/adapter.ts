@@ -1,5 +1,11 @@
 import { Web3MobileWallet, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import { AppIdentity, AuthorizationResult, AuthToken, Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {
+    AppIdentity,
+    AuthorizationResult,
+    AuthToken,
+    Base64EncodedAddress,
+    Cluster,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
@@ -13,15 +19,8 @@ import {
     WalletSignMessageError,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import {
-    clusterApiUrl,
-    Connection,
-    Message,
-    PublicKey,
-    SendOptions,
-    Transaction,
-    TransactionSignature,
-} from '@solana/web3.js';
+import { clusterApiUrl, Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
+import { toUint8Array } from './base64Utils';
 import getIsSupported from './getIsSupported';
 
 export interface AuthorizationResultCache {
@@ -49,6 +48,11 @@ function getClusterFromURL(urlString: string): Cluster {
         return 'testnet';
     }
     return 'mainnet-beta';
+}
+
+function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
+    const publicKeyByteArray = toUint8Array(address);
+    return new PublicKey(publicKeyByteArray);
 }
 
 export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
@@ -82,7 +86,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     get publicKey(): PublicKey | null {
         if (this._publicKey == null && this._authorizationResult != null) {
-            this._publicKey = new PublicKey(this._authorizationResult.addresses[0]); // TODO(#44): support multiple addresses
+            this._publicKey = getPublicKeyFromAddress(
+                // TODO(#44): support multiple addresses
+                this._authorizationResult.addresses[0],
+            );
         }
         return this._publicKey ? this._publicKey : null;
     }
@@ -135,7 +142,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                         identity: this._appIdentity,
                     });
                     try {
-                        this._publicKey = new PublicKey(addresses[0]); // TODO(#44): support multiple addresses
+                        this._publicKey = getPublicKeyFromAddress(
+                            // TODO(#44): support multiple addresses
+                            addresses[0],
+                        );
                     } catch (e) {
                         throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
                     }
