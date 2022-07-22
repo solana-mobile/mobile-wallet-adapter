@@ -227,7 +227,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val result = client.authorize(
                 Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
-                "Solana"
+                "Solana",
+                ProtocolContract.CLUSTER_TESTNET
             ).get()
             Log.d(TAG, "Authorized: $result")
             _uiState.update {
@@ -442,7 +443,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val result = client.signAndSendTransactions(
                 transactions,
                 CommitmentLevel.Confirmed,
-                ProtocolContract.CLUSTER_TESTNET,
                 false,
                 CommitmentLevel.Confirmed
             ).get()

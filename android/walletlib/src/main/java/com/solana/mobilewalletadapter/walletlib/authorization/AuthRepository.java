@@ -229,6 +229,7 @@ public class AuthRepository {
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
                 " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                 " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
@@ -245,9 +246,10 @@ public class AuthRepository {
             final long issued = c.getLong(1);
             final int publicKeyId = c.getInt(2);
             final byte[] scope = c.getBlob(3);
-            final byte[] publicKey = c.getBlob(4);
-            authRecord = new AuthRecord(id, identityRecord, publicKey, scope, publicKeyId, issued,
-                    issued + mAuthIssuerConfig.authorizationValidityMs);
+            final String cluster = c.getString(4);
+            final byte[] publicKey = c.getBlob(5);
+            authRecord = new AuthRecord(id, identityRecord, publicKey, cluster, scope, publicKeyId,
+                    issued, issued + mAuthIssuerConfig.authorizationValidityMs);
         }
 
         // Revoke this authorization if it is either from the future, or too old to be reissuable
@@ -335,6 +337,7 @@ public class AuthRepository {
                                          @NonNull Uri uri,
                                          @NonNull Uri relativeIconUri,
                                          @NonNull byte[] publicKey,
+                                         @NonNull String cluster,
                                          @Nullable byte[] scope) {
         final SQLiteDatabase db = ensureStarted();
 
@@ -414,10 +417,11 @@ public class AuthRepository {
 
         final long now = System.currentTimeMillis();
 
-        final ContentValues authContentValues = new ContentValues(4);
+        final ContentValues authContentValues = new ContentValues(5);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.id);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
+        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, scope);
         final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, authContentValues);
 
@@ -439,7 +443,7 @@ public class AuthRepository {
         // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
         // thus know that the identity remains referenced; no need to purge unused identities.
 
-        return new AuthRecord(id, identityRecord, publicKey, scope, publicKeyId, now,
+        return new AuthRecord(id, identityRecord, publicKey, cluster, scope, publicKeyId, now,
                 now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
@@ -460,14 +464,16 @@ public class AuthRepository {
             Log.d(TAG, "AuthRecord still valid; reissuing same AuthRecord: " + authRecord);
             reissued = authRecord;
         } else {
-            final ContentValues reissueContentValues = new ContentValues(4);
+            final ContentValues reissueContentValues = new ContentValues(5);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.id);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
+            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER, authRecord.cluster);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, authRecord.scope);
             final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, reissueContentValues);
-            reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey, authRecord.scope,
-                    authRecord.publicKeyId, now, now + mAuthIssuerConfig.authorizationValidityMs);
+            reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
+                    authRecord.cluster, authRecord.scope, authRecord.publicKeyId, now,
+                    now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);
             // Note: reissue is net-neutral on the number of authorizations per identity, so there's
@@ -583,6 +589,7 @@ public class AuthRepository {
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
                 " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                 " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
@@ -595,9 +602,11 @@ public class AuthRepository {
                 final long issued = c.getLong(1);
                 final int publicKeyId = c.getInt(2);
                 final byte[] scope = c.getBlob(3);
-                final byte[] publicKey = c.getBlob(4);
-                final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey, scope,
-                        publicKeyId, issued, issued + mAuthIssuerConfig.authorizationValidityMs);
+                final String cluster = c.getString(4);
+                final byte[] publicKey = c.getBlob(5);
+                final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey, cluster,
+                        scope, publicKeyId, issued,
+                        issued + mAuthIssuerConfig.authorizationValidityMs);
                 authorizations.add(authRecord);
             }
         }

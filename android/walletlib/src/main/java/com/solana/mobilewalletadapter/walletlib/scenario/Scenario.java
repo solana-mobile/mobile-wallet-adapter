@@ -136,7 +136,8 @@ public abstract class Scenario {
                         final Uri uri = request.identityUri != null ? request.identityUri : Uri.EMPTY;
                         final Uri relativeIconUri = request.iconUri != null ? request.iconUri : Uri.EMPTY;
                         final AuthRecord authRecord = mAuthRepository.issue(
-                                name, uri, relativeIconUri, authorize.publicKey, authorize.scope);
+                                name, uri, relativeIconUri, authorize.publicKey, request.cluster,
+                                authorize.scope);
                         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
                         synchronized (mLock) {
                             mActiveAuthorization = authRecord;
@@ -163,7 +164,8 @@ public abstract class Scenario {
             }));
 
             mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
-                    future, request.identityName, request.identityUri, request.iconUri)));
+                    future, request.identityName, request.identityUri, request.iconUri,
+                    request.cluster)));
         }
 
         @Override
@@ -232,7 +234,7 @@ public abstract class Scenario {
 
             mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(new ReauthorizeRequest(
                     future, request.identityName, request.identityUri, request.iconUri,
-                    authRecord.scope)));
+                    authRecord.cluster, authRecord.scope)));
         }
 
         @Override
@@ -267,13 +269,13 @@ public abstract class Scenario {
                     r = () -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
                             request, authRecord.identity.name, authRecord.identity.uri,
                             authRecord.identity.relativeIconUri, authRecord.scope,
-                            authRecord.publicKey));
+                            authRecord.publicKey, authRecord.cluster));
                     break;
                 case Message:
                     r = () -> mCallbacks.onSignMessagesRequest(new SignMessagesRequest(request,
                             authRecord.identity.name, authRecord.identity.uri,
                             authRecord.identity.relativeIconUri, authRecord.scope,
-                            authRecord.publicKey));
+                            authRecord.publicKey, authRecord.cluster));
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown payload type");
@@ -297,7 +299,7 @@ public abstract class Scenario {
             mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionsRequest(
                     new SignAndSendTransactionsRequest(request, authRecord.identity.name,
                             authRecord.identity.uri, authRecord.identity.relativeIconUri,
-                            authRecord.scope, authRecord.publicKey)));
+                            authRecord.scope, authRecord.publicKey, authRecord.cluster)));
         }
     };
 

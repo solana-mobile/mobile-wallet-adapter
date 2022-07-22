@@ -11,15 +11,13 @@ sealed class RpcCluster(val name: String) {
 
 open class TransactionParams(
     val commitmentLevel: CommitmentLevel,
-    val cluster: RpcCluster,
     val skipPreflight: Boolean,
     val preflightCommitment: CommitmentLevel?
 )
 
 //TODO: We can add other defaults as they become relevant
-object DefaultTestnet : TransactionParams(
+object DefaultTransactionParams : TransactionParams(
     commitmentLevel = CommitmentLevel.Confirmed,
-    cluster = RpcCluster.Testnet,
     skipPreflight = false,
     preflightCommitment = null
 )

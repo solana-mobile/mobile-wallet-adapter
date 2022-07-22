@@ -149,7 +149,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             identityName = null;
         }
 
-        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName);
+        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER, ProtocolContract.CLUSTER_MAINNET_BETA);
+
+        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName, cluster);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizeComplete(f)));
         mMethodHandlers.authorize(request);
     }
@@ -205,15 +207,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final Uri iconUri;
         @Nullable
         public final String identityName;
+        @NonNull
+        public final String cluster;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
-                                 @Nullable String identityName) {
+                                 @Nullable String identityName,
+                                 @NonNull String cluster) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
+            this.cluster = cluster;
         }
 
         @Override
@@ -232,6 +238,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     ", identityUri=" + identityUri +
                     ", iconUri=" + iconUri +
                     ", identityName='" + identityName + '\'' +
+                    ", cluster='" + cluster + '\'' +
                     '/' + super.toString() +
                     '}';
         }
@@ -743,9 +750,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final CommitmentLevel commitmentLevel;
 
-        @Nullable
-        public final String cluster;
-
         public final boolean skipPreflight;
 
         @NonNull
@@ -754,12 +758,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         private SignAndSendTransactionsRequest(@Nullable Object id,
                                                @NonNull @Size(min = 1) byte[][] transactions,
                                                @NonNull CommitmentLevel commitmentLevel,
-                                               @Nullable String cluster,
                                                boolean skipPreflight,
                                                @NonNull CommitmentLevel preflightCommitmentLevel) {
             super(id, transactions);
             this.commitmentLevel = commitmentLevel;
-            this.cluster = cluster;
             this.skipPreflight = skipPreflight;
             this.preflightCommitmentLevel = preflightCommitmentLevel;
         }
@@ -782,7 +784,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignAndSendTransactionsRequest{" +
                     "commitmentLevel=" + commitmentLevel +
-                    ", cluster=" + cluster +
                     ", skipPreflight=" + skipPreflight +
                     ", preflightCommitmentLevel=" + preflightCommitmentLevel +
                     ", super=" + super.toString() +
@@ -841,8 +842,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER, null);
-
         final boolean skipPreflight = o.optBoolean(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, false);
 
         final CommitmentLevel preflightCommitmentLevel;
@@ -858,7 +857,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         final SignAndSendTransactionsRequest request = new SignAndSendTransactionsRequest(
-                id, payloads, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel);
+                id, payloads, commitmentLevel, skipPreflight, preflightCommitmentLevel);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionsComplete(f)));
         mMethodHandlers.signAndSendTransactions(request);
     }

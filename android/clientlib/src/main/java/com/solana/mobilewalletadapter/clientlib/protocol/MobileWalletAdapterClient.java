@@ -127,7 +127,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public AuthorizeFuture authorize(@Nullable Uri identityUri,
                                      @Nullable Uri iconUri,
-                                     @Nullable String identityName)
+                                     @Nullable String identityName,
+                                     @Nullable String cluster)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -143,6 +144,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
+            authorize.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
@@ -635,7 +637,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
                                                                  @NonNull CommitmentLevel commitmentLevel,
-                                                                 @Nullable String cluster,
                                                                  boolean skipPreflight,
                                                                  @Nullable CommitmentLevel preflightCommitmentLevel)
             throws IOException {
@@ -651,7 +652,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             signAndSendTransactions.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
             signAndSendTransactions.put(ProtocolContract.PARAMETER_COMMITMENT,
                     commitmentLevel.commitmentLevel);
-            signAndSendTransactions.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
             if (skipPreflight) {
                 signAndSendTransactions.put(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, true);
             }
@@ -673,7 +673,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
                                                                  @NonNull CommitmentLevel commitmentLevel)
             throws IOException {
-        return signAndSendTransactions(transactions, commitmentLevel, null, false, null);
+        return signAndSendTransactions(transactions, commitmentLevel, false, null);
     }
 
     public static class SignAndSendTransactionsFuture
