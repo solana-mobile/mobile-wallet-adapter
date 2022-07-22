@@ -43,7 +43,7 @@ class SendTransactionFragment : Fragment() {
                         is MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest.SignAndSendTransactions -> {
                             this@SendTransactionFragment.request = request
                             viewBinding.textDesiredCommitment.text = request.request.commitmentLevel.toString()
-                            viewBinding.textCluster.text = request.request.cluster ?: "<unspecified>"
+                            viewBinding.textCluster.text = request.request.cluster
                         }
                         else -> {
                             this@SendTransactionFragment.request = null
