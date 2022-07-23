@@ -31,7 +31,7 @@ export type AuthToken = string;
 
 export type Base64EncodedAddress = string;
 
-type Base58EncodedSignature = string;
+type Base64EncodedSignature = string;
 
 type Base64EncodedMessage = string;
 
@@ -77,7 +77,7 @@ export interface SignAndSendTransactionsAPI {
         commitment: Finality;
         payloads: Base64EncodedTransaction[];
         preflight_commitment: Finality;
-    }): Promise<Readonly<{ signatures: Base58EncodedSignature[] }>>;
+    }): Promise<Readonly<{ signatures: Base64EncodedSignature[] }>>;
 }
 
 export interface MobileWallet
