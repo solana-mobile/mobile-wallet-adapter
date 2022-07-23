@@ -17,11 +17,14 @@ const WEBSOCKET_CONNECTION_CONFIG = {
     /**
      * 300 milliseconds is a generally accepted threshold for what someone
      * would consider an acceptable response time for a user interface
-     * after having performed a low-attention tapping task. We set the
+     * after having performed a low-attention tapping task. We set the initial
      * interval at which we wait for the wallet to set up the websocket at
-     * half this, as per the Nyquist frequency.
+     * half this, as per the Nyquist frequency, with a progressive backoff
+     * sequence from there. The total wait time is 30s, which allows for the
+     * user to be presented with a disambiguation dialog, select a wallet, and
+     * for the wallet app to subsequently start.
      */
-    retryDelayMs: 150,
+    retryDelayMs: [150, 150, 200, 500, 500, 750, 750, 1000],
 } as const;
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
 
@@ -109,7 +112,9 @@ export async function transact<TReturn>(
                 );
             } else {
                 await new Promise((resolve) => {
-                    retryWaitTimeoutId = window.setTimeout(resolve, WEBSOCKET_CONNECTION_CONFIG.retryDelayMs);
+                    const idx = attempts < WEBSOCKET_CONNECTION_CONFIG.retryDelayMs.length ?
+                        attempts : WEBSOCKET_CONNECTION_CONFIG.retryDelayMs.length - 1
+                    retryWaitTimeoutId = window.setTimeout(resolve, WEBSOCKET_CONNECTION_CONFIG.retryDelayMs[idx]);
                 });
                 attemptSocketConnection();
             }

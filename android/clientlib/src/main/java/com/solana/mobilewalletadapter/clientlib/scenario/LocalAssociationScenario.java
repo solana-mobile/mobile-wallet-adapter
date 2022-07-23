@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 public class LocalAssociationScenario extends Scenario {
     private static final String TAG = LocalAssociationScenario.class.getSimpleName();
-    private static final int CONNECT_MAX_ATTEMPTS = 6;
-    private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 100, 250, 500, 750 };
+    private static final int CONNECT_MAX_ATTEMPTS = 34;
+    private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 150, 150, 200, 500, 500, 750, 750, 1000 }; // == 30s, which allows time for a user to choose a wallet from the disambiguation dialog, and for that wallet to start
     private static final int CONNECT_TIMEOUT_MS = 200; // localhost connections should be very fast
 
     @WebSocketsTransportContract.LocalPortRange
