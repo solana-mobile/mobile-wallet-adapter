@@ -10,6 +10,7 @@ import {
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import bs58 from 'bs58';
 
 import { fromUint8Array, toUint8Array } from './base64Utils';
 
@@ -92,12 +93,13 @@ export async function transact<TReturn>(
                                         return serializedTransaction.toString('base64');
                                     }),
                                 );
-                                const { signatures } = await wallet.signAndSendTransactions({
+                                const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
                                     ...rest,
                                     commitment: targetCommitment,
                                     payloads,
                                     preflight_commitment: targetCommitment,
                                 });
+                                const signatures = base64EncodedSignatures.map(toUint8Array).map(bs58.encode);
                                 return signatures as TransactionSignature[];
                             } as Web3MobileWallet[TMethodName];
                             break;
