@@ -4,7 +4,6 @@ import {
     AuthorizationResult,
     AuthToken,
     Base64EncodedAddress,
-    Cluster,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
@@ -19,9 +18,10 @@ import {
     WalletSignMessageError,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import { clusterApiUrl, Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
+import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
 import { toUint8Array } from './base64Utils';
 import getIsSupported from './getIsSupported';
+import { Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -32,23 +32,6 @@ export interface AuthorizationResultCache {
 export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
-
-/**
- * Infer the cluster from an RPC URL.
- */
-function getClusterFromURL(urlString: string): Cluster {
-    const url = new URL(urlString);
-    const isHttps = url.protocol === 'https';
-    const devnetUrl = new URL(clusterApiUrl('devnet', isHttps));
-    if (devnetUrl.hostname === url.hostname) {
-        return 'devnet';
-    }
-    const testnetUrl = new URL(clusterApiUrl('testnet', isHttps));
-    if (testnetUrl.hostname === url.hostname) {
-        return 'testnet';
-    }
-    return 'mainnet-beta';
-}
 
 function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
     const publicKeyByteArray = toUint8Array(address);
@@ -65,13 +48,19 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _authorizationResult: AuthorizationResult | undefined;
     private _authorizationResultCache: AuthorizationResultCache;
     private _connecting = false;
+    private _cluster: Cluster;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
 
-    constructor(config: { appIdentity: AppIdentity; authorizationResultCache: AuthorizationResultCache }) {
+    constructor(config: {
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        cluster: Cluster;
+    }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._appIdentity = config.appIdentity;
+        this._cluster = config.cluster;
         if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
                 if (authorizationResult) {
@@ -139,6 +128,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             try {
                 await this.transact(async (wallet) => {
                     const { addresses, auth_token, wallet_uri_base } = await wallet.authorize({
+                        cluster: this._cluster,
                         identity: this._appIdentity,
                     });
                     try {
@@ -240,10 +230,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 return await this.transact(async (wallet) => {
                     await this.performReauthorization(wallet, authorizationResult);
                     const signatures = await wallet.signAndSendTransactions({
-                        // FIXME: Acquire this from the `AuthorizationResult` when it's introduced there.
-                        cluster: getClusterFromURL(connection.rpcEndpoint),
-                        fee_payer: transaction.feePayer,
                         connection,
+                        fee_payer: transaction.feePayer,
                         transactions: [transaction],
                     });
                     return signatures[0];
