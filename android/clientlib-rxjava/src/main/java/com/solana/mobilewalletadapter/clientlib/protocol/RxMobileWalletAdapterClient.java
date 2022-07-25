@@ -11,8 +11,6 @@ import androidx.annotation.Size;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizeFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizeResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.DeauthorizeFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsFuture;
@@ -50,12 +48,12 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<ReauthorizeResult> reauthorize(@Nullable Uri identityUri,
-                                                 @Nullable Uri iconUri,
-                                                 @Nullable String identityName,
-                                                 @NonNull String authToken) {
+    public Single<AuthorizeResult> reauthorize(@Nullable Uri identityUri,
+                                               @Nullable Uri iconUri,
+                                               @Nullable String identityName,
+                                               @NonNull String authToken) {
         try {
-            ReauthorizeFuture reauthorizeFuture = mMobileWalletAdapterClient.reauthorize(identityUri, iconUri, identityName, authToken);
+            AuthorizeFuture reauthorizeFuture = mMobileWalletAdapterClient.reauthorize(identityUri, iconUri, identityName, authToken);
             return Single.fromFuture(reauthorizeFuture);
         } catch (Exception e) {
             return Single.error(e);

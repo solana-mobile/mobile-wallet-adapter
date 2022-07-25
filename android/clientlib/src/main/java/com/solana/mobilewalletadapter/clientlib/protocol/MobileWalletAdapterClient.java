@@ -121,7 +121,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     // =============================================================================================
-    // authorize
+    // authorize (shares AuthorizeFuture and AuthorizeResult with reauthorize)
     // =============================================================================================
 
     @NonNull
@@ -228,10 +228,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public ReauthorizeFuture reauthorize(@Nullable Uri identityUri,
-                                         @Nullable Uri iconUri,
-                                         @Nullable String identityName,
-                                         @NonNull String authToken)
+    public AuthorizeFuture reauthorize(@Nullable Uri identityUri,
+                                       @Nullable Uri iconUri,
+                                       @Nullable String identityName,
+                                       @NonNull String authToken)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -252,55 +252,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             throw new UnsupportedOperationException("Failed to create reauthorize JSON params", e);
         }
 
-        return new ReauthorizeFuture(methodCall(ProtocolContract.METHOD_REAUTHORIZE, reauthorize, mClientTimeoutMs));
-    }
-
-    public static class ReauthorizeResult {
-        @NonNull
-        public final String authToken;
-
-        private ReauthorizeResult(@NonNull String authToken) {
-            this.authToken = authToken;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "ReauthorizeResult{authToken='<REDACTED>'}";
-        }
-    }
-
-    public static class ReauthorizeFuture
-            extends JsonRpc20MethodResultFuture<ReauthorizeResult>
-            implements NotifyOnCompleteFuture<ReauthorizeResult> {
-        private ReauthorizeFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
-            super(methodCallFuture);
-        }
-
-        @NonNull
-        @Override
-        protected ReauthorizeResult processResult(@Nullable Object o)
-                throws JsonRpc20InvalidResponseException {
-            if (!(o instanceof JSONObject)) {
-                throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
-            }
-
-            final JSONObject jo = (JSONObject) o;
-
-            final String authToken;
-            try {
-                authToken = jo.getString(ProtocolContract.RESULT_AUTH_TOKEN);
-            } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException("expected an auth_token");
-            }
-
-            return new ReauthorizeResult(authToken);
-        }
-
-        @Override
-        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<ReauthorizeResult>> cb) {
-            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
-        }
+        return new AuthorizeFuture(methodCall(ProtocolContract.METHOD_REAUTHORIZE, reauthorize, mClientTimeoutMs));
     }
 
     // =============================================================================================

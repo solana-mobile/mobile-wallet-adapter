@@ -109,7 +109,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     // =============================================================================================
-    // authorize
+    // authorize (shares onAuthorizationComplete and AuthorizeResult with reauthorize)
     // =============================================================================================
 
     private void handleAuthorize(@Nullable Object id, @Nullable Object params) throws IOException {
@@ -150,11 +150,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName);
-        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizeComplete(f)));
+        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
 
-    private void onAuthorizeComplete(@NonNull NotifyOnCompleteFuture<AuthorizeResult> future) {
+    // NOTE: future may be either AuthorizeRequest or ReauthorizeRequest
+    private void onAuthorizationComplete(@NonNull NotifyOnCompleteFuture<AuthorizeResult> future) {
         final AuthorizeRequest request = (AuthorizeRequest) future;
 
         try {
@@ -163,10 +164,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result = request.get();
             } catch (ExecutionException e) {
                 final Throwable cause = e.getCause();
-                if (cause instanceof RequestDeclinedException) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorize request declined", null);
+                if (cause instanceof AuthorizationNotValidException || // NOTE: AuthorizationNotValidException only expected for reauthorize requests
+                        cause instanceof RequestDeclinedException
+                ) {
+                    assert(!(cause instanceof AuthorizationNotValidException) || request instanceof ReauthorizeRequest);
+                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request failed", null);
                 } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorize request", null);
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request", null);
                 }
                 return;
             } catch (CancellationException e) {
@@ -189,7 +193,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 o.put(ProtocolContract.RESULT_ADDRESSES, addresses);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
-                throw new RuntimeException("Failed preparing authorize response", e);
+                throw new RuntimeException("Failed preparing authorization response", e);
             }
 
             handleRpcResult(request.id, o);
@@ -314,58 +318,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
 
         final ReauthorizeRequest request = new ReauthorizeRequest(id, identityUri, iconUri, identityName, authToken);
-        request.notifyOnComplete((f) -> mHandler.post(() -> onReauthorizeComplete(f)));
+        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.reauthorize(request);
     }
 
-    private void onReauthorizeComplete(@NonNull NotifyOnCompleteFuture<ReauthorizeResult> future) {
-        final ReauthorizeRequest request = (ReauthorizeRequest) future;
-
-        try {
-            final ReauthorizeResult result;
-            try {
-                result = request.get();
-            } catch (ExecutionException e) {
-                final Throwable cause = e.getCause();
-                if (
-                    cause instanceof AuthorizationNotValidException ||
-                    cause instanceof RequestDeclinedException
-                ) {
-                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "reauthorize request failed", null);
-                } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing reauthorize request", null);
-                }
-                return;
-            } catch (CancellationException e) {
-                // Treat cancellation as a declined request
-                handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "reauthorize request failed", null);
-                return;
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Should never occur!");
-            }
-
-            assert(result != null); // checked in ReauthorizeRequest.complete()
-
-            final JSONObject o = new JSONObject();
-            try {
-                o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-            } catch (JSONException e) {
-                throw new RuntimeException("Failed preparing reauthorize response", e);
-            }
-
-            handleRpcResult(request.id, o);
-        } catch (IOException e) {
-            Log.e(TAG, "Failed sending response for id=" + request.id, e);
-        }
-    }
-
-    public static class ReauthorizeRequest extends RequestFuture<ReauthorizeResult> {
-        @Nullable
-        public final Uri identityUri;
-        @Nullable
-        public final Uri iconUri;
-        @Nullable
-        public final String identityName;
+    public static class ReauthorizeRequest extends AuthorizeRequest {
         @NonNull
         public final String authToken;
 
@@ -374,47 +331,17 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                    @Nullable Uri iconUri,
                                    @Nullable String identityName,
                                    @NonNull String authToken) {
-            super(id);
-            this.identityUri = identityUri;
-            this.iconUri = iconUri;
-            this.identityName = identityName;
+            super(id, identityUri, iconUri, identityName);
             this.authToken = authToken;
-        }
-
-        @Override
-        public boolean complete(@Nullable ReauthorizeResult result) {
-            if (result == null) {
-                throw new IllegalArgumentException("A non-null result must be provided");
-            }
-            return super.complete(result);
         }
 
         @NonNull
         @Override
         public String toString() {
             return "ReauthorizeRequest{" +
-                    "id=" + id +
-                    ", identityUri=" + identityUri +
-                    ", iconUri=" + iconUri +
-                    ", identityName='" + identityName + '\'' +
-                    ", authToken=<REDACTED>" +
+                    "authToken=<REDACTED>" +
                     '/' + super.toString() +
                     '}';
-        }
-    }
-
-    public static class ReauthorizeResult {
-        @NonNull
-        public final String authToken;
-
-        public ReauthorizeResult(@NonNull String authToken) {
-            this.authToken = authToken;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "ReauthorizeResult{authToken=<REDACTED>}";
         }
     }
 

@@ -85,18 +85,15 @@ export default function useAuthorization() {
   );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      if (data) {
-        await wallet.reauthorize({
-          auth_token: data.authorization.auth_token,
-        });
-        return data.publicKey;
-      } else {
-        const authorizationResult = await wallet.authorize({
-          identity: APP_IDENTITY,
-        });
-        setAuthorization(authorizationResult);
-        return getPublicKeyFromAuthorizationResult(authorizationResult);
-      }
+      const authorizationResult = await (data
+        ? wallet.reauthorize({
+            auth_token: data.authorization.auth_token,
+          })
+        : wallet.authorize({
+            identity: APP_IDENTITY,
+          }));
+      setAuthorization(authorizationResult);
+      return getPublicKeyFromAuthorizationResult(authorizationResult);
     },
     [data, setAuthorization],
   );
