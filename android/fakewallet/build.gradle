@@ -57,7 +57,7 @@ dependencies {
     implementation 'io.coil-kt:coil:2.1.0'
     implementation 'io.coil-kt:coil-svg:2.1.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation project(path: ':walletlib')
     kapt 'androidx.room:room-compiler:2.4.2'
 }
