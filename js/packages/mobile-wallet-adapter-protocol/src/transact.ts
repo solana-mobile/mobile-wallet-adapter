@@ -13,7 +13,6 @@ import { startSession } from './startSession';
 import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
-    maxAttempts: 34,
     /**
      * 300 milliseconds is a generally accepted threshold for what someone
      * would consider an acceptable response time for a user interface
@@ -24,7 +23,8 @@ const WEBSOCKET_CONNECTION_CONFIG = {
      * user to be presented with a disambiguation dialog, select a wallet, and
      * for the wallet app to subsequently start.
      */
-    retryDelayMs: [150, 150, 200, 500, 500, 750, 750, 1000],
+    retryDelayScheduleMs: [150, 150, 200, 500, 500, 750, 750, 1000],
+    timeoutMs: 30000,
 } as const;
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
 
@@ -61,11 +61,15 @@ export async function transact<TReturn>(
     const associationKeypair = await generateAssociationKeypair();
     const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
     const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
+    let connectionStartTime: number;
+    const getNextRetryDelayMs = (() => {
+        const schedule = [...WEBSOCKET_CONNECTION_CONFIG.retryDelayScheduleMs];
+        return () => (schedule.length > 1 ? (schedule.shift() as number) : schedule[0]);
+    })();
     let nextJsonRpcMessageId = 1;
     let lastKnownInboundSequenceNumber = 0;
     let state: State = { __type: 'disconnected' };
     return new Promise((resolve, reject) => {
-        let attempts = 0;
         let socket: WebSocket;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
@@ -103,7 +107,7 @@ export async function transact<TReturn>(
         };
         const handleError = async (_evt: Event) => {
             disposeSocket();
-            if (++attempts >= WEBSOCKET_CONNECTION_CONFIG.maxAttempts) {
+            if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                 reject(
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
@@ -112,9 +116,8 @@ export async function transact<TReturn>(
                 );
             } else {
                 await new Promise((resolve) => {
-                    const idx = attempts < WEBSOCKET_CONNECTION_CONFIG.retryDelayMs.length ?
-                        attempts : WEBSOCKET_CONNECTION_CONFIG.retryDelayMs.length - 1
-                    retryWaitTimeoutId = window.setTimeout(resolve, WEBSOCKET_CONNECTION_CONFIG.retryDelayMs[idx]);
+                    const retryDelayMs = getNextRetryDelayMs();
+                    retryWaitTimeoutId = window.setTimeout(resolve, retryDelayMs);
                 });
                 attemptSocketConnection();
             }
@@ -204,6 +207,9 @@ export async function transact<TReturn>(
                 disposeSocket();
             }
             state = { __type: 'connecting', associationKeypair };
+            if (connectionStartTime === undefined) {
+                connectionStartTime = Date.now();
+            }
             socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL]);
             socket.addEventListener('open', handleOpen);
             socket.addEventListener('close', handleClose);
