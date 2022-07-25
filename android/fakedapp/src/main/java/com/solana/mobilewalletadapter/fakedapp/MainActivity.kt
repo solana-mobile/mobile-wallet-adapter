@@ -8,6 +8,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.annotation.GuardedBy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -121,8 +122,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val intentSender = object : MainViewModel.StartActivityForResultSender {
-        override fun startActivityForResult(intent: Intent) {
-            this@MainActivity.startActivityForResult(intent, 0)
+        @GuardedBy("this")
+        private var callback: (() -> Unit)? = null
+
+        override fun startActivityForResult(
+            intent: Intent,
+            onActivityCompleteCallback: () -> Unit
+        ) {
+            synchronized(this) {
+                check(callback == null) { "Received an activity start request while another is pending" }
+                callback = onActivityCompleteCallback
+            }
+            this@MainActivity.startActivityForResult(intent, WALLET_ACTIVITY_REQUEST_CODE)
         }
+
+        fun onActivityComplete() {
+            synchronized(this) {
+                callback?.let { it() }
+                callback = null
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            WALLET_ACTIVITY_REQUEST_CODE -> intentSender.onActivityComplete()
+        }
+    }
+
+    companion object {
+        private const val WALLET_ACTIVITY_REQUEST_CODE = 1234
     }
 }

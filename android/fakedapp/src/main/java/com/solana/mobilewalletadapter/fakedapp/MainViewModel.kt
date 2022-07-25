@@ -22,15 +22,12 @@ import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
 import com.solana.mobilewalletadapter.fakedapp.usecase.GetLatestBlockhashUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.RequestAirdropUseCase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
@@ -483,8 +480,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sender: StartActivityForResultSender,
         uriPrefix: Uri? = null,
         action: suspend (MobileWalletAdapterClient) -> T?
-    ): T? {
-        return mobileWalletAdapterClientSem.withPermit {
+    ): T? = coroutineScope {
+        return@coroutineScope mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
             val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
@@ -493,7 +490,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 localAssociation.session
             )
             try {
-                sender.startActivityForResult(associationIntent)
+                sender.startActivityForResult(associationIntent) {
+                    viewModelScope.launch {
+                        // Ensure this coroutine will wrap up in a timely fashion when the launched
+                        // activity completes
+                        delay(LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS)
+                        this@coroutineScope.cancel()
+                    }
+                }
             } catch (e: ActivityNotFoundException) {
                 Log.e(TAG, "Failed to start intent=$associationIntent", e)
                 showMessage(R.string.msg_no_wallet_found)
@@ -501,33 +505,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             return@withPermit withContext(Dispatchers.IO) {
-                val mobileWalletAdapterClient = try {
+                try {
+                    val mobileWalletAdapterClient = try {
+                        runInterruptible {
+                            localAssociation.start().get(LOCAL_ASSOCIATION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        }
+                    } catch (e: InterruptedException) {
+                        Log.w(TAG, "Interrupted while waiting for local association to be ready")
+                        return@withContext null
+                    } catch (e: TimeoutException) {
+                        Log.e(TAG, "Timed out waiting for local association to be ready")
+                        return@withContext null
+                    } catch (e: ExecutionException) {
+                        Log.e(TAG, "Failed establishing local association with wallet", e.cause)
+                        return@withContext null
+                    } catch (e: CancellationException) {
+                        Log.e(TAG, "Local association was cancelled before connected", e)
+                        return@withContext null
+                    }
+
+                    // NOTE: this is a blocking method call, appropriate in the Dispatchers.IO context
+                    action(mobileWalletAdapterClient)
+                } finally {
                     @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
-                    localAssociation.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                } catch (e: InterruptedException) {
-                    Log.w(TAG, "Interrupted while waiting for local association to be ready")
-                    return@withContext null
-                } catch (e: TimeoutException) {
-                    Log.e(TAG, "Timed out waiting for local association to be ready")
-                    return@withContext null
-                } catch (e: ExecutionException) {
-                    Log.e(TAG, "Failed establishing local association with wallet", e.cause)
-                    return@withContext null
+                    localAssociation.close().get(LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 }
-
-                // NOTE: this is a blocking method call, appropriate in the Dispatchers.IO context
-                val result = action(mobileWalletAdapterClient)
-
-                @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
-                localAssociation.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-
-                result
             }
         }
     }
 
     interface StartActivityForResultSender {
-        fun startActivityForResult(intent: Intent) // throws ActivityNotFoundException
+        fun startActivityForResult(intent: Intent, onActivityCompleteCallback: () -> Unit) // throws ActivityNotFoundException
     }
 
     data class UiState(
@@ -563,7 +571,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private val TAG = MainViewModel::class.simpleName
-        private const val ASSOCIATION_TIMEOUT_MS = 10000L
+        private const val LOCAL_ASSOCIATION_START_TIMEOUT_MS = 60000L // LocalAssociationScenario.start() has a shorter timeout; this is just a backup safety measure
+        private const val LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS = 5000L
+        private const val LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS = 5000L
         private val TESTNET_RPC_URI = Uri.parse("https://api.testnet.solana.com")
     }
 }
