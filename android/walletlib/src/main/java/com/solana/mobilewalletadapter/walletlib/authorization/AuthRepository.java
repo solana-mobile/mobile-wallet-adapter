@@ -228,12 +228,17 @@ public class AuthRepository {
                 AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
+                ", " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
                 " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                 " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
                 " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
+                " INNER JOIN " + AuthDatabase.TABLE_WALLET_URI_BASE +
+                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                " = " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_ID +
                 " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID + "=?",
                 new String[] { tokenIdStr })) {
             if (!c.moveToNext()) {
@@ -244,10 +249,13 @@ public class AuthRepository {
             final int id = c.getInt(0);
             final long issued = c.getLong(1);
             final int publicKeyId = c.getInt(2);
-            final byte[] scope = c.getBlob(3);
-            final byte[] publicKey = c.getBlob(4);
-            authRecord = new AuthRecord(id, identityRecord, publicKey, scope, publicKeyId, issued,
-                    issued + mAuthIssuerConfig.authorizationValidityMs);
+            final int walletUriBaseId = c.getInt(3);
+            final byte[] scope = c.getBlob(4);
+            final byte[] publicKey = c.getBlob(5);
+            final Uri walletUriBase = c.isNull(6) ?
+                    null : Uri.parse(c.getString(6));
+            authRecord = new AuthRecord(id, identityRecord, publicKey, scope, walletUriBase,
+                    publicKeyId, walletUriBaseId, issued, issued + mAuthIssuerConfig.authorizationValidityMs);
         }
 
         // Revoke this authorization if it is either from the future, or too old to be reissuable
@@ -335,6 +343,7 @@ public class AuthRepository {
                                          @NonNull Uri uri,
                                          @NonNull Uri relativeIconUri,
                                          @NonNull byte[] publicKey,
+                                         @Nullable Uri walletUriBase,
                                          @Nullable byte[] scope) {
         final SQLiteDatabase db = ensureStarted();
 
@@ -412,12 +421,36 @@ public class AuthRepository {
             publicKeyId = (int) db.insert(AuthDatabase.TABLE_PUBLIC_KEYS, null, publicKeyContentValues);
         }
 
+        // Next, try and look up the wallet URI base
+        int walletUriBaseId = -1;
+        try (final Cursor c = db.query(AuthDatabase.TABLE_WALLET_URI_BASE,
+                new String[] { AuthDatabase.COLUMN_WALLET_URI_BASE_ID },
+                AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
+                        (walletUriBase != null ? "=?" : " IS NULL"),
+                (walletUriBase != null ? new String[] { walletUriBase.toString() } : null),
+                null,
+                null,
+                null)) {
+            if (c.moveToNext()) {
+                walletUriBaseId = c.getInt(0);
+            }
+        }
+
+        // If no matching wallet URI base exists, create one
+        if (walletUriBaseId == -1) {
+            final ContentValues walletUriBaseContentValues = new ContentValues(1);
+            walletUriBaseContentValues.put(AuthDatabase.COLUMN_WALLET_URI_BASE_URI,
+                    walletUriBase != null ? walletUriBase.toString() : null);
+            walletUriBaseId = (int) db.insert(AuthDatabase.TABLE_WALLET_URI_BASE, null, walletUriBaseContentValues);
+        }
+
         final long now = System.currentTimeMillis();
 
-        final ContentValues authContentValues = new ContentValues(4);
+        final ContentValues authContentValues = new ContentValues(5);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.id);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
+        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, scope);
         final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, authContentValues);
 
@@ -435,12 +468,14 @@ public class AuthRepository {
         final int purgeCount = purgeOldestStatement.executeUpdateDelete();
         if (purgeCount > 0) {
             Log.v(TAG, "Purged " + purgeCount + " oldest authorizations for identity: " + identityRecord);
+            // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
+            // thus know that the identity remains referenced; no need to purge unused identities.
+            deleteUnreferencedPublicKeys(db);
+            deleteUnreferencedWalletUriBase(db);
         }
-        // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
-        // thus know that the identity remains referenced; no need to purge unused identities.
 
-        return new AuthRecord(id, identityRecord, publicKey, scope, publicKeyId, now,
-                now + mAuthIssuerConfig.authorizationValidityMs);
+        return new AuthRecord(id, identityRecord, publicKey, scope, walletUriBase, publicKeyId,
+                walletUriBaseId, now, now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
     @Nullable
@@ -460,14 +495,16 @@ public class AuthRepository {
             Log.d(TAG, "AuthRecord still valid; reissuing same AuthRecord: " + authRecord);
             reissued = authRecord;
         } else {
-            final ContentValues reissueContentValues = new ContentValues(4);
+            final ContentValues reissueContentValues = new ContentValues(5);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.id);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
+            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, authRecord.walletUriBaseId);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, authRecord.scope);
             final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, reissueContentValues);
             reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey, authRecord.scope,
-                    authRecord.publicKeyId, now, now + mAuthIssuerConfig.authorizationValidityMs);
+                    authRecord.walletUriBase, authRecord.publicKeyId, authRecord.walletUriBaseId,
+                    now, now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);
             // Note: reissue is net-neutral on the number of authorizations per identity, so there's
@@ -490,9 +527,10 @@ public class AuthRepository {
         deleteAuthorizations.bindLong(1, authRecord.id);
         final int deleteCount = deleteAuthorizations.executeUpdateDelete();
 
-        // There may now be unreferenced identities and public keys; if so, delete them
+        // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedIdentities(db);
         deleteUnreferencedPublicKeys(db);
+        deleteUnreferencedWalletUriBase(db);
 
         return (deleteCount != 0);
     }
@@ -514,8 +552,9 @@ public class AuthRepository {
         deleteIdentity.bindLong(1, identityRecord.id);
         final int deleteCount = deleteIdentity.executeUpdateDelete();
 
-        // There may now be unreferenced public keys; if so, delete them
+        // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedPublicKeys(db);
+        deleteUnreferencedWalletUriBase(db);
 
         return (deleteCount != 0);
     }
@@ -538,6 +577,16 @@ public class AuthRepository {
                         "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                         " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedPublicKeys.executeUpdateDelete();
+    }
+
+    @GuardedBy("this")
+    private void deleteUnreferencedWalletUriBase(@NonNull SQLiteDatabase db) {
+        final SQLiteStatement deleteUnreferencedWalletUriBase = db.compileStatement(
+                "DELETE FROM " + AuthDatabase.TABLE_WALLET_URI_BASE +
+                        " WHERE " + AuthDatabase.COLUMN_WALLET_URI_BASE_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
+        deleteUnreferencedWalletUriBase.executeUpdateDelete();
     }
 
     @NonNull
@@ -582,22 +631,31 @@ public class AuthRepository {
                 AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
+                ", " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
                 " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                 " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
                 " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                 " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
+                " INNER JOIN " + AuthDatabase.TABLE_WALLET_URI_BASE +
+                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                " = " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_ID +
                 " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
                 new String[] { Integer.toString(identityRecord.id) })) {
             while (c.moveToNext()) {
                 final int id = c.getInt(0);
                 final long issued = c.getLong(1);
                 final int publicKeyId = c.getInt(2);
-                final byte[] scope = c.getBlob(3);
-                final byte[] publicKey = c.getBlob(4);
+                final int walletUriBaseId = c.getInt(3);
+                final byte[] scope = c.getBlob(4);
+                final byte[] publicKey = c.getBlob(5);
+                final Uri walletUriBase = c.isNull(6) ?
+                        null : Uri.parse(c.getString(6));
                 final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey, scope,
-                        publicKeyId, issued, issued + mAuthIssuerConfig.authorizationValidityMs);
+                        walletUriBase, publicKeyId, walletUriBaseId, issued,
+                        issued + mAuthIssuerConfig.authorizationValidityMs);
                 authorizations.add(authRecord);
             }
         }

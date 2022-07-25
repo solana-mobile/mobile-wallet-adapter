@@ -136,7 +136,8 @@ public abstract class Scenario {
                         final Uri uri = request.identityUri != null ? request.identityUri : Uri.EMPTY;
                         final Uri relativeIconUri = request.iconUri != null ? request.iconUri : Uri.EMPTY;
                         final AuthRecord authRecord = mAuthRepository.issue(
-                                name, uri, relativeIconUri, authorize.publicKey, authorize.scope);
+                                name, uri, relativeIconUri, authorize.publicKey,
+                                authorize.walletUriBase, authorize.scope);
                         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
                         synchronized (mLock) {
                             mActiveAuthorization = authRecord;
@@ -219,7 +220,8 @@ public abstract class Scenario {
                     }
 
                     mIoHandler.post(() -> request.complete(
-                            new MobileWalletAdapterServer.ReauthorizeResult(authToken)));
+                            new MobileWalletAdapterServer.AuthorizeResult(
+                                    authToken, authRecord.publicKey, authRecord.walletUriBase)));
                 } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException("Unexpected exception while waiting for reauthorization", e);
                 } catch (CancellationException e) {

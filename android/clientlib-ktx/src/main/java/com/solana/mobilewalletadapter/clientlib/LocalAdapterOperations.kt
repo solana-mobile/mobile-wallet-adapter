@@ -24,7 +24,7 @@ class LocalAdapterOperations(
         }
     }
 
-    override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.ReauthorizeResult {
+    override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.AuthorizeResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.reauthorize(identityUri, iconUri, identityName, authToken)?.get()
