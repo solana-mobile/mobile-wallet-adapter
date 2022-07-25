@@ -2,7 +2,6 @@ import { Connection, PublicKey, Transaction, TransactionSignature } from '@solan
 import {
     AuthorizeAPI,
     CloneAuthorizationAPI,
-    Cluster,
     DeauthorizeAPI,
     Finality,
     MobileWallet,
@@ -16,7 +15,6 @@ import { fromUint8Array, toUint8Array } from './base64Utils';
 
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        cluster: Cluster;
         connection: Connection;
         fee_payer?: PublicKey;
         transactions: Transaction[];

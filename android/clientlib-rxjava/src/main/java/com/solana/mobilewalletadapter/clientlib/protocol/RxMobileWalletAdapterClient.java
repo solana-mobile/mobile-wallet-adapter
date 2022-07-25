@@ -39,9 +39,10 @@ public class RxMobileWalletAdapterClient {
     @NonNull
     public Single<AuthorizeResult> authorize(@Nullable Uri identityUri,
                                              @Nullable Uri iconUri,
-                                             @Nullable String identityName) {
+                                             @Nullable String identityName,
+                                             @Nullable String cluster) {
         try {
-            AuthorizeFuture authorizeFuture = mMobileWalletAdapterClient.authorize(identityUri, iconUri, identityName);
+            AuthorizeFuture authorizeFuture = mMobileWalletAdapterClient.authorize(identityUri, iconUri, identityName, cluster);
             return Single.fromFuture(authorizeFuture);
         } catch (Exception e) {
             return Single.error(e);
@@ -99,12 +100,11 @@ public class RxMobileWalletAdapterClient {
     @NonNull
     public Single<SignAndSendTransactionsResult> signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
                                                                          @NonNull CommitmentLevel commitmentLevel,
-                                                                         @Nullable String cluster,
                                                                          boolean skipPreflight,
                                                                          @Nullable CommitmentLevel preflightCommitmentLevel) {
         try {
             SignAndSendTransactionsFuture signAndSendTransactionsFuture = mMobileWalletAdapterClient.signAndSendTransactions(
-                    transactions, commitmentLevel, cluster, skipPreflight, preflightCommitmentLevel
+                    transactions, commitmentLevel, skipPreflight, preflightCommitmentLevel
             );
             return Single.fromFuture(signAndSendTransactionsFuture);
         } catch (Exception e) {

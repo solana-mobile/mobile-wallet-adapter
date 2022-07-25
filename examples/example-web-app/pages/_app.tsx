@@ -10,7 +10,8 @@ import type { AppProps } from 'next/app';
 import { SnackbarProvider } from 'notistack';
 import { useMemo } from 'react';
 
-const DEVNET_ENDPOINT = /*#__PURE__*/ clusterApiUrl(WalletAdapterNetwork.Devnet);
+const CLUSTER = WalletAdapterNetwork.Devnet;
+const ENDPOINT = /*#__PURE__*/ clusterApiUrl(CLUSTER);
 
 const theme = /*#__PURE__*/ createTheme();
 
@@ -27,6 +28,7 @@ function ExampleMobileDApp({ Component, pageProps }: AppProps) {
                               uri: window.location.href,
                           },
                           authorizationResultCache: createDefaultAuthorizationResultCache(),
+                          cluster: CLUSTER,
                       }),
                   ],
         [],
@@ -34,7 +36,7 @@ function ExampleMobileDApp({ Component, pageProps }: AppProps) {
     return (
         <ThemeProvider theme={theme}>
             <SnackbarProvider autoHideDuration={10000}>
-                <ConnectionProvider endpoint={DEVNET_ENDPOINT}>
+                <ConnectionProvider endpoint={ENDPOINT}>
                     <WalletProvider wallets={wallets}>
                         <Component {...pageProps} />
                     </WalletProvider>

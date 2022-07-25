@@ -26,8 +26,9 @@ public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityReques
             @Nullable Uri identityUri,
             @Nullable Uri iconUri,
             @NonNull byte[] authorizationScope,
-            @NonNull byte[] publicKey) {
-        super(request, identityName, identityUri, iconUri, authorizationScope);
+            @NonNull byte[] publicKey,
+            @NonNull String cluster) {
+        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
         mRequest = request;
         mPublicKey = publicKey;
     }
@@ -46,11 +47,6 @@ public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityReques
     @NonNull
     public CommitmentLevel getCommitmentLevel() {
         return mRequest.commitmentLevel;
-    }
-
-    @Nullable
-    public String getCluster() {
-        return mRequest.cluster;
     }
 
     public boolean getSkipPreflight() {

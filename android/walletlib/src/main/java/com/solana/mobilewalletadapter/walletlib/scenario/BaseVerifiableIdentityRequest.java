@@ -24,18 +24,23 @@ import java.util.concurrent.Future;
     protected final Uri mIconUri;
 
     @NonNull
+    protected final String mCluster;
+
+    @NonNull
     protected final byte[] mAuthorizationScope;
 
     protected BaseVerifiableIdentityRequest(@NonNull Future<?> request,
                                             @Nullable String identityName,
                                             @Nullable Uri identityUri,
                                             @Nullable Uri iconUri,
+                                            @NonNull String cluster,
                                             @NonNull byte[] authorizationScope) {
         super(request);
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;
         mAuthorizationScope = authorizationScope;
+        mCluster = cluster;
     }
 
     @Nullable
@@ -51,6 +56,11 @@ import java.util.concurrent.Future;
     @Nullable
     public Uri getIconRelativeUri() {
         return mIconUri;
+    }
+
+    @NonNull
+    public String getCluster() {
+        return mCluster;
     }
 
     @NonNull

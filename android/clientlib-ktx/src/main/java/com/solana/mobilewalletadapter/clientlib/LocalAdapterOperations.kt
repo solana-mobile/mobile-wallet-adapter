@@ -16,10 +16,10 @@ class LocalAdapterOperations(
 
     var client: MobileWalletAdapterClient? = null
 
-    override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): MobileWalletAdapterClient.AuthorizeResult {
+    override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster): MobileWalletAdapterClient.AuthorizeResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.authorize(identityUri, iconUri, identityName)?.get()
+            client?.authorize(identityUri, iconUri, identityName, rpcCluster.name)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
@@ -70,7 +70,6 @@ class LocalAdapterOperations(
             client?.signAndSendTransactions(
                 transactions,
                 params.commitmentLevel,
-                params.cluster.name,
                 params.skipPreflight,
                 params.preflightCommitment
             )?.get()

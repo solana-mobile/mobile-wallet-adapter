@@ -50,7 +50,7 @@ export type WalletAssociationConfig = Readonly<{
 }>;
 
 export interface AuthorizeAPI {
-    authorize(params: { identity: AppIdentity }): Promise<AuthorizationResult>;
+    authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
     cloneAuthorization(params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
@@ -73,7 +73,6 @@ export interface SignTransactionsAPI {
 }
 export interface SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        cluster: Cluster;
         commitment: Finality;
         payloads: Base64EncodedTransaction[];
         preflight_commitment: Finality;

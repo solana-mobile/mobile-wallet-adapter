@@ -24,8 +24,9 @@ public abstract class SignPayloadsRequest extends BaseVerifiableIdentityRequest 
                                   @Nullable Uri identityUri,
                                   @Nullable Uri iconUri,
                                   @NonNull byte[] authorizationScope,
-                                  @NonNull byte[] publicKey) {
-        super(request, identityName, identityUri, iconUri, authorizationScope);
+                                  @NonNull byte[] publicKey,
+                                  @NonNull String cluster) {
+        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
         mRequest = request;
         mPublicKey = publicKey;
     }

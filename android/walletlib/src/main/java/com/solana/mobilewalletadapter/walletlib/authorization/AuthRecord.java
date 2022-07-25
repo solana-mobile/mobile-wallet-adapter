@@ -27,6 +27,9 @@ public class AuthRecord {
     public final byte[] publicKey;
 
     @NonNull
+    public final String cluster;
+
+    @NonNull
     public final byte[] scope;
 
     /*package*/ final int publicKeyId;
@@ -36,6 +39,7 @@ public class AuthRecord {
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
                            @NonNull byte[] publicKey,
+                           @NonNull String cluster,
                            @NonNull byte[] scope,
                            @IntRange(from = 1) int publicKeyId,
                            @IntRange(from = 0) long issued,
@@ -45,6 +49,7 @@ public class AuthRecord {
         this.id = id;
         this.identity = identity;
         this.publicKey = publicKey;
+        this.cluster = cluster;
         this.scope = scope;
         this.publicKeyId = publicKeyId;
         this.issued = issued;
@@ -88,6 +93,7 @@ public class AuthRecord {
                 "id=" + id +
                 ", identity=" + identity +
                 ", publicKey=" + Arrays.toString(publicKey) +
+                ", cluster='" + cluster + '\'' +
                 ", scope=" + Arrays.toString(scope) +
                 ", issued=" + issued +
                 ", expires=" + expires +

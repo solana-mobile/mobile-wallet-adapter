@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.common;
 public class ProtocolContract {
     public static final String METHOD_AUTHORIZE = "authorize";
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY
+    public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
     // METHOD_AUTHORIZE returns a RESULT_AUTH_TOKEN
     // METHOD_AUTHORIZE returns a RESULT_ADDRESSES
     // METHOD_AUTHORIZE returns an optional RESULT_WALLET_URI_BASE
@@ -35,7 +36,6 @@ public class ProtocolContract {
     public static final String METHOD_SIGN_AND_SEND_TRANSACTIONS = "sign_and_send_transactions";
     // METHOD_SIGN_AND_SEND_TRANSACTIONS takes a PARAMETER_PAYLOADS
     public static final String PARAMETER_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values)
-    public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
     public static final String PARAMETER_SKIP_PREFLIGHT = "skip_preflight"; // type: Boolean
     public static final String PARAMETER_PREFLIGHT_COMMITMENT = "preflight_commitment"; // type: String (one of the COMMITMENT_* values)
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base64-encoded payload signatures)

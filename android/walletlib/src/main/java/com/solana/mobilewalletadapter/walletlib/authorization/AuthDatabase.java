@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 
 /*package*/ class AuthDatabase extends SQLiteOpenHelper {
     private static final String DATABASE_NAME_SUFFIX = "-solana-wallet-lib-auth.db";
-    private static final int DATABASE_SCHEMA_VERSION = 2;
+    private static final int DATABASE_SCHEMA_VERSION = 3;
 
     /*package*/ static final String TABLE_IDENTITIES = "identities";
     /*package*/ static final String COLUMN_IDENTITIES_ID = "id"; // type: int
@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
     /*package*/ static final String COLUMN_AUTHORIZATIONS_ISSUED = "issued"; // type: long
     /*package*/ static final String COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID = "public_key_id"; // type: long
     /*package*/ static final String COLUMN_AUTHORIZATIONS_SCOPE = "scope"; // type: byte[]
+    /*package*/ static final String COLUMN_AUTHORIZATIONS_CLUSTER = "cluster"; // type: String
 
     /*package*/ static final String TABLE_PUBLIC_KEYS = "public_keys";
     /*package*/ static final String COLUMN_PUBLIC_KEYS_ID = "id"; // type: long
@@ -47,7 +48,8 @@ import androidx.annotation.NonNull;
                     COLUMN_AUTHORIZATIONS_IDENTITY_ID + " INTEGER NOT NULL," +
                     COLUMN_AUTHORIZATIONS_ISSUED + " INTEGER NOT NULL," +
                     COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID + " INTEGER NOT NULL," +
-                    COLUMN_AUTHORIZATIONS_SCOPE + " BLOB NOT NULL)";
+                    COLUMN_AUTHORIZATIONS_SCOPE + " BLOB NOT NULL," +
+                    COLUMN_AUTHORIZATIONS_CLUSTER + " TEXT NOT NULL)";
     private static final String CREATE_TABLE_PUBLIC_KEYS =
             "CREATE TABLE " + TABLE_PUBLIC_KEYS + " (" +
                     COLUMN_PUBLIC_KEYS_ID + " INTEGER NOT NULL PRIMARY KEY," +

@@ -17,8 +17,9 @@ public class SignTransactionsRequest extends SignPayloadsRequest {
                                         @Nullable Uri identityUri,
                                         @Nullable Uri iconUri,
                                         @NonNull byte[] authorizationScope,
-                                        @NonNull byte[] publicKey) {
-        super(request, identityName, identityUri, iconUri, authorizationScope, publicKey);
+                                        @NonNull byte[] publicKey,
+                                        @NonNull String cluster) {
+        super(request, identityName, identityUri, iconUri, authorizationScope, publicKey, cluster);
         if (request.type != MobileWalletAdapterServer.SignPayloadsRequest.Type.Transaction) {
             throw new IllegalArgumentException("request should be a Transaction");
         }

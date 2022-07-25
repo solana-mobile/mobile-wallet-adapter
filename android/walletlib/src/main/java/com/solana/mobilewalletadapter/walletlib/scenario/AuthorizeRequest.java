@@ -26,15 +26,20 @@ public class AuthorizeRequest extends BaseScenarioRequest {
     @Nullable
     protected final Uri mIconUri;
 
+    @NonNull
+    protected final String mCluster;
+
     /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
                                  @Nullable String identityName,
                                  @Nullable Uri identityUri,
-                                 @Nullable Uri iconUri) {
+                                 @Nullable Uri iconUri,
+                                 @NonNull String cluster) {
         super(request);
         mRequest = request;
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;
+        mCluster = cluster;
     }
 
     @Nullable
@@ -50,6 +55,11 @@ public class AuthorizeRequest extends BaseScenarioRequest {
     @Nullable
     public Uri getIconRelativeUri() {
         return mIconUri;
+    }
+
+    @NonNull
+    public String getCluster() {
+        return mCluster;
     }
 
     public void completeWithAuthorize(@NonNull byte[] publicKey,
