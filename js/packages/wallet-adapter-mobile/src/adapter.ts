@@ -136,12 +136,6 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                         identity: this._appIdentity,
                     });
                     this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                    this.emit(
-                        'connect',
-                        // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        this.publicKey!,
-                    );
                 });
             } catch (e) {
                 throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
@@ -152,8 +146,17 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
+        const didPublicKeyChange = this._authorizationResult?.addresses[0] !== authorizationResult.addresses[0]; // TODO(#44): support multiple addresses
         this._authorizationResult = authorizationResult;
-        delete this._publicKey;
+        if (didPublicKeyChange) {
+            delete this._publicKey;
+            this.emit(
+                'connect',
+                // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                this.publicKey!,
+            );
+        }
         await this._authorizationResultCache.set(authorizationResult);
     }
 
