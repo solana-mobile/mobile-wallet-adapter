@@ -92,6 +92,7 @@ export default function useAuthorization() {
         return data.publicKey;
       } else {
         const authorizationResult = await wallet.authorize({
+          cluster: 'devnet',
           identity: APP_IDENTITY,
         });
         setAuthorization(authorizationResult);
