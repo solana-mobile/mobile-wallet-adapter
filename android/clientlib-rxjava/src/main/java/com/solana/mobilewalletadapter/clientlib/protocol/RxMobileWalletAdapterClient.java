@@ -8,11 +8,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizeFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizeResult;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationFuture;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.DeauthorizeFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeFuture;
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.ReauthorizeResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsFuture;
@@ -37,13 +35,13 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<AuthorizeResult> authorize(@Nullable Uri identityUri,
-                                             @Nullable Uri iconUri,
-                                             @Nullable String identityName,
-                                             @Nullable String cluster) {
+    public Single<AuthorizationResult> authorize(@Nullable Uri identityUri,
+                                                 @Nullable Uri iconUri,
+                                                 @Nullable String identityName,
+                                                 @Nullable String cluster) {
         try {
-            AuthorizeFuture authorizeFuture = mMobileWalletAdapterClient.authorize(identityUri, iconUri, identityName, cluster);
-            return Single.fromFuture(authorizeFuture);
+            AuthorizationFuture authorizationFuture = mMobileWalletAdapterClient.authorize(identityUri, iconUri, identityName, cluster);
+            return Single.fromFuture(authorizationFuture);
         } catch (Exception e) {
             return Single.error(e);
         }
@@ -51,12 +49,12 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<ReauthorizeResult> reauthorize(@Nullable Uri identityUri,
-                                                 @Nullable Uri iconUri,
-                                                 @Nullable String identityName,
-                                                 @NonNull String authToken) {
+    public Single<AuthorizationResult> reauthorize(@Nullable Uri identityUri,
+                                                   @Nullable Uri iconUri,
+                                                   @Nullable String identityName,
+                                                   @NonNull String authToken) {
         try {
-            ReauthorizeFuture reauthorizeFuture = mMobileWalletAdapterClient.reauthorize(identityUri, iconUri, identityName, authToken);
+            AuthorizationFuture reauthorizeFuture = mMobileWalletAdapterClient.reauthorize(identityUri, iconUri, identityName, authToken);
             return Single.fromFuture(reauthorizeFuture);
         } catch (Exception e) {
             return Single.error(e);

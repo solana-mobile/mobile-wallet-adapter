@@ -121,38 +121,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     // =============================================================================================
-    // authorize
+    // authorize/reauthorize shared types
     // =============================================================================================
 
-    @NonNull
-    public AuthorizeFuture authorize(@Nullable Uri identityUri,
-                                     @Nullable Uri iconUri,
-                                     @Nullable String identityName,
-                                     @Nullable String cluster)
-            throws IOException {
-        if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
-            throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
-        } else if (iconUri != null && !iconUri.isRelative()) {
-            throw new IllegalArgumentException("If non-null, iconRelativeUri must be a relative Uri");
-        }
-
-        final JSONObject authorize;
-        try {
-            final JSONObject identity = new JSONObject();
-            identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
-            identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
-            identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
-            authorize = new JSONObject();
-            authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
-            authorize.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
-        }
-
-        return new AuthorizeFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
-    }
-
-    public static class AuthorizeResult {
+    public static class AuthorizationResult {
         @NonNull
         public final String authToken;
         @NonNull
@@ -160,9 +132,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @Nullable
         public final Uri walletUriBase;
 
-        private AuthorizeResult(@NonNull String authToken,
-                                @NonNull byte[] publicKey,
-                                @Nullable Uri walletUriBase) {
+        private AuthorizationResult(@NonNull String authToken,
+                                    @NonNull byte[] publicKey,
+                                    @Nullable Uri walletUriBase) {
             this.authToken = authToken;
             this.publicKey = publicKey;
             this.walletUriBase = walletUriBase;
@@ -171,7 +143,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @NonNull
         @Override
         public String toString() {
-            return "AuthorizeResult{" +
+            return "AuthorizationResult{" +
                     "authToken=<REDACTED>" +
                     ", publicKey=" + Arrays.toString(publicKey) +
                     ", walletUriBase=" + walletUriBase +
@@ -179,16 +151,16 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
     }
 
-    public static class AuthorizeFuture
-            extends JsonRpc20MethodResultFuture<AuthorizeResult>
-            implements NotifyOnCompleteFuture<AuthorizeResult> {
-        private AuthorizeFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+    public static class AuthorizationFuture
+            extends JsonRpc20MethodResultFuture<AuthorizationResult>
+            implements NotifyOnCompleteFuture<AuthorizationResult> {
+        private AuthorizationFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
             super(methodCallFuture);
         }
 
         @NonNull
         @Override
-        protected AuthorizeResult processResult(@Nullable Object o)
+        protected AuthorizationResult processResult(@Nullable Object o)
                 throws JsonRpc20InvalidResponseException {
             if (!(o instanceof JSONObject)) {
                 throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
@@ -215,14 +187,46 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final String walletUriBaseStr = jo.has(ProtocolContract.RESULT_WALLET_URI_BASE) ?
                     jo.optString(ProtocolContract.RESULT_WALLET_URI_BASE) : null;
 
-            return new AuthorizeResult(authToken, publicKey,
+            return new AuthorizationResult(authToken, publicKey,
                     (walletUriBaseStr != null) ? Uri.parse(walletUriBaseStr) : null);
         }
 
         @Override
-        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<AuthorizeResult>> cb) {
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<AuthorizationResult>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
+    }
+
+    // =============================================================================================
+    // authorize (shares AuthorizeFuture and AuthorizeResult with reauthorize)
+    // =============================================================================================
+
+    @NonNull
+    public AuthorizationFuture authorize(@Nullable Uri identityUri,
+                                         @Nullable Uri iconUri,
+                                         @Nullable String identityName,
+                                         @Nullable String cluster)
+            throws IOException {
+        if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
+            throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
+        } else if (iconUri != null && !iconUri.isRelative()) {
+            throw new IllegalArgumentException("If non-null, iconRelativeUri must be a relative Uri");
+        }
+
+        final JSONObject authorize;
+        try {
+            final JSONObject identity = new JSONObject();
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
+            authorize = new JSONObject();
+            authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
+            authorize.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
+        }
+
+        return new AuthorizationFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
     }
 
     // =============================================================================================
@@ -230,10 +234,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public ReauthorizeFuture reauthorize(@Nullable Uri identityUri,
-                                         @Nullable Uri iconUri,
-                                         @Nullable String identityName,
-                                         @NonNull String authToken)
+    public AuthorizationFuture reauthorize(@Nullable Uri identityUri,
+                                           @Nullable Uri iconUri,
+                                           @Nullable String identityName,
+                                           @NonNull String authToken)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -254,55 +258,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             throw new UnsupportedOperationException("Failed to create reauthorize JSON params", e);
         }
 
-        return new ReauthorizeFuture(methodCall(ProtocolContract.METHOD_REAUTHORIZE, reauthorize, mClientTimeoutMs));
-    }
-
-    public static class ReauthorizeResult {
-        @NonNull
-        public final String authToken;
-
-        private ReauthorizeResult(@NonNull String authToken) {
-            this.authToken = authToken;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "ReauthorizeResult{authToken='<REDACTED>'}";
-        }
-    }
-
-    public static class ReauthorizeFuture
-            extends JsonRpc20MethodResultFuture<ReauthorizeResult>
-            implements NotifyOnCompleteFuture<ReauthorizeResult> {
-        private ReauthorizeFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
-            super(methodCallFuture);
-        }
-
-        @NonNull
-        @Override
-        protected ReauthorizeResult processResult(@Nullable Object o)
-                throws JsonRpc20InvalidResponseException {
-            if (!(o instanceof JSONObject)) {
-                throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
-            }
-
-            final JSONObject jo = (JSONObject) o;
-
-            final String authToken;
-            try {
-                authToken = jo.getString(ProtocolContract.RESULT_AUTH_TOKEN);
-            } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException("expected an auth_token");
-            }
-
-            return new ReauthorizeResult(authToken);
-        }
-
-        @Override
-        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<ReauthorizeResult>> cb) {
-            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
-        }
+        return new AuthorizationFuture(methodCall(ProtocolContract.METHOD_REAUTHORIZE, reauthorize, mClientTimeoutMs));
     }
 
     // =============================================================================================

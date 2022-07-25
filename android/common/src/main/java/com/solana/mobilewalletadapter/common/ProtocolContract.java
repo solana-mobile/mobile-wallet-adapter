@@ -19,6 +19,8 @@ public class ProtocolContract {
     // METHOD_REAUTHORIZE takes an optional PARAMETER_IDENTITY
     // METHOD_REAUTHORIZE takes a PARAMETER_AUTH_TOKEN
     // METHOD_REAUTHORIZE returns a RESULT_AUTH_TOKEN
+    // METHOD_REAUTHORIZE returns a RESULT_ADDRESSES
+    // METHOD_REAUTHORIZE returns an optional RESULT_WALLET_URI_BASE
 
     public static final String METHOD_CLONE_AUTHORIZATION = "clone_authorization";
     // METHOD_CLONE_AUTHORIZATION returns a RESULT_AUTH_TOKEN
