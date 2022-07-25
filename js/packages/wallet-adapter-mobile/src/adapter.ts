@@ -75,10 +75,14 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     get publicKey(): PublicKey | null {
         if (this._publicKey == null && this._authorizationResult != null) {
-            this._publicKey = getPublicKeyFromAddress(
-                // TODO(#44): support multiple addresses
-                this._authorizationResult.addresses[0],
-            );
+            try {
+                this._publicKey = getPublicKeyFromAddress(
+                    // TODO(#44): support multiple addresses
+                    this._authorizationResult.addresses[0],
+                );
+            } catch (e) {
+                throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
+            }
         }
         return this._publicKey ? this._publicKey : null;
     }
@@ -127,23 +131,11 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             }
             try {
                 await this.transact(async (wallet) => {
-                    const { addresses, auth_token, wallet_uri_base } = await wallet.authorize({
+                    const authorizationResult = await wallet.authorize({
                         cluster: this._cluster,
                         identity: this._appIdentity,
                     });
-                    try {
-                        this._publicKey = getPublicKeyFromAddress(
-                            // TODO(#44): support multiple addresses
-                            addresses[0],
-                        );
-                    } catch (e) {
-                        throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
-                    }
-                    this.handleAuthorizationResult({
-                        addresses,
-                        auth_token,
-                        wallet_uri_base: wallet_uri_base,
-                    }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                     this.emit(
                         'connect',
                         // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
@@ -161,24 +153,19 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
         this._authorizationResult = authorizationResult;
+        delete this._publicKey;
         await this._authorizationResultCache.set(authorizationResult);
     }
 
     private async performReauthorization(
         wallet: Web3MobileWallet,
         currentAuthorizationResult: AuthorizationResult,
-    ): Promise<AuthToken> {
+    ): Promise<void> {
         try {
-            const { auth_token } = await wallet.reauthorize({
+            const authorizationResult = await wallet.reauthorize({
                 auth_token: currentAuthorizationResult.auth_token,
             });
-            if (currentAuthorizationResult.auth_token !== auth_token) {
-                this.handleAuthorizationResult({
-                    ...currentAuthorizationResult,
-                    auth_token,
-                }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-            }
-            return auth_token;
+            this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         } catch (e) {
             this.disconnect();
             throw new WalletDisconnectedError((e instanceof Error && e?.message) || 'Unknown error', e);

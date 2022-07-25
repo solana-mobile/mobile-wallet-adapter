@@ -59,7 +59,7 @@ export interface DeauthorizeAPI {
     deauthorize(params: { auth_token: AuthToken }): Promise<Readonly<Record<string, never>>>;
 }
 export interface ReauthorizeAPI {
-    reauthorize(params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
+    reauthorize(params: { auth_token: AuthToken }): Promise<AuthorizationResult>;
 }
 export interface SignMessagesAPI {
     signMessages(params: {
