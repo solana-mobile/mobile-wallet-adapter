@@ -16,7 +16,7 @@ class LocalAdapterOperations(
 
     var client: MobileWalletAdapterClient? = null
 
-    override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster): MobileWalletAdapterClient.AuthorizeResult {
+    override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.authorize(identityUri, iconUri, identityName, rpcCluster.name)?.get()
@@ -24,7 +24,7 @@ class LocalAdapterOperations(
         }
     }
 
-    override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.ReauthorizeResult {
+    override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.reauthorize(identityUri, iconUri, identityName, authToken)?.get()

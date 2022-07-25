@@ -271,7 +271,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value.authToken!!
             ).get()
             Log.d(TAG, "Reauthorized: $result")
-            _uiState.update { it.copy(authToken = result.authToken) }
+            _uiState.update {
+                it.copy(
+                    authToken = result.authToken,
+                    publicKey = result.publicKey
+                )
+            }
             reauthorized = true
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
