@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -166,26 +166,31 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>protected <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mCluster">mCluster</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>protected <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mIconUri">mIconUri</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mIdentityName">mIdentityName</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>protected <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mIdentityUri">mIdentityUri</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>protected byte[]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mPublicKey">mPublicKey</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>protected <a href="../protocol/MobileWalletAdapterServer.SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignPayloadsRequest</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mRequest">mRequest</a></span></code></th>
 <td class="colLast">&nbsp;</td>
@@ -210,12 +215,13 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected </code></td>
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignPayloadsRequest,java.lang.String,android.net.Uri,android.net.Uri,byte%5B%5D,byte%5B%5D)">SignPayloadsRequest</a></span>&#8203;(<a href="../protocol/MobileWalletAdapterServer.SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignPayloadsRequest</a>&nbsp;request,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignPayloadsRequest,java.lang.String,android.net.Uri,android.net.Uri,byte%5B%5D,byte%5B%5D,java.lang.String)">SignPayloadsRequest</a></span>&#8203;(<a href="../protocol/MobileWalletAdapterServer.SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignPayloadsRequest</a>&nbsp;request,
                    <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;identityName,
                    <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;identityUri,
                    <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;iconUri,
                    byte[]&nbsp;authorizationScope,
-                   byte[]&nbsp;publicKey)</code></th>
+                   byte[]&nbsp;publicKey,
+                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;cluster)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -272,26 +278,31 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
+<td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCluster()">getCluster</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIconRelativeUri()">getIconRelativeUri</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIdentityName()">getIdentityName</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIdentityUri()">getIdentityUri</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>byte[][]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getPayloads()">getPayloads</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>byte[]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getPublicKey()">getPublicKey</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
@@ -370,6 +381,16 @@ protected final&nbsp;<a href="https://d.android.com/reference/android/net/Uri.ht
 protected final&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a> mIconUri</pre>
 </li>
 </ul>
+<a id="mCluster">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>mCluster</h4>
+<pre>@NonNull
+protected final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> mCluster</pre>
+</li>
+</ul>
 <a id="mAuthorizationScope">
 <!--   -->
 </a>
@@ -390,7 +411,7 @@ protected final&nbsp;byte[] mAuthorizationScope</pre>
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignPayloadsRequest,java.lang.String,android.net.Uri,android.net.Uri,byte[],byte[])">
+<a id="&lt;init&gt;(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignPayloadsRequest,java.lang.String,android.net.Uri,android.net.Uri,byte[],byte[],java.lang.String)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -407,7 +428,9 @@ protected final&nbsp;byte[] mAuthorizationScope</pre>
                               @NonNull
                               byte[]&nbsp;authorizationScope,
                               @NonNull
-                              byte[]&nbsp;publicKey)</pre>
+                              byte[]&nbsp;publicKey,
+                              @NonNull
+                              <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;cluster)</pre>
 </li>
 </ul>
 </li>
@@ -528,6 +551,16 @@ public&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?is-ext
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="VerifiableIdentityRequest.html#getIconRelativeUri()">getIconRelativeUri</a></code>&nbsp;in interface&nbsp;<code><a href="VerifiableIdentityRequest.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">VerifiableIdentityRequest</a></code></dd>
 </dl>
+</li>
+</ul>
+<a id="getCluster()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getCluster</h4>
+<pre class="methodSignature">@NonNull
+public&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;getCluster()</pre>
 </li>
 </ul>
 <a id="getAuthorizationScope()">
