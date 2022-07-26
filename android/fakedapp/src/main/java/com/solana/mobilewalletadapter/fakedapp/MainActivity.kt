@@ -121,6 +121,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.checkIsWalletEndpointAvailable()
+    }
+
     private val intentSender = object : MainViewModel.StartActivityForResultSender {
         @GuardedBy("this")
         private var callback: (() -> Unit)? = null
