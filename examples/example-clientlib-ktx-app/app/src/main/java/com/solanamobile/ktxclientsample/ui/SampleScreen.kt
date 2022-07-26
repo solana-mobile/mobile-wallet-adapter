@@ -37,80 +37,52 @@ fun SampleScreen(
                 textAlign = TextAlign.Center
             )
 
-            Divider(
-                modifier = Modifier.padding(
-                    top = 16.dp,
-                    bottom = 16.dp
-                )
-            )
-
-            var memoText by remember { mutableStateOf("") }
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = memoText,
-                label = { Text("Memo Text") },
-                onValueChange = { memoText = it }
-            )
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                enabled = viewState.isConnected,
-                onClick = { /*TODO*/ }
+            Column(
+                modifier = Modifier.padding(8.dp)
             ) {
-                Text("Record Message")
+                Divider(
+                    modifier = Modifier.padding(
+                        top = 16.dp,
+                        bottom = 16.dp
+                    )
+                )
+
+                var memoText by remember { mutableStateOf("") }
+
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    value = memoText,
+                    label = { Text("Memo Text") },
+                    onValueChange = { memoText = it }
+                )
+
+                Row {
+                    Button(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        enabled = viewState.isConnected,
+                        onClick = { /*TODO*/ }
+                    ) {
+                        Text("Publish Memo")
+                    }
+
+                    OutlinedButton(
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.secondaryVariant
+                        ),
+                        onClick = { /*TODO*/ }
+                    ) {
+                        Text(
+                            text = "?",
+                            color = MaterialTheme.colors.primary
+                        )
+                    }
+                }
             }
         }
-
-//        Button(
-//            modifier = Modifier.fillMaxWidth(),
-//            onClick = {
-//                if (!viewState.isConnected) {
-//                    viewmodel.connectToWallet(intentSender)
-//                } else {
-//                    viewmodel.disconnect(intentSender)
-//                }
-//            }
-//        ) {
-//            Text(
-//                text = if (!viewState.isConnected) "Connect to Wallet" else "Disconnect from Wallet"
-//            )
-//        }
-
-//        Box(
-//            modifier = Modifier
-//                .background(
-//                    if (viewState.isConnected) {
-//                        Color.Green
-//                    } else {
-//                        Color.LightGray
-//                    }
-//                )
-//                .fillMaxWidth()
-//        ) {
-//            Text(
-//                modifier = Modifier
-//                    .fillMaxWidth(),
-//                textAlign = TextAlign.Center,
-//                text = "Address: ${ viewState.userAddress }"
-//            )
-//        }
-
-//        Button(
-//            modifier = Modifier.fillMaxWidth(),
-//            enabled = viewState.isConnected,
-//            onClick = { /*TODO*/ }
-//        ) {
-//            Text("Sign Message")
-//        }
-//
-//        Button(
-//            modifier = Modifier.fillMaxWidth(),
-//            enabled = viewState.isConnected,
-//            onClick = { /*TODO*/ }
-//        ) {
-//            Text("Request Airdrop")
-//        }
 
         Column(
             modifier = Modifier
@@ -119,18 +91,32 @@ fun SampleScreen(
                 .background(MaterialTheme.colors.surface)
                 .padding(8.dp)
         ) {
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    text = "Balance: \u25ce 5",
-                    style = MaterialTheme.typography.h5
+                    text = "Balance: \u25ce",
+                    style = MaterialTheme.typography.h5,
+                )
+
+                Text(
+                    text = "-",
+                    style = MaterialTheme.typography.h5,
                 )
 
                 Spacer(Modifier.weight(1f))
                 
                 Button(
+                    elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.secondaryVariant
+                    ),
                     onClick = { /*TODO*/ }
                 ) {
-                    Text(text = "Add Funds")
+                    Text(
+                        text = "Add Funds",
+                        color = MaterialTheme.colors.primary
+                    )
                 }
             }
 
@@ -141,19 +127,22 @@ fun SampleScreen(
                     tint = Color.Black,
                     modifier = Modifier
                         .size(24.dp)
+                        .padding(end = 8.dp)
                 )
 
                 Text(
-                    text = "8hEeWszgrA2XkRK4GH6zL4Qq5wJBwotwsB6VEweD8YEQ"
+                    text = "8hEeWszgrA2XkRK4GH6zL4Qq5wJBwotwsB6VEweD8YEQ",
+                    maxLines = 1
                 )
             }
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
+                enabled = false,
                 onClick = { /*TODO*/ }
             ) {
                 Text(
-                    text = "Add funds to enable"
+                    text = "Add funds to get started"
                 )
             }
         }
