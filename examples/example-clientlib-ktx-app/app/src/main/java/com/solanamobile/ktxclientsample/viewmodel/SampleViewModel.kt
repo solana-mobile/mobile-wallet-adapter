@@ -32,12 +32,12 @@ class SampleViewModel @Inject constructor(
             walletAdapter.transact(sender) {
                 val result = authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
 
-                _state.update {
-                    _state.value.copy(
-                        isConnected = true,
-                        userAddress = result.publicKey
-                    )
-                }
+//                _state.update {
+//                    _state.value.copy(
+//                        isConnected = true,
+//                        userAddress = result.publicKey
+//                    )
+//                }
             }
         }
     }
