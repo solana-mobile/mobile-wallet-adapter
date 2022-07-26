@@ -41,6 +41,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
 
+    private var isWalletEndpointAvailable = false
+
+    fun checkIsWalletEndpointAvailable() {
+        if (!isWalletEndpointAvailable) {
+            if (LocalAssociationIntentCreator.isWalletEndpointAvailable(getApplication<Application>().packageManager)) {
+                isWalletEndpointAvailable = true
+            } else {
+                showMessage(R.string.msg_no_wallet_found);
+            }
+        }
+    }
+
     fun authorize(sender: StartActivityForResultSender) = viewModelScope.launch {
         val result = localAssociateAndExecute(sender) { client ->
             doAuthorize(client)
