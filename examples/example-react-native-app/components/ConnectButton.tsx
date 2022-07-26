@@ -8,7 +8,7 @@ import useGuardedCallback from '../utils/useGuardedCallback';
 type Props = Readonly<ComponentProps<typeof Button>>;
 
 export default function ConnectButton(props: Props) {
-  const {setAuthorization} = useAuthorization();
+  const {authorizeSession} = useAuthorization();
   const [authorizationInProgress, setAuthorizationInProgress] = useState(false);
   const handleConnectPress = useGuardedCallback(async () => {
     try {
@@ -16,12 +16,9 @@ export default function ConnectButton(props: Props) {
         return;
       }
       setAuthorizationInProgress(true);
-      const authorizationResult = await transact(async walletAPI => {
-        return await walletAPI('authorize', {
-          identity: {name: 'React Native dApp'},
-        });
+      await transact(async wallet => {
+        await authorizeSession(wallet);
       });
-      setAuthorization(authorizationResult);
     } finally {
       setAuthorizationInProgress(false);
     }

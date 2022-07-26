@@ -5,6 +5,7 @@
 package com.solana.mobilewalletadapter.fakedapp
 
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -21,15 +22,12 @@ import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
 import com.solana.mobilewalletadapter.fakedapp.usecase.GetLatestBlockhashUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.RequestAirdropUseCase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
@@ -77,7 +75,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun requestAirdrop() = viewModelScope.launch {
         try {
-            RequestAirdropUseCase(TESTNET_RPC_URI, _uiState.value.publicKeyBase58!!)
+            RequestAirdropUseCase(TESTNET_RPC_URI, _uiState.value.publicKey!!)
             Log.d(TAG, "Airdrop request sent")
             showMessage(R.string.msg_airdrop_request_sent)
         } catch (e: RequestAirdropUseCase.AirdropFailedException) {
@@ -86,12 +84,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signTransaction(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
+    fun signTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
 
         val signedTransactions = localAssociateAndExecute(sender) { client ->
+            val authorized = doReauthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
             val blockhash = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
@@ -99,15 +101,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(numTransactions) {
-                MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
+                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
-            doSignTransaction(client, transactions)
+            doSignTransactions(client, transactions)
         }
 
         if (signedTransactions != null) {
             val verified = signedTransactions.map { txn ->
                 try {
-                    MemoTransactionUseCase.verify(uiState.value.publicKeyBase58!!, txn)
+                    MemoTransactionUseCase.verify(uiState.value.publicKey!!, txn)
                     true
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -122,33 +124,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun authorizeAndSignTransaction(sender: StartActivityForResultSender) = viewModelScope.launch {
+    fun authorizeAndSignTransactions(sender: StartActivityForResultSender) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
 
         val signedTransactions = localAssociateAndExecute(sender) { client ->
             val authorized = doAuthorize(client)
-            if (authorized) {
-                val blockhash = try {
-                    latestBlockhash.await()
-                } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
-                    Log.e(TAG, "Failed retrieving latest blockhash", e)
-                    return@localAssociateAndExecute null
-                }
-                val transactions = Array(1) {
-                    MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
-                }
-                doSignTransaction(client, transactions)
-            } else {
-                null
+            if (!authorized) {
+                return@localAssociateAndExecute null
             }
+            val blockhash = try {
+                latestBlockhash.await()
+            } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
+                Log.e(TAG, "Failed retrieving latest blockhash", e)
+                return@localAssociateAndExecute null
+            }
+            val transactions = Array(1) {
+                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
+            }
+            doSignTransactions(client, transactions)
         }
 
         if (signedTransactions != null) {
             val verified = signedTransactions.map { txn ->
                 try {
-                    MemoTransactionUseCase.verify(uiState.value.publicKeyBase58!!, txn)
+                    MemoTransactionUseCase.verify(uiState.value.publicKey!!, txn)
                     true
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -163,23 +164,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun signMessage(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
+    fun signMessages(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
         val signedMessages = localAssociateAndExecute(sender) { client ->
+            val authorized = doReauthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
             val messages = Array(numMessages) {
                 Random.nextBytes(16384)
             }
-            doSignMessage(client, messages)
+            doSignMessages(client, messages)
         }
 
         showMessage(if (signedMessages != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
     }
 
-    fun signAndSendTransaction(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
+    fun signAndSendTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
 
         val signatures = localAssociateAndExecute(sender) { client ->
+            val authorized = doReauthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
             val blockhash = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
@@ -187,9 +196,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(numTransactions) {
-                MemoTransactionUseCase.create(uiState.value.publicKeyBase58!!, blockhash)
+                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
-            doSignAndSendTransaction(client, transactions)
+            doSignAndSendTransactions(client, transactions)
         }
 
         showMessage(if (signatures != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
@@ -215,13 +224,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val result = client.authorize(
                 Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
-                "Solana"
+                "Solana",
+                ProtocolContract.CLUSTER_TESTNET
             ).get()
             Log.d(TAG, "Authorized: $result")
             _uiState.update {
                 it.copy(
                     authToken = result.authToken,
-                    publicKeyBase58 = result.publicKey
+                    publicKey = result.publicKey
                 )
             }
             authorized = true
@@ -261,7 +271,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value.authToken!!
             ).get()
             Log.d(TAG, "Reauthorized: $result")
-            _uiState.update { it.copy(authToken = result.authToken) }
+            _uiState.update {
+                it.copy(
+                    authToken = result.authToken,
+                    publicKey = result.publicKey
+                )
+            }
             reauthorized = true
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
@@ -347,93 +362,89 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // NOTE: blocks and waits for completion of remote method call
-    private fun doSignTransaction(
+    private fun doSignTransactions(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
     ): Array<ByteArray>? {
         var signedTransactions: Array<ByteArray>? = null
         try {
-            val result = client.signTransaction(uiState.value.authToken!!, transactions).get()
+            val result = client.signTransactions(transactions).get()
             Log.d(TAG, "Signed transaction(s): $result")
             signedTransactions = result.signedPayloads
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
-                is IOException -> Log.e(TAG, "IO error while sending sign_transaction", cause)
+                is IOException -> Log.e(TAG, "IO error while sending sign_transactions", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_transaction result", cause)
-                is MobileWalletAdapterClient.InvalidPayloadException ->
-                    Log.e(TAG, "Transaction payload invalid", cause)
+                    Log.e(TAG, "Timed out while waiting for sign_transactions result", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException ->
+                    Log.e(TAG, "Transaction payloads invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Authorization invalid, authorization or reauthorization required", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception for sign_transaction", cause)
+                        else -> Log.e(TAG, "Remote exception for sign_transactions", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
-                    Log.e(TAG, "JSON-RPC client exception for sign_transaction", cause)
+                    Log.e(TAG, "JSON-RPC client exception for sign_transactions", cause)
                 else -> throw e
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_transaction request was cancelled", e)
+            Log.e(TAG, "sign_transactions request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "sign_transaction request was interrupted", e)
+            Log.e(TAG, "sign_transactions request was interrupted", e)
         }
 
         return signedTransactions
     }
 
     // NOTE: blocks and waits for completion of remote method call
-    private fun doSignMessage(
+    private fun doSignMessages(
         client: MobileWalletAdapterClient,
         messages: Array<ByteArray>
     ): Array<ByteArray>? {
         var signedMessages: Array<ByteArray>? = null
         try {
-            val result = client.signMessage(uiState.value.authToken!!, messages).get()
+            val result = client.signMessages(messages).get()
             Log.d(TAG, "Signed message(s): $result")
             signedMessages = result.signedPayloads
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
-                is IOException -> Log.e(TAG, "IO error while sending sign_message", cause)
+                is IOException -> Log.e(TAG, "IO error while sending sign_messages", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_message result", cause)
-                is MobileWalletAdapterClient.InvalidPayloadException ->
-                    Log.e(TAG, "Message payload invalid", cause)
+                    Log.e(TAG, "Timed out while waiting for sign_messages result", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException ->
+                    Log.e(TAG, "Message payloads invalid", cause)
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Authorization invalid, authorization or reauthorization required", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception for sign_message", cause)
+                        else -> Log.e(TAG, "Remote exception for sign_messages", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
-                    Log.e(TAG, "JSON-RPC client exception for sign_message", cause)
+                    Log.e(TAG, "JSON-RPC client exception for sign_messages", cause)
                 else -> throw e
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_message request was cancelled", e)
+            Log.e(TAG, "sign_messages request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "sign_message request was interrupted", e)
+            Log.e(TAG, "sign_messages request was interrupted", e)
         }
 
         return signedMessages
     }
 
     // NOTE: blocks and waits for completion of remote method call
-    private fun doSignAndSendTransaction(
+    private fun doSignAndSendTransactions(
         client: MobileWalletAdapterClient,
         transactions: Array<ByteArray>
-    ): Array<String>? {
-        var signatures: Array<String>? = null
+    ): Array<ByteArray>? {
+        var signatures: Array<ByteArray>? = null
         try {
-            val result = client.signAndSendTransaction(
-                uiState.value.authToken!!,
+            val result = client.signAndSendTransactions(
                 transactions,
                 CommitmentLevel.Confirmed,
-                ProtocolContract.CLUSTER_TESTNET,
                 false,
                 CommitmentLevel.Confirmed
             ).get()
@@ -442,30 +453,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
                 is IOException ->
-                    Log.e(TAG, "IO error while sending sign_and_send_transaction", cause)
+                    Log.e(TAG, "IO error while sending sign_and_send_transactions", cause)
                 is TimeoutException ->
-                    Log.e(TAG, "Timed out while waiting for sign_and_send_transaction result", cause)
-                is MobileWalletAdapterClient.InvalidPayloadException ->
-                    Log.e(TAG, "Transaction payload invalid", cause)
+                    Log.e(TAG, "Timed out while waiting for sign_and_send_transactions result", cause)
+                is MobileWalletAdapterClient.InvalidPayloadsException ->
+                    Log.e(TAG, "Transaction payloads invalid", cause)
                 is MobileWalletAdapterClient.NotCommittedException -> {
                     Log.e(TAG, "Commitment not reached for all transactions", cause)
                 }
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {
-                        ProtocolContract.ERROR_REAUTHORIZE -> Log.e(TAG, "Reauthorization required", cause)
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Authorization invalid, authorization or reauthorization required", cause)
                         ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
                         ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception for sign_and_send_transaction", cause)
+                        else -> Log.e(TAG, "Remote exception for sign_and_send_transactions", cause)
                     }
                 is JsonRpc20Client.JsonRpc20Exception ->
-                    Log.e(TAG, "JSON-RPC client exception for sign_and_send_transaction", cause)
+                    Log.e(TAG, "JSON-RPC client exception for sign_and_send_transactions", cause)
                 else -> throw e
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "sign_and_send_transaction request was cancelled", e)
+            Log.e(TAG, "sign_and_send_transactions request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "sign_and_send_transaction request was interrupted", e)
+            Log.e(TAG, "sign_and_send_transactions request was interrupted", e)
         }
 
         return signatures
@@ -475,53 +485,100 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sender: StartActivityForResultSender,
         uriPrefix: Uri? = null,
         action: suspend (MobileWalletAdapterClient) -> T?
-    ): T? {
-        return mobileWalletAdapterClientSem.withPermit {
+    ): T? = coroutineScope {
+        return@coroutineScope mobileWalletAdapterClientSem.withPermit {
             val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
-            sender.startActivityForResult(LocalAssociationIntentCreator.createAssociationIntent(uriPrefix, localAssociation.port, localAssociation.session))
+            val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+                uriPrefix,
+                localAssociation.port,
+                localAssociation.session
+            )
+            try {
+                sender.startActivityForResult(associationIntent) {
+                    viewModelScope.launch {
+                        // Ensure this coroutine will wrap up in a timely fashion when the launched
+                        // activity completes
+                        delay(LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS)
+                        this@coroutineScope.cancel()
+                    }
+                }
+            } catch (e: ActivityNotFoundException) {
+                Log.e(TAG, "Failed to start intent=$associationIntent", e)
+                showMessage(R.string.msg_no_wallet_found)
+                return@withPermit null
+            }
 
             return@withPermit withContext(Dispatchers.IO) {
-                val mobileWalletAdapterClient = try {
+                try {
+                    val mobileWalletAdapterClient = try {
+                        runInterruptible {
+                            localAssociation.start().get(LOCAL_ASSOCIATION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        }
+                    } catch (e: InterruptedException) {
+                        Log.w(TAG, "Interrupted while waiting for local association to be ready")
+                        return@withContext null
+                    } catch (e: TimeoutException) {
+                        Log.e(TAG, "Timed out waiting for local association to be ready")
+                        return@withContext null
+                    } catch (e: ExecutionException) {
+                        Log.e(TAG, "Failed establishing local association with wallet", e.cause)
+                        return@withContext null
+                    } catch (e: CancellationException) {
+                        Log.e(TAG, "Local association was cancelled before connected", e)
+                        return@withContext null
+                    }
+
+                    // NOTE: this is a blocking method call, appropriate in the Dispatchers.IO context
+                    action(mobileWalletAdapterClient)
+                } finally {
                     @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
-                    localAssociation.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                } catch (e: InterruptedException) {
-                    Log.w(TAG, "Interrupted while waiting for local association to be ready")
-                    return@withContext null
-                } catch (e: TimeoutException) {
-                    Log.e(TAG, "Timed out waiting for local association to be ready")
-                    return@withContext null
-                } catch (e: ExecutionException) {
-                    Log.e(TAG, "Failed establishing local association with wallet", e.cause)
-                    return@withContext null
+                    localAssociation.close().get(LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 }
-
-                // NOTE: this is a blocking method call, appropriate in the Dispatchers.IO context
-                val result = action(mobileWalletAdapterClient)
-
-                @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
-                localAssociation.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-
-                result
             }
         }
     }
 
     interface StartActivityForResultSender {
-        fun startActivityForResult(intent: Intent)
+        fun startActivityForResult(intent: Intent, onActivityCompleteCallback: () -> Unit) // throws ActivityNotFoundException
     }
 
     data class UiState(
         val authToken: String? = null,
-        val publicKeyBase58: String? = null,
+        val publicKey: ByteArray? = null,
         val messages: List<String> = emptyList()
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as UiState
+
+            if (authToken != other.authToken) return false
+            if (publicKey != null) {
+                if (other.publicKey == null) return false
+                if (!publicKey.contentEquals(other.publicKey)) return false
+            } else if (other.publicKey != null) return false
+            if (messages != other.messages) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = authToken?.hashCode() ?: 0
+            result = 31 * result + (publicKey?.contentHashCode() ?: 0)
+            result = 31 * result + messages.hashCode()
+            return result
+        }
     }
 
     companion object {
         private val TAG = MainViewModel::class.simpleName
-        private const val ASSOCIATION_TIMEOUT_MS = 10000L
+        private const val LOCAL_ASSOCIATION_START_TIMEOUT_MS = 60000L // LocalAssociationScenario.start() has a shorter timeout; this is just a backup safety measure
+        private const val LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS = 5000L
+        private const val LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS = 5000L
         private val TESTNET_RPC_URI = Uri.parse("https://api.testnet.solana.com")
     }
 }

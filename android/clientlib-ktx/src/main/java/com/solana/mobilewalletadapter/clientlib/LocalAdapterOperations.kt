@@ -16,15 +16,15 @@ class LocalAdapterOperations(
 
     var client: MobileWalletAdapterClient? = null
 
-    override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String): MobileWalletAdapterClient.AuthorizeResult {
+    override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.authorize(identityUri, iconUri, identityName)?.get()
+            client?.authorize(identityUri, iconUri, identityName, rpcCluster.name)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
 
-    override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.ReauthorizeResult {
+    override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.reauthorize(identityUri, iconUri, identityName, authToken)?.get()
@@ -48,30 +48,28 @@ class LocalAdapterOperations(
         }
     }
 
-    override suspend fun signMessage(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadResult {
+    override suspend fun signMessages(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.signMessage(authToken, transactions)?.get()
+            client?.signMessages(transactions)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
 
-    override suspend fun signTransaction(authToken: String, transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadResult {
+    override suspend fun signTransactions(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.signTransaction(authToken, transactions)?.get()
+            client?.signTransactions(transactions)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
 
-    override suspend fun signAndSendTransaction(authToken: String, transactions: Array<ByteArray>, params: TransactionParams): MobileWalletAdapterClient.SignAndSendTransactionResult {
+    override suspend fun signAndSendTransactions(transactions: Array<ByteArray>, params: TransactionParams): MobileWalletAdapterClient.SignAndSendTransactionsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.signAndSendTransaction(
-                authToken,
+            client?.signAndSendTransactions(
                 transactions,
                 params.commitmentLevel,
-                params.cluster.name,
                 params.skipPreflight,
                 params.preflightCommitment
             )?.get()

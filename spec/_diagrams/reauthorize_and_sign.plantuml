@@ -18,7 +18,7 @@ Dapp -> Dapp : <i>t</i> = CreateTransaction(<i>pub</i>, ...)
 
 == Submit for signing with cached auth token ==
 
-Dapp -> Wallet ++-- : sign_transaction {<i>at</i>, <i>t</i>}
+Dapp -> Wallet ++-- : sign_transactions {<i>at</i>, <i>t</i>}
 Wallet -X Wallet : validate auth token <i>at</i>
 Wallet --> Dapp ++-- : error {ERROR_REAUTHORIZE}
 
@@ -37,10 +37,10 @@ Dapp -> Dapp : Store(<i>at2</i>, <i>pub</i>, <i>uri</i>)
 
 == Resubmit for signing with new auth token ==
 
-Dapp -> Wallet ++-- : sign_transaction(<i>at2</i>, <i>t</i>)
+Dapp -> Wallet ++-- : sign_transactions(<i>at2</i>, <i>t</i>)
 Wallet -> Wallet : validate auth token <i>at2</i>
 Wallet -> Wallet : validate transaction <i>t</i>
-Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransaction(<i>t</i>)
+Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransactions(<i>t</i>)
 Wallet --> Dapp ++-- : response(<i>st</i>)
 
 == Submit signed transaction to network ==

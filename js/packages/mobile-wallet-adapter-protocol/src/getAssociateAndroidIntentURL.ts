@@ -1,6 +1,6 @@
 import arrayBufferToBase64String from './arrayBufferToBase64String';
 import { assertAssociationPort } from './associationPort';
-import { SolanaMobileWalletAdapterForbiddenWalletBaseURLError } from './errors';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors';
 import getStringWithURLUnsafeBase64CharactersReplaced from './getStringWithURLUnsafeBase64CharactersReplaced';
 
 const INTENT_NAME = 'solana-wallet';
@@ -22,7 +22,10 @@ function getIntentURL(methodPathname: string, intentUrlBase?: string) {
             baseUrl = new URL(intentUrlBase);
         } catch {} // eslint-disable-line no-empty
         if (baseUrl?.protocol !== 'https:') {
-            throw new SolanaMobileWalletAdapterForbiddenWalletBaseURLError();
+            throw new SolanaMobileWalletAdapterError(
+                SolanaMobileWalletAdapterErrorCode.ERROR_FORBIDDEN_WALLET_BASE_URL,
+                'Base URLs supplied by wallets must be valid `https` URLs',
+            );
         }
     }
     baseUrl ||= new URL(`${INTENT_NAME}:/`);

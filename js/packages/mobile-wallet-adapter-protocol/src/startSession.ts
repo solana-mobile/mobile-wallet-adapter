@@ -1,5 +1,5 @@
 import { AssociationPort, getRandomAssociationPort } from './associationPort';
-import { SolanaMobileWalletAdapterWalletNotInstalledError } from './errors';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors';
 import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL';
 
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
@@ -84,7 +84,10 @@ export async function startSession(
                     assertUnreachable(browser);
             }
         } catch (e) {
-            throw new SolanaMobileWalletAdapterWalletNotInstalledError();
+            throw new SolanaMobileWalletAdapterError(
+                SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
+                'Found no installed wallet that supports the mobile wallet protocol.',
+            );
         }
     }
     return randomAssociationPort;

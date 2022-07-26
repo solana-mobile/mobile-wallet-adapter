@@ -16,6 +16,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
+import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAssociateBinding
 import kotlinx.coroutines.launch
 
@@ -37,14 +38,22 @@ class AssociateFragment : Fragment() {
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 activityViewModel.mobileWalletAdapterServiceEvents.collect { request ->
+                    val navController = findNavController()
+                    // If several events are emitted back-to-back (e.g. during session
+                    // teardown), this fragment may not have had a chance to transition
+                    // lifecycle states. Only navigate if we believe we are still here.
+                    if (navController.currentDestination?.id != R.id.fragment_associate) {
+                        return@collect
+                    }
+
                     when (request) {
                         is MobileWalletAdapterServiceRequest.None ->
                             Unit
                         is MobileWalletAdapterServiceRequest.AuthorizeDapp ->
-                            findNavController().navigate(AssociateFragmentDirections.actionAuthorizeDapp())
-                        is MobileWalletAdapterServiceRequest.SignPayload,
-                        is MobileWalletAdapterServiceRequest.SignAndSendTransaction->
-                            findNavController().navigate(AssociateFragmentDirections.actionSignPayload())
+                            navController.navigate(AssociateFragmentDirections.actionAuthorizeDapp())
+                        is MobileWalletAdapterServiceRequest.SignPayloads,
+                        is MobileWalletAdapterServiceRequest.SignAndSendTransactions ->
+                            navController.navigate(AssociateFragmentDirections.actionSignPayload())
                         is MobileWalletAdapterServiceRequest.SessionTerminated ->
                             Unit
                     }

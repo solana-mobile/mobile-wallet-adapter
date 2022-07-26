@@ -39,74 +39,66 @@ class SignPayloadFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 activityViewModel.mobileWalletAdapterServiceEvents.collect { request ->
                     when (request) {
-                        is MobileWalletAdapterServiceRequest.SignPayload -> {
+                        is MobileWalletAdapterServiceRequest.SignPayloads -> {
                             val res =
-                                if (request is MobileWalletAdapterServiceRequest.SignTransaction) {
-                                    R.string.label_sign_transaction
+                                if (request is MobileWalletAdapterServiceRequest.SignTransactions) {
+                                    R.string.label_sign_transactions
                                 } else {
-                                    R.string.label_sign_message
+                                    R.string.label_sign_messages
                                 }
                             viewBinding.textSignPayloads.setText(res)
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
 
                             viewBinding.btnAuthorize.setOnClickListener {
-                                activityViewModel.signPayloadSimulateSign(request)
+                                activityViewModel.signPayloadsSimulateSign(request)
                             }
 
                             viewBinding.btnDecline.setOnClickListener {
-                                activityViewModel.signPayloadDeclined(request)
-                            }
-
-                            viewBinding.btnSimulateReauthorize.setOnClickListener {
-                                activityViewModel.signPayloadSimulateReauthorizationRequired(request)
+                                activityViewModel.signPayloadsDeclined(request)
                             }
 
                             viewBinding.btnSimulateAuthorizationFailed.setOnClickListener {
-                                activityViewModel.signPayloadSimulateAuthTokenInvalid(request)
+                                activityViewModel.signPayloadsSimulateAuthTokenInvalid(request)
                             }
 
-                            viewBinding.btnSimulateInvalidPayload.setOnClickListener {
-                                activityViewModel.signPayloadSimulateInvalidPayload(request)
+                            viewBinding.btnSimulateInvalidPayloads.setOnClickListener {
+                                activityViewModel.signPayloadsSimulateInvalidPayloads(request)
                             }
 
                             viewBinding.btnSimulateTooManyPayloads.setOnClickListener {
-                                activityViewModel.signPayloadSimulateTooManyPayloads(request)
+                                activityViewModel.signPayloadsSimulateTooManyPayloads(request)
                             }
                         }
-                        is MobileWalletAdapterServiceRequest.SignAndSendTransaction -> {
+                        is MobileWalletAdapterServiceRequest.SignAndSendTransactions -> {
                             request.signatures?.run {
                                 // When signatures are present, move on to sending the transaction
                                 findNavController().navigate(SignPayloadFragmentDirections.actionSendTransaction())
                                 return@collect
                             }
 
-                            viewBinding.textSignPayloads.setText(R.string.label_sign_transaction)
+                            viewBinding.textSignPayloads.setText(R.string.label_sign_transactions)
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
 
                             viewBinding.btnAuthorize.setOnClickListener {
-                                activityViewModel.signAndSendTransactionSimulateSign(request)
+                                activityViewModel.signAndSendTransactionsSimulateSign(request)
                             }
 
                             viewBinding.btnDecline.setOnClickListener {
-                                activityViewModel.signAndSendTransactionDeclined(request)
-                            }
-
-                            viewBinding.btnSimulateReauthorize.setOnClickListener {
-                                activityViewModel.signAndSendTransactionSimulateReauthorizationRequired(request)
+                                activityViewModel.signAndSendTransactionsDeclined(request)
                             }
 
                             viewBinding.btnSimulateAuthorizationFailed.setOnClickListener {
-                                activityViewModel.signAndSendTransactionSimulateAuthTokenInvalid(request)
+                                activityViewModel.signAndSendTransactionsSimulateAuthTokenInvalid(request)
                             }
 
-                            viewBinding.btnSimulateInvalidPayload.setOnClickListener {
-                                activityViewModel.signAndSendTransactionSimulateInvalidPayload(request)
+                            viewBinding.btnSimulateInvalidPayloads.setOnClickListener {
+                                activityViewModel.signAndSendTransactionsSimulateInvalidPayloads(request)
                             }
 
                             viewBinding.btnSimulateTooManyPayloads.setOnClickListener {
-                                activityViewModel.signAndSendTransactionSimulateTooManyPayloads(request)
+                                activityViewModel.signAndSendTransactionsSimulateTooManyPayloads(request)
                             }
                         }
                         else -> {

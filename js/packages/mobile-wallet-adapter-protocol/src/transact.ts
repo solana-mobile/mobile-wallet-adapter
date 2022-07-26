@@ -1,27 +1,30 @@
 import createHelloReq from './createHelloReq';
+import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector';
 import {
-    SolanaMobileWalletAdapterProtocolJsonRpcError,
-    SolanaMobileWalletAdapterProtocolSessionClosedError,
-    SolanaMobileWalletAdapterProtocolSessionEstablishmentError,
-    SolanaMobileWalletAdapterSecureContextRequiredError,
+    SolanaMobileWalletAdapterError,
+    SolanaMobileWalletAdapterErrorCode,
+    SolanaMobileWalletAdapterProtocolError,
 } from './errors';
 import generateAssociationKeypair from './generateAssociationKeypair';
 import generateECDHKeypair from './generateECDHKeypair';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
 import { startSession } from './startSession';
-import { AssociationKeypair, MobileWalletAPI, WalletAssociationConfig } from './types';
+import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
-    maxAttempts: 34,
     /**
      * 300 milliseconds is a generally accepted threshold for what someone
      * would consider an acceptable response time for a user interface
-     * after having performed a low-attention tapping task. We set the
+     * after having performed a low-attention tapping task. We set the initial
      * interval at which we wait for the wallet to set up the websocket at
-     * half this, as per the Nyquist frequency.
+     * half this, as per the Nyquist frequency, with a progressive backoff
+     * sequence from there. The total wait time is 30s, which allows for the
+     * user to be presented with a disambiguation dialog, select a wallet, and
+     * for the wallet app to subsequently start.
      */
-    retryDelayMs: 150,
+    retryDelayScheduleMs: [150, 150, 200, 500, 500, 750, 750, 1000],
+    timeoutMs: 30000,
 } as const;
 const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
 
@@ -38,22 +41,35 @@ type State =
 
 function assertSecureContext() {
     if (typeof window === 'undefined' || window.isSecureContext !== true) {
-        throw new SolanaMobileWalletAdapterSecureContextRequiredError();
+        throw new SolanaMobileWalletAdapterError(
+            SolanaMobileWalletAdapterErrorCode.ERROR_SECURE_CONTEXT_REQUIRED,
+            'The mobile wallet adapter protocol must be used in a secure context (`https`).',
+        );
     }
 }
 
+function getSequenceNumberFromByteArray(byteArray: ArrayBuffer): number {
+    const view = new DataView(byteArray);
+    return view.getUint32(0, /* littleEndian */ false);
+}
+
 export async function transact<TReturn>(
-    callback: (walletAPI: MobileWalletAPI) => TReturn,
+    callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
     const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
+    let connectionStartTime: number;
+    const getNextRetryDelayMs = (() => {
+        const schedule = [...WEBSOCKET_CONNECTION_CONFIG.retryDelayScheduleMs];
+        return () => (schedule.length > 1 ? (schedule.shift() as number) : schedule[0]);
+    })();
     let nextJsonRpcMessageId = 1;
+    let lastKnownInboundSequenceNumber = 0;
     let state: State = { __type: 'disconnected' };
     return new Promise((resolve, reject) => {
-        let attempts = 0;
         let socket: WebSocket;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
@@ -79,17 +95,29 @@ export async function transact<TReturn>(
             if (evt.wasClean) {
                 state = { __type: 'disconnected' };
             } else {
-                reject(new SolanaMobileWalletAdapterProtocolSessionClosedError(evt.code, evt.reason));
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session dropped unexpectedly (${evt.code}: ${evt.reason}).`,
+                        { closeEvent: evt },
+                    ),
+                );
             }
             disposeSocket();
         };
         const handleError = async (_evt: Event) => {
             disposeSocket();
-            if (++attempts >= WEBSOCKET_CONNECTION_CONFIG.maxAttempts) {
-                reject(new SolanaMobileWalletAdapterProtocolSessionEstablishmentError(sessionPort));
+            if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
+                        `Failed to connect to the wallet websocket on port ${sessionPort}.`,
+                    ),
+                );
             } else {
                 await new Promise((resolve) => {
-                    retryWaitTimeoutId = window.setTimeout(resolve, WEBSOCKET_CONNECTION_CONFIG.retryDelayMs);
+                    const retryDelayMs = getNextRetryDelayMs();
+                    retryWaitTimeoutId = window.setTimeout(resolve, retryDelayMs);
                 });
                 attemptSocketConnection();
             }
@@ -99,12 +127,18 @@ export async function transact<TReturn>(
             switch (state.__type) {
                 case 'connected':
                     try {
+                        const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
+                        const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                        if (sequenceNumber <= lastKnownInboundSequenceNumber) {
+                            throw new Error('Encrypted message has invalid sequence number');
+                        }
+                        lastKnownInboundSequenceNumber = sequenceNumber;
                         const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                         const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
                         delete jsonRpcResponsePromises[jsonRpcMessage.id];
                         responsePromise.resolve(jsonRpcMessage.result);
                     } catch (e) {
-                        if (e instanceof SolanaMobileWalletAdapterProtocolJsonRpcError) {
+                        if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                             const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
                             delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                             responsePromise.reject(e);
@@ -120,25 +154,42 @@ export async function transact<TReturn>(
                         state.ecdhPrivateKey,
                     );
                     state = { __type: 'connected', sharedSecret };
-                    const walletAPI: MobileWalletAPI = async (method, params) => {
-                        const id = nextJsonRpcMessageId++;
-                        socket.send(
-                            await encryptJsonRpcMessage(
-                                {
-                                    id,
-                                    jsonrpc: '2.0',
-                                    method,
-                                    params,
-                                },
-                                sharedSecret,
-                            ),
-                        );
-                        return new Promise((resolve, reject) => {
-                            jsonRpcResponsePromises[id] = { resolve, reject };
-                        });
-                    };
+                    const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
+                        get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
+                            if (target[p] == null) {
+                                const method = p
+                                    .toString()
+                                    .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+                                    .toLowerCase();
+                                target[p] = async function (params: Parameters<MobileWallet[TMethodName]>[0]) {
+                                    const id = nextJsonRpcMessageId++;
+                                    socket.send(
+                                        await encryptJsonRpcMessage(
+                                            {
+                                                id,
+                                                jsonrpc: '2.0',
+                                                method,
+                                                params,
+                                            },
+                                            sharedSecret,
+                                        ),
+                                    );
+                                    return new Promise((resolve, reject) => {
+                                        jsonRpcResponsePromises[id] = { resolve, reject };
+                                    });
+                                } as MobileWallet[TMethodName];
+                            }
+                            return target[p];
+                        },
+                        defineProperty() {
+                            return false;
+                        },
+                        deleteProperty() {
+                            return false;
+                        },
+                    });
                     try {
-                        resolve(await callback(walletAPI));
+                        resolve(await callback(wallet));
                     } catch (e) {
                         reject(e);
                     } finally {
@@ -156,6 +207,9 @@ export async function transact<TReturn>(
                 disposeSocket();
             }
             state = { __type: 'connecting', associationKeypair };
+            if (connectionStartTime === undefined) {
+                connectionStartTime = Date.now();
+            }
             socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL]);
             socket.addEventListener('open', handleOpen);
             socket.addEventListener('close', handleClose);

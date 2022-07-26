@@ -19,7 +19,7 @@ import java.net.URL
 
 // Note: this class is for testing purposes only. It does not comprehensively check for error
 // results from the RPC server.
-object SendTransactionUseCase {
+object SendTransactionsUseCase {
     @Suppress("BlockingMethodInNonBlockingContext") // runs in Dispatchers.IO
     suspend operator fun invoke(
         rpcUri: Uri,
@@ -193,7 +193,7 @@ object SendTransactionUseCase {
         }
     }
 
-    private val TAG = SendTransactionUseCase::class.simpleName
+    private val TAG = SendTransactionsUseCase::class.simpleName
     private const val TIMEOUT_MS = 20000
     private const val COMMITMENT_DELAY_MS = 1000L
     private const val COMMITMENT_RETRIES = 10

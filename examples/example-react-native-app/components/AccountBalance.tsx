@@ -2,7 +2,7 @@ import {useConnection} from '@solana/wallet-adapter-react';
 import {LAMPORTS_PER_SOL, PublicKey} from '@solana/web3.js';
 import React, {useCallback, useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Subheading, Text} from 'react-native-paper';
+import {Headline, Text} from 'react-native-paper';
 import useSWR from 'swr';
 
 type Props = Readonly<{
@@ -29,11 +29,11 @@ export default function AccountBalance({publicKey}: Props) {
   );
   return (
     <View style={styles.container}>
-      <Subheading>Balance: </Subheading>
-      <Text style={styles.currencySymbol} variant="titleLarge">
+      <Headline>Balance: </Headline>
+      <Text style={styles.currencySymbol} variant="headlineLarge">
         {'\u25ce'}
       </Text>
-      <Subheading>{balance}</Subheading>
+      <Headline>{balance}</Headline>
     </View>
   );
 }

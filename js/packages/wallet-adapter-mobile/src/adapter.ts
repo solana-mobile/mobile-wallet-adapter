@@ -1,5 +1,10 @@
-import { Web3MobileWalletAPI, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import { AppIdentity, AuthorizationResult, AuthToken } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { Web3MobileWallet, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import {
+    AppIdentity,
+    AuthorizationResult,
+    AuthToken,
+    Base64EncodedAddress,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
@@ -14,7 +19,9 @@ import {
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import { Connection, PublicKey, SendOptions, Transaction, TransactionSignature } from '@solana/web3.js';
+import { toUint8Array } from './base64Utils';
 import getIsSupported from './getIsSupported';
+import { Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -25,6 +32,12 @@ export interface AuthorizationResultCache {
 export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
+
+function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
+    const publicKeyByteArray = toUint8Array(address);
+    return new PublicKey(publicKeyByteArray);
+}
+
 export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     name = SolanaMobileWalletAdapterWalletName;
     url = 'https://solanamobile.com';
@@ -35,13 +48,19 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _authorizationResult: AuthorizationResult | undefined;
     private _authorizationResultCache: AuthorizationResultCache;
     private _connecting = false;
+    private _cluster: Cluster;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
 
-    constructor(config: { appIdentity: AppIdentity; authorizationResultCache: AuthorizationResultCache }) {
+    constructor(config: {
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        cluster: Cluster;
+    }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._appIdentity = config.appIdentity;
+        this._cluster = config.cluster;
         if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
                 if (authorizationResult) {
@@ -56,7 +75,14 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     get publicKey(): PublicKey | null {
         if (this._publicKey == null && this._authorizationResult != null) {
-            this._publicKey = new PublicKey(this._authorizationResult.pub_key);
+            try {
+                this._publicKey = getPublicKeyFromAddress(
+                    // TODO(#44): support multiple addresses
+                    this._authorizationResult.addresses[0],
+                );
+            } catch (e) {
+                throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
+            }
         }
         return this._publicKey ? this._publicKey : null;
     }
@@ -73,79 +99,76 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         return this._readyState;
     }
 
-    async connect(): Promise<void> {
-        if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
-            const err = new WalletNotReadyError();
-            this.emit('error', err);
-            throw err;
-        }
-        this._connecting = true;
-        const cachedAuthorizationResult = await this._authorizationResultCache.get();
-        if (cachedAuthorizationResult) {
-            this._authorizationResult = cachedAuthorizationResult;
-            this._connecting = false;
-            if (this._readyState !== WalletReadyState.Installed) {
-                this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
-            }
-            this.emit(
-                'connect',
-                // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                this.publicKey!,
-            );
-            return;
-        }
+    private async runWithGuard<TReturn>(callback: () => Promise<TReturn>) {
         try {
-            await this.transact(async (walletAPI) => {
-                const {
-                    auth_token,
-                    pub_key: base58PublicKey,
-                    wallet_uri_base,
-                } = await walletAPI('authorize', { identity: this._appIdentity });
-                try {
-                    this._publicKey = new PublicKey(base58PublicKey);
-                } catch (e) {
-                    throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
+            return await callback();
+        } catch (e: any) {
+            this.emit('error', e);
+            throw e;
+        }
+    }
+
+    async connect(): Promise<void> {
+        return await this.runWithGuard(async () => {
+            if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
+                throw new WalletNotReadyError();
+            }
+            this._connecting = true;
+            const cachedAuthorizationResult = await this._authorizationResultCache.get();
+            if (cachedAuthorizationResult) {
+                this._authorizationResult = cachedAuthorizationResult;
+                this._connecting = false;
+                if (this._readyState !== WalletReadyState.Installed) {
+                    this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
                 }
-                this.handleAuthorizationResult({
-                    auth_token,
-                    pub_key: base58PublicKey,
-                    wallet_uri_base: wallet_uri_base,
-                }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.emit(
                     'connect',
                     // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     this.publicKey!,
                 );
-            });
-        } catch (e) {
-            throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
-        } finally {
-            this._connecting = false;
-        }
+                return;
+            }
+            try {
+                await this.transact(async (wallet) => {
+                    const authorizationResult = await wallet.authorize({
+                        cluster: this._cluster,
+                        identity: this._appIdentity,
+                    });
+                    this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                });
+            } catch (e) {
+                throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
+            } finally {
+                this._connecting = false;
+            }
+        });
     }
 
     private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
+        const didPublicKeyChange = this._authorizationResult?.addresses[0] !== authorizationResult.addresses[0]; // TODO(#44): support multiple addresses
         this._authorizationResult = authorizationResult;
+        if (didPublicKeyChange) {
+            delete this._publicKey;
+            this.emit(
+                'connect',
+                // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                this.publicKey!,
+            );
+        }
         await this._authorizationResultCache.set(authorizationResult);
     }
 
     private async performReauthorization(
-        walletAPI: Web3MobileWalletAPI,
+        wallet: Web3MobileWallet,
         currentAuthorizationResult: AuthorizationResult,
-    ): Promise<AuthToken> {
+    ): Promise<void> {
         try {
-            const { auth_token } = await walletAPI('reauthorize', {
+            const authorizationResult = await wallet.reauthorize({
                 auth_token: currentAuthorizationResult.auth_token,
             });
-            if (currentAuthorizationResult.auth_token !== auth_token) {
-                this.handleAuthorizationResult({
-                    ...currentAuthorizationResult,
-                    auth_token,
-                }); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-            }
-            return auth_token;
+            this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         } catch (e) {
             this.disconnect();
             throw new WalletDisconnectedError((e instanceof Error && e?.message) || 'Unknown error', e);
@@ -159,7 +182,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         this.emit('disconnect');
     }
 
-    private async transact<TReturn>(callback: (walletAPI: Web3MobileWalletAPI) => TReturn): Promise<TReturn> {
+    private async transact<TReturn>(callback: (wallet: Web3MobileWallet) => TReturn): Promise<TReturn> {
         const walletUriBase = this._authorizationResult?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         return await transact(callback, config);
@@ -172,23 +195,17 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     private async performSignTransactions(transactions: Transaction[]): Promise<Transaction[]> {
+        const authorizationResult = this.assertIsAuthorized();
         try {
-            const authorizationResult = this.assertIsAuthorized();
-            try {
-                return await this.transact(async (walletAPI) => {
-                    const freshAuthToken = await this.performReauthorization(walletAPI, authorizationResult);
-                    const signedTransactions = await walletAPI('sign_transaction', {
-                        auth_token: freshAuthToken,
-                        transactions,
-                    });
-                    return signedTransactions;
+            return await this.transact(async (wallet) => {
+                await this.performReauthorization(wallet, authorizationResult);
+                const signedTransactions = await wallet.signTransactions({
+                    transactions,
                 });
-            } catch (error: any) {
-                throw new WalletSignTransactionError(error?.message, error);
-            }
+                return signedTransactions;
+            });
         } catch (error: any) {
-            this.emit('error', error);
-            throw error;
+            throw new WalletSignTransactionError(error?.message, error);
         }
     }
 
@@ -197,15 +214,14 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         connection: Connection,
         _options?: SendOptions,
     ): Promise<TransactionSignature> {
-        try {
+        return await this.runWithGuard(async () => {
             const authorizationResult = this.assertIsAuthorized();
             try {
-                return await this.transact(async (walletAPI) => {
-                    const freshAuthToken = await this.performReauthorization(walletAPI, authorizationResult);
-                    const signatures = await walletAPI('sign_and_send_transaction', {
-                        auth_token: freshAuthToken,
-                        fee_payer: this.publicKey || undefined,
+                return await this.transact(async (wallet) => {
+                    await this.performReauthorization(wallet, authorizationResult);
+                    const signatures = await wallet.signAndSendTransactions({
                         connection,
+                        fee_payer: transaction.feePayer,
                         transactions: [transaction],
                     });
                     return signatures[0];
@@ -213,30 +229,30 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             } catch (error: any) {
                 throw new WalletSendTransactionError(error?.message, error);
             }
-        } catch (error: any) {
-            this.emit('error', error);
-            throw error;
-        }
+        });
     }
 
     async signTransaction(transaction: Transaction): Promise<Transaction> {
-        const [signedTransaction] = await this.performSignTransactions([transaction]);
-        return signedTransaction;
+        return await this.runWithGuard(async () => {
+            const [signedTransaction] = await this.performSignTransactions([transaction]);
+            return signedTransaction;
+        });
     }
 
     async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
-        const signedTransactions = await this.performSignTransactions(transactions);
-        return signedTransactions;
+        return await this.runWithGuard(async () => {
+            const signedTransactions = await this.performSignTransactions(transactions);
+            return signedTransactions;
+        });
     }
 
     async signMessage(message: Uint8Array): Promise<Uint8Array> {
-        try {
+        return await this.runWithGuard(async () => {
             const authorizationResult = this.assertIsAuthorized();
             try {
-                return await this.transact(async (walletAPI) => {
-                    const freshAuthToken = await this.performReauthorization(walletAPI, authorizationResult);
-                    const [signedMessage] = await walletAPI('sign_message', {
-                        auth_token: freshAuthToken,
+                return await this.transact(async (wallet) => {
+                    await this.performReauthorization(wallet, authorizationResult);
+                    const [signedMessage] = await wallet.signMessages({
                         payloads: [message],
                     });
                     const signature = signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES);
@@ -245,9 +261,6 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             } catch (error: any) {
                 throw new WalletSignMessageError(error?.message, error);
             }
-        } catch (error: any) {
-            this.emit('error', error);
-            throw error;
-        }
+        });
     }
 }

@@ -9,26 +9,26 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
-import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest {
+public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityRequest {
     @NonNull
-    private final MobileWalletAdapterServer.SignAndSendTransactionRequest mRequest;
+    private final MobileWalletAdapterServer.SignAndSendTransactionsRequest mRequest;
 
     @NonNull
     protected final byte[] mPublicKey;
 
-    /*package*/ SignAndSendTransactionRequest(
-            @NonNull MobileWalletAdapterServer.SignAndSendTransactionRequest request,
+    /*package*/ SignAndSendTransactionsRequest(
+            @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request,
             @Nullable String identityName,
             @Nullable Uri identityUri,
             @Nullable Uri iconUri,
             @NonNull byte[] authorizationScope,
-            @NonNull byte[] publicKey) {
-        super(request, identityName, identityUri, iconUri, authorizationScope);
+            @NonNull byte[] publicKey,
+            @NonNull String cluster) {
+        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
         mRequest = request;
         mPublicKey = publicKey;
     }
@@ -49,11 +49,6 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
         return mRequest.commitmentLevel;
     }
 
-    @Nullable
-    public String getCluster() {
-        return mRequest.cluster;
-    }
-
     public boolean getSkipPreflight() {
         return mRequest.skipPreflight;
     }
@@ -64,7 +59,7 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
     }
 
     public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
-        mRequest.complete(new MobileWalletAdapterServer.SignatureResult(signatures));
+        mRequest.complete(new MobileWalletAdapterServer.SignaturesResult(signatures));
     }
 
     public void completeWithDecline() {
@@ -73,7 +68,7 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
     }
 
     public void completeWithInvalidSignatures(@NonNull @Size(min = 1) boolean[] valid) {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.InvalidPayloadException(
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.InvalidPayloadsException(
                 "One or more invalid payloads provided", valid));
     }
 
@@ -89,15 +84,8 @@ public class SignAndSendTransactionRequest extends BaseVerifiableIdentityRequest
                 "Number of payloads provided for signing exceeds implementation limit"));
     }
 
-    @VisibleForTesting
-    public void completeWithReauthorizationRequired() {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.ReauthorizationRequiredException(
-                "auth_token requires reauthorization"));
-    }
-
-    @VisibleForTesting
-    public void completeWithAuthTokenNotValid() {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.AuthTokenNotValidException(
+    public void completeWithAuthorizationNotValid() {
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.AuthorizationNotValidException(
                 "auth_token not valid for signing of this payload"));
     }
 }

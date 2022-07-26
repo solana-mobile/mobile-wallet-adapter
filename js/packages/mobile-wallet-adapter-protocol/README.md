@@ -1,6 +1,6 @@
 # `@solana-mobile/mobile-wallet-adapter-protocol`
 
-This is a reference implementation of the [Mobile Wallet Adapter specification](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md) in JavaScript. Use this to start a session with a mobile wallet in which you can issue API calls to it (eg. `sign_message`) as per the spec.
+This is a reference implementation of the [Mobile Wallet Adapter specification](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md) in JavaScript. Use this to start a session with a mobile wallet in which you can issue API calls to it (eg. `sign_messages`) as per the spec.
 
 If you are simply looking to integrate a JavaScript application with mobile wallets, see [`@solana-mobile/wallet-adapter-mobile`](https://www.npmjs.com/package/@solana-mobile/wallet-adapter-mobile) instead.
 
@@ -20,7 +20,7 @@ The callback you provide will be called once a session has been established with
 
 ```typescript
 const signedPayloads = await transact(async (wallet) => {
-    const {signed_payloads} = await wallet('sign_message', {
+    const {signed_payloads} = await wallet.signMessages({
         auth_token,
         payloads: [/* ... */],
     });
@@ -38,18 +38,24 @@ You can catch exceptions at any level. See `errors.ts` for a list of exceptions 
 try {
     await transact(async (wallet) => {
         try {
-            await wallet('sign_transaction', /* ... */);
+            await wallet.signTransactions(/* ... */);
         } catch (e) {
-            if (e instanceof SolanaMobileWalletAdapterProtocolReauthorizeError) {
+            if (
+                e instanceof SolanaMobileWalletAdapterProtocolError &&
+                e.code === SolanaMobileWalletAdapterProtocolErrorCode.ERROR_REAUTHORIZE
+            ) {
                 console.error('The auth token has gone stale');
-                await wallet('reauthorize', {auth_token});
+                await wallet.reauthorize({auth_token});
                 // Retry...
             }
             throw e;
         }
     });
 } catch(e) {
-    if (e instanceof SolanaMobileWalletAdapterWalletNotInstalledError) {
+    if (
+        e instanceof SolanaMobileWalletAdapterError &&
+        e.code === SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND
+    ) {
         /* ... */
     }
     throw e;

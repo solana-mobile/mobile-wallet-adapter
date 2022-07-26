@@ -11,6 +11,7 @@ import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import React, {useContext, useState} from 'react';
 import {Linking, StyleSheet, View} from 'react-native';
 import {Button, Dialog, Paragraph, Portal} from 'react-native-paper';
+import {TextEncoder} from 'text-encoding';
 
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
@@ -22,7 +23,7 @@ type Props = Readonly<{
 }>;
 
 export default function RecordMessageButton({children, message}: Props) {
-  const {authorization} = useAuthorization();
+  const {authorizeSession} = useAuthorization();
   const {connection} = useConnection();
   const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =
@@ -32,28 +33,31 @@ export default function RecordMessageButton({children, message}: Props) {
     async (
       messageBuffer: Buffer,
     ): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
-      const memoProgramTransaction = new Transaction({
-        ...(await connection.getLatestBlockhash()),
-        feePayer: authorization!.publicKey,
-      }).add(
-        new TransactionInstruction({
-          data: messageBuffer,
-          keys: [],
-          programId: new PublicKey(
-            'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
-          ),
-        }),
-      );
-      const [signature] = await transact(async walletAPI => {
-        return await walletAPI('sign_and_send_transaction', {
-          auth_token: authorization!.auth_token,
+      const [signature] = await transact(async wallet => {
+        const [publicKey, latestBlockhash] = await Promise.all([
+          authorizeSession(wallet),
+          connection.getLatestBlockhash(),
+        ]);
+        const memoProgramTransaction = new Transaction({
+          ...latestBlockhash,
+          feePayer: publicKey,
+        }).add(
+          new TransactionInstruction({
+            data: messageBuffer,
+            keys: [],
+            programId: new PublicKey(
+              'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
+            ),
+          }),
+        );
+        return await wallet.signAndSendTransactions({
           connection,
           transactions: [memoProgramTransaction],
         });
       });
       return [signature, await connection.confirmTransaction(signature)];
     },
-    [connection],
+    [authorizeSession, connection],
   );
   return (
     <>
@@ -62,13 +66,13 @@ export default function RecordMessageButton({children, message}: Props) {
           disabled={!message}
           loading={recordingInProgress}
           onPress={async () => {
-            if (recordingInProgress || authorization?.publicKey == null) {
+            if (recordingInProgress) {
               return;
             }
             setRecordingInProgress(true);
             try {
               const result = await recordMessageGuarded(
-                new (globalThis as any).TextEncoder().encode(message) as Buffer,
+                new TextEncoder().encode(message) as Buffer,
               );
               if (result) {
                 const [signature, response] = result;

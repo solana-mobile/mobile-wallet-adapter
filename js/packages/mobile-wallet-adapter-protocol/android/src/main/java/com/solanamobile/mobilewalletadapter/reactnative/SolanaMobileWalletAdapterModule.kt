@@ -1,20 +1,21 @@
 package com.solanamobile.mobilewalletadapter.reactnative
 
+import android.content.ActivityNotFoundException
 import android.net.Uri
-import android.os.Looper
 import android.util.Log
 import com.facebook.react.bridge.*
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
-import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solanamobile.mobilewalletadapter.reactnative.JSONSerializationUtils.convertJsonToMap
 import com.solanamobile.mobilewalletadapter.reactnative.JSONSerializationUtils.convertMapToJson
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.Semaphore
 import org.json.JSONObject
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext), CoroutineScope {
@@ -22,7 +23,6 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     data class SessionState(
         val client: MobileWalletAdapterClient,
         val localAssociation: LocalAssociationScenario,
-        val semSessionTermination: Semaphore,
     )
 
     override val coroutineContext =
@@ -46,38 +46,37 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         mutex.lock()
         Log.d(name, "startSession with config $config")
         try {
-            val semConnectedOrFailed = Semaphore(1, 1)
-            val semTerminated = Semaphore(1, 1)
             val uriPrefix = config?.getString("baseUri")?.let { Uri.parse(it) }
-            lateinit var localAssociation: LocalAssociationScenario
-            val scenarioCallbacks = object : Scenario.Callbacks {
-                override fun onScenarioReady(client: MobileWalletAdapterClient) {
-                    sessionState = SessionState(client, localAssociation, semTerminated)
-                    semConnectedOrFailed.release()
-                }
-
-                override fun onScenarioError() = semConnectedOrFailed.release()
-                override fun onScenarioComplete() = semConnectedOrFailed.release()
-                override fun onScenarioTeardownComplete() = semTerminated.release()
-            }
-            localAssociation = LocalAssociationScenario(
-                Looper.getMainLooper(),
-                ASSOCIATION_TIMEOUT_MS,
-                scenarioCallbacks,
-                uriPrefix
+            val localAssociation = LocalAssociationScenario(
+                CLIENT_TIMEOUT_MS,
             )
-            val intent = localAssociation.createAssociationIntent()
+            val intent = LocalAssociationIntentCreator.createAssociationIntent(
+                uriPrefix,
+                localAssociation.port,
+                localAssociation.session
+            )
             currentActivity?.startActivityForResult(intent, 0)
                 ?: throw NullPointerException("Could not find a current activity from which to launch a local association")
-            localAssociation.start()
-            withTimeout(ASSOCIATION_TIMEOUT_MS.toLong()) {
-                semConnectedOrFailed.acquire()
-            }
+            val client =
+                localAssociation.start().get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
+            sessionState = SessionState(client, localAssociation)
             promise.resolve(true)
-        } catch (e: TimeoutCancellationException) {
+        } catch (e: ActivityNotFoundException) {
+            Log.e(name, "Found no installed wallet that supports the mobile wallet protocol", e)
+            cleanup()
+            promise.reject("ERROR_WALLET_NOT_FOUND", e)
+        } catch (e: TimeoutException) {
             Log.e(name, "Timed out waiting for local association to be ready", e)
             cleanup()
             promise.reject("Timed out waiting for local association to be ready", e)
+        } catch (e: InterruptedException) {
+            Log.w(name, "Interrupted while waiting for local association to be ready", e)
+            cleanup()
+            promise.reject(e)
+        } catch (e: ExecutionException) {
+            Log.e(name, "Failed establishing local association with wallet", e.cause)
+            cleanup()
+            promise.reject(e)
         } catch (e: Throwable) {
             Log.e(name, "Failed to start session", e)
             cleanup()
@@ -116,12 +115,10 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
             Log.d(name, "endSession")
             try {
                 it.localAssociation.close()
-                withTimeout(ASSOCIATION_TIMEOUT_MS.toLong()) {
-                    it.semSessionTermination.acquire()
-                }
+                    .get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
                 cleanup()
                 promise.resolve(true)
-            } catch (e: TimeoutCancellationException) {
+            } catch (e: TimeoutException) {
                 Log.e(name, "Timed out waiting for local association to close", e)
                 cleanup()
                 promise.reject("Failed to end session", e)

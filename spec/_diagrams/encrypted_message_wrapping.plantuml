@@ -20,22 +20,28 @@ note over MWA_A, MWA_B : Both endpoints in possession of secret encryption key <
 
 App_A -> MWA_A ++-- : Outgoing JSON-RPC 2.0 message <i>m</i>
 
-MWA_A -> MWA_A : iv = generate 96-bit random IV
-MWA_A -> MWA_A : Encrypt <i>m</i>\n(<i>C_m</i>, <i>tag</i>) = AES-GCM-enc(<i>K</i>, <i>iv</i>, <i>m</i>)
+MWA_A -> MWA_A : <i>seq</i> = ++<i>tx_seq</i>
+MWA_A -> MWA_A : <i>iv</i> = generate 96-bit random IV
+MWA_A -> MWA_A : Encrypt <i>m</i>\n(<i>C_m</i>, <i>tag</i>) = AES-GCM-enc(<i>K</i>, <i>iv</i>, <i>m</i>, <i>seq</i>)
 
-MWA_A --> MWA_B ++-- : {<i>iv</i>, <i>C_m</i>, <i>tag</i>}
+MWA_A --> MWA_B ++-- : {<i>seq</i>, <i>iv</i>, <i>C_m</i>, <i>tag</i>}
 
-MWA_B -> MWA_B : Decrypt <i>C_m</i>\n<i>m</i> = AES-GCM-dec(<i>K</i>, <i>iv</i>, <i>C_m</i>)
+MWA_B -> MWA_B : Validate <i>seq</i> > <i>rx_seq</i>
+MWA_B -> MWA_B : <i>rx_seq</i> = <i>seq</i>
+MWA_B -> MWA_B : Decrypt <i>C_m</i>\n<i>m</i> = AES-GCM-dec(<i>K</i>, <i>iv</i>, <i>C_m</i>, <i>seq</i>)
 MWA_B -> MWA_B : Validate <i>tag</i>
 
 MWA_B -> App_B ++-- : Incoming JSON-RPC 2.0 message <i>m</i>
 
 legend
-| <i>K</i>   | AES-128-GCM secret encryption key                   |
-| <i>m</i>   | Plaintext message                                   |
-| <i>iv</i>  | 96-bit random initialization vector for AES-128-GCM |
-| <i>C_m</i> | Ciphertext of <i>m</i> using AES-128-GCM            |
-| <i>tag</i> | 128-bit AES-GCM tag for <i>m</i>                    |
+| <i>K</i>      | AES-128-GCM secret encryption key                   |
+| <i>m</i>      | Plaintext message                                   |
+| <i>seq</i>    | 32-bit message sequence number (big endian)         |
+| <i>iv</i>     | 96-bit random initialization vector for AES-128-GCM |
+| <i>C_m</i>    | Ciphertext of <i>m</i> using AES-128-GCM            |
+| <i>tag</i>    | 128-bit AES-GCM tag for <i>m</i>                    |
+| <i>tx_seq</i> | Sequence number of the last transmitted message     |
+| <i>rx_seq</i> | Sequence number of the last received message        |
 end legend
 
 @enduml

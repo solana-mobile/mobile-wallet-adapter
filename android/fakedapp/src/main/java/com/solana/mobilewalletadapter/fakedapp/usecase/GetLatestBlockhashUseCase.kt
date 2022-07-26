@@ -33,12 +33,12 @@ object GetLatestBlockhashUseCase {
             if (conn.responseCode != HttpURLConnection.HTTP_OK) {
                 throw GetLatestBlockhashFailedException("Response code=${conn.responseCode}")
             }
-            val blockhash = conn.inputStream.use { inputStream ->
+            val blockhashBase58 = conn.inputStream.use { inputStream ->
                 val response = inputStream.readBytes().toString(StandardCharsets.UTF_8)
                 parseLatestBlockhashResponse(response)
             }
-            Log.d(TAG, "getLatestBlockhash blockhash=$blockhash")
-            Base58DecodeUseCase(blockhash)
+            Log.d(TAG, "getLatestBlockhash blockhash(base58)=$blockhashBase58")
+            Base58DecodeUseCase(blockhashBase58)
         }
     }
 

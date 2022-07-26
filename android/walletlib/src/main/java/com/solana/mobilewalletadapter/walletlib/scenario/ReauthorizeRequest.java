@@ -19,8 +19,9 @@ public class ReauthorizeRequest extends BaseVerifiableIdentityRequest {
                                    @Nullable String identityName,
                                    @Nullable Uri identityUri,
                                    @Nullable Uri iconUri,
+                                   @NonNull String cluster,
                                    @NonNull byte[] authorizationScope) {
-        super(request, identityName, identityUri, iconUri, authorizationScope);
+        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
         mRequest = request;
     }
 

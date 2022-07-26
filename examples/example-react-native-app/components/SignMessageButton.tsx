@@ -1,4 +1,5 @@
 import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import {fromUint8Array} from 'js-base64';
 import React, {useContext, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Button, Dialog, Paragraph, Portal, Text} from 'react-native-paper';
@@ -12,12 +13,8 @@ type Props = Readonly<{
   message: string;
 }>;
 
-function getBase64StringFromByteArray(byteArray: Uint8Array): string {
-  return globalThis.btoa(String.fromCharCode.call(null, ...byteArray));
-}
-
 export default function SignMessageButton({children, message}: Props) {
-  const {authorization} = useAuthorization();
+  const {authorizeSession} = useAuthorization();
   const [previewSignature, setPreviewSignature] = useState<Uint8Array | null>(
     null,
   );
@@ -25,24 +22,24 @@ export default function SignMessageButton({children, message}: Props) {
     useState(false);
   const setSnackbarProps = useContext(SnackbarContext);
   const [signMessageTutorialOpen, setSignMessageTutorialOpen] = useState(false);
-  const signMessageGuarded = useGuardedCallback(async buffer => {
-    const [signature] = await transact(async walletAPI => {
-      return await walletAPI('sign_message', {
-        auth_token: authorization!.auth_token,
-        payloads: [buffer],
+  const signMessageGuarded = useGuardedCallback(
+    async buffer => {
+      const [signature] = await transact(async wallet => {
+        await authorizeSession(wallet);
+        return await wallet.signMessages({
+          payloads: [buffer],
+        });
       });
-    });
-    return signature;
-  }, []);
+      return signature;
+    },
+    [authorizeSession],
+  );
   return (
     <>
       <View style={styles.buttonGroup}>
         <Button
           disabled={!message}
           onPress={async () => {
-            if (authorization?.publicKey == null) {
-              return;
-            }
             const messageBuffer = new Uint8Array(
               message.split('').map(c => c.charCodeAt(0)),
             );
@@ -60,7 +57,7 @@ export default function SignMessageButton({children, message}: Props) {
               });
             }
           }}
-          mode="contained"
+          mode="outlined"
           style={styles.actionButton}>
           {children}
         </Button>
@@ -101,9 +98,7 @@ export default function SignMessageButton({children, message}: Props) {
           <Dialog.Content>
             <Paragraph>
               <Text>
-                {previewSignature
-                  ? getBase64StringFromByteArray(previewSignature)
-                  : null}
+                {previewSignature ? fromUint8Array(previewSignature) : null}
               </Text>
             </Paragraph>
             <Dialog.Actions>

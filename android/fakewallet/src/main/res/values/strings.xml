@@ -14,16 +14,15 @@
     <string name="label_verification_scope">Scope:</string>
 
     <!-- Sign Payload fragment strings -->
-    <string name="label_sign_transaction">Sign transaction(s)</string>
-    <string name="label_sign_message">Sign message(s)</string>
+    <string name="label_sign_transactions">Sign transaction(s)</string>
+    <string name="label_sign_messages">Sign message(s)</string>
     <string name="label_num_txns">Num payloads:</string>
-    <string name="label_simulate_reauthorize">Simulate reauthorization req\'d</string>
     <string name="label_simulate_authorization_failed">Simulate auth token invalid</string>
-    <string name="label_simulate_invalid_payload">Simulate first payload invalid</string>
+    <string name="label_simulate_invalid_payloads">Simulate first payload invalid</string>
     <string name="label_simulate_too_many_payloads">Simulate too many payloads</string>
 
     <!-- Send Transaction fragment strings -->
-    <string name="label_send_transaction">Sending transaction(s)</string>
+    <string name="label_send_transactions">Sending transaction(s)</string>
     <string name="label_desired_commitment">Commitment:</string>
     <string name="label_cluster">Cluster:</string>
     <string name="label_simulate_commitment_reached">Simulate commitment achieved</string>

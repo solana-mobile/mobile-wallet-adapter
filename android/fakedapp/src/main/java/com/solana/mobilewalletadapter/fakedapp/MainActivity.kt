@@ -4,11 +4,11 @@
 
 package com.solana.mobilewalletadapter.fakedapp
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.annotation.GuardedBy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -81,51 +81,77 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {
-            viewModel.signTransaction(intentSender, 1)
+            viewModel.signTransactions(intentSender, 1)
         }
 
         viewBinding.btnSignTxnX3.setOnClickListener {
-            viewModel.signTransaction(intentSender, 3)
+            viewModel.signTransactions(intentSender, 3)
         }
 
         viewBinding.btnSignTxnX20.setOnClickListener {
-            viewModel.signTransaction(intentSender, 20)
+            viewModel.signTransactions(intentSender, 20)
         }
 
         viewBinding.btnAuthorizeSign.setOnClickListener {
-            viewModel.authorizeAndSignTransaction(intentSender)
+            viewModel.authorizeAndSignTransactions(intentSender)
         }
 
         viewBinding.btnSignMsgX1.setOnClickListener {
-            viewModel.signMessage(intentSender, 1)
+            viewModel.signMessages(intentSender, 1)
         }
 
         viewBinding.btnSignMsgX3.setOnClickListener {
-            viewModel.signMessage(intentSender, 3)
+            viewModel.signMessages(intentSender, 3)
         }
 
         viewBinding.btnSignMsgX20.setOnClickListener {
-            viewModel.signMessage(intentSender, 20)
+            viewModel.signMessages(intentSender, 20)
         }
 
         viewBinding.btnSignAndSendTxnX1.setOnClickListener {
-            viewModel.signAndSendTransaction(intentSender, 1)
+            viewModel.signAndSendTransactions(intentSender, 1)
         }
 
         viewBinding.btnSignAndSendTxnX3.setOnClickListener {
-            viewModel.signAndSendTransaction(intentSender, 3)
+            viewModel.signAndSendTransactions(intentSender, 3)
         }
 
         viewBinding.btnSignAndSendTxnX20.setOnClickListener {
-            viewModel.signAndSendTransaction(intentSender, 20)
+            viewModel.signAndSendTransactions(intentSender, 20)
         }
     }
 
     private val intentSender = object : MainViewModel.StartActivityForResultSender {
-        override fun startActivityForResult(intent: Intent) {
-            try {
-                this@MainActivity.startActivityForResult(intent, 0)
-            } catch (_: ActivityNotFoundException) {}
+        @GuardedBy("this")
+        private var callback: (() -> Unit)? = null
+
+        override fun startActivityForResult(
+            intent: Intent,
+            onActivityCompleteCallback: () -> Unit
+        ) {
+            synchronized(this) {
+                check(callback == null) { "Received an activity start request while another is pending" }
+                callback = onActivityCompleteCallback
+            }
+            this@MainActivity.startActivityForResult(intent, WALLET_ACTIVITY_REQUEST_CODE)
         }
+
+        fun onActivityComplete() {
+            synchronized(this) {
+                callback?.let { it() }
+                callback = null
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            WALLET_ACTIVITY_REQUEST_CODE -> intentSender.onActivityComplete()
+        }
+    }
+
+    companion object {
+        private const val WALLET_ACTIVITY_REQUEST_CODE = 1234
     }
 }
