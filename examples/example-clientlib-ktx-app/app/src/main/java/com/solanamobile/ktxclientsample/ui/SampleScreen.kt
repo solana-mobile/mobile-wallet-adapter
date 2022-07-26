@@ -58,6 +58,28 @@ fun SampleScreen(
                     onValueChange = { memoText = it }
                 )
 
+                val openDialog = remember { mutableStateOf(false)  }
+
+                if (openDialog.value) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            openDialog.value = false
+                        },
+                        text = {
+                            Text("Clicking the \"Publish\" button will send a transaction that publishes the text you've typed above onto the Solana Blockchain using the Memo program.")
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    openDialog.value = false
+                                }
+                            ) {
+                                Text("Got it")
+                            }
+                        },
+                    )
+                }
+
                 Row {
                     Button(
                         modifier = Modifier
@@ -73,7 +95,9 @@ fun SampleScreen(
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = MaterialTheme.colors.secondaryVariant
                         ),
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            openDialog.value = true
+                        }
                     ) {
                         Text(
                             text = "?",
