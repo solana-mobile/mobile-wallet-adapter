@@ -85,7 +85,7 @@ fun SampleScreen(
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 8.dp),
-                        enabled = viewState.isConnected,
+                        enabled = viewState.canTransact && memoText.isNotEmpty(),
                         onClick = { /*TODO*/ }
                     ) {
                         Text("Publish Memo")
@@ -124,7 +124,7 @@ fun SampleScreen(
                 )
 
                 Text(
-                    text = "-",
+                    text = if (viewState.canTransact && viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
                     style = MaterialTheme.typography.h5,
                 )
 
@@ -155,7 +155,7 @@ fun SampleScreen(
                 )
 
                 Text(
-                    text = "8hEeWszgrA2XkRK4GH6zL4Qq5wJBwotwsB6VEweD8YEQ",
+                    text = if (viewState.canTransact) viewState.userAddress else "",
                     maxLines = 1
                 )
             }
