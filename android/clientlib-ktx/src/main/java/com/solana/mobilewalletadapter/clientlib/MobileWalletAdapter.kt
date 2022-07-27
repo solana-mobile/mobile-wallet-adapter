@@ -71,6 +71,10 @@ class MobileWalletAdapter(
                     }
                     throw e
                 }
+                is MobileWalletAdapterClient.InsecureWalletEndpointUriException -> {
+                    Log.e(TAG, "Authorization result contained a non-HTTPS wallet base URI", cause)
+                    throw e
+                }
                 is JsonRpc20Client.JsonRpc20Exception -> {
                     Log.e(TAG, "JSON-RPC client exception", cause)
                     throw e

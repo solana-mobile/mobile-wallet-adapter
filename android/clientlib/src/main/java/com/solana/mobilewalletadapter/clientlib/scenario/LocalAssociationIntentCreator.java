@@ -47,8 +47,8 @@ public class LocalAssociationIntentCreator {
     private static Uri createAssociationUri(@Nullable Uri endpointPrefix,
                                             @IntRange(from = 0, to = 65535) int port,
                                             @NonNull String associationToken) {
-        if (endpointPrefix != null && (!endpointPrefix.isAbsolute() || !endpointPrefix.isHierarchical())) {
-            throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute and hierarchical");
+        if (endpointPrefix != null && (!"https".equals(endpointPrefix.getScheme()) || !endpointPrefix.isHierarchical())) {
+            throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute with scheme 'https' and hierarchical");
         }
 
         final Uri.Builder dataUriBuilder;
