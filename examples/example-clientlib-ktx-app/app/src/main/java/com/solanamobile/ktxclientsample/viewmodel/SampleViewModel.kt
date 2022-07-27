@@ -31,31 +31,13 @@ class SampleViewModel @Inject constructor(
         viewModelScope.launch {
             walletAdapter.transact(sender) {
                 val result = authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
-
-
-                //8hEeWszgrA2XkRK4GH6zL4Qq5wJBwotwsB6VEweD8YEQ
-//                _state.update {
-//                    _state.value.copy(
-//                        isConnected = true,
-//                        userAddress = result.publicKey
-//                    )
-//                }
             }
         }
     }
 
     fun disconnect(sender: ActivityResultSender) {
         viewModelScope.launch {
-            walletAdapter.transact(sender) {
-                //deauthorize()
-
-//                _state.update {
-//                    _state.value.copy(
-//                        isConnected = false,
-//                        userAddress = ""
-//                    )
-//                }
-            }
+            walletAdapter.transact(sender) { }
         }
     }
 }
