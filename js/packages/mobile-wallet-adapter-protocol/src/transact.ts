@@ -48,6 +48,24 @@ function assertSecureContext() {
     }
 }
 
+function assertSecureEndpointSpecificURI(walletUriBase: string) {
+    let url: URL;
+    try {
+        url = new URL(walletUriBase);
+    } catch {
+        throw new SolanaMobileWalletAdapterError(
+            SolanaMobileWalletAdapterErrorCode.ERROR_FORBIDDEN_WALLET_BASE_URL,
+            'Invalid base URL supplied by wallet',
+        );
+    }
+    if (url.protocol !== 'https:') {
+        throw new SolanaMobileWalletAdapterError(
+            SolanaMobileWalletAdapterErrorCode.ERROR_FORBIDDEN_WALLET_BASE_URL,
+            'Base URLs supplied by wallets must be valid `https` URLs',
+        );
+    }
+}
+
 function getSequenceNumberFromByteArray(byteArray: ArrayBuffer): number {
     const view = new DataView(byteArray);
     return view.getUint32(0, /* littleEndian */ false);
@@ -175,7 +193,29 @@ export async function transact<TReturn>(
                                         ),
                                     );
                                     return new Promise((resolve, reject) => {
-                                        jsonRpcResponsePromises[id] = { resolve, reject };
+                                        jsonRpcResponsePromises[id] = {
+                                            resolve(result) {
+                                                switch (p) {
+                                                    case 'authorize':
+                                                    case 'reauthorize': {
+                                                        const { wallet_uri_base } = result as Awaited<
+                                                            ReturnType<MobileWallet['authorize' | 'reauthorize']>
+                                                        >;
+                                                        if (wallet_uri_base != null) {
+                                                            try {
+                                                                assertSecureEndpointSpecificURI(wallet_uri_base);
+                                                            } catch (e) {
+                                                                reject(e);
+                                                                return;
+                                                            }
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                                resolve(result);
+                                            },
+                                            reject,
+                                        };
                                     });
                                 } as MobileWallet[TMethodName];
                             }
