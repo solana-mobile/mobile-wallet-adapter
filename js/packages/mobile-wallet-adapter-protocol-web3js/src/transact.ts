@@ -1,6 +1,7 @@
 import { Connection, PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import {
     AuthorizeAPI,
+    Base64EncodedAddress,
     CloneAuthorizationAPI,
     DeauthorizeAPI,
     Finality,
@@ -26,7 +27,7 @@ interface Web3SignTransactionsAPI {
 }
 
 interface Web3SignMessagesAPI {
-    signMessages(params: { payloads: Uint8Array[] }): Promise<Uint8Array[]>;
+    signMessages(params: { address: Base64EncodedAddress; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
 }
 
 export interface Web3MobileWallet

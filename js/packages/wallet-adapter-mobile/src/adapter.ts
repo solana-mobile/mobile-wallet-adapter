@@ -1,5 +1,10 @@
 import { Web3MobileWallet, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import { AppIdentity, AuthorizationResult, Base64EncodedAddress } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {
+    AppIdentity,
+    AuthorizationResult,
+    AuthToken,
+    Base64EncodedAddress,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
@@ -171,13 +176,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         await this._authorizationResultCache.set(authorizationResult);
     }
 
-    private async performReauthorization(
-        wallet: Web3MobileWallet,
-        currentAuthorizationResult: AuthorizationResult,
-    ): Promise<void> {
+    private async performReauthorization(wallet: Web3MobileWallet, authToken: AuthToken): Promise<void> {
         try {
             const authorizationResult = await wallet.reauthorize({
-                auth_token: currentAuthorizationResult.auth_token,
+                auth_token: authToken,
             });
             this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         } catch (e) {
@@ -190,6 +192,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         delete this._authorizationResult;
         delete this._publicKey;
+        delete this._selectedAddress;
         this.emit('disconnect');
     }
 
@@ -199,17 +202,19 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         return await transact(callback, config);
     }
 
-    private assertIsAuthorized(): AuthorizationResult {
-        const authorizationResult = this._authorizationResult;
-        if (!authorizationResult) throw new WalletNotConnectedError();
-        return authorizationResult;
+    private assertIsAuthorized() {
+        if (!this._authorizationResult || !this._selectedAddress) throw new WalletNotConnectedError();
+        return {
+            authToken: this._authorizationResult.auth_token,
+            selectedAddress: this._selectedAddress,
+        };
     }
 
     private async performSignTransactions(transactions: Transaction[]): Promise<Transaction[]> {
-        const authorizationResult = this.assertIsAuthorized();
+        const { authToken } = this.assertIsAuthorized();
         try {
             return await this.transact(async (wallet) => {
-                await this.performReauthorization(wallet, authorizationResult);
+                await this.performReauthorization(wallet, authToken);
                 const signedTransactions = await wallet.signTransactions({
                     transactions,
                 });
@@ -226,10 +231,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         _options?: SendOptions,
     ): Promise<TransactionSignature> {
         return await this.runWithGuard(async () => {
-            const authorizationResult = this.assertIsAuthorized();
+            const { authToken } = this.assertIsAuthorized();
             try {
                 return await this.transact(async (wallet) => {
-                    await this.performReauthorization(wallet, authorizationResult);
+                    await this.performReauthorization(wallet, authToken);
                     const signatures = await wallet.signAndSendTransactions({
                         connection,
                         fee_payer: transaction.feePayer,
@@ -259,11 +264,12 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     async signMessage(message: Uint8Array): Promise<Uint8Array> {
         return await this.runWithGuard(async () => {
-            const authorizationResult = this.assertIsAuthorized();
+            const { authToken, selectedAddress } = this.assertIsAuthorized();
             try {
                 return await this.transact(async (wallet) => {
-                    await this.performReauthorization(wallet, authorizationResult);
+                    await this.performReauthorization(wallet, authToken);
                     const [signedMessage] = await wallet.signMessages({
+                        address: selectedAddress,
                         payloads: [message],
                     });
                     const signature = signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES);
