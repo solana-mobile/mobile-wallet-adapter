@@ -135,7 +135,9 @@ fun SampleScreen(
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.secondaryVariant
                     ),
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        viewmodel.addFunds(intentSender)
+                    }
                 ) {
                     Text(
                         text = "Add Funds",
