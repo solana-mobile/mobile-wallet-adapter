@@ -11,24 +11,30 @@ import {toUint8Array} from 'js-base64';
 import {useCallback} from 'react';
 import useSWR from 'swr';
 
+type Account = Readonly<{
+  address: Base64EncodedAddress;
+  publicKey: PublicKey;
+}>;
+
 const STORAGE_KEY = 'cachedAuthorization';
 
 function getDataFromAuthorizationResult(
   authorizationResult: AuthorizationResult,
 ) {
   return {
+    account: getAccountFromAuthorizationResult(authorizationResult),
     authorization: authorizationResult,
-    publicKey: getPublicKeyFromAuthorizationResult(authorizationResult),
   };
 }
 
-function getPublicKeyFromAuthorizationResult(
+function getAccountFromAuthorizationResult(
   authorizationResult: AuthorizationResult,
-): PublicKey {
-  return getPublicKeyFromAddress(
-    // TODO(#44): support multiple addresses
-    authorizationResult.addresses[0],
-  );
+): Account {
+  const address = authorizationResult.addresses[0]; // TODO(#44): support multiple addresses
+  return {
+    address,
+    publicKey: getPublicKeyFromAddress(address),
+  };
 }
 
 async function authorizationFetcher(storageKey: string) {
@@ -94,7 +100,7 @@ export default function useAuthorization() {
             identity: APP_IDENTITY,
           }));
       setAuthorization(authorizationResult);
-      return getPublicKeyFromAuthorizationResult(authorizationResult);
+      return getAccountFromAuthorizationResult(authorizationResult);
     },
     [data, setAuthorization],
   );
@@ -109,8 +115,8 @@ export default function useAuthorization() {
     [data?.authorization.auth_token, setAuthorization],
   );
   return {
+    account: data?.account ?? null,
     authorizeSession,
     deauthorizeSession,
-    publicKey: data?.publicKey ?? null,
   };
 }

@@ -23,7 +23,7 @@ type Props = Readonly<{
 }>;
 
 export default function RecordMessageButton({children, message}: Props) {
-  const {authorizeSession} = useAuthorization();
+  const {account: selectedAccount, authorizeSession} = useAuthorization();
   const {connection} = useConnection();
   const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =
@@ -34,13 +34,17 @@ export default function RecordMessageButton({children, message}: Props) {
       messageBuffer: Buffer,
     ): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
       const [signature] = await transact(async wallet => {
-        const [publicKey, latestBlockhash] = await Promise.all([
+        const [freshAccount, latestBlockhash] = await Promise.all([
           authorizeSession(wallet),
           connection.getLatestBlockhash(),
         ]);
         const memoProgramTransaction = new Transaction({
           ...latestBlockhash,
-          feePayer: publicKey,
+          feePayer:
+            // Either the public key that was already selected when this method was called...
+            selectedAccount?.publicKey ??
+            // ...or the newly authorized public key.
+            freshAccount.publicKey,
         }).add(
           new TransactionInstruction({
             data: messageBuffer,
@@ -57,7 +61,7 @@ export default function RecordMessageButton({children, message}: Props) {
       });
       return [signature, await connection.confirmTransaction(signature)];
     },
-    [authorizeSession, connection],
+    [authorizeSession, connection, selectedAccount],
   );
   return (
     <>
