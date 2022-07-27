@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":9};
+var data = {"i0":9,"i1":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -159,6 +159,11 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
                        <a href="../protocol/MobileWalletAdapterSession.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterSession</a>&nbsp;session)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>static boolean</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#isWalletEndpointAvailable(android.content.pm.PackageManager)">isWalletEndpointAvailable</a></span>&#8203;(<a href="https://d.android.com/reference/android/content/pm/PackageManager.html?is-external=true" title="class or interface in android.content.pm" class="externalLink">PackageManager</a>&nbsp;pm)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
 </table>
 <ul class="blockList">
 <li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
@@ -186,13 +191,26 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <a id="createAssociationIntent(android.net.Uri,int,com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>createAssociationIntent</h4>
 <pre class="methodSignature">@NonNull
-public static&nbsp;<a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;createAssociationIntent&#8203;(<a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;endpointPrefix,
+public static&nbsp;<a href="https://d.android.com/reference/android/content/Intent.html?is-external=true" title="class or interface in android.content" class="externalLink">Intent</a>&nbsp;createAssociationIntent&#8203;(@Nullable
+                                             <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;endpointPrefix,
+                                             @IntRange(from=0L,to=65535L)
                                              int&nbsp;port,
+                                             @NonNull
                                              <a href="../protocol/MobileWalletAdapterSession.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterSession</a>&nbsp;session)</pre>
+</li>
+</ul>
+<a id="isWalletEndpointAvailable(android.content.pm.PackageManager)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>isWalletEndpointAvailable</h4>
+<pre class="methodSignature">public static&nbsp;boolean&nbsp;isWalletEndpointAvailable&#8203;(@NonNull
+                                                <a href="https://d.android.com/reference/android/content/pm/PackageManager.html?is-external=true" title="class or interface in android.content.pm" class="externalLink">PackageManager</a>&nbsp;pm)</pre>
 </li>
 </ul>
 </li>
