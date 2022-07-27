@@ -3,10 +3,10 @@ package com.solanamobile.ktxclientsample.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.solana.core.PublicKey
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
+import com.solanamobile.web3.core.PublicKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,22 +87,18 @@ class SampleViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val reauthResult = walletAdapter.transact(sender) {
-                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
-            }
-
             //val pubkey = PublicKey(reauthResult.publicKey)
-//            val pubkey = PublicKey(pubkeyBytes)
-//            val acct = Account()
-//
+            val pubkey = PublicKey(pubkeyBytes)
+
 //            val blockHash = solanaRpcUseCase.getLatestBlockHash()
 //
 //            val msg = Message()
-//            msg.setFeePayer(acct)
+//            msg.feePayer = pubkey
 //            msg.addInstruction(MemoProgram.writeUtf8(pubkey, memoText))
 //            msg.setRecentBlockHash(blockHash)
 //
 //            val result = walletAdapter.transact(sender) {
+//                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
 //                signAndSendTransactions(arrayOf(msg.serialize()))
 //            }
 //

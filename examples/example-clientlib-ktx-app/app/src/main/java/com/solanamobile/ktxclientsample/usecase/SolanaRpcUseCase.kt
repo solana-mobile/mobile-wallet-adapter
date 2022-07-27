@@ -4,9 +4,9 @@ import com.solana.Solana
 import com.solana.api.getBalance
 import com.solana.api.getRecentBlockhash
 import com.solana.api.requestAirdrop
-import com.solana.core.PublicKey
 import com.solana.networking.NetworkingRouter
 import com.solana.networking.RPCEndpoint
+import com.solanamobile.web3.core.PublicKey
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -49,7 +49,7 @@ class SolanaRpcUseCase @Inject constructor() {
         }
     }
 
-    suspend fun getSignatureStatus(signature: String): String =
+    private suspend fun getSignatureStatus(signature: String): String =
         withContext(Dispatchers.IO) {
             suspendCoroutine { cont ->
                 val params = mutableListOf<Any>()
