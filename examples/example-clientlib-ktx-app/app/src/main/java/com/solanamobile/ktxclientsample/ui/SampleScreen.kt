@@ -172,7 +172,7 @@ fun SampleScreen(
             ) {
                 Text(
                     color = MaterialTheme.colors.onPrimary,
-                    text = if (viewState.canTransact && viewState.solBalance >= 0) "Disconnect" else "Add funds to get started"
+                    text = if (viewState.canTransact) "Disconnect" else "Add funds to get started"
                 )
             }
         }
