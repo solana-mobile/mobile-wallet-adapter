@@ -1,16 +1,12 @@
 package com.solanamobile.ktxclientsample.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.solana.Solana
-import com.solana.api.requestAirdrop
 import com.solana.core.PublicKey
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
-import com.solana.networking.NetworkingRouter
-import com.solana.networking.RPCEndpoint
+import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +21,8 @@ data class SampleViewState(
 
 @HiltViewModel
 class SampleViewModel @Inject constructor(
-    private val walletAdapter: MobileWalletAdapter
+    private val walletAdapter: MobileWalletAdapter,
+    private val solanaRpcUseCase: SolanaRpcUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow(SampleViewState())
@@ -39,15 +36,6 @@ class SampleViewModel @Inject constructor(
                 val result = authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
 
                 val pubkey = PublicKey(result.publicKey)
-
-                val network = NetworkingRouter(RPCEndpoint.devnetSolana)
-                val solana = Solana(network)
-
-                solana.api.requestAirdrop(pubkey, 100000000) { drop ->
-                    drop.onSuccess {
-                        Log.v("Andrew", "Your drop: $it")
-                    }
-                }
 
 //                _state.update {
 //                    _state.value.copy(
