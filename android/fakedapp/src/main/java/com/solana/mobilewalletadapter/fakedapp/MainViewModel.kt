@@ -41,6 +41,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
 
+    private var isWalletEndpointAvailable = false
+
+    fun checkIsWalletEndpointAvailable() {
+        if (!isWalletEndpointAvailable) {
+            if (LocalAssociationIntentCreator.isWalletEndpointAvailable(getApplication<Application>().packageManager)) {
+                isWalletEndpointAvailable = true
+            } else {
+                showMessage(R.string.msg_no_wallet_found);
+            }
+        }
+    }
+
     fun authorize(sender: StartActivityForResultSender) = viewModelScope.launch {
         val result = localAssociateAndExecute(sender) { client ->
             doAuthorize(client)
@@ -247,6 +259,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         else ->
                             Log.e(TAG, "Remote exception for authorize", cause)
                     }
+                is MobileWalletAdapterClient.InsecureWalletEndpointUriException ->
+                    Log.e(TAG, "authorize result contained a non-HTTPS wallet base URI", e)
                 is JsonRpc20Client.JsonRpc20Exception ->
                     Log.e(TAG, "JSON-RPC client exception for authorize", cause)
                 else -> throw e
@@ -292,6 +306,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         else ->
                             Log.e(TAG, "Remote exception for reauthorize", cause)
                     }
+                is MobileWalletAdapterClient.InsecureWalletEndpointUriException ->
+                    Log.e(TAG, "reauthorize result contained a non-HTTPS wallet base URI", e)
                 is JsonRpc20Client.JsonRpc20Exception ->
                     Log.e(TAG, "JSON-RPC client exception for reauthorize", cause)
                 else -> throw e

@@ -1,10 +1,5 @@
 import { Web3MobileWallet, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import {
-    AppIdentity,
-    AuthorizationResult,
-    AuthToken,
-    Base64EncodedAddress,
-} from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { AppIdentity, AuthorizationResult, Base64EncodedAddress } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
@@ -29,6 +24,10 @@ export interface AuthorizationResultCache {
     set(authorizationResult: AuthorizationResult): Promise<void>;
 }
 
+export interface AddressSelector {
+    select(addresses: Base64EncodedAddress[]): Promise<Base64EncodedAddress>;
+}
+
 export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
@@ -44,6 +43,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     icon =
         'data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjI4IiB3aWR0aD0iMjgiIHZpZXdCb3g9Ii0zIDAgMjggMjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI0RDQjhGRiI+PHBhdGggZD0iTTE3LjQgMTcuNEgxNXYyLjRoMi40di0yLjRabTEuMi05LjZoLTIuNHYyLjRoMi40VjcuOFoiLz48cGF0aCBkPSJNMjEuNiAzVjBoLTIuNHYzaC0zLjZWMGgtMi40djNoLTIuNHY2LjZINC41YTIuMSAyLjEgMCAxIDEgMC00LjJoMi43VjNINC41QTQuNSA0LjUgMCAwIDAgMCA3LjVWMjRoMjEuNnYtNi42aC0yLjR2NC4ySDIuNFYxMS41Yy41LjMgMS4yLjQgMS44LjVoNy41QTYuNiA2LjYgMCAwIDAgMjQgOVYzaC0yLjRabTAgNS43YTQuMiA0LjIgMCAxIDEtOC40IDBWNS40aDguNHYzLjNaIi8+PC9nPjwvc3ZnPg==';
 
+    private _addressSelector: AddressSelector;
     private _appIdentity: AppIdentity;
     private _authorizationResult: AuthorizationResult | undefined;
     private _authorizationResultCache: AuthorizationResultCache;
@@ -51,14 +51,17 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _cluster: Cluster;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
+    private _selectedAddress: Base64EncodedAddress | undefined;
 
     constructor(config: {
+        addressSelector: AddressSelector;
         appIdentity: AppIdentity;
         authorizationResultCache: AuthorizationResultCache;
         cluster: Cluster;
     }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
+        this._addressSelector = config.addressSelector;
         this._appIdentity = config.appIdentity;
         this._cluster = config.cluster;
         if (this._readyState !== WalletReadyState.Unsupported) {
@@ -74,12 +77,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     get publicKey(): PublicKey | null {
-        if (this._publicKey == null && this._authorizationResult != null) {
+        if (this._publicKey == null && this._selectedAddress != null) {
             try {
-                this._publicKey = getPublicKeyFromAddress(
-                    // TODO(#44): support multiple addresses
-                    this._authorizationResult.addresses[0],
-                );
+                this._publicKey = getPublicKeyFromAddress(this._selectedAddress);
             } catch (e) {
                 throw new WalletPublicKeyError((e instanceof Error && e?.message) || 'Unknown error', e);
             }
@@ -121,9 +121,10 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 if (this._readyState !== WalletReadyState.Installed) {
                     this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
                 }
+                this._selectedAddress = await this._addressSelector.select(cachedAuthorizationResult.addresses);
                 this.emit(
                     'connect',
-                    // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
+                    // Having just set `this._selectedAddress`, `this.publicKey` is definitely non-null
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     this.publicKey!,
                 );
@@ -146,16 +147,26 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
-        const didPublicKeyChange = this._authorizationResult?.addresses[0] !== authorizationResult.addresses[0]; // TODO(#44): support multiple addresses
+        const didPublicKeysChange =
+            // Case 1: We started from having no authorization.
+            this._authorizationResult == null ||
+            // Case 2: The number of authorized public keys changed.
+            this._authorizationResult?.addresses.length !== authorizationResult.addresses.length ||
+            // Case 3: The new list of addresses isn't exactly the same as the old list, in the same order.
+            this._authorizationResult.addresses.some((address, ii) => address !== authorizationResult.addresses[ii]);
         this._authorizationResult = authorizationResult;
-        if (didPublicKeyChange) {
-            delete this._publicKey;
-            this.emit(
-                'connect',
-                // Having just set an `authorizationResult`, `this.publicKey` is definitely non-null
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                this.publicKey!,
-            );
+        if (didPublicKeysChange) {
+            const nextSelectedAddress = await this._addressSelector.select(authorizationResult.addresses);
+            if (nextSelectedAddress !== this._selectedAddress) {
+                this._selectedAddress = nextSelectedAddress;
+                delete this._publicKey;
+                this.emit(
+                    'connect',
+                    // Having just set `this._selectedAddress`, `this.publicKey` is definitely non-null
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    this.publicKey!,
+                );
+            }
         }
         await this._authorizationResultCache.set(authorizationResult);
     }

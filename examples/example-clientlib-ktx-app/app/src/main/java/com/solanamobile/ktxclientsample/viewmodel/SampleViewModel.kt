@@ -8,12 +8,12 @@ import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SampleViewState(
-    val isConnected: Boolean = false,
+    val canTransact: Boolean = false,
+    val solBalance: Double = -1.0,
     val userAddress: String = ""
 )
 
@@ -31,29 +31,13 @@ class SampleViewModel @Inject constructor(
         viewModelScope.launch {
             walletAdapter.transact(sender) {
                 val result = authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
-
-                _state.update {
-                    _state.value.copy(
-                        isConnected = true,
-                        userAddress = result.publicKey
-                    )
-                }
             }
         }
     }
 
     fun disconnect(sender: ActivityResultSender) {
         viewModelScope.launch {
-            walletAdapter.transact(sender) {
-                //deauthorize()
-
-                _state.update {
-                    _state.value.copy(
-                        isConnected = false,
-                        userAddress = ""
-                    )
-                }
-            }
+            walletAdapter.transact(sender) { }
         }
     }
 }
