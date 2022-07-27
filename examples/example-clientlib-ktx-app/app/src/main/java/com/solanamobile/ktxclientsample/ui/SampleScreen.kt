@@ -162,11 +162,15 @@ fun SampleScreen(
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = false,
+                enabled = viewState.canTransact,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.Red.copy(red = 0.7f)
+                ),
                 onClick = { /*TODO*/ }
             ) {
                 Text(
-                    text = "Add funds to get started"
+                    color = MaterialTheme.colors.onPrimary,
+                    text = if (viewState.canTransact && viewState.solBalance >= 0) "Disconnect" else "Add funds to get started"
                 )
             }
         }
