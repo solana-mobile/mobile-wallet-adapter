@@ -16,7 +16,7 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-**Version: 0.3.0**
+**Version: 0.3.1**
 
 ## Changelog
 
@@ -26,6 +26,7 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 | 0.2.0   | Updates based on wallet adapter feedback |
 | 0.2.1   | Fix a few missed pluralizations |
 | 0.3.0   | Sessions now track authorization statefully, rather than by providing `auth_token` to each [privileged method](#privileged-methods) |
+| 0.3.1   | Enforce HTTPS for endpoint-specific URIs |
 
 # Non-normative front matter
 
@@ -176,7 +177,7 @@ Dapp endpoints may optionally also support copying the remote URI to the system 
 
 ### Endpoint-specific URIs
 
-During [Session Establishment](#session-establishment), the wallet endpoint may return a URI prefix to use for future association attempts. This is expected to be used with [App Links](https://developer.android.com/training/app-links) or [Universal Links](https://developer.apple.com/ios/universal-links/), to ensure that the desired wallet app is launched by the dapp. If a dapp has been informed of a URI prefix for a wallet, it should use it with the same path elements and parameters provided as for the `solana-wallet:` URI scheme. For e.g., if an Android wallet endpoint handles App Links for solanaexamplewallet.io, it could provide a prefix of:
+During [Session Establishment](#session-establishment), the wallet endpoint may return a URI prefix to use for future association attempts. This is expected to be used with [App Links](https://developer.android.com/training/app-links) or [Universal Links](https://developer.apple.com/ios/universal-links/), to ensure that the desired wallet app is launched by the dapp. A dapp should reject URI prefixes with schemes other than `https:` for security reasons. If a dapp has been informed of a URI prefix for a wallet, it should use it with the same path elements and parameters provided as for the `solana-wallet:` URI scheme. For e.g., if an Android wallet endpoint handles App Links for solanaexamplewallet.io, it could provide a prefix of:
 
 ```
 https://solanaexamplewallet.io/mobilewalletadapter

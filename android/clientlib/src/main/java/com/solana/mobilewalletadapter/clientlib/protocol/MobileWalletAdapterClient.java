@@ -186,15 +186,23 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
             final String walletUriBaseStr = jo.has(ProtocolContract.RESULT_WALLET_URI_BASE) ?
                     jo.optString(ProtocolContract.RESULT_WALLET_URI_BASE) : null;
+            final Uri walletUriBase = walletUriBaseStr != null ? Uri.parse(walletUriBaseStr) : null;
+            if (walletUriBase != null && !"https".equalsIgnoreCase(walletUriBase.getScheme())) {
+                throw new InsecureWalletEndpointUriException("Invalid wallet URI prefix '" +
+                        walletUriBaseStr + "'; expected a 'https' URI");
+            }
 
-            return new AuthorizationResult(authToken, publicKey,
-                    (walletUriBaseStr != null) ? Uri.parse(walletUriBaseStr) : null);
+            return new AuthorizationResult(authToken, publicKey, walletUriBase);
         }
 
         @Override
         public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<AuthorizationResult>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
+    }
+
+    public static class InsecureWalletEndpointUriException extends JsonRpc20InvalidResponseException {
+        /*package*/ InsecureWalletEndpointUriException(@NonNull String message) { super(message); }
     }
 
     // =============================================================================================
