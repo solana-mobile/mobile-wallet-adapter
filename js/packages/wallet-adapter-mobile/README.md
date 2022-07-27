@@ -10,6 +10,7 @@ Create an instance of the mobile wallet adapter like this.
 
 ```typescript
 new SolanaMobileWalletAdapter({
+    addressSelector: createDefaultAddressSelector(),
     appIdentity: {
         name: 'My app',
         uri: 'https://myapp.io',
@@ -24,6 +25,7 @@ Use that adapter instance alongside the other adapters used by your app.
 ```typescript
 const wallets = useMemo(() => [
     new SolanaMobileWalletAdapter({
+        addressSelector: createDefaultAddressSelector(),
         appIdentity: {
             name: 'My app',
             uri: 'https://myapp.io',
