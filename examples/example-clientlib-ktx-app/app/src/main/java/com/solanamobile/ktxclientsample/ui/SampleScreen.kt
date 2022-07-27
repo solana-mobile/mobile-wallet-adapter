@@ -86,7 +86,9 @@ fun SampleScreen(
                             .weight(1f)
                             .padding(end = 8.dp),
                         enabled = viewState.canTransact && memoText.isNotEmpty(),
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            viewmodel.publishMemo(intentSender, memoText)
+                        }
                     ) {
                         Text("Publish Memo")
                     }
@@ -129,7 +131,16 @@ fun SampleScreen(
                 )
 
                 Spacer(Modifier.weight(1f))
-                
+
+                if (viewState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .height(24.dp)
+                            .width(24.dp)
+                    )
+                }
+
                 Button(
                     elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -149,7 +160,7 @@ fun SampleScreen(
             Row {
                 Icon(
                     imageVector = Icons.Filled.VpnKey,
-                    contentDescription = "Add Address",
+                    contentDescription = "Address",
                     tint = Color.Black,
                     modifier = Modifier
                         .size(24.dp)

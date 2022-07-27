@@ -2,6 +2,7 @@ package com.solanamobile.ktxclientsample.usecase
 
 import com.solana.Solana
 import com.solana.api.getBalance
+import com.solana.api.getRecentBlockhash
 import com.solana.api.requestAirdrop
 import com.solana.core.PublicKey
 import com.solana.networking.NetworkingRouter
@@ -82,6 +83,17 @@ class SolanaRpcUseCase @Inject constructor() {
 
                     result.onFailure { throw it }
                 }
+            }
+        }
+
+    suspend fun getLatestBlockHash(): String =
+        suspendCoroutine { cont ->
+            solana.api.getRecentBlockhash { result ->
+                result.onSuccess {
+                    cont.resume(it)
+                }
+
+                result.onFailure { throw it }
             }
         }
 

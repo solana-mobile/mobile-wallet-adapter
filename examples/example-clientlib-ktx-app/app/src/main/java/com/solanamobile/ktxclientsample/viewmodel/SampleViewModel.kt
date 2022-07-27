@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SampleViewState(
+    val isLoading: Boolean = false,
     val canTransact: Boolean = false,
     val solBalance: Double = 0.0,
     val userAddress: String = ""
@@ -31,12 +32,23 @@ class SampleViewModel @Inject constructor(
     val viewState: StateFlow<SampleViewState>
         get() = _state
 
+    private var token: String = ""
+    private var pubkeyBytes = byteArrayOf()
+
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
             val result = walletAdapter.transact(sender) {
                 authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
             }
 
+            _state.update {
+                _state.value.copy(
+                    isLoading = true
+                )
+            }
+
+            token = result.authToken
+            pubkeyBytes = result.publicKey
             val pubkey = PublicKey(result.publicKey)
 
             val tx = solanaRpcUseCase.requestAirdrop(pubkey)
@@ -48,6 +60,7 @@ class SampleViewModel @Inject constructor(
 
                 _state.update {
                     _state.value.copy(
+                        isLoading = false,
                         canTransact = true,
                         solBalance = displayBal,
                         userAddress = pubkey.toBase58()
@@ -56,11 +69,49 @@ class SampleViewModel @Inject constructor(
             } else {
                 _state.update {
                     _state.value.copy(
+                        isLoading = false,
                         canTransact = true,
                         solBalance = 0.0,
                         userAddress = "Error airdropping"
                     )
                 }
+            }
+        }
+    }
+
+    fun publishMemo(sender: ActivityResultSender, memoText: String) {
+        _state.update {
+            _state.value.copy(
+                isLoading = true
+            )
+        }
+
+        viewModelScope.launch {
+            val reauthResult = walletAdapter.transact(sender) {
+                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
+            }
+
+            //val pubkey = PublicKey(reauthResult.publicKey)
+//            val pubkey = PublicKey(pubkeyBytes)
+//            val acct = Account()
+//
+//            val blockHash = solanaRpcUseCase.getLatestBlockHash()
+//
+//            val msg = Message()
+//            msg.setFeePayer(acct)
+//            msg.addInstruction(MemoProgram.writeUtf8(pubkey, memoText))
+//            msg.setRecentBlockHash(blockHash)
+//
+//            val result = walletAdapter.transact(sender) {
+//                signAndSendTransactions(arrayOf(msg.serialize()))
+//            }
+//
+//            Log.v("Andrew", "Here is your result: $result")
+
+            _state.update {
+                _state.value.copy(
+                    isLoading = false
+                )
             }
         }
     }
