@@ -14,7 +14,7 @@ type Props = Readonly<{
 }>;
 
 export default function SignMessageButton({children, message}: Props) {
-  const {authorizeSession} = useAuthorization();
+  const {account: selectedAccount, authorizeSession} = useAuthorization();
   const [previewSignature, setPreviewSignature] = useState<Uint8Array | null>(
     null,
   );
@@ -25,14 +25,19 @@ export default function SignMessageButton({children, message}: Props) {
   const signMessageGuarded = useGuardedCallback(
     async buffer => {
       const [signature] = await transact(async wallet => {
-        await authorizeSession(wallet);
+        const freshAccount = await authorizeSession(wallet);
         return await wallet.signMessages({
+          address:
+            // Either the address that was already selected when this method was called...
+            selectedAccount?.address ??
+            // ...or the newly authorized address
+            freshAccount.address,
           payloads: [buffer],
         });
       });
       return signature;
     },
-    [authorizeSession],
+    [authorizeSession, selectedAccount],
   );
   return (
     <>
