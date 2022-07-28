@@ -71,7 +71,7 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.42"
     kapt "com.google.dagger:hilt-compiler:2.42"
 
-    implementation 'com.github.creativedrewy:SolanaKT:1.1.7'
+    implementation 'com.portto.solana:web3:0.1.3'
     implementation 'org.bitcoinj:bitcoinj-core:0.15.10'
     implementation 'com.squareup.okhttp3:okhttp:4.9.0'
 

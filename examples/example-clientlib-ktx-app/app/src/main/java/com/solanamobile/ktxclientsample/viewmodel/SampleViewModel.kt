@@ -3,10 +3,11 @@ package com.solanamobile.ktxclientsample.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.portto.solana.web3.*
+import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
-import com.solanamobile.web3.core.PublicKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,22 +88,22 @@ class SampleViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            //val pubkey = PublicKey(reauthResult.publicKey)
             val pubkey = PublicKey(pubkeyBytes)
 
-//            val blockHash = solanaRpcUseCase.getLatestBlockHash()
-//
-//            val msg = Message()
-//            msg.feePayer = pubkey
-//            msg.addInstruction(MemoProgram.writeUtf8(pubkey, memoText))
-//            msg.setRecentBlockHash(blockHash)
-//
-//            val result = walletAdapter.transact(sender) {
-//                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
-//                signAndSendTransactions(arrayOf(msg.serialize()))
-//            }
-//
-//            Log.v("Andrew", "Here is your result: $result")
+            val blockHash = solanaRpcUseCase.getLatestBlockHash()
+
+            val tx = Transaction()
+            tx.add(MemoProgram.writeUtf8(pubkey, memoText))
+            tx.setRecentBlockHash(blockHash)
+            tx.feePayer = pubkey
+            tx.partialSign(KeyPair(Ed25519Keypair(pubkeyBytes, byteArrayOf())))
+
+            val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
+
+            val result = walletAdapter.transact(sender) {
+                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
+                signAndSendTransactions(arrayOf(bytes))
+            }
 
             _state.update {
                 _state.value.copy(

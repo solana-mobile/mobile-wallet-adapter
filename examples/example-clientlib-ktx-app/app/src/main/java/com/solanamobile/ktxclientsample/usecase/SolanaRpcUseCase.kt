@@ -1,33 +1,19 @@
 package com.solanamobile.ktxclientsample.usecase
 
-import com.solana.Solana
-import com.solana.api.getBalance
-import com.solana.api.getRecentBlockhash
-import com.solana.api.requestAirdrop
-import com.solana.networking.NetworkingRouter
-import com.solana.networking.RPCEndpoint
-import com.solanamobile.web3.core.PublicKey
+import com.portto.solana.web3.Connection
+import com.portto.solana.web3.PublicKey
+import com.portto.solana.web3.rpc.types.config.Commitment
+import com.portto.solana.web3.util.Cluster
 import kotlinx.coroutines.*
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class SolanaRpcUseCase @Inject constructor() {
 
-    private val network = NetworkingRouter(RPCEndpoint.devnetSolana)
-    private val solana = Solana(network)
+    private val api by lazy { Connection(Cluster.DEVNET) }
 
     suspend fun requestAirdrop(pubkey: PublicKey): String =
         withContext(Dispatchers.IO) {
-            suspendCoroutine { cont ->
-                solana.api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP) { result ->
-                    result.onSuccess {
-                        cont.resume(it)
-                    }
-
-                    result.onFailure { throw it }
-                }
-            }
+            api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
         }
 
     suspend fun awaitConfirmation(signature: String): Deferred<Boolean> {
@@ -35,12 +21,8 @@ class SolanaRpcUseCase @Inject constructor() {
             async {
                 return@async withContext(Dispatchers.IO) {
                     repeat(10) {
-                        val status = getSignatureStatus(signature)
-                        if (status == "finalized") {
-                            return@withContext true
-                        }
-
-                        delay(3000)
+                        api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString() ?: ""
+                        return@withContext true
                     }
 
                     false
@@ -49,52 +31,14 @@ class SolanaRpcUseCase @Inject constructor() {
         }
     }
 
-    private suspend fun getSignatureStatus(signature: String): String =
-        withContext(Dispatchers.IO) {
-            suspendCoroutine { cont ->
-                val params = mutableListOf<Any>()
-                params.add(listOf(signature))
-                params.add(mapOf("searchTransactionHistory" to false))
-
-                solana.api.router.request<Any>("getSignatureStatuses", params, Any::class.javaObjectType) { result ->
-                    result.onSuccess {
-                        val finalized = "finalized"
-                        val rawResult = it.toString()
-
-                        if (rawResult.contains(finalized)) {
-                            cont.resume(finalized)
-                        } else {
-                            cont.resume("pending")
-                        }
-                    }
-
-                    result.onFailure { throw it }
-                }
-            }
-        }
-
     suspend fun getBalance(pubkey: PublicKey): Long =
         withContext(Dispatchers.IO) {
-            suspendCoroutine { cont ->
-                solana.api.getBalance(pubkey) { result ->
-                    result.onSuccess {
-                        cont.resume(it)
-                    }
-
-                    result.onFailure { throw it }
-                }
-            }
+            api.getBalance(pubkey, Commitment.CONFIRMED)
         }
 
     suspend fun getLatestBlockHash(): String =
-        suspendCoroutine { cont ->
-            solana.api.getRecentBlockhash { result ->
-                result.onSuccess {
-                    cont.resume(it)
-                }
-
-                result.onFailure { throw it }
-            }
+        withContext(Dispatchers.IO) {
+            api.getLatestBlockhash() ?: ""
         }
 
     companion object {
