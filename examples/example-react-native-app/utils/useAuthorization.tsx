@@ -1,8 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {PublicKey} from '@solana/web3.js';
 import {
   AuthorizationResult,
   AuthorizeAPI,
+  AuthToken,
   Base64EncodedAddress,
   DeauthorizeAPI,
   ReauthorizeAPI,
@@ -13,19 +13,11 @@ import useSWR from 'swr';
 
 type Account = Readonly<{
   address: Base64EncodedAddress;
+  authToken: AuthToken;
   publicKey: PublicKey;
 }>;
 
 const STORAGE_KEY = 'cachedAuthorization';
-
-function getDataFromAuthorizationResult(
-  authorizationResult: AuthorizationResult,
-) {
-  return {
-    account: getAccountFromAuthorizationResult(authorizationResult),
-    authorization: authorizationResult,
-  };
-}
 
 function getAccountFromAuthorizationResult(
   authorizationResult: AuthorizationResult,
@@ -33,23 +25,9 @@ function getAccountFromAuthorizationResult(
   const address = authorizationResult.addresses[0]; // TODO(#44): support multiple addresses
   return {
     address,
+    authToken: authorizationResult.auth_token,
     publicKey: getPublicKeyFromAddress(address),
   };
-}
-
-async function authorizationFetcher(storageKey: string) {
-  try {
-    const serializedValue = await AsyncStorage.getItem(storageKey);
-    if (!serializedValue) {
-      return null;
-    }
-    const authorization = JSON.parse(serializedValue) as AuthorizationResult;
-    return getDataFromAuthorizationResult(authorization);
-  } catch {
-    // Presume the data in storage is corrupt and erase it.
-    await AsyncStorage.removeItem(STORAGE_KEY);
-    return null;
-  }
 }
 
 function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
@@ -62,60 +40,37 @@ export const APP_IDENTITY = {
 };
 
 export default function useAuthorization() {
-  const {data, mutate} = useSWR(STORAGE_KEY, authorizationFetcher, {
-    suspense: true,
-  });
-  const setAuthorization = useCallback(
-    (authorizationResult: AuthorizationResult | null) => {
-      mutate(
-        async () => {
-          if (authorizationResult) {
-            await AsyncStorage.setItem(
-              STORAGE_KEY,
-              JSON.stringify(authorizationResult),
-            );
-            return getDataFromAuthorizationResult(authorizationResult);
-          } else {
-            await AsyncStorage.removeItem(STORAGE_KEY);
-            return null;
-          }
-        },
-        {
-          optimisticData: authorizationResult
-            ? getDataFromAuthorizationResult(authorizationResult)
-            : null,
-        },
-      );
-    },
-    [mutate],
+  const {data: account, mutate} = useSWR<Account | null | undefined>(
+    STORAGE_KEY,
   );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      const authorizationResult = await (data
+      const authorizationResult = await (account
         ? wallet.reauthorize({
-            auth_token: data.authorization.auth_token,
+            auth_token: account.authToken,
           })
         : wallet.authorize({
             cluster: 'devnet',
             identity: APP_IDENTITY,
           }));
-      setAuthorization(authorizationResult);
-      return getAccountFromAuthorizationResult(authorizationResult);
+      return await mutate(
+        getAccountFromAuthorizationResult(authorizationResult),
+      );
     },
-    [data, setAuthorization],
+    [account, mutate],
   );
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
-      if (data?.authorization.auth_token == null) {
+      if (account?.authToken == null) {
         return;
       }
-      await wallet.deauthorize({auth_token: data.authorization.auth_token});
-      setAuthorization(null);
+      await wallet.deauthorize({auth_token: account?.authToken});
+      mutate(null);
     },
-    [data?.authorization.auth_token, setAuthorization],
+    [account, mutate],
   );
   return {
-    account: data?.account ?? null,
+    account: account ?? null,
     authorizeSession,
     deauthorizeSession,
   };
