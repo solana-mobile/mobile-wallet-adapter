@@ -1,16 +1,13 @@
 package com.solanamobile.ktxclientsample.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.portto.solana.web3.PublicKey
-import com.portto.solana.web3.SerializeConfig
-import com.portto.solana.web3.Transaction
-import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.RpcCluster
+import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,16 +26,14 @@ data class SampleViewState(
 @HiltViewModel
 class SampleViewModel @Inject constructor(
     private val walletAdapter: MobileWalletAdapter,
-    private val solanaRpcUseCase: SolanaRpcUseCase
+    private val solanaRpcUseCase: SolanaRpcUseCase,
+    private val persistanceUseCase: PersistanceUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow(SampleViewState())
 
     val viewState: StateFlow<SampleViewState>
         get() = _state
-
-    private var token: String = ""
-    private var pubkeyBytes = byteArrayOf()
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
@@ -52,12 +47,11 @@ class SampleViewModel @Inject constructor(
                 )
             }
 
-            token = result.authToken
-            pubkeyBytes = result.publicKey
             val pubkey = PublicKey(result.publicKey)
+            persistanceUseCase.persistConnection(pubkey, result.authToken)
 
             val tx = solanaRpcUseCase.requestAirdrop(pubkey)
-            val confirmed = solanaRpcUseCase.awaitConfirmation(tx).await()
+            val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
 
             if (confirmed) {
                 val balance = solanaRpcUseCase.getBalance(pubkey)
@@ -92,29 +86,29 @@ class SampleViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val pubkey = PublicKey(pubkeyBytes)
-
-            val blockHash = solanaRpcUseCase.getLatestBlockHash()
-
-            val tx = Transaction()
-            tx.add(MemoProgram.writeUtf8(pubkey, memoText))
-            tx.setRecentBlockHash(blockHash!!)
-            tx.feePayer = pubkey
-
-            val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
-
-            val result = walletAdapter.transact(sender) {
-                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
-                signAndSendTransactions(arrayOf(bytes))
-            }
-
-            Log.v("Andrew", "Your tx: $result")
-
-            _state.update {
-                _state.value.copy(
-                    isLoading = false
-                )
-            }
+//            val pubkey = PublicKey(pubkeyBytes)
+//
+//            val blockHash = solanaRpcUseCase.getLatestBlockHash()
+//
+//            val tx = Transaction()
+//            tx.add(MemoProgram.writeUtf8(pubkey, memoText))
+//            tx.setRecentBlockHash(blockHash!!)
+//            tx.feePayer = pubkey
+//
+//            val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
+//
+//            val result = walletAdapter.transact(sender) {
+//                reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
+//                signAndSendTransactions(arrayOf(bytes))
+//            }
+//
+//            Log.v("Andrew", "Your tx: $result")
+//
+//            _state.update {
+//                _state.value.copy(
+//                    isLoading = false
+//                )
+//            }
         }
     }
 

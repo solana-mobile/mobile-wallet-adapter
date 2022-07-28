@@ -16,7 +16,7 @@ class SolanaRpcUseCase @Inject constructor() {
             api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
         }
 
-    suspend fun awaitConfirmation(signature: String): Deferred<Boolean> {
+    suspend fun awaitConfirmationAsync(signature: String): Deferred<Boolean> {
         return coroutineScope {
             async {
                 return@async withContext(Dispatchers.IO) {
