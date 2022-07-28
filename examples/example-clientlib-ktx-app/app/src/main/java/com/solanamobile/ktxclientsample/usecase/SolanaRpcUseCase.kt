@@ -21,8 +21,11 @@ class SolanaRpcUseCase @Inject constructor() {
             async {
                 return@async withContext(Dispatchers.IO) {
                     repeat(10) {
-                        api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString() ?: ""
-                        return@withContext true
+                        val conf = api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString()
+
+                        if (conf != null) {
+                            return@withContext true
+                        }
                     }
 
                     false
