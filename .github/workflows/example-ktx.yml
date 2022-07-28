@@ -1,14 +1,12 @@
-name: Android CI
+name: Build clientlib-ktx Sample App
 
 on:
   push:
     branches: [ main ]
-    paths: [ '.github/**', 'examples/example-clientlib-ktx-app/**' ]
+    paths: [ 'android/**', '.github/**', 'examples/example-clientlib-ktx-app/**' ]
   pull_request:
     branches: [ main ]
-    paths: [ '.github/**', 'examples/example-clientlib-ktx-app/**' ]
-  release:
-    types: [ published ]
+    paths: [ 'android/**', '.github/**', 'examples/example-clientlib-ktx-app/**' ]
 
 jobs:
   build:
