@@ -2,6 +2,7 @@ package com.solanamobile.ktxclientsample.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VpnKey
@@ -9,6 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -194,6 +199,52 @@ fun SampleScreen(
                     color = MaterialTheme.colors.onPrimary,
                     text = if (viewState.canTransact) "Disconnect" else "Add funds to get started"
                 )
+            }
+
+            val uriHandler = LocalUriHandler.current
+
+            if (viewState.memoTx.isNotEmpty()) {
+                Snackbar(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    val sourceStr = "Memo Successfully Published: VIEW"
+                    val annotatedString = buildAnnotatedString {
+                        append(sourceStr)
+
+                        addStyle(
+                            style = SpanStyle(
+                                color = Color.Yellow,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            start = 29,
+                            end = 33
+                        )
+                        addStringAnnotation(
+                            tag = "URL",
+                            annotation = "https://explorer.solana.com/tx/${ viewState.memoTx }?cluster=devnet",
+                            start = 29,
+                            end = 33
+                        )
+
+                        addStyle(
+                            style = SpanStyle(
+                                color = Color.White
+                            ),
+                            start = 0,
+                            end = 28
+                        )
+                    }
+
+                    ClickableText(
+                        text = annotatedString,
+                        onClick = {
+                            annotatedString.getStringAnnotations("URL", it, it)
+                                .firstOrNull()?.let { strAnnotation ->
+                                    uriHandler.openUri(strAnnotation.item)
+                                }
+                        }
+                    )
+                }
             }
         }
     }

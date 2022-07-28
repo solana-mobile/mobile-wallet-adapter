@@ -4,6 +4,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.portto.solana.web3.PublicKey
+import com.portto.solana.web3.SerializeConfig
+import com.portto.solana.web3.Transaction
+import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.RpcCluster
@@ -12,17 +15,20 @@ import com.solanamobile.ktxclientsample.usecase.NotConnected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.bitcoinj.core.Base58
 import javax.inject.Inject
 
 data class SampleViewState(
     val isLoading: Boolean = false,
     val canTransact: Boolean = false,
     val solBalance: Double = 0.0,
-    val userAddress: String = ""
+    val userAddress: String = "",
+    val memoTx: String = ""
 )
 
 val solanaUri = Uri.parse("https://solana.com")
@@ -113,35 +119,41 @@ class SampleViewModel @Inject constructor(
     }
 
     fun publishMemo(sender: ActivityResultSender, memoText: String) {
-        _state.value.copy(
-            isLoading = true
-        ).updateViewState()
+        val conn = persistanceUseCase.getWalletConnection()
 
+        if (conn is Connected) {
+            _state.value.copy(
+                isLoading = true
+            ).updateViewState()
 
-        viewModelScope.launch {
-//            val pubkey = PublicKey(pubkeyBytes)
-//
-//            val blockHash = solanaRpcUseCase.getLatestBlockHash()
-//
-//            val tx = Transaction()
-//            tx.add(MemoProgram.writeUtf8(pubkey, memoText))
-//            tx.setRecentBlockHash(blockHash!!)
-//            tx.feePayer = pubkey
-//
-//            val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
-//
-//            val result = walletAdapter.transact(sender) {
-//                reauthorize(solanaUri, iconUri, identityName, token)
-//                signAndSendTransactions(arrayOf(bytes))
-//            }
-//
-//            Log.v("Andrew", "Your tx: $result")
-//
-//            _state.update {
-//                _state.value.copy(
-//                    isLoading = false
-//                )
-//            }
+            viewModelScope.launch {
+                val blockHash = solanaRpcUseCase.getLatestBlockHash()
+
+                val tx = Transaction()
+                tx.add(MemoProgram.writeUtf8(conn.publickKey, memoText))
+                tx.setRecentBlockHash(blockHash!!)
+                tx.feePayer = conn.publickKey
+
+                val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
+
+                val result = walletAdapter.transact(sender) {
+                    reauthorize(solanaUri, iconUri, identityName, conn.authToken)
+                    signAndSendTransactions(arrayOf(bytes))
+                }
+
+                result.signatures.firstOrNull()?.let { sig ->
+                    val readableSig = Base58.encode(sig)
+
+                    _state.value.copy(
+                        isLoading = false,
+                        memoTx = readableSig
+                    ).updateViewState()
+
+                    //Clear out the recent transaction
+                    delay(5000)
+                    _state.value.copy(memoTx = "").updateViewState()
+                }
+            }
         }
     }
 
