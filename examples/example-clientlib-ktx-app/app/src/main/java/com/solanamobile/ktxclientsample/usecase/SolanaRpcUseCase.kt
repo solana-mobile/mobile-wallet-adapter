@@ -31,9 +31,15 @@ class SolanaRpcUseCase @Inject constructor() {
         }
     }
 
-    suspend fun getBalance(pubkey: PublicKey): Long =
+    suspend fun getBalance(pubkey: PublicKey, asReadable: Boolean = true): Double =
         withContext(Dispatchers.IO) {
-            api.getBalance(pubkey, Commitment.CONFIRMED)
+            val bal = api.getBalance(pubkey, Commitment.CONFIRMED)
+
+            if (asReadable) {
+                bal.toDouble() / LAMPORTS_PER_SOL.toDouble()
+            } else {
+                bal.toDouble()
+            }
         }
 
     suspend fun getLatestBlockHash(): String? =

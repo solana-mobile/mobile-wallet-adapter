@@ -65,7 +65,7 @@ class SampleViewModel @Inject constructor(
 
                 _state.value.copy(
                     isLoading = false,
-                    solBalance = balance.toDouble() / SolanaRpcUseCase.LAMPORTS_PER_SOL.toDouble()
+                    solBalance = balance
                 ).updateViewState()
             }
         }
@@ -99,12 +99,11 @@ class SampleViewModel @Inject constructor(
 
             if (confirmed) {
                 val balance = solanaRpcUseCase.getBalance(currentConn.publickKey)
-                val displayBal = balance.toDouble() / SolanaRpcUseCase.LAMPORTS_PER_SOL.toDouble()
 
                 _state.value.copy(
                     isLoading = false,
                     canTransact = true,
-                    solBalance = displayBal,
+                    solBalance = balance,
                     userAddress = currentConn.publickKey.toBase58()
                 ).updateViewState()
             } else {
