@@ -14,7 +14,7 @@ type Props = Readonly<{
 }>;
 
 export default function SignMessageButton({children, message}: Props) {
-  const {account: selectedAccount, authorizeSession} = useAuthorization();
+  const {authorizeSession, selectedAccount} = useAuthorization();
   const [previewSignature, setPreviewSignature] = useState<Uint8Array | null>(
     null,
   );

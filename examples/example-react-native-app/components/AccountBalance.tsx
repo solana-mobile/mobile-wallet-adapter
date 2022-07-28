@@ -12,14 +12,21 @@ type Props = Readonly<{
 export default function AccountBalance({publicKey}: Props) {
   const {connection} = useConnection();
   const balanceFetcher = useCallback(
-    async function (_: 'accountBalance'): Promise<number> {
-      return await connection.getBalance(publicKey);
+    async function ([_, selectedPublicKey]: [
+      'accountBalance',
+      PublicKey,
+    ]): Promise<number> {
+      return await connection.getBalance(selectedPublicKey);
     },
-    [connection, publicKey],
+    [connection],
   );
-  const {data: lamports} = useSWR('accountBalance', balanceFetcher, {
-    suspense: true,
-  });
+  const {data: lamports} = useSWR(
+    ['accountBalance', publicKey],
+    balanceFetcher,
+    {
+      suspense: true,
+    },
+  );
   const balance = useMemo(
     () =>
       new Intl.NumberFormat(undefined, {maximumFractionDigits: 1}).format(

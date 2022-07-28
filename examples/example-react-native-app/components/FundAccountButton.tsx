@@ -50,7 +50,7 @@ export default function FundAccountButton({children, publicKey}: Props) {
             } else {
               setSnackbarProps({children: 'Funding successful'});
               mutate(
-                'accountBalance',
+                ['accountBalance', publicKey],
                 // Optimistic update; will be revalidated automatically by SWR.
                 (currentBalance?: number) =>
                   (currentBalance || 0) + LAMPORTS_PER_AIRDROP,
