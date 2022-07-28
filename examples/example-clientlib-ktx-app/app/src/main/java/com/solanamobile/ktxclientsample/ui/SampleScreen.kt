@@ -2,6 +2,7 @@ package com.solanamobile.ktxclientsample.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VpnKey
@@ -9,6 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,9 +23,16 @@ import com.solanamobile.ktxclientsample.viewmodel.SampleViewModel
 @Composable
 fun SampleScreen(
     intentSender: ActivityResultSender,
-    viewmodel: SampleViewModel = hiltViewModel()
+    viewModel: SampleViewModel = hiltViewModel()
 ) {
-    val viewState = viewmodel.viewState.collectAsState().value
+    val viewState = viewModel.viewState.collectAsState().value
+
+    LaunchedEffect(
+        key1 = Unit,
+        block = {
+            viewModel.loadConnection()
+        }
+    )
 
     Box(
         modifier = Modifier
@@ -86,7 +98,9 @@ fun SampleScreen(
                             .weight(1f)
                             .padding(end = 8.dp),
                         enabled = viewState.canTransact && memoText.isNotEmpty(),
-                        onClick = { /*TODO*/ }
+                        onClick = {
+                            viewModel.publishMemo(intentSender, memoText)
+                        }
                     ) {
                         Text("Publish Memo")
                     }
@@ -129,13 +143,24 @@ fun SampleScreen(
                 )
 
                 Spacer(Modifier.weight(1f))
-                
+
+                if (viewState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .height(24.dp)
+                            .width(24.dp)
+                    )
+                }
+
                 Button(
                     elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.secondaryVariant
                     ),
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        viewModel.addFunds(intentSender)
+                    }
                 ) {
                     Text(
                         text = "Add Funds",
@@ -147,7 +172,7 @@ fun SampleScreen(
             Row {
                 Icon(
                     imageVector = Icons.Filled.VpnKey,
-                    contentDescription = "Add Address",
+                    contentDescription = "Address",
                     tint = Color.Black,
                     modifier = Modifier
                         .size(24.dp)
@@ -166,12 +191,60 @@ fun SampleScreen(
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Red.copy(red = 0.7f)
                 ),
-                onClick = { /*TODO*/ }
+                onClick = {
+                    viewModel.disconnect(intentSender)
+                }
             ) {
                 Text(
                     color = MaterialTheme.colors.onPrimary,
-                    text = if (viewState.canTransact && viewState.solBalance >= 0) "Disconnect" else "Add funds to get started"
+                    text = if (viewState.canTransact) "Disconnect" else "Add funds to get started"
                 )
+            }
+
+            val uriHandler = LocalUriHandler.current
+
+            if (viewState.memoTx.isNotEmpty()) {
+                Snackbar(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    val sourceStr = "Memo Successfully Published: VIEW"
+                    val annotatedString = buildAnnotatedString {
+                        append(sourceStr)
+
+                        addStyle(
+                            style = SpanStyle(
+                                color = Color.Yellow,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            start = 29,
+                            end = 33
+                        )
+                        addStringAnnotation(
+                            tag = "URL",
+                            annotation = "https://explorer.solana.com/tx/${ viewState.memoTx }?cluster=devnet",
+                            start = 29,
+                            end = 33
+                        )
+
+                        addStyle(
+                            style = SpanStyle(
+                                color = Color.White
+                            ),
+                            start = 0,
+                            end = 28
+                        )
+                    }
+
+                    ClickableText(
+                        text = annotatedString,
+                        onClick = {
+                            annotatedString.getStringAnnotations("URL", it, it)
+                                .firstOrNull()?.let { strAnnotation ->
+                                    uriHandler.openUri(strAnnotation.item)
+                                }
+                        }
+                    )
+                }
             }
         }
     }

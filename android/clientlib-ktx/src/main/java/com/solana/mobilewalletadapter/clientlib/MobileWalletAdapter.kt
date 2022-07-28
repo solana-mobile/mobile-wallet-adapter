@@ -23,8 +23,8 @@ class MobileWalletAdapter(
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    suspend fun transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> Unit) {
-        try {
+    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T): T {
+        return try {
             withContext(ioDispatcher) {
                 val scenario = LocalAssociationScenario(timeout)
                 val details = scenario.associationDetails()
@@ -47,10 +47,12 @@ class MobileWalletAdapter(
                 }
 
                 adapterOperations.client = client
-                block(adapterOperations)
+                val result = block(adapterOperations)
 
                 @Suppress("BlockingMethodInNonBlockingContext")
                 scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+
+                result
             }
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
