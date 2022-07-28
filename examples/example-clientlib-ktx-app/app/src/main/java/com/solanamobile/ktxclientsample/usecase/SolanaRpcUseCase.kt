@@ -36,9 +36,9 @@ class SolanaRpcUseCase @Inject constructor() {
             api.getBalance(pubkey, Commitment.CONFIRMED)
         }
 
-    suspend fun getLatestBlockHash(): String =
+    suspend fun getLatestBlockHash(): String? =
         withContext(Dispatchers.IO) {
-            api.getLatestBlockhash() ?: ""
+            api.getLatestBlockhash(Commitment.CONFIRMED)
         }
 
     companion object {

@@ -1,9 +1,12 @@
 package com.solanamobile.ktxclientsample.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.portto.solana.web3.*
+import com.portto.solana.web3.PublicKey
+import com.portto.solana.web3.SerializeConfig
+import com.portto.solana.web3.Transaction
 import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
@@ -94,9 +97,8 @@ class SampleViewModel @Inject constructor(
 
             val tx = Transaction()
             tx.add(MemoProgram.writeUtf8(pubkey, memoText))
-            tx.setRecentBlockHash(blockHash)
+            tx.setRecentBlockHash(blockHash!!)
             tx.feePayer = pubkey
-            tx.partialSign(KeyPair(Ed25519Keypair(pubkeyBytes, byteArrayOf())))
 
             val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
 
@@ -104,6 +106,8 @@ class SampleViewModel @Inject constructor(
                 reauthorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", token)
                 signAndSendTransactions(arrayOf(bytes))
             }
+
+            Log.v("Andrew", "Your tx: $result")
 
             _state.update {
                 _state.value.copy(
