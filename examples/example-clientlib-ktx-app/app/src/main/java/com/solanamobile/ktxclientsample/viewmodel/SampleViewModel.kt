@@ -7,6 +7,7 @@ import com.portto.solana.web3.PublicKey
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.RpcCluster
+import com.solanamobile.ktxclientsample.usecase.Connected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,10 +31,34 @@ class SampleViewModel @Inject constructor(
     private val persistanceUseCase: PersistanceUseCase
 ): ViewModel() {
 
+    private fun SampleViewState.updateViewState() {
+        _state.update { this }
+    }
+
     private val _state = MutableStateFlow(SampleViewState())
 
     val viewState: StateFlow<SampleViewState>
         get() = _state
+
+    fun loadConnection() {
+        val connection = persistanceUseCase.getWalletConnection()
+        if (connection is Connected) {
+            _state.value.copy(
+                isLoading = true,
+                canTransact = true,
+                userAddress = connection.publickKey.toBase58()
+            ).updateViewState()
+
+            viewModelScope.launch {
+                val balance = solanaRpcUseCase.getBalance(connection.publickKey)
+
+                _state.value.copy(
+                    isLoading = false,
+                    solBalance = balance.toDouble() / SolanaRpcUseCase.LAMPORTS_PER_SOL.toDouble()
+                ).updateViewState()
+            }
+        }
+    }
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
@@ -41,11 +66,9 @@ class SampleViewModel @Inject constructor(
                 authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", RpcCluster.Devnet)
             }
 
-            _state.update {
-                _state.value.copy(
-                    isLoading = true
-                )
-            }
+            _state.value.copy(
+                isLoading = true
+            ).updateViewState()
 
             val pubkey = PublicKey(result.publicKey)
             persistanceUseCase.persistConnection(pubkey, result.authToken)
@@ -57,33 +80,28 @@ class SampleViewModel @Inject constructor(
                 val balance = solanaRpcUseCase.getBalance(pubkey)
                 val displayBal = balance.toDouble() / SolanaRpcUseCase.LAMPORTS_PER_SOL.toDouble()
 
-                _state.update {
-                    _state.value.copy(
-                        isLoading = false,
-                        canTransact = true,
-                        solBalance = displayBal,
-                        userAddress = pubkey.toBase58()
-                    )
-                }
+                _state.value.copy(
+                    isLoading = false,
+                    canTransact = true,
+                    solBalance = displayBal,
+                    userAddress = pubkey.toBase58()
+                ).updateViewState()
             } else {
-                _state.update {
-                    _state.value.copy(
-                        isLoading = false,
-                        canTransact = true,
-                        solBalance = 0.0,
-                        userAddress = "Error airdropping"
-                    )
-                }
+                _state.value.copy(
+                    isLoading = false,
+                    canTransact = true,
+                    solBalance = 0.0,
+                    userAddress = "Error airdropping"
+                ).updateViewState()
             }
         }
     }
 
     fun publishMemo(sender: ActivityResultSender, memoText: String) {
-        _state.update {
-            _state.value.copy(
-                isLoading = true
-            )
-        }
+        _state.value.copy(
+            isLoading = true
+        ).updateViewState()
+
 
         viewModelScope.launch {
 //            val pubkey = PublicKey(pubkeyBytes)
@@ -114,8 +132,16 @@ class SampleViewModel @Inject constructor(
 
     fun disconnect(sender: ActivityResultSender) {
         viewModelScope.launch {
-            walletAdapter.transact(sender) {
-                //deauthorize("")
+            val conn = persistanceUseCase.getWalletConnection()
+
+            if (conn is Connected) {
+                walletAdapter.transact(sender) {
+                    deauthorize(conn.authToken)
+                }
+
+                persistanceUseCase.clearConnection()
+
+                SampleViewState().updateViewState()
             }
         }
     }

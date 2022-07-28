@@ -18,9 +18,16 @@ import com.solanamobile.ktxclientsample.viewmodel.SampleViewModel
 @Composable
 fun SampleScreen(
     intentSender: ActivityResultSender,
-    viewmodel: SampleViewModel = hiltViewModel()
+    viewModel: SampleViewModel = hiltViewModel()
 ) {
-    val viewState = viewmodel.viewState.collectAsState().value
+    val viewState = viewModel.viewState.collectAsState().value
+
+    LaunchedEffect(
+        key1 = Unit,
+        block = {
+            viewModel.loadConnection()
+        }
+    )
 
     Box(
         modifier = Modifier
@@ -87,7 +94,7 @@ fun SampleScreen(
                             .padding(end = 8.dp),
                         enabled = viewState.canTransact && memoText.isNotEmpty(),
                         onClick = {
-                            viewmodel.publishMemo(intentSender, memoText)
+                            viewModel.publishMemo(intentSender, memoText)
                         }
                     ) {
                         Text("Publish Memo")
@@ -147,7 +154,7 @@ fun SampleScreen(
                         backgroundColor = MaterialTheme.colors.secondaryVariant
                     ),
                     onClick = {
-                        viewmodel.addFunds(intentSender)
+                        viewModel.addFunds(intentSender)
                     }
                 ) {
                     Text(
@@ -179,7 +186,9 @@ fun SampleScreen(
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Red.copy(red = 0.7f)
                 ),
-                onClick = { /*TODO*/ }
+                onClick = {
+                    viewModel.disconnect(intentSender)
+                }
             ) {
                 Text(
                     color = MaterialTheme.colors.onPrimary,
