@@ -33,11 +33,3 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle and run tests
         run: ./gradlew build
-
-  # Note: only runs on 'release' events
-  upload-to-release:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: write # needed for uploading files to releases
-    if: ${{ github.event_name == 'release' }}
