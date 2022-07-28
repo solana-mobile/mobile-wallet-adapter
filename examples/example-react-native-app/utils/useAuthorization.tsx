@@ -1,49 +1,56 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {PublicKey} from '@solana/web3.js';
 import {
   AuthorizationResult,
   AuthorizeAPI,
+  AuthToken,
   Base64EncodedAddress,
   DeauthorizeAPI,
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {toUint8Array} from 'js-base64';
-import {useCallback} from 'react';
+import {useCallback, useMemo} from 'react';
 import useSWR from 'swr';
 
-const STORAGE_KEY = 'cachedAuthorization';
+export type Account = Readonly<{
+  address: Base64EncodedAddress;
+  publicKey: PublicKey;
+}>;
 
-function getDataFromAuthorizationResult(
-  authorizationResult: AuthorizationResult,
-) {
+type Authorization = Readonly<{
+  accounts: Account[];
+  authToken: AuthToken;
+  selectedAccount: Account;
+}>;
+
+function getAccountFromAddress(address: Base64EncodedAddress): Account {
   return {
-    authorization: authorizationResult,
-    publicKey: getPublicKeyFromAuthorizationResult(authorizationResult),
+    address,
+    publicKey: getPublicKeyFromAddress(address),
   };
 }
 
-function getPublicKeyFromAuthorizationResult(
+function getAuthorizationFromAuthorizationResult(
   authorizationResult: AuthorizationResult,
-): PublicKey {
-  return getPublicKeyFromAddress(
-    // TODO(#44): support multiple addresses
-    authorizationResult.addresses[0],
-  );
-}
-
-async function authorizationFetcher(storageKey: string) {
-  try {
-    const serializedValue = await AsyncStorage.getItem(storageKey);
-    if (!serializedValue) {
-      return null;
-    }
-    const authorization = JSON.parse(serializedValue) as AuthorizationResult;
-    return getDataFromAuthorizationResult(authorization);
-  } catch {
-    // Presume the data in storage is corrupt and erase it.
-    await AsyncStorage.removeItem(STORAGE_KEY);
-    return null;
+  previouslySelectedAccount?: Account,
+): Authorization {
+  let selectedAccount: Account;
+  if (
+    // We have yet to select an account.
+    previouslySelectedAccount == null ||
+    // The previously selected account is no longer in the set of authorized addresses.
+    authorizationResult.addresses.indexOf(previouslySelectedAccount.address) ===
+      -1
+  ) {
+    const firstAddress = authorizationResult.addresses[0];
+    selectedAccount = getAccountFromAddress(firstAddress);
+  } else {
+    selectedAccount = previouslySelectedAccount;
   }
+  return {
+    accounts: authorizationResult.addresses.map(getAccountFromAddress),
+    authToken: authorizationResult.auth_token,
+    selectedAccount,
+  };
 }
 
 function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
@@ -56,61 +63,73 @@ export const APP_IDENTITY = {
 };
 
 export default function useAuthorization() {
-  const {data, mutate} = useSWR(STORAGE_KEY, authorizationFetcher, {
-    suspense: true,
-  });
-  const setAuthorization = useCallback(
-    (authorizationResult: AuthorizationResult | null) => {
-      mutate(
-        async () => {
-          if (authorizationResult) {
-            await AsyncStorage.setItem(
-              STORAGE_KEY,
-              JSON.stringify(authorizationResult),
-            );
-            return getDataFromAuthorizationResult(authorizationResult);
-          } else {
-            await AsyncStorage.removeItem(STORAGE_KEY);
-            return null;
-          }
-        },
-        {
-          optimisticData: authorizationResult
-            ? getDataFromAuthorizationResult(authorizationResult)
-            : null,
-        },
+  const {data: authorization, mutate: setAuthorization} = useSWR<
+    Authorization | null | undefined
+  >('authorization');
+  const handleAuthorizationResult = useCallback(
+    async (
+      authorizationResult: AuthorizationResult,
+    ): Promise<Authorization> => {
+      const nextAuthorization = getAuthorizationFromAuthorizationResult(
+        authorizationResult,
+        authorization?.selectedAccount,
       );
+      await setAuthorization(nextAuthorization);
+      return nextAuthorization;
     },
-    [mutate],
+    [authorization, setAuthorization],
   );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      const authorizationResult = await (data
+      const authorizationResult = await (authorization
         ? wallet.reauthorize({
-            auth_token: data.authorization.auth_token,
+            auth_token: authorization.authToken,
           })
         : wallet.authorize({
             cluster: 'devnet',
             identity: APP_IDENTITY,
           }));
-      setAuthorization(authorizationResult);
-      return getPublicKeyFromAuthorizationResult(authorizationResult);
+      return (await handleAuthorizationResult(authorizationResult))
+        .selectedAccount;
     },
-    [data, setAuthorization],
+    [authorization],
   );
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
-      if (data?.authorization.auth_token == null) {
+      if (authorization?.authToken == null) {
         return;
       }
-      await wallet.deauthorize({auth_token: data.authorization.auth_token});
+      await wallet.deauthorize({auth_token: authorization.authToken});
       setAuthorization(null);
     },
-    [data?.authorization.auth_token, setAuthorization],
+    [authorization, setAuthorization],
   );
-  return {
-    authorizeSession,
-    deauthorizeSession,
-    publicKey: data?.publicKey ?? null,
-  };
+  const onChangeAccount = useCallback((nextSelectedAccount: Account) => {
+    setAuthorization(currentAuthorization => {
+      if (
+        !currentAuthorization?.accounts.some(
+          ({address}) => address === nextSelectedAccount.address,
+        )
+      ) {
+        throw new Error(
+          `${nextSelectedAccount.address} is not one of the available addresses`,
+        );
+      }
+
+      return {
+        ...currentAuthorization,
+        selectedAccount: nextSelectedAccount,
+      };
+    });
+  }, []);
+  return useMemo(
+    () => ({
+      accounts: authorization?.accounts ?? null,
+      authorizeSession,
+      deauthorizeSession,
+      onChangeAccount,
+      selectedAccount: authorization?.selectedAccount ?? null,
+    }),
+    [authorization, authorizeSession, deauthorizeSession, onChangeAccount],
+  );
 }

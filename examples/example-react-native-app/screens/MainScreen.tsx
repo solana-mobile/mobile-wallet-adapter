@@ -8,7 +8,7 @@ import SignMessageButton from '../components/SignMessageButton';
 import useAuthorization from '../utils/useAuthorization';
 
 export default function MainScreen() {
-  const {publicKey} = useAuthorization();
+  const {accounts, onChangeAccount, selectedAccount} = useAuthorization();
   const [memoText, setMemoText] = useState('');
   return (
     <>
@@ -36,7 +36,13 @@ export default function MainScreen() {
           <Divider style={styles.spacer} />
           <SignMessageButton message={memoText}>Sign Message</SignMessageButton>
         </ScrollView>
-        {publicKey ? <AccountInfo publicKey={publicKey} /> : null}
+        {accounts && selectedAccount ? (
+          <AccountInfo
+            accounts={accounts}
+            onChange={onChangeAccount}
+            selectedAccount={selectedAccount}
+          />
+        ) : null}
       </Portal.Host>
     </>
   );
