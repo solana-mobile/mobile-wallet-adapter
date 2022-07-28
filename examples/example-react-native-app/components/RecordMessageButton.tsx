@@ -23,7 +23,7 @@ type Props = Readonly<{
 }>;
 
 export default function RecordMessageButton({children, message}: Props) {
-  const {account: selectedAccount, authorizeSession} = useAuthorization();
+  const {authorizeSession, selectedAccount} = useAuthorization();
   const {connection} = useConnection();
   const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =

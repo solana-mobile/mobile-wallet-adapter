@@ -8,25 +8,48 @@ import {
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {toUint8Array} from 'js-base64';
-import {useCallback} from 'react';
+import {useCallback, useMemo} from 'react';
 import useSWR from 'swr';
 
-type Account = Readonly<{
+export type Account = Readonly<{
   address: Base64EncodedAddress;
-  authToken: AuthToken;
   publicKey: PublicKey;
 }>;
 
-const STORAGE_KEY = 'cachedAuthorization';
+type Authorization = Readonly<{
+  accounts: Account[];
+  authToken: AuthToken;
+  selectedAccount: Account;
+}>;
 
-function getAccountFromAuthorizationResult(
-  authorizationResult: AuthorizationResult,
-): Account {
-  const address = authorizationResult.addresses[0]; // TODO(#44): support multiple addresses
+function getAccountFromAddress(address: Base64EncodedAddress): Account {
   return {
     address,
-    authToken: authorizationResult.auth_token,
     publicKey: getPublicKeyFromAddress(address),
+  };
+}
+
+function getAuthorizationFromAuthorizationResult(
+  authorizationResult: AuthorizationResult,
+  previouslySelectedAccount?: Account,
+): Authorization {
+  let selectedAccount: Account;
+  if (
+    // We have yet to select an account.
+    previouslySelectedAccount == null ||
+    // The previously selected account is no longer in the set of authorized addresses.
+    authorizationResult.addresses.indexOf(previouslySelectedAccount.address) ===
+      -1
+  ) {
+    const firstAddress = authorizationResult.addresses[0];
+    selectedAccount = getAccountFromAddress(firstAddress);
+  } else {
+    selectedAccount = previouslySelectedAccount;
+  }
+  return {
+    accounts: authorizationResult.addresses.map(getAccountFromAddress),
+    authToken: authorizationResult.auth_token,
+    selectedAccount,
   };
 }
 
@@ -40,38 +63,73 @@ export const APP_IDENTITY = {
 };
 
 export default function useAuthorization() {
-  const {data: account, mutate} = useSWR<Account | null | undefined>(
-    STORAGE_KEY,
+  const {data: authorization, mutate: setAuthorization} = useSWR<
+    Authorization | null | undefined
+  >('authorization');
+  const handleAuthorizationResult = useCallback(
+    async (
+      authorizationResult: AuthorizationResult,
+    ): Promise<Authorization> => {
+      const nextAuthorization = getAuthorizationFromAuthorizationResult(
+        authorizationResult,
+        authorization?.selectedAccount,
+      );
+      await setAuthorization(nextAuthorization);
+      return nextAuthorization;
+    },
+    [authorization, setAuthorization],
   );
   const authorizeSession = useCallback(
     async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      const authorizationResult = await (account
+      const authorizationResult = await (authorization
         ? wallet.reauthorize({
-            auth_token: account.authToken,
+            auth_token: authorization.authToken,
           })
         : wallet.authorize({
             cluster: 'devnet',
             identity: APP_IDENTITY,
           }));
-      return await mutate(
-        getAccountFromAuthorizationResult(authorizationResult),
-      );
+      return (await handleAuthorizationResult(authorizationResult))
+        .selectedAccount;
     },
-    [account, mutate],
+    [authorization],
   );
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
-      if (account?.authToken == null) {
+      if (authorization?.authToken == null) {
         return;
       }
-      await wallet.deauthorize({auth_token: account?.authToken});
-      mutate(null);
+      await wallet.deauthorize({auth_token: authorization.authToken});
+      setAuthorization(null);
     },
-    [account, mutate],
+    [authorization, setAuthorization],
   );
-  return {
-    account: account ?? null,
-    authorizeSession,
-    deauthorizeSession,
-  };
+  const onChangeAccount = useCallback((nextSelectedAccount: Account) => {
+    setAuthorization(currentAuthorization => {
+      if (
+        !currentAuthorization?.accounts.some(
+          ({address}) => address === nextSelectedAccount.address,
+        )
+      ) {
+        throw new Error(
+          `${nextSelectedAccount.address} is not one of the available addresses`,
+        );
+      }
+
+      return {
+        ...currentAuthorization,
+        selectedAccount: nextSelectedAccount,
+      };
+    });
+  }, []);
+  return useMemo(
+    () => ({
+      accounts: authorization?.accounts ?? null,
+      authorizeSession,
+      deauthorizeSession,
+      onChangeAccount,
+      selectedAccount: authorization?.selectedAccount ?? null,
+    }),
+    [authorization, authorizeSession, deauthorizeSession, onChangeAccount],
+  );
 }
