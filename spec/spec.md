@@ -16,28 +16,18 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-<<<<<<< HEAD
-**Version: 0.3.1**
-||||||| parent of 297a538 (Add minimum timeouts to MWA spec)
-**Version: 0.3.0**
-=======
 **Version: 0.3.2**
->>>>>>> 297a538 (Add minimum timeouts to MWA spec)
 
 ## Changelog
 
-| Version | Description |
-| ------- | ----------- |
-| 0.1.0   | Initial draft |
-| 0.2.0   | Updates based on wallet adapter feedback |
-| 0.2.1   | Fix a few missed pluralizations |
+| Version | Description                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1.0   | Initial draft                                                                                                                       |
+| 0.2.0   | Updates based on wallet adapter feedback                                                                                            |
+| 0.2.1   | Fix a few missed pluralizations                                                                                                     |
 | 0.3.0   | Sessions now track authorization statefully, rather than by providing `auth_token` to each [privileged method](#privileged-methods) |
-<<<<<<< HEAD
-| 0.3.1   | Enforce HTTPS for endpoint-specific URIs |
-||||||| parent of 297a538 (Add minimum timeouts to MWA spec)
-=======
-| 0.3.2   | Replace timeout placeholders with minimum timeouts |
->>>>>>> 297a538 (Add minimum timeouts to MWA spec)
+| 0.3.1   | Enforce HTTPS for endpoint-specific URIs                                                                                            |
+| 0.3.2   | Replace timeout placeholders with minimum timeouts                                                                                  |
 
 # Non-normative front matter
 
