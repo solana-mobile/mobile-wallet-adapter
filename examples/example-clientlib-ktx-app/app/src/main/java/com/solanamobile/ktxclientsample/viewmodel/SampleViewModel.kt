@@ -10,6 +10,7 @@ import com.portto.solana.web3.Transaction
 import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
+import com.solana.mobilewalletadapter.clientlib.RpcCluster
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,7 +43,7 @@ class SampleViewModel @Inject constructor(
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
             val result = walletAdapter.transact(sender) {
-                authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana")
+                authorize(Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana", RpcCluster.Devnet)
             }
 
             _state.update {

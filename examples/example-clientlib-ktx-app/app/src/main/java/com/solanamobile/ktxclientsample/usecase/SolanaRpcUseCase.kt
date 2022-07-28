@@ -38,7 +38,7 @@ class SolanaRpcUseCase @Inject constructor() {
 
     suspend fun getLatestBlockHash(): String? =
         withContext(Dispatchers.IO) {
-            api.getLatestBlockhash(Commitment.CONFIRMED)
+            api.getLatestBlockhash(Commitment.FINALIZED)
         }
 
     companion object {
