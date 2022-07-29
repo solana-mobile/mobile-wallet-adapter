@@ -10,4 +10,12 @@ export default [
         },
         plugins: [ts()],
     },
+    {
+        input: 'src/startAttestationEngine.ts',
+        output: {
+            dir: 'lib',
+            format: 'esm',
+        },
+        plugins: [ts()],
+    },
 ] as RollupOptions[];

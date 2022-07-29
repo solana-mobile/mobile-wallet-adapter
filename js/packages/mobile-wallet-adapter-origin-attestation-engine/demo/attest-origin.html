@@ -1,0 +1,8 @@
+<script type="module">
+    import startAttestationEngine from '../lib/startAttestationEngine.js';
+    try {
+        await startAttestationEngine();
+    } catch(e) {
+        console.error(e);
+    }
+</script>
