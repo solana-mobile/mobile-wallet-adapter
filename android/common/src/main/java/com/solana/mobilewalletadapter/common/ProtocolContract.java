@@ -43,6 +43,7 @@ public class ProtocolContract {
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base64-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGES = "sign_messages";
+    public static final String PARAMETER_ADDRESSES = "addresses"; // type: JSON array of String (base64-encoded addresses)
     // METHOD_SIGN_MESSAGES takes a PARAMETER_PAYLOADS
     // METHOD_SIGN_MESSAGES returns a RESULT_SIGNED_PAYLOADS
 

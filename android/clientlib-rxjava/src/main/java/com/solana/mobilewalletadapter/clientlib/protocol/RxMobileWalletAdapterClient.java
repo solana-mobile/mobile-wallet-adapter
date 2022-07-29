@@ -85,9 +85,10 @@ public class RxMobileWalletAdapterClient {
 
     @CheckResult
     @NonNull
-    public Single<SignPayloadsResult> signMessages(@NonNull @Size(min = 1) byte[][] messages) {
+    public Single<SignPayloadsResult> signMessages(@NonNull @Size(min = 1) byte[][] messages,
+                                                   @NonNull @Size(min = 1) byte[][] addresses) {
         try {
-            SignPayloadsFuture signPayloadsFuture = mMobileWalletAdapterClient.signMessages(messages);
+            SignPayloadsFuture signPayloadsFuture = mMobileWalletAdapterClient.signMessages(messages, addresses);
             return Single.fromFuture(signPayloadsFuture);
         } catch (Exception e) {
             return Single.error(e);

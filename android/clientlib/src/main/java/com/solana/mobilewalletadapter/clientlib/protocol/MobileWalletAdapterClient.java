@@ -206,7 +206,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     // =============================================================================================
-    // authorize (shares AuthorizeFuture and AuthorizeResult with reauthorize)
+    // authorize
     // =============================================================================================
 
     @NonNull
@@ -398,27 +398,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    private NotifyOnCompleteFuture<Object> signPayloads(@NonNull String method,
-                                                        @NonNull @Size(min = 1) byte[][] payloads)
-            throws IOException {
-        for (byte[] p : payloads) {
-            if (p == null || p.length == 0) {
-                throw new IllegalArgumentException("payloads must be null or empty");
-            }
-        }
-
-        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(payloads);
-        final JSONObject signPayloads = new JSONObject();
-        try {
-            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
-        }
-
-        return methodCall(method, signPayloads, mClientTimeoutMs);
-    }
-
-    @NonNull
     @Size(min = 1)
     private static byte[][] unpackResponsePayloadArray(@NonNull JSONObject jo,
                                                        @NonNull String paramName,
@@ -577,8 +556,22 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public SignPayloadsFuture signTransactions(@NonNull @Size(min = 1) byte[][] transactions)
             throws IOException {
+        for (byte[] t : transactions) {
+            if (t == null || t.length == 0) {
+                throw new IllegalArgumentException("transactions must not be null or empty");
+            }
+        }
+
+        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
+        final JSONObject signPayloads = new JSONObject();
+        try {
+            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
+        }
+
         return new SignPayloadsFuture(
-                signPayloads(ProtocolContract.METHOD_SIGN_TRANSACTIONS, transactions),
+                methodCall(ProtocolContract.METHOD_SIGN_TRANSACTIONS, signPayloads, mClientTimeoutMs),
                 transactions.length);
     }
 
@@ -587,10 +580,27 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // =============================================================================================
 
     @NonNull
-    public SignPayloadsFuture signMessages(@NonNull @Size(min = 1) byte[][] messages)
+    public SignPayloadsFuture signMessages(@NonNull @Size(min = 1) byte[][] messages,
+                                           @NonNull @Size(min = 1) byte[][] addresses)
             throws IOException {
+        for (byte[] m : messages) {
+            if (m == null || m.length == 0) {
+                throw new IllegalArgumentException("messages must not be null or empty");
+            }
+        }
+
+        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(messages);
+        final JSONArray addressesArr = JsonPack.packByteArraysToBase64PayloadsArray(addresses);
+        final JSONObject signPayloads = new JSONObject();
+        try {
+            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
+            signPayloads.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr);
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
+        }
+
         return new SignPayloadsFuture(
-                signPayloads(ProtocolContract.METHOD_SIGN_MESSAGES, messages),
+                methodCall(ProtocolContract.METHOD_SIGN_MESSAGES, signPayloads, mClientTimeoutMs),
                 messages.length);
     }
 

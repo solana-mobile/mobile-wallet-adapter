@@ -12,16 +12,13 @@ import androidx.annotation.Nullable;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
 public class SignTransactionsRequest extends SignPayloadsRequest {
-    /*package*/ SignTransactionsRequest(@NonNull MobileWalletAdapterServer.SignPayloadsRequest request,
+    /*package*/ SignTransactionsRequest(@NonNull MobileWalletAdapterServer.SignTransactionsRequest request,
                                         @Nullable String identityName,
                                         @Nullable Uri identityUri,
                                         @Nullable Uri iconUri,
                                         @NonNull byte[] authorizationScope,
-                                        @NonNull byte[] publicKey,
+                                        @NonNull byte[] authorizedPublicKey,
                                         @NonNull String cluster) {
-        super(request, identityName, identityUri, iconUri, authorizationScope, publicKey, cluster);
-        if (request.type != MobileWalletAdapterServer.SignPayloadsRequest.Type.Transaction) {
-            throw new IllegalArgumentException("request should be a Transaction");
-        }
+        super(request, identityName, identityUri, iconUri, authorizationScope, authorizedPublicKey, cluster);
     }
 }

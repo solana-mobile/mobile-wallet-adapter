@@ -16,7 +16,7 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-**Version: 0.3.2**
+**Version: 0.3.3**
 
 ## Changelog
 
@@ -28,6 +28,7 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 | 0.3.0   | Sessions now track authorization statefully, rather than by providing `auth_token` to each [privileged method](#privileged-methods) |
 | 0.3.1   | Enforce HTTPS for endpoint-specific URIs                                                                                            |
 | 0.3.2   | Replace timeout placeholders with minimum timeouts                                                                                  |
+| 0.3.3   | `sign_messages` should take multiple addresses for signing (for parity with `sign_transactions` behavior)                           |
 
 # Non-normative front matter
 
@@ -677,14 +678,14 @@ sign_messages
 
 ```
 {
-    "address": "<address>",
+    "addresses": ["<address>", ...],
     “payloads”: [“<message>”, ...],
 }
 ```
 
 where:
 
-- `address`: the base64-encoded address of the account which should be used to sign `message`. This should be one of the addresses returned by [`authorize`](#authorize) or [`reauthorize`](#reauthorize) for the current session's authorization.
+- `addresses`: one or more base64-encoded addresses of the accounts which should be used to sign `message`. These should be a subset of the addresses returned by [`authorize`](#authorize) or [`reauthorize`](#reauthorize) for the current session's authorization.
 - `payloads`: one or more base64url-encoded message payloads to sign
 
 ###### Result
@@ -721,7 +722,7 @@ where:
 
 ##### Description
 
-The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account address, and return the signed messages to the dapp endpoint.
+The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account address, and return the signed messages to the dapp endpoint. The signatures should be appended to the message, in the same order as `addresses`.
 
 #### clone_authorization
 
