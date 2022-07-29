@@ -105,7 +105,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
 
         viewModelScope.launch {
-            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
+            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.authorizedPublicKey)
             check(keypair != null) { "Unknown public key for signing request" }
 
             val valid = BooleanArray(request.request.payloads.size) { true }
@@ -127,7 +127,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             }
 
             if (valid.all { it }) {
-                Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
+                Log.d(TAG, "Simulating signing with ${request.request.authorizedPublicKey}")
                 request.request.completeWithSignedPayloads(signedPayloads)
             } else {
                 Log.e(TAG, "One or more transactions not valid")

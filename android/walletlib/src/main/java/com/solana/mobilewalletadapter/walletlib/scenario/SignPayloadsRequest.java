@@ -14,26 +14,26 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 
 public abstract class SignPayloadsRequest extends BaseVerifiableIdentityRequest {
     @NonNull
-    protected final MobileWalletAdapterServer.SignPayloadsRequest mRequest;
+    protected final MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult> mRequest;
 
     @NonNull
-    protected final byte[] mPublicKey;
+    protected final byte[] mAuthorizedPublicKey;
 
-    protected SignPayloadsRequest(@NonNull MobileWalletAdapterServer.SignPayloadsRequest request,
+    protected SignPayloadsRequest(@NonNull MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult> request,
                                   @Nullable String identityName,
                                   @Nullable Uri identityUri,
                                   @Nullable Uri iconUri,
                                   @NonNull byte[] authorizationScope,
-                                  @NonNull byte[] publicKey,
+                                  @NonNull byte[] authorizedPublicKey,
                                   @NonNull String cluster) {
         super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
         mRequest = request;
-        mPublicKey = publicKey;
+        mAuthorizedPublicKey = authorizedPublicKey;
     }
 
     @NonNull
-    public byte[] getPublicKey() {
-        return mPublicKey;
+    public byte[] getAuthorizedPublicKey() {
+        return mAuthorizedPublicKey;
     }
 
     @NonNull

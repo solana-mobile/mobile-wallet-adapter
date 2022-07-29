@@ -48,7 +48,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (LocalAssociationIntentCreator.isWalletEndpointAvailable(getApplication<Application>().packageManager)) {
                 isWalletEndpointAvailable = true
             } else {
-                showMessage(R.string.msg_no_wallet_found);
+                showMessage(R.string.msg_no_wallet_found)
             }
         }
     }
@@ -185,7 +185,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val messages = Array(numMessages) {
                 Random.nextBytes(16384)
             }
-            doSignMessages(client, messages)
+            doSignMessages(client, messages, arrayOf(_uiState.value.publicKey!!))
         }
 
         showMessage(if (signedMessages != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
@@ -417,11 +417,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // NOTE: blocks and waits for completion of remote method call
     private fun doSignMessages(
         client: MobileWalletAdapterClient,
-        messages: Array<ByteArray>
+        messages: Array<ByteArray>,
+        addresses: Array<ByteArray>
     ): Array<ByteArray>? {
         var signedMessages: Array<ByteArray>? = null
         try {
-            val result = client.signMessages(messages).get()
+            val result = client.signMessages(messages, addresses).get()
             Log.d(TAG, "Signed message(s): $result")
             signedMessages = result.signedPayloads
         } catch (e: ExecutionException) {
@@ -561,7 +562,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     data class UiState(
         val authToken: String? = null,
-        val publicKey: ByteArray? = null,
+        val publicKey: ByteArray? = null, // TODO(#44): support multiple addresses
         val messages: List<String> = emptyList()
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)

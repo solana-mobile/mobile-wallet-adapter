@@ -27,11 +27,12 @@ export default function SignMessageButton({children, message}: Props) {
       const [signature] = await transact(async wallet => {
         const freshAccount = await authorizeSession(wallet);
         return await wallet.signMessages({
-          address:
+          addresses: [
             // Either the address that was already selected when this method was called...
             selectedAccount?.address ??
             // ...or the newly authorized address
-            freshAccount.address,
+            freshAccount.address
+          ],
           payloads: [buffer],
         });
       });

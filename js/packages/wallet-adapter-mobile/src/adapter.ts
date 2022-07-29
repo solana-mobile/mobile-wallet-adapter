@@ -269,7 +269,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 return await this.transact(async (wallet) => {
                     await this.performReauthorization(wallet, authToken);
                     const [signedMessage] = await wallet.signMessages({
-                        address: selectedAddress,
+                        addresses: [selectedAddress],
                         payloads: [message],
                     });
                     const signature = signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES);

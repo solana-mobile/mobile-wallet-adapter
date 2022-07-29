@@ -253,7 +253,7 @@ public abstract class Scenario {
         }
 
         @Override
-        public void signPayloads(@NonNull MobileWalletAdapterServer.SignPayloadsRequest request) {
+        public void signTransactions(@NonNull MobileWalletAdapterServer.SignTransactionsRequest request) {
             final AuthRecord authRecord;
             synchronized (mLock) {
                 authRecord = mActiveAuthorization;
@@ -264,24 +264,34 @@ public abstract class Scenario {
                 return;
             }
 
-            final Runnable r;
-            switch (request.type) {
-                case Transaction:
-                    r = () -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
-                            request, authRecord.identity.name, authRecord.identity.uri,
-                            authRecord.identity.relativeIconUri, authRecord.scope,
-                            authRecord.publicKey, authRecord.cluster));
-                    break;
-                case Message:
-                    r = () -> mCallbacks.onSignMessagesRequest(new SignMessagesRequest(request,
-                            authRecord.identity.name, authRecord.identity.uri,
-                            authRecord.identity.relativeIconUri, authRecord.scope,
-                            authRecord.publicKey, authRecord.cluster));
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown payload type");
+            mIoHandler.post(() -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
+                    request, authRecord.identity.name, authRecord.identity.uri,
+                    authRecord.identity.relativeIconUri, authRecord.scope,
+                    authRecord.publicKey, authRecord.cluster)));
+        }
+
+        @Override
+        public void signMessages(@NonNull MobileWalletAdapterServer.SignMessagesRequest request) {
+            final AuthRecord authRecord;
+            synchronized (mLock) {
+                authRecord = mActiveAuthorization;
             }
-            mIoHandler.post(r);
+            if (authRecord == null || authRecord.isRevoked()) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
+                return;
+            }
+
+            try {
+                final SignMessagesRequest smr = new SignMessagesRequest(request,
+                        authRecord.identity.name, authRecord.identity.uri,
+                        authRecord.identity.relativeIconUri, authRecord.scope,
+                        authRecord.publicKey, authRecord.cluster);
+                mIoHandler.post(() -> mCallbacks.onSignMessagesRequest(smr));
+            } catch (IllegalArgumentException e) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.RequestDeclinedException("Unexpected address; not signing message"))); // TODO(#44): support multiple addresses
+            }
         }
 
         @Override

@@ -48,10 +48,10 @@ class LocalAdapterOperations(
         }
     }
 
-    override suspend fun signMessages(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
+    override suspend fun signMessages(messages: Array<ByteArray>, addresses: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.signMessages(transactions)?.get()
+            client?.signMessages(messages, addresses)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }

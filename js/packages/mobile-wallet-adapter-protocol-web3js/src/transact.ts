@@ -27,7 +27,7 @@ interface Web3SignTransactionsAPI {
 }
 
 interface Web3SignMessagesAPI {
-    signMessages(params: { address: Base64EncodedAddress; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
+    signMessages(params: { addresses: Base64EncodedAddress[]; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
 }
 
 export interface Web3MobileWallet

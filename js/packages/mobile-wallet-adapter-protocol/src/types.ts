@@ -63,7 +63,7 @@ export interface ReauthorizeAPI {
 }
 export interface SignMessagesAPI {
     signMessages(params: {
-        address: Base64EncodedAddress;
+        addresses: Base64EncodedAddress[];
         payloads: Base64EncodedMessage[];
     }): Promise<Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>>;
 }
