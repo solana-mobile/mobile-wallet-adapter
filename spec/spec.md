@@ -329,7 +329,10 @@ where:
 ```
 {
     “auth_token”: “<auth_token>”,
-    “addresses”: [“<address>", ...]
+    “accounts”: [
+        {“address”: “<address>", “label”: “<label>”},
+        ...
+    ],
     “wallet_uri_base”: “<wallet_uri_base>”,
 }
 ```
@@ -337,7 +340,9 @@ where:
 where:
 
 - `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to `reauthorize` access to [privileged methods](#privileged-methods).
-- `addresses`: one or more base64-encoded addresses, for the accounts to which this auth token corresponds
+- `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
+  - `address`: a base64-encoded address for this account
+  - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 
 ###### Errors
@@ -349,7 +354,7 @@ where:
 
 ##### Description
 
-This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods, along with addresses for all authorized accounts. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris). After a successful call to `authorize`, the current session will be placed into an authorized state, with privileges associated with the returned `auth_token`. On failure, the current session with be placed into the unauthorized state.
+This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods, along with addresses and optional labels for all authorized accounts. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris). After a successful call to `authorize`, the current session will be placed into an authorized state, with privileges associated with the returned `auth_token`. On failure, the current session with be placed into the unauthorized state.
 
 The returned `auth_token` is an opaque string with meaning only to the wallet endpoint which created it. It is recommended that the wallet endpoint include a mechanism to authenticate the contents of auth tokens it issues (for e.g., with an HMAC, or by encryption with a secret symmetric key). This `auth_token` may be used to [`reauthorize`](#reauthorize) future sessions between these dapp and wallet endpoints. 
 
@@ -435,7 +440,10 @@ where:
 ```
 {
     “auth_token”: “<auth_token>”,
-    "addresses": [“<address>", ...]
+    “accounts”: [
+        {“address”: “<address>", “label”: “<label>”},
+        ...
+    ],
     “wallet_uri_base”: “<wallet_uri_base>”,
 }
 ```
@@ -443,7 +451,7 @@ where:
 where:
 
 - `auth_token`: as defined for [`authorize`](#authorize)
-- `addresses`: as defined for [`authorize`](#authorize)
+- `accounts`: as defined for [`authorize`](#authorize)
 - `wallet_uri_base`: as defined for [`authorize`](#authorize)
 
 ###### Errors
@@ -456,7 +464,7 @@ where:
 
 This method attempts to put the current session in an authorized state, with privileges associated with the specified `auth_token`.
 
-On success, the current session will be placed into an authorized state. Additionally, updated values for `auth_token`, `addresses`, and/or `wallet_uri_base` will be returned. These may differ from those originally provided in the [`authorize`](#authorize) response for this auth token; if so, they override any previous values for these parameters. The prior values should be discarded and not reused. This allows a wallet endpoint to update the auth token used by the dapp endpoint, or to modify the set of authorized account addresses without requiring the dapp endpoint to restart the authorization process.
+On success, the current session will be placed into an authorized state. Additionally, updated values for `auth_token`, `accounts`, and/or `wallet_uri_base` will be returned. These may differ from those originally provided in the [`authorize`](#authorize) response for this auth token; if so, they override any previous values for these parameters. The prior values should be discarded and not reused. This allows a wallet endpoint to update the auth token used by the dapp endpoint, or to modify the set of authorized account addresses or their labels without requiring the dapp endpoint to restart the authorization process.
 
 If the result is `ERROR_AUTHORIZATION_FAILED`, this auth token cannot be reused, and should be discarded. The dapp endpoint should request a new token with the [`authorize`](#authorize) method. The session with be placed into the unauthorized state.
 
