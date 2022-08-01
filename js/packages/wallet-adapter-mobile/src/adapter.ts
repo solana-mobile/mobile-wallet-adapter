@@ -126,7 +126,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 if (this._readyState !== WalletReadyState.Installed) {
                     this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
                 }
-                this._selectedAddress = await this._addressSelector.select(cachedAuthorizationResult.addresses);
+                this._selectedAddress = await this._addressSelector.select(
+                    cachedAuthorizationResult.accounts.map(({ address }) => address),
+                );
                 this.emit(
                     'connect',
                     // Having just set `this._selectedAddress`, `this.publicKey` is definitely non-null
@@ -155,13 +157,17 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         const didPublicKeysChange =
             // Case 1: We started from having no authorization.
             this._authorizationResult == null ||
-            // Case 2: The number of authorized public keys changed.
-            this._authorizationResult?.addresses.length !== authorizationResult.addresses.length ||
+            // Case 2: The number of authorized accounts changed.
+            this._authorizationResult?.accounts.length !== authorizationResult.accounts.length ||
             // Case 3: The new list of addresses isn't exactly the same as the old list, in the same order.
-            this._authorizationResult.addresses.some((address, ii) => address !== authorizationResult.addresses[ii]);
+            this._authorizationResult.accounts.some(
+                (account, ii) => account.address !== authorizationResult.accounts[ii].address,
+            );
         this._authorizationResult = authorizationResult;
         if (didPublicKeysChange) {
-            const nextSelectedAddress = await this._addressSelector.select(authorizationResult.addresses);
+            const nextSelectedAddress = await this._addressSelector.select(
+                authorizationResult.accounts.map(({ address }) => address),
+            );
             if (nextSelectedAddress !== this._selectedAddress) {
                 this._selectedAddress = nextSelectedAddress;
                 delete this._publicKey;
