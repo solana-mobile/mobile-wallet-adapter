@@ -177,9 +177,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
             final byte[] publicKey;
             try {
-                final byte[][] addresses = JsonPack.unpackBase64PayloadsArrayToByteArrays(
-                        jo.getJSONArray(ProtocolContract.RESULT_ADDRESSES));
-                publicKey = addresses[0]; // TODO(#44): support multiple addresses
+                final JSONArray accounts = jo.getJSONArray(ProtocolContract.RESULT_ACCOUNTS);
+                final JSONObject account = accounts.getJSONObject(0); // TODO(#44): support multiple addresses
+                final String b64EncodedAddress = account.getString(ProtocolContract.RESULT_ACCOUNTS_ADDRESS);
+                publicKey = JsonPack.unpackBase64PayloadToByteArray(b64EncodedAddress);
             } catch (JSONException e) {
                 throw new JsonRpc20InvalidResponseException("expected one or more addresses");
             }

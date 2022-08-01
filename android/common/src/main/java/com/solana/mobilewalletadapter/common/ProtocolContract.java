@@ -9,7 +9,7 @@ public class ProtocolContract {
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY
     public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
     // METHOD_AUTHORIZE returns a RESULT_AUTH_TOKEN
-    // METHOD_AUTHORIZE returns a RESULT_ADDRESSES
+    // METHOD_AUTHORIZE returns a RESULT_ACCOUNTS
     // METHOD_AUTHORIZE returns an optional RESULT_WALLET_URI_BASE
 
     public static final String METHOD_DEAUTHORIZE = "deauthorize";
@@ -19,7 +19,7 @@ public class ProtocolContract {
     // METHOD_REAUTHORIZE takes an optional PARAMETER_IDENTITY
     // METHOD_REAUTHORIZE takes a PARAMETER_AUTH_TOKEN
     // METHOD_REAUTHORIZE returns a RESULT_AUTH_TOKEN
-    // METHOD_REAUTHORIZE returns a RESULT_ADDRESSES
+    // METHOD_REAUTHORIZE returns a RESULT_ACCOUNTS
     // METHOD_REAUTHORIZE returns an optional RESULT_WALLET_URI_BASE
 
     public static final String METHOD_CLONE_AUTHORIZATION = "clone_authorization";
@@ -56,7 +56,10 @@ public class ProtocolContract {
     public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of String (base64-encoded payloads)
 
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
-    public static final String RESULT_ADDRESSES = "addresses"; // type: JSON array of String (base64-encoded addresses)
+    public static final String RESULT_ACCOUNTS = "accounts"; // type: JSON array of Account
+    public static final String RESULT_ACCOUNTS_ADDRESS = "address"; // type: String (base64-encoded addresses)
+    public static final String RESULT_ACCOUNTS_LABEL = "label"; // type: String
+
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
 
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)
