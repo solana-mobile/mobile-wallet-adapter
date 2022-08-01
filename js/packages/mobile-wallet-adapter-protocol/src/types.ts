@@ -79,9 +79,10 @@ export interface SignTransactionsAPI {
 }
 export interface SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        commitment: Finality;
+        options?: Readonly<{
+            min_context_slot?: number;
+        }>;
         payloads: Base64EncodedTransaction[];
-        preflight_commitment: Finality;
     }): Promise<Readonly<{ signatures: Base64EncodedSignature[] }>>;
 }
 
