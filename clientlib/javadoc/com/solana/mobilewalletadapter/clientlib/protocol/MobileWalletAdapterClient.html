@@ -309,7 +309,8 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(byte%5B%5D%5B%5D)">signMessages</a></span>&#8203;(byte[][]&nbsp;messages)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)">signMessages</a></span>&#8203;(byte[][]&nbsp;messages,
+            byte[][]&nbsp;addresses)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
@@ -459,7 +460,7 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="c
 </dl>
 </li>
 </ul>
-<a id="signMessages(byte[][])">
+<a id="signMessages(byte[][],byte[][])">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -467,7 +468,9 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="c
 <h4>signMessages</h4>
 <pre class="methodSignature">@NonNull
 public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a>&nbsp;signMessages&#8203;(@NonNull @Size(min=1L)
-                                                                 byte[][]&nbsp;messages)
+                                                                 byte[][]&nbsp;messages,
+                                                                 @NonNull @Size(min=1L)
+                                                                 byte[][]&nbsp;addresses)
                                                           throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
