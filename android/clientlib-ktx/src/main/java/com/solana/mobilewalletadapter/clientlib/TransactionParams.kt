@@ -1,7 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib
 
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
 
 sealed class RpcCluster(val name: String) {
     object MainnetBeta : RpcCluster(ProtocolContract.CLUSTER_MAINNET_BETA)
@@ -10,14 +9,10 @@ sealed class RpcCluster(val name: String) {
 }
 
 open class TransactionParams(
-    val commitmentLevel: CommitmentLevel,
-    val skipPreflight: Boolean,
-    val preflightCommitment: CommitmentLevel?
+    val minContextSlot: Int?
 )
 
 //TODO: We can add other defaults as they become relevant
 object DefaultTransactionParams : TransactionParams(
-    commitmentLevel = CommitmentLevel.Confirmed,
-    skipPreflight = false,
-    preflightCommitment = null
+    minContextSlot = null
 )

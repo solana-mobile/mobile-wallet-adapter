@@ -15,7 +15,6 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsResult;
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -98,26 +97,10 @@ public class RxMobileWalletAdapterClient {
     @CheckResult
     @NonNull
     public Single<SignAndSendTransactionsResult> signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
-                                                                         @NonNull CommitmentLevel commitmentLevel,
-                                                                         boolean skipPreflight,
-                                                                         @Nullable CommitmentLevel preflightCommitmentLevel) {
+                                                                         @Nullable Integer minContextSlot) {
         try {
             SignAndSendTransactionsFuture signAndSendTransactionsFuture = mMobileWalletAdapterClient.signAndSendTransactions(
-                    transactions, commitmentLevel, skipPreflight, preflightCommitmentLevel
-            );
-            return Single.fromFuture(signAndSendTransactionsFuture);
-        } catch (Exception e) {
-            return Single.error(e);
-        }
-    }
-
-    @CheckResult
-    @NonNull
-    public Single<SignAndSendTransactionsResult> signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
-                                                                         @NonNull CommitmentLevel commitmentLevel) {
-        try {
-            SignAndSendTransactionsFuture signAndSendTransactionsFuture = mMobileWalletAdapterClient.signAndSendTransactions(
-                    transactions, commitmentLevel
+                    transactions, minContextSlot
             );
             return Single.fromFuture(signAndSendTransactionsFuture);
         } catch (Exception e) {

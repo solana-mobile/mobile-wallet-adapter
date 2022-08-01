@@ -69,9 +69,7 @@ class LocalAdapterOperations(
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.signAndSendTransactions(
                 transactions,
-                params.commitmentLevel,
-                params.skipPreflight,
-                params.preflightCommitment
+                params.minContextSlot
             )?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }

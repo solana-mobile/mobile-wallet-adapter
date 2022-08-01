@@ -223,25 +223,28 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithInvalidSignatures(valid)
     }
 
-    fun signAndSendTransactionsCommitmentReached(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
+    fun signAndSendTransactionsSubmitted(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
 
-        Log.d(TAG, "Simulating commitmentLevel=${request.request.commitmentLevel} reached on cluster=${request.request.cluster}")
+        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.cluster}")
 
         request.request.completeWithSignatures(request.signatures!!)
     }
 
-    fun signAndSendTransactionsCommitmentNotReached(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
+    fun signAndSendTransactionsNotSubmitted(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         if (rejectStaleRequest(request)) {
             return
         }
 
-        Log.d(TAG, "Simulating commitmentLevel=${request.request.commitmentLevel} NOT reached on cluster=${request.request.cluster}")
+        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.cluster}")
 
-        val committed = BooleanArray(request.request.payloads.size) { i -> i != 0 }
-        request.request.completeWithNotCommitted(request.signatures!!, committed)
+        val signatures = request.signatures!!
+        val notSubmittedSignatures = Array(signatures.size) { i ->
+            if (i != 0) signatures[i] else null
+        }
+        request.request.completeWithNotSubmitted(notSubmittedSignatures)
     }
 
     fun signAndSendTransactionsSend(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
@@ -256,27 +259,16 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             request.signatures!!
 
             try {
-                val commitmentReached = SendTransactionsUseCase(
+                SendTransactionsUseCase(
                     request.endpointUri,
                     request.signedTransactions,
-                    request.request.commitmentLevel,
-                    request.request.skipPreflight,
-                    request.request.preflightCommitmentLevel
+                    request.request.minContextSlot
                 )
-                Log.d(TAG, "Commitment status for transactions submitted via RPC: ${commitmentReached.contentToString()}")
-                if (commitmentReached.all { it }) {
-                    request.request.completeWithSignatures(request.signatures)
-                } else {
-                    request.request.completeWithNotCommitted(request.signatures, commitmentReached)
-                }
+                Log.d(TAG, "All transactions submitted via RPC")
+                request.request.completeWithSignatures(request.signatures)
             } catch (e: SendTransactionsUseCase.InvalidTransactionsException) {
                 Log.e(TAG, "Failed submitting transactions via RPC", e)
                 request.request.completeWithInvalidSignatures(e.valid)
-            } catch (e: SendTransactionsUseCase.CannotVerifySignaturesException) {
-                Log.e(TAG, "Failed verifying transaction committment reached via RPC", e)
-                request.request.completeWithNotCommitted(
-                    request.signatures,
-                    BooleanArray(request.signatures.size) { false })
             }
         }
     }

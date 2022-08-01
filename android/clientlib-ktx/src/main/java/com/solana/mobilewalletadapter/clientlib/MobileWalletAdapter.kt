@@ -85,8 +85,8 @@ class MobileWalletAdapter(
                     Log.e(TAG, "Transaction payloads invalid", cause)
                     throw e
                 }
-                is MobileWalletAdapterClient.NotCommittedException -> {
-                    Log.e(TAG, "Commitment not reached for all transactions", cause)
+                is MobileWalletAdapterClient.NotSubmittedException -> {
+                    Log.e(TAG, "Not all transactions were submitted", cause)
                     throw e
                 }
                 else -> throw e

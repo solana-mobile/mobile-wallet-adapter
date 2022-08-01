@@ -10,27 +10,39 @@ import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 public class JsonPack {
     @NonNull
     public static JSONArray packByteArraysToBase64PayloadsArray(@NonNull byte[][] byteArrays) {
         final JSONArray arr = new JSONArray();
         for (byte[] byteArray : byteArrays) {
-            final String b64 =
-                Base64.encodeToString(byteArray,Base64.NO_WRAP | Base64.NO_PADDING);
-            arr.put(b64);
+            if (byteArray == null) {
+                arr.put(JSONObject.NULL);
+            } else {
+                final String b64 = Base64.encodeToString(byteArray, Base64.NO_WRAP);
+                arr.put(b64);
+            }
         }
         return arr;
     }
 
     @NonNull
-    public static byte[][] unpackBase64PayloadsArrayToByteArrays(@NonNull JSONArray arr)
+    public static byte[][] unpackBase64PayloadsArrayToByteArrays(@NonNull JSONArray arr,
+                                                                 boolean allowNulls)
             throws JSONException {
         final int numEntries = arr.length();
         final byte[][] byteArrays = new byte[numEntries][];
         for (int i = 0; i < numEntries; i++) {
-            final String b64 = arr.getString(i);
-            byteArrays[i] = unpackBase64PayloadToByteArray(b64);
+            if (arr.isNull(i)) {
+                if (!allowNulls) {
+                    throw new IllegalArgumentException("null entries not allowed");
+                }
+                byteArrays[i] = null;
+            } else {
+                final String b64 = arr.getString(i);
+                byteArrays[i] = unpackBase64PayloadToByteArray(b64);
+            }
         }
         return byteArrays;
     }

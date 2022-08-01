@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
@@ -569,10 +568,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final byte[][] payloads;
         try {
-            payloads = JsonPack.unpackBase64PayloadsArrayToByteArrays(payloadsArray);
+            payloads = JsonPack.unpackBase64PayloadsArrayToByteArrays(payloadsArray, false);
         } catch (JSONException e) {
             throw new IllegalArgumentException("payloads must be an array of base64url-encoded Strings");
         }
+        // throws uncaught IllegalArgumentException if payloadsArray contains nulls
 
         return payloads;
     }
@@ -735,10 +735,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final byte[][] addresses;
         try {
-            addresses = JsonPack.unpackBase64PayloadsArrayToByteArrays(addressesArray);
+            addresses = JsonPack.unpackBase64PayloadsArrayToByteArrays(addressesArray, false);
         } catch (JSONException e) {
             throw new IllegalArgumentException("addresses must be an array of base64url-encoded Strings");
         }
+        // throws uncaught IllegalArgumentException if addressesArray contains nulls
 
         if (checkExceedsSigningLimits(payloads.length, SigningType.Message)) {
             handleRpcError(id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of payloads provided for signing exceeds implementation limit", null);
@@ -776,33 +777,22 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     // =============================================================================================
 
     public static class SignAndSendTransactionsRequest extends SignRequest<SignaturesResult> {
-        @NonNull
-        public final CommitmentLevel commitmentLevel;
-
-        public final boolean skipPreflight;
-
-        @NonNull
-        public final CommitmentLevel preflightCommitmentLevel;
+        @Nullable
+        public final Integer minContextSlot;
 
         private SignAndSendTransactionsRequest(@Nullable Object id,
                                                @NonNull @Size(min = 1) byte[][] transactions,
-                                               @NonNull CommitmentLevel commitmentLevel,
-                                               boolean skipPreflight,
-                                               @NonNull CommitmentLevel preflightCommitmentLevel) {
+                                               @Nullable Integer minContextSlot) {
             super(id, transactions);
-            this.commitmentLevel = commitmentLevel;
-            this.skipPreflight = skipPreflight;
-            this.preflightCommitmentLevel = preflightCommitmentLevel;
+            this.minContextSlot = minContextSlot;
         }
 
         @Override
         public boolean completeExceptionally(@NonNull Exception ex) {
-            if (ex instanceof NotCommittedException) {
-                final NotCommittedException nce = (NotCommittedException) ex;
+            if (ex instanceof NotSubmittedException) {
+                final NotSubmittedException nce = (NotSubmittedException) ex;
                 if (nce.signatures.length != payloads.length) {
                     throw new IllegalArgumentException("Number of signatures does not match the number of payloads");
-                } else if (nce.committed.length != payloads.length) {
-                    throw new IllegalArgumentException("Number of committed values does not match the number of payloads");
                 }
             }
             return super.completeExceptionally(ex);
@@ -812,9 +802,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Override
         public String toString() {
             return "SignAndSendTransactionsRequest{" +
-                    "commitmentLevel=" + commitmentLevel +
-                    ", skipPreflight=" + skipPreflight +
-                    ", preflightCommitmentLevel=" + preflightCommitmentLevel +
+                    "minContextSlot=" + minContextSlot +
                     ", super=" + super.toString() +
                     '}';
         }
@@ -863,30 +851,22 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final String commitmentLevelStr = o.optString(ProtocolContract.PARAMETER_COMMITMENT);
-        final CommitmentLevel commitmentLevel = CommitmentLevel.fromCommitmentLevelString(
-                commitmentLevelStr);
-        if (commitmentLevel == null) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "request contains an invalid commitment_level", null);
-            return;
-        }
+        final JSONObject options = o.optJSONObject(ProtocolContract.PARAMETER_OPTIONS);
 
-        final boolean skipPreflight = o.optBoolean(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, false);
-
-        final CommitmentLevel preflightCommitmentLevel;
-        if (o.has(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT)) {
-            final String preflightCommitmentLevelStr = o.optString(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT);
-            preflightCommitmentLevel = CommitmentLevel.fromCommitmentLevelString(preflightCommitmentLevelStr);
-            if (preflightCommitmentLevel == null) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "request contains an invalid preflight_commitment", null);
+        final Integer minContextSlot;
+        if (options != null && options.has(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT)) {
+            try {
+                minContextSlot = options.getInt(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT);
+            } catch (JSONException e) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "min_context_slot must be an integer", null);
                 return;
             }
         } else {
-            preflightCommitmentLevel = CommitmentLevel.Finalized;
+            minContextSlot = null;
         }
 
         final SignAndSendTransactionsRequest request = new SignAndSendTransactionsRequest(
-                id, payloads, commitmentLevel, skipPreflight, preflightCommitmentLevel);
+                id, payloads, minContextSlot);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionsComplete(f)));
         mMethodHandlers.signAndSendTransactions(request);
     }
@@ -908,10 +888,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     final InvalidPayloadsException e2 = (InvalidPayloadsException) cause;
                     handleRpcError(request.id, ProtocolContract.ERROR_INVALID_PAYLOADS, "payloads invalid for signing",
                             createInvalidPayloadsData(e2.valid));
-                } else if (cause instanceof NotCommittedException) {
-                    final NotCommittedException e2 = (NotCommittedException) cause;
-                    handleRpcError(request.id, ProtocolContract.ERROR_NOT_COMMITTED, "transactions not committed",
-                            createNotCommittedData(e2.signatures, e2.committed));
+                } else if (cause instanceof NotSubmittedException) {
+                    final NotSubmittedException e2 = (NotSubmittedException) cause;
+                    handleRpcError(request.id, ProtocolContract.ERROR_NOT_SUBMITTED, "transactions not submitted",
+                            createNotSubmittedData(e2.signatures));
                 } else if (cause instanceof  TooManyPayloadsException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of transactions provided for signing exceeds implementation limit", null);
                 } else {
@@ -929,15 +909,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             assert(result != null); // checked in SignPayloadsRequest.complete()
             assert(result.signatures.length == request.payloads.length); // checked in SignPayloadsRequest.complete()
 
-            final String[] signaturesBase64 = new String[result.signatures.length];
-            for (int i = 0; i < result.signatures.length; i++) {
-                signaturesBase64[i] = Base64.encodeToString(result.signatures[i], Base64.NO_WRAP);
-            }
-
-            final JSONArray signatures = JsonPack.packStrings(signaturesBase64);
             final JSONObject o = new JSONObject();
             try {
-                o.put(ProtocolContract.RESULT_SIGNATURES, signatures);
+                o.put(ProtocolContract.RESULT_SIGNATURES,
+                        JsonPack.packByteArraysToBase64PayloadsArray(result.signatures));
             } catch (JSONException e) {
                 throw new RuntimeException("Failed constructing sign response", e);
             }
@@ -949,21 +924,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     @NonNull
-    private String createNotCommittedData(@NonNull @Size(min = 1) byte[][] signatures,
-                                          @NonNull @Size(min = 1) boolean[] committed) {
-        final String[] signaturesBase64 = new String[signatures.length];
-        for (int i = 0; i < signatures.length; i++) {
-            signaturesBase64[i] = Base64.encodeToString(signatures[i], Base64.NO_WRAP);
-        }
-
-        final JSONArray signaturesArr = JsonPack.packStrings(signaturesBase64);
-        final JSONArray committedArr = JsonPack.packBooleans(committed);
+    private String createNotSubmittedData(@NonNull @Size(min = 1) byte[][] signatures) {
         final JSONObject o = new JSONObject();
         try {
-            o.put(ProtocolContract.DATA_NOT_COMMITTED_SIGNATURES, signaturesArr);
-            o.put(ProtocolContract.DATA_NOT_COMMITTED_COMMITMENT, committedArr);
+            o.put(ProtocolContract.DATA_NOT_SUBMITTED_SIGNATURES,
+                    JsonPack.packByteArraysToBase64PayloadsArray(signatures));
         } catch (JSONException e) {
-            throw new RuntimeException("Failed constructing not committed data", e);
+            throw new RuntimeException("Failed constructing not submitted data", e);
         }
 
         return o.toString();
@@ -1003,29 +970,22 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
-    public static class NotCommittedException extends MobileWalletAdapterServerException {
+    public static class NotSubmittedException extends MobileWalletAdapterServerException {
         @NonNull
         @Size(min = 1)
         public final byte[][] signatures;
 
-        @NonNull
-        @Size(min = 1)
-        public final boolean[] committed;
-
-        public NotCommittedException(@NonNull String m,
-                                     @NonNull @Size(min = 1) byte[][] signatures,
-                                     @NonNull @Size(min = 1) boolean[] committed) {
+        public NotSubmittedException(@NonNull String m,
+                                     @NonNull @Size(min = 1) byte[][] signatures) {
             super(m);
             this.signatures = signatures;
-            this.committed = committed;
         }
 
         @Nullable
         @Override
         public String getMessage() {
             return super.getMessage() +
-                    "/signatures=" + Arrays.toString(signatures) +
-                    "/committed=" + Arrays.toString(committed);
+                    "/signatures=" + Arrays.toString(signatures);
         }
     }
 

@@ -23,10 +23,9 @@
 
     <!-- Send Transaction fragment strings -->
     <string name="label_send_transactions">Sending transaction(s)</string>
-    <string name="label_desired_commitment">Commitment:</string>
     <string name="label_cluster">Cluster:</string>
-    <string name="label_simulate_commitment_reached">Simulate commitment achieved</string>
-    <string name="label_simulate_commitment_not_reached">Simulate commitment not achieved</string>
+    <string name="label_simulate_transactions_submitted">Simulate submitted</string>
+    <string name="label_simulate_transactions_not_submitted">Simulate submit failed</string>
     <string name="label_send_transaction_to_cluster">Send transaction to cluster</string>
 
     <!-- Common strings -->
