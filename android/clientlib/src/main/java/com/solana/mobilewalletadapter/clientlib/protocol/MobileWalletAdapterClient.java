@@ -12,7 +12,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
@@ -402,7 +401,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @Size(min = 1)
     private static byte[][] unpackResponsePayloadArray(@NonNull JSONObject jo,
                                                        @NonNull String paramName,
-                                                       @IntRange(from = 1) int numExpectedPayloads)
+                                                       @IntRange(from = 1) int numExpectedPayloads,
+                                                       boolean allowNulls)
             throws JsonRpc20InvalidResponseException {
         assert(numExpectedPayloads > 0); // checked with inputs to sign*
 
@@ -420,9 +420,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         final byte[][] payloads;
         try {
-            payloads = JsonPack.unpackBase64PayloadsArrayToByteArrays(arr);
+            payloads = JsonPack.unpackBase64PayloadsArrayToByteArrays(arr, allowNulls);
         } catch (JSONException e) {
             throw new JsonRpc20InvalidResponseException(paramName + " must be an array of base64url-encoded Strings");
+        } catch (IllegalArgumentException e) {
+            throw new JsonRpc20InvalidResponseException(paramName + " does not allow null entries");
         }
 
         return payloads;
@@ -495,7 +497,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
             final JSONObject jo = (JSONObject) o;
             final byte[][] signedPayloads = unpackResponsePayloadArray(jo,
-                    ProtocolContract.RESULT_SIGNED_PAYLOADS, mExpectedNumSignedPayloads);
+                        ProtocolContract.RESULT_SIGNED_PAYLOADS, mExpectedNumSignedPayloads, false);
             return new SignPayloadsResult(signedPayloads);
         }
 
@@ -611,9 +613,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
     @NonNull
     public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
-                                                                 @NonNull CommitmentLevel commitmentLevel,
-                                                                 boolean skipPreflight,
-                                                                 @Nullable CommitmentLevel preflightCommitmentLevel)
+                                                                 @Nullable Integer minContextSlot)
             throws IOException {
         for (byte[] t : transactions) {
             if (t == null || t.length == 0) {
@@ -625,14 +625,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         final JSONObject signAndSendTransactions = new JSONObject();
         try {
             signAndSendTransactions.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
-            signAndSendTransactions.put(ProtocolContract.PARAMETER_COMMITMENT,
-                    commitmentLevel.commitmentLevel);
-            if (skipPreflight) {
-                signAndSendTransactions.put(ProtocolContract.PARAMETER_SKIP_PREFLIGHT, true);
-            }
-            if (preflightCommitmentLevel != null) {
-                signAndSendTransactions.put(ProtocolContract.PARAMETER_PREFLIGHT_COMMITMENT,
-                        preflightCommitmentLevel.commitmentLevel);
+            if (minContextSlot != null) {
+                final JSONObject options = new JSONObject();
+                options.put(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT, (int)minContextSlot);
+                signAndSendTransactions.put(ProtocolContract.PARAMETER_OPTIONS, options);
             }
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
@@ -642,13 +638,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 methodCall(ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS,
                         signAndSendTransactions, mClientTimeoutMs),
                 transactions.length);
-    }
-
-    @NonNull
-    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
-                                                                 @NonNull CommitmentLevel commitmentLevel)
-            throws IOException {
-        return signAndSendTransactions(transactions, commitmentLevel, false, null);
     }
 
     public static class SignAndSendTransactionsFuture
@@ -672,7 +661,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
             final JSONObject jo = (JSONObject) o;
             final byte[][] signatures = unpackResponsePayloadArray(jo,
-                    ProtocolContract.RESULT_SIGNATURES, mExpectedNumSignatures);
+                    ProtocolContract.RESULT_SIGNATURES, mExpectedNumSignatures, false);
             return new SignAndSendTransactionsResult(signatures);
         }
 
@@ -685,8 +674,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                         return new InvalidPayloadsException(remoteException.getMessage(),
                                 remoteException.data, mExpectedNumSignatures);
 
-                    case ProtocolContract.ERROR_NOT_COMMITTED:
-                        return new NotCommittedException(remoteException.getMessage(),
+                    case ProtocolContract.ERROR_NOT_SUBMITTED:
+                        return new NotSubmittedException(remoteException.getMessage(),
                                 remoteException.data, mExpectedNumSignatures);
                 }
             } catch (JsonRpc20InvalidResponseException e) {
@@ -717,20 +706,16 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         }
     }
 
-    public static class NotCommittedException extends JsonRpc20RemoteException {
+    public static class NotSubmittedException extends JsonRpc20RemoteException {
         @NonNull
         @Size(min = 1)
         public final byte[][] signatures;
 
-        @NonNull
-        @Size(min = 1)
-        public final boolean[] commitment;
-
-        private NotCommittedException(@NonNull String message,
+        private NotSubmittedException(@NonNull String message,
                                       @Nullable String data,
                                       @IntRange(from = 1) int expectedNumSignatures)
                 throws JsonRpc20InvalidResponseException {
-            super(ProtocolContract.ERROR_NOT_COMMITTED, message, data);
+            super(ProtocolContract.ERROR_NOT_SUBMITTED, message, data);
 
             if (data == null) {
                 throw new JsonRpc20InvalidResponseException("data should not be null");
@@ -739,21 +724,18 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             try {
                 o = new JSONObject(data);
             } catch (JSONException e) {
-                throw new JsonRpc20InvalidResponseException("data is not a valid ERROR_NOT_COMMITTED result");
+                throw new JsonRpc20InvalidResponseException("data is not a valid ERROR_NOT_SUBMITTED result");
             }
 
             signatures = unpackResponsePayloadArray(o,
-                    ProtocolContract.DATA_NOT_COMMITTED_SIGNATURES, expectedNumSignatures);
-            commitment = unpackResponseBooleanArray(o,
-                    ProtocolContract.DATA_NOT_COMMITTED_COMMITMENT, expectedNumSignatures);
+                    ProtocolContract.DATA_NOT_SUBMITTED_SIGNATURES, expectedNumSignatures, true);
         }
 
         @NonNull
         @Override
         public String getMessage() {
             return super.getMessage() +
-                    "/signatures=" + Arrays.toString(signatures) +
-                    "/commitment=" + Arrays.toString(commitment);
+                    "/signatures=" + Arrays.toString(signatures);
         }
     }
 }

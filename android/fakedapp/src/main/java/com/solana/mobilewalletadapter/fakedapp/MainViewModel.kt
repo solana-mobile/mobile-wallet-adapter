@@ -18,7 +18,6 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel
 import com.solana.mobilewalletadapter.fakedapp.usecase.GetLatestBlockhashUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.RequestAirdropUseCase
@@ -106,7 +105,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (!authorized) {
                 return@localAssociateAndExecute null
             }
-            val blockhash = try {
+            val (blockhash, _) = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
                 Log.e(TAG, "Failed retrieving latest blockhash", e)
@@ -146,7 +145,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (!authorized) {
                 return@localAssociateAndExecute null
             }
-            val blockhash = try {
+            val (blockhash, _) = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
                 Log.e(TAG, "Failed retrieving latest blockhash", e)
@@ -201,7 +200,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (!authorized) {
                 return@localAssociateAndExecute null
             }
-            val blockhash = try {
+            val (blockhash, slot) = try {
                 latestBlockhash.await()
             } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
                 Log.e(TAG, "Failed retrieving latest blockhash", e)
@@ -210,7 +209,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val transactions = Array(numTransactions) {
                 MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
-            doSignAndSendTransactions(client, transactions)
+            doSignAndSendTransactions(client, transactions, slot)
         }
 
         showMessage(if (signatures != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
@@ -455,16 +454,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // NOTE: blocks and waits for completion of remote method call
     private fun doSignAndSendTransactions(
         client: MobileWalletAdapterClient,
-        transactions: Array<ByteArray>
+        transactions: Array<ByteArray>,
+        minContextSlot: Int? = null
     ): Array<ByteArray>? {
         var signatures: Array<ByteArray>? = null
         try {
-            val result = client.signAndSendTransactions(
-                transactions,
-                CommitmentLevel.Confirmed,
-                false,
-                CommitmentLevel.Confirmed
-            ).get()
+            val result = client.signAndSendTransactions(transactions, minContextSlot).get()
             Log.d(TAG, "Signatures: ${result.signatures.contentToString()}")
             signatures = result.signatures
         } catch (e: ExecutionException) {
@@ -475,8 +470,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e(TAG, "Timed out while waiting for sign_and_send_transactions result", cause)
                 is MobileWalletAdapterClient.InvalidPayloadsException ->
                     Log.e(TAG, "Transaction payloads invalid", cause)
-                is MobileWalletAdapterClient.NotCommittedException -> {
-                    Log.e(TAG, "Commitment not reached for all transactions", cause)
+                is MobileWalletAdapterClient.NotSubmittedException -> {
+                    Log.e(TAG, "Not all transactions were submitted", cause)
                 }
                 is JsonRpc20Client.JsonRpc20RemoteException ->
                     when (cause.code) {

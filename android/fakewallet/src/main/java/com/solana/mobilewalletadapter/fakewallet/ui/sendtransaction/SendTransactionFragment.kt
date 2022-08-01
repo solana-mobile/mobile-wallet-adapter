@@ -42,7 +42,6 @@ class SendTransactionFragment : Fragment() {
                     when (request) {
                         is MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest.SignAndSendTransactions -> {
                             this@SendTransactionFragment.request = request
-                            viewBinding.textDesiredCommitment.text = request.request.commitmentLevel.toString()
                             viewBinding.textCluster.text = request.request.cluster
                         }
                         else -> {
@@ -61,12 +60,12 @@ class SendTransactionFragment : Fragment() {
             }
         }
 
-        viewBinding.btnSimulateCommitmentReached.setOnClickListener {
-            activityViewModel.signAndSendTransactionsCommitmentReached(request!!)
+        viewBinding.btnSimulateTransactionsSubmitted.setOnClickListener {
+            activityViewModel.signAndSendTransactionsSubmitted(request!!)
         }
 
-        viewBinding.btnSimulateCommitmentNotReached.setOnClickListener {
-            activityViewModel.signAndSendTransactionsCommitmentNotReached(request!!)
+        viewBinding.btnSimulateTransactionsNotSubmitted.setOnClickListener {
+            activityViewModel.signAndSendTransactionsNotSubmitted(request!!)
         }
 
         viewBinding.btnSendTransactionToCluster.setOnClickListener {

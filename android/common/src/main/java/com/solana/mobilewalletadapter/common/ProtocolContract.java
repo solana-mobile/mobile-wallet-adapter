@@ -37,9 +37,8 @@ public class ProtocolContract {
 
     public static final String METHOD_SIGN_AND_SEND_TRANSACTIONS = "sign_and_send_transactions";
     // METHOD_SIGN_AND_SEND_TRANSACTIONS takes a PARAMETER_PAYLOADS
-    public static final String PARAMETER_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values)
-    public static final String PARAMETER_SKIP_PREFLIGHT = "skip_preflight"; // type: Boolean
-    public static final String PARAMETER_PREFLIGHT_COMMITMENT = "preflight_commitment"; // type: String (one of the COMMITMENT_* values)
+    public static final String PARAMETER_OPTIONS = "options"; // type: JSON object
+    public static final String PARAMETER_OPTIONS_MIN_CONTEXT_SLOT = "min_context_slot"; // type: Number
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base64-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGES = "sign_messages";
@@ -69,18 +68,13 @@ public class ProtocolContract {
     public static final int ERROR_AUTHORIZATION_FAILED = -1;
     public static final int ERROR_INVALID_PAYLOADS = -2;
     public static final int ERROR_NOT_SIGNED = -3;
-    public static final int ERROR_NOT_COMMITTED = -4;
+    public static final int ERROR_NOT_SUBMITTED = -4;
     public static final int ERROR_TOO_MANY_PAYLOADS = -5;
     public static final int ERROR_ATTEST_ORIGIN_ANDROID = -100;
 
     public static final String DATA_INVALID_PAYLOADS_VALID = "valid"; // Type: JSON array of Boolean
 
-    public static final String DATA_NOT_COMMITTED_SIGNATURES = RESULT_SIGNATURES; // type: same as RESULT_SIGNATURES
-    public static final String DATA_NOT_COMMITTED_COMMITMENT = "commitment"; // type: String (one of the COMMITMENT_* values) or null
-
-    public static final String COMMITMENT_PROCESSED = "processed";
-    public static final String COMMITMENT_CONFIRMED = "confirmed";
-    public static final String COMMITMENT_FINALIZED = "finalized";
+    public static final String DATA_NOT_SUBMITTED_SIGNATURES = RESULT_SIGNATURES; // type: same as RESULT_SIGNATURES
 
     public static final String CLUSTER_MAINNET_BETA = "mainnet-beta";
     public static final String CLUSTER_TESTNET = "testnet";

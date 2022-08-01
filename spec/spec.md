@@ -597,7 +597,7 @@ sign_and_send_transactions
 {
     “payloads”: [“<transaction>”, ...],
     "options": {
-        “commitment”: “<commitment_level>”,
+        “min_context_slot”: <min_context_slot>,
     }
 }
 ```
@@ -605,8 +605,8 @@ sign_and_send_transactions
 where:
 
 - `payloads`: one or more base64-encoded transaction payload to sign
-- `options`: a JSON object, containing:
-  - `commitment`: (optional) if set, one of `processed`, `confirmed`, or `finalized`, specifying the desired commitment level that must be reached for this request to be successful. If not set, defaults to `confirmed`.
+- `options`: (optional) a JSON object, containing:
+  - `min_context_slot`: (optional) if set, the minimum slot number at which to perform preflight transaction checks
 
 ###### Result
 {: .no_toc }
@@ -639,28 +639,26 @@ where:
 
   - `transaction_valid`: an array of booleans with the same length as `payloads` indicating which are valid
 - `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign this transaction for any reason
-- `ERROR_NOT_COMMITTED`
+- `ERROR_NOT_SUBMITTED`
 
   ```
   “data”: {
       “signatures”: [“<transaction_signature>”, ...],
-      “commitment”: [<commitment_reached>, ...],
   }
   ```
 
-  if the requested commitment level was not reached for any of the signed transactions, where:
+  if the wallet endpoint was unable to submit one or more of the signed transactions to the network, where:
 
-  - `signatures`: as defined for a successful result
-  - `commitment_reached`: for each entry in `signatures`, a boolean indicating whether the desired commitment level was reached
+  - `signatures`: the corresponding base64-encoded transaction signatures for transactions which were successfully sent to the network, or `null` for transactions which were unable to be submitted to the network for any reason
 - `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
 
 ##### Description
 
 _Implementation of this method by a wallet endpoint is optional._
 
-The wallet endpoint should attempt to simulate the transactions provided by `payloads` and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private keys for the authorized addresses, submit them to the network, wait for the requested commitment level to be reached, and return the transaction signatures to the dapp endpoint.
+The wallet endpoint should attempt to simulate the transactions provided by `payloads` and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should verify the transactions, sign them with the private keys for the authorized addresses, submit them to the network, and return the transaction signatures to the dapp endpoint.
 
-`options` allows customization of how the wallet endpoint processes the transactions it sends to the Solana network. `commitment` controls what level of transaction confirmation the wallet endpoint should wait for before returning a successful result to the dapp endpoint.
+`options` allows customization of how the wallet endpoint processes the transactions it sends to the Solana network. If specified, `min_context_slot` specifies the minimum slot number that the transactions should be evaluated at. This allows the wallet endpoint to wait for its network RPC node to reach the same point in time as the node used by the dapp endpoint, ensuring that, e.g., the recent blockhash encoded in the transactions will be available.
 
 ###### Non-normative commentary
 
@@ -668,7 +666,7 @@ This method is optional, to support signing-only wallet endpoints which do not h
 
 it does not allow the dapp endpoint to specify the network RPC server to submit the transaction to; that is at the discretion of the wallet endpoint. If this is a detail that matters to the dapp endpoint, it should instead use the `sign_transactions` method and submit the transaction to a network RPC server of its choosing.
 
-It is recommended that dapp endpoints verify that the reported commitment level was actually reached for each transaction, to minimize the risks presented by malicious wallet endpoints.
+It is recommended that dapp endpoints verify that each transaction reached an appropriate level of commitment (typically either `confirmed` or `finalized`).
 
 #### sign_messages
 
@@ -789,7 +787,7 @@ The protocol defines the following constants:
 const ERROR_AUTHORIZATION_FAILED = -1
 const ERROR_INVALID_PAYLOADS = -2
 const ERROR_NOT_SIGNED = -3
-const ERROR_NOT_COMMITTED = -4
+const ERROR_NOT_SUBMITTED = -4
 const ERROR_NOT_CLONED = -5
 const ERROR_TOO_MANY_PAYLOADS = -6
 const ERROR_CLUSTER_NOT_SUPPORTED = -7

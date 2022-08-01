@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
-import com.solana.mobilewalletadapter.common.protocol.CommitmentLevel;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
 public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityRequest {
@@ -44,18 +43,9 @@ public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityReques
         return mRequest.payloads;
     }
 
-    @NonNull
-    public CommitmentLevel getCommitmentLevel() {
-        return mRequest.commitmentLevel;
-    }
-
-    public boolean getSkipPreflight() {
-        return mRequest.skipPreflight;
-    }
-
-    @NonNull
-    public CommitmentLevel getPreflightCommitmentLevel() {
-        return mRequest.preflightCommitmentLevel;
+    @Nullable
+    public Integer getMinContextSlot() {
+        return mRequest.minContextSlot;
     }
 
     public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
@@ -72,11 +62,9 @@ public class SignAndSendTransactionsRequest extends BaseVerifiableIdentityReques
                 "One or more invalid payloads provided", valid));
     }
 
-    public void completeWithNotCommitted(@NonNull @Size(min = 1) byte[][] signatures,
-                                         @NonNull @Size(min = 1) boolean[] committed) {
-        mRequest.completeExceptionally(new MobileWalletAdapterServer.NotCommittedException(
-                "One or more transactions did not reach the requested commitment level",
-                signatures, committed));
+    public void completeWithNotSubmitted(@NonNull @Size(min = 1) byte[][] signatures) {
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.NotSubmittedException(
+                "One or more transactions were not submitted", signatures));
     }
 
     public void completeWithTooManyPayloads() {

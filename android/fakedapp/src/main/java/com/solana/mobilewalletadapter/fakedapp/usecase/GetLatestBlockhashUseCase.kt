@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets
 // NOT suitable for production use.
 object GetLatestBlockhashUseCase {
     @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO
-    suspend operator fun invoke(rpcUri: Uri): ByteArray {
+    suspend operator fun invoke(rpcUri: Uri): Pair<ByteArray, Int?> {
         return withContext(Dispatchers.IO) {
             val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
@@ -33,12 +33,12 @@ object GetLatestBlockhashUseCase {
             if (conn.responseCode != HttpURLConnection.HTTP_OK) {
                 throw GetLatestBlockhashFailedException("Response code=${conn.responseCode}")
             }
-            val blockhashBase58 = conn.inputStream.use { inputStream ->
+            val (blockhashBase58, minContextSlot) = conn.inputStream.use { inputStream ->
                 val response = inputStream.readBytes().toString(StandardCharsets.UTF_8)
                 parseLatestBlockhashResponse(response)
             }
             Log.d(TAG, "getLatestBlockhash blockhash(base58)=$blockhashBase58")
-            Base58DecodeUseCase(blockhashBase58)
+            Base58DecodeUseCase(blockhashBase58) to minContextSlot
         }
     }
 
@@ -56,12 +56,13 @@ object GetLatestBlockhashUseCase {
         return jo.toString()
     }
 
-    private fun parseLatestBlockhashResponse(response: String): String {
+    private fun parseLatestBlockhashResponse(response: String): Pair<String, Int> {
         val jo = JSONObject(response)
         val result = jo.optJSONObject("result")
             ?: throw GetLatestBlockhashFailedException("getLatestBlockhash request was not successful, response=$response")
         val value = result.getJSONObject("value")
-        return value.getString("blockhash")
+        val context = result.getJSONObject("context")
+        return value.getString("blockhash") to context.getInt("slot")
     }
 
     class GetLatestBlockhashFailedException(message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
