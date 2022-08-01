@@ -18,6 +18,7 @@ interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
         connection: Connection;
         fee_payer?: PublicKey;
+        minContextSlot?: number;
         transactions: Transaction[];
     }): Promise<TransactionSignature[]>;
 }
@@ -52,6 +53,7 @@ export async function transact<TReturn>(
                             target[p] = async function ({
                                 connection,
                                 fee_payer: feePayer,
+                                minContextSlot,
                                 transactions,
                                 ...rest
                             }: Parameters<Web3MobileWallet['signAndSendTransactions']>[0]) {
@@ -94,9 +96,10 @@ export async function transact<TReturn>(
                                 );
                                 const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
                                     ...rest,
-                                    commitment: targetCommitment,
+                                    ...(minContextSlot != null
+                                        ? { options: { min_context_slot: minContextSlot } }
+                                        : null),
                                     payloads,
-                                    preflight_commitment: targetCommitment,
                                 });
                                 const signatures = base64EncodedSignatures.map(toUint8Array).map(bs58.encode);
                                 return signatures as TransactionSignature[];

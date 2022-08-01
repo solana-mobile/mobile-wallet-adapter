@@ -228,16 +228,18 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     async sendTransaction(
         transaction: Transaction,
         connection: Connection,
-        _options?: SendOptions,
+        options?: SendOptions,
     ): Promise<TransactionSignature> {
         return await this.runWithGuard(async () => {
             const { authToken } = this.assertIsAuthorized();
+            const minContextSlot = options?.minContextSlot;
             try {
                 return await this.transact(async (wallet) => {
                     await this.performReauthorization(wallet, authToken);
                     const signatures = await wallet.signAndSendTransactions({
                         connection,
                         fee_payer: transaction.feePayer,
+                        minContextSlot,
                         transactions: [transaction],
                     });
                     return signatures[0];
