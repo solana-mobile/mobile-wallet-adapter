@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6};
+var data = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -169,7 +169,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signPayloads(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignPayloadsRequest)">signPayloads</a></span>&#8203;(<a href="MobileWalletAdapterServer.SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignPayloadsRequest</a>&nbsp;request)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignMessagesRequest)">signMessages</a></span>&#8203;(<a href="MobileWalletAdapterServer.SignMessagesRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignMessagesRequest</a>&nbsp;request)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactions(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignTransactionsRequest)">signTransactions</a></span>&#8203;(<a href="MobileWalletAdapterServer.SignTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignTransactionsRequest</a>&nbsp;request)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -219,14 +224,24 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
                  <a href="MobileWalletAdapterServer.DeauthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.DeauthorizeRequest</a>&nbsp;request)</pre>
 </li>
 </ul>
-<a id="signPayloads(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignPayloadsRequest)">
+<a id="signTransactions(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignTransactionsRequest)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>signPayloads</h4>
-<pre class="methodSignature">void&nbsp;signPayloads&#8203;(@NonNull
-                  <a href="MobileWalletAdapterServer.SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignPayloadsRequest</a>&nbsp;request)</pre>
+<h4>signTransactions</h4>
+<pre class="methodSignature">void&nbsp;signTransactions&#8203;(@NonNull
+                      <a href="MobileWalletAdapterServer.SignTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignTransactionsRequest</a>&nbsp;request)</pre>
+</li>
+</ul>
+<a id="signMessages(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignMessagesRequest)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>signMessages</h4>
+<pre class="methodSignature">void&nbsp;signMessages&#8203;(@NonNull
+                  <a href="MobileWalletAdapterServer.SignMessagesRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignMessagesRequest</a>&nbsp;request)</pre>
 </li>
 </ul>
 <a id="signAndSendTransactions(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignAndSendTransactionsRequest)">
