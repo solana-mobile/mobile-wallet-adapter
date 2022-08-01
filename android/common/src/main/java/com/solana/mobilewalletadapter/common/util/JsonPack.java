@@ -30,9 +30,15 @@ public class JsonPack {
         final byte[][] byteArrays = new byte[numEntries][];
         for (int i = 0; i < numEntries; i++) {
             final String b64 = arr.getString(i);
-            byteArrays[i] = Base64.decode(b64, Base64.DEFAULT);
+            byteArrays[i] = unpackBase64PayloadToByteArray(b64);
         }
         return byteArrays;
+    }
+
+    @NonNull
+    public static byte[] unpackBase64PayloadToByteArray(@NonNull String b64Payload)
+            throws JSONException {
+        return Base64.decode(b64Payload, Base64.DEFAULT);
     }
 
     @NonNull

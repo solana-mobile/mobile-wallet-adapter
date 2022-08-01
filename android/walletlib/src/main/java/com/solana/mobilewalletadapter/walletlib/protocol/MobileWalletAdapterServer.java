@@ -147,9 +147,14 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                final JSONArray addresses = new JSONArray(); // TODO(#44): support multiple addresses
-                addresses.put(publicKeyBase64);
-                o.put(ProtocolContract.RESULT_ADDRESSES, addresses);
+                final JSONArray accounts = new JSONArray().put(
+                        // TODO(#44): support multiple accounts
+                        new JSONObject()
+                                .put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64)
+                                // TODO(#187): Implement account labels
+                                .put(ProtocolContract.RESULT_ACCOUNTS_LABEL, "My First Wallet")
+                );
+                o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
                 throw new RuntimeException("Failed preparing authorization response", e);
