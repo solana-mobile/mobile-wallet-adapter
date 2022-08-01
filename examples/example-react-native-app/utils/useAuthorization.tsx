@@ -1,5 +1,6 @@
 import {PublicKey} from '@solana/web3.js';
 import {
+  Account as AuthorizedAccount,
   AuthorizationResult,
   AuthorizeAPI,
   AuthToken,
@@ -13,6 +14,7 @@ import useSWR from 'swr';
 
 export type Account = Readonly<{
   address: Base64EncodedAddress;
+  label?: string;
   publicKey: PublicKey;
 }>;
 
@@ -22,10 +24,10 @@ type Authorization = Readonly<{
   selectedAccount: Account;
 }>;
 
-function getAccountFromAddress(address: Base64EncodedAddress): Account {
+function getAccountFromAuthorizedAccount(account: AuthorizedAccount): Account {
   return {
-    address,
-    publicKey: getPublicKeyFromAddress(address),
+    ...account,
+    publicKey: getPublicKeyFromAddress(account.address),
   };
 }
 
@@ -38,16 +40,17 @@ function getAuthorizationFromAuthorizationResult(
     // We have yet to select an account.
     previouslySelectedAccount == null ||
     // The previously selected account is no longer in the set of authorized addresses.
-    authorizationResult.addresses.indexOf(previouslySelectedAccount.address) ===
-      -1
+    !authorizationResult.accounts.some(
+      ({address}) => address === previouslySelectedAccount.address,
+    )
   ) {
-    const firstAddress = authorizationResult.addresses[0];
-    selectedAccount = getAccountFromAddress(firstAddress);
+    const firstAccount = authorizationResult.accounts[0];
+    selectedAccount = getAccountFromAuthorizedAccount(firstAccount);
   } else {
     selectedAccount = previouslySelectedAccount;
   }
   return {
-    accounts: authorizationResult.addresses.map(getAccountFromAddress),
+    accounts: authorizationResult.accounts.map(getAccountFromAuthorizedAccount),
     authToken: authorizationResult.auth_token,
     selectedAccount,
   };
@@ -92,7 +95,7 @@ export default function useAuthorization() {
       return (await handleAuthorizationResult(authorizationResult))
         .selectedAccount;
     },
-    [authorization],
+    [authorization, handleAuthorizationResult],
   );
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
@@ -104,24 +107,26 @@ export default function useAuthorization() {
     },
     [authorization, setAuthorization],
   );
-  const onChangeAccount = useCallback((nextSelectedAccount: Account) => {
-    setAuthorization(currentAuthorization => {
-      if (
-        !currentAuthorization?.accounts.some(
-          ({address}) => address === nextSelectedAccount.address,
-        )
-      ) {
-        throw new Error(
-          `${nextSelectedAccount.address} is not one of the available addresses`,
-        );
-      }
-
-      return {
-        ...currentAuthorization,
-        selectedAccount: nextSelectedAccount,
-      };
-    });
-  }, []);
+  const onChangeAccount = useCallback(
+    (nextSelectedAccount: Account) => {
+      setAuthorization(currentAuthorization => {
+        if (
+          !currentAuthorization?.accounts.some(
+            ({address}) => address === nextSelectedAccount.address,
+          )
+        ) {
+          throw new Error(
+            `${nextSelectedAccount.address} is not one of the available addresses`,
+          );
+        }
+        return {
+          ...currentAuthorization,
+          selectedAccount: nextSelectedAccount,
+        };
+      });
+    },
+    [setAuthorization],
+  );
   return useMemo(
     () => ({
       accounts: authorization?.accounts ?? null,

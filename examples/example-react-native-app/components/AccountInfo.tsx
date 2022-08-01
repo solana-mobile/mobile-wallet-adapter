@@ -20,6 +20,15 @@ type Props = Readonly<{
   selectedAccount: Account;
 }>;
 
+function getLabelFromAccount(account: Account) {
+  const base58EncodedPublicKey = account.publicKey.toBase58();
+  if (account.label) {
+    return `${account.label} (${base58EncodedPublicKey.slice(0, 8)})`;
+  } else {
+    return base58EncodedPublicKey;
+  }
+}
+
 export default function AccountInfo({
   accounts,
   onChange,
@@ -28,6 +37,10 @@ export default function AccountInfo({
   const {colors} = useTheme();
   const selectedAccountPublicKeyBase58String = useMemo(
     () => selectedAccount.publicKey.toBase58(),
+    [selectedAccount],
+  );
+  const selectedAccountLabel = useMemo(
+    () => getLabelFromAccount(selectedAccount),
     [selectedAccount],
   );
   const [menuVisible, setMenuVisible] = useState(false);
@@ -50,7 +63,7 @@ export default function AccountInfo({
             );
           }}
           style={styles.keyRow}>
-          {'\u{1f5dd} ' + selectedAccountPublicKeyBase58String}
+          {'\u{1f5dd} ' + selectedAccountLabel}
         </Subheading>
         {accounts.length > 1 ? (
           <Menu
@@ -78,7 +91,7 @@ export default function AccountInfo({
                     setMenuVisible(false);
                   }}
                   key={base58PublicKey}
-                  title={base58PublicKey}
+                  title={getLabelFromAccount(account)}
                 />
               );
             })}
