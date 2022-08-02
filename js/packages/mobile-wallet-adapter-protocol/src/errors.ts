@@ -45,7 +45,7 @@ export const SolanaMobileWalletAdapterProtocolErrorCode = {
     ERROR_AUTHORIZATION_FAILED: -1,
     ERROR_INVALID_PAYLOADS: -2,
     ERROR_NOT_SIGNED: -3,
-    ERROR_NOT_COMMITTED: -4,
+    ERROR_NOT_SUBMITTED: -4,
     ERROR_TOO_MANY_PAYLOADS: -5,
     ERROR_ATTEST_ORIGIN_ANDROID: -100,
 } as const;
@@ -56,7 +56,7 @@ type ProtocolErrorDataTypeMap = {
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_AUTHORIZATION_FAILED]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_INVALID_PAYLOADS]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_SIGNED]: undefined;
-    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_COMMITTED]: undefined;
+    [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_SUBMITTED]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_TOO_MANY_PAYLOADS]: undefined;
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_ATTEST_ORIGIN_ANDROID]: {
         attest_origin_uri: string;
