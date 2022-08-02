@@ -35,7 +35,7 @@
         "clean": "shx rm -rf lib/*",
         "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
         "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
-        "postbuild": "echo '{\"type\":\"commonjs\"}' | npx json > lib/cjs/package.json && echo '{\"type\":\"module\"} ' | npx json > lib/esm/package.json",
+        "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
@@ -43,6 +43,7 @@
     },
     "devDependencies": {
         "@types/react-native": "^0.69.3",
-        "agadoo": "^2.0.0"
+        "agadoo": "^2.0.0",
+        "cross-env": "^7.0.3"
     }
 }
