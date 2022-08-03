@@ -146,13 +146,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                final JSONArray accounts = new JSONArray().put(
-                        // TODO(#44): support multiple accounts
-                        new JSONObject()
-                                .put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64)
-                                // TODO(#187): Implement account labels
-                                .put(ProtocolContract.RESULT_ACCOUNTS_LABEL, "My First Wallet")
-                );
+                final JSONObject account = new JSONObject();
+                account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
+                if (result.accountLabel != null) {
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, result.accountLabel);
+                }
+                final JSONArray accounts = new JSONArray().put(account); // TODO(#44): support multiple accounts
                 o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
@@ -212,13 +211,18 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final byte[] publicKey;
 
         @Nullable
+        public final String accountLabel;
+
+        @Nullable
         public final Uri walletUriBase;
 
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull byte[] publicKey,
+                                   @Nullable String accountLabel,
                                    @Nullable Uri walletUriBase) {
             this.authToken = authToken;
             this.publicKey = publicKey;
+            this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
         }
 
@@ -228,6 +232,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
                     ", publicKey=" + Arrays.toString(publicKey) +
+                    ", accountLabel='" + accountLabel + '\'' +
                     ", walletUriBase=" + walletUriBase +
                     '}';
         }

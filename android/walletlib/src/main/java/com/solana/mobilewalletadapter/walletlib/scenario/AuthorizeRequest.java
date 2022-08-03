@@ -63,9 +63,10 @@ public class AuthorizeRequest extends BaseScenarioRequest {
     }
 
     public void completeWithAuthorize(@NonNull byte[] publicKey,
+                                      @Nullable String accountLabel,
                                       @Nullable Uri walletUriBase,
                                       @Nullable byte[] scope) {
-        mRequest.complete(new Result(publicKey, walletUriBase, scope));
+        mRequest.complete(new Result(publicKey, accountLabel, walletUriBase, scope));
     }
 
     public void completeWithDecline() {
@@ -76,14 +77,18 @@ public class AuthorizeRequest extends BaseScenarioRequest {
         @NonNull
         /*package*/ final byte[] publicKey;
         @Nullable
+        /*package*/ final String accountLabel;
+        @Nullable
         /*package*/ final Uri walletUriBase;
         @Nullable
         /*package*/ final byte[] scope;
 
         private Result(@NonNull byte[] publicKey,
+                       @Nullable String accountLabel,
                        @Nullable Uri walletUriBase,
                        @Nullable byte[] scope) {
             this.publicKey = publicKey;
+            this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
             this.scope = scope;
         }

@@ -136,8 +136,9 @@ public abstract class Scenario {
                         final Uri uri = request.identityUri != null ? request.identityUri : Uri.EMPTY;
                         final Uri relativeIconUri = request.iconUri != null ? request.iconUri : Uri.EMPTY;
                         final AuthRecord authRecord = mAuthRepository.issue(
-                                name, uri, relativeIconUri, authorize.publicKey, request.cluster,
-                                authorize.walletUriBase, authorize.scope);
+                                name, uri, relativeIconUri, authorize.publicKey,
+                                authorize.accountLabel, request.cluster, authorize.walletUriBase,
+                                authorize.scope);
                         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
                         synchronized (mLock) {
                             mActiveAuthorization = authRecord;
@@ -145,7 +146,8 @@ public abstract class Scenario {
 
                         final String authToken = mAuthRepository.toAuthToken(authRecord);
                         request.complete(new MobileWalletAdapterServer.AuthorizationResult(
-                                authToken, authorize.publicKey, authorize.walletUriBase));
+                                authToken, authorize.publicKey, authorize.accountLabel,
+                                authorize.walletUriBase));
                     } else {
                         synchronized (mLock) {
                             mActiveAuthorization = null;
@@ -222,7 +224,8 @@ public abstract class Scenario {
 
                     mIoHandler.post(() -> request.complete(
                             new MobileWalletAdapterServer.AuthorizationResult(
-                                    authToken, authRecord.publicKey, authRecord.walletUriBase)));
+                                    authToken, authRecord.publicKey, authRecord.accountLabel,
+                                    authRecord.walletUriBase)));
                 } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException("Unexpected exception while waiting for reauthorization", e);
                 } catch (CancellationException e) {
