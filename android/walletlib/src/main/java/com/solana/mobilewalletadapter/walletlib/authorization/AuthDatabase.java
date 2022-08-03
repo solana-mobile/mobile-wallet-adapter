@@ -7,12 +7,14 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 /*package*/ class AuthDatabase extends SQLiteOpenHelper {
+    private static final String TAG = AuthDatabase.class.getSimpleName();
     private static final String DATABASE_NAME_SUFFIX = "-solana-wallet-lib-auth.db";
-    private static final int DATABASE_SCHEMA_VERSION = 4;
+    private static final int DATABASE_SCHEMA_VERSION = 5;
 
     /*package*/ static final String TABLE_IDENTITIES = "identities";
     /*package*/ static final String COLUMN_IDENTITIES_ID = "id"; // type: int
@@ -31,10 +33,10 @@ import androidx.annotation.NonNull;
     /*package*/ static final String COLUMN_AUTHORIZATIONS_SCOPE = "scope"; // type: byte[]
     /*package*/ static final String COLUMN_AUTHORIZATIONS_CLUSTER = "cluster"; // type: String
 
-
     /*package*/ static final String TABLE_PUBLIC_KEYS = "public_keys";
     /*package*/ static final String COLUMN_PUBLIC_KEYS_ID = "id"; // type: long
     /*package*/ static final String COLUMN_PUBLIC_KEYS_RAW = "public_key_raw"; // type: byte[]
+    /*package*/ static final String COLUMN_PUBLIC_KEYS_LABEL = "label"; // type: String
 
     /*package*/ static final String TABLE_WALLET_URI_BASE = "wallet_uri_base";
     /*package*/ static final String COLUMN_WALLET_URI_BASE_ID = "id"; // type: long
@@ -60,7 +62,8 @@ import androidx.annotation.NonNull;
     private static final String CREATE_TABLE_PUBLIC_KEYS =
             "CREATE TABLE " + TABLE_PUBLIC_KEYS + " (" +
                     COLUMN_PUBLIC_KEYS_ID + " INTEGER NOT NULL PRIMARY KEY," +
-                    COLUMN_PUBLIC_KEYS_RAW + " BLOB NOT NULL)";
+                    COLUMN_PUBLIC_KEYS_RAW + " BLOB NOT NULL," +
+                    COLUMN_PUBLIC_KEYS_LABEL + " TEXT)";
     private static final String CREATE_TABLE_WALLET_URI_BASE =
             "CREATE TABLE " + TABLE_WALLET_URI_BASE + " (" +
                     COLUMN_WALLET_URI_BASE_ID + " INTEGER NOT NULL PRIMARY KEY," +
@@ -85,7 +88,12 @@ import androidx.annotation.NonNull;
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        throw new RuntimeException("Old database schema detected; pre-v1.0.0, no DB schema backward compatibility is implemented");
+        Log.w(TAG, "Old database schema detected; pre-v1.0.0, no DB schema backward compatibility is implemented");
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_IDENTITIES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_AUTHORIZATIONS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PUBLIC_KEYS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET_URI_BASE);
+        onCreate(db);
     }
 
     @NonNull

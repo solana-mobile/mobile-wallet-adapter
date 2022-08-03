@@ -232,6 +232,7 @@ public class AuthRepository {
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
+                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_LABEL +
                 ", " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
                 " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                 " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
@@ -254,9 +255,9 @@ public class AuthRepository {
             final byte[] scope = c.getBlob(4);
             final String cluster = c.getString(5);
             final byte[] publicKey = c.getBlob(6);
-            final Uri walletUriBase = c.isNull(7) ?
-                    null : Uri.parse(c.getString(7));
-            authRecord = new AuthRecord(id, identityRecord, publicKey, cluster, scope,
+            final String accountLabel = c.isNull(7) ? null : c.getString(7);
+            final Uri walletUriBase = c.isNull(8) ? null : Uri.parse(c.getString(8));
+            authRecord = new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
                     walletUriBase, publicKeyId, walletUriBaseId, issued,
                     issued + mAuthIssuerConfig.authorizationValidityMs);
         }
@@ -346,6 +347,7 @@ public class AuthRepository {
                                          @NonNull Uri uri,
                                          @NonNull Uri relativeIconUri,
                                          @NonNull byte[] publicKey,
+                                         @Nullable String accountLabel,
                                          @NonNull String cluster,
                                          @Nullable Uri walletUriBase,
                                          @Nullable byte[] scope) {
@@ -420,8 +422,9 @@ public class AuthRepository {
 
         // If no matching public key exists, create one
         if (publicKeyId == -1) {
-            final ContentValues publicKeyContentValues = new ContentValues(1);
+            final ContentValues publicKeyContentValues = new ContentValues(2);
             publicKeyContentValues.put(AuthDatabase.COLUMN_PUBLIC_KEYS_RAW, publicKey);
+            publicKeyContentValues.put(AuthDatabase.COLUMN_PUBLIC_KEYS_LABEL, accountLabel);
             publicKeyId = (int) db.insert(AuthDatabase.TABLE_PUBLIC_KEYS, null, publicKeyContentValues);
         }
 
@@ -479,8 +482,9 @@ public class AuthRepository {
             deleteUnreferencedWalletUriBase(db);
         }
 
-        return new AuthRecord(id, identityRecord, publicKey, cluster, scope, walletUriBase,
-                publicKeyId, walletUriBaseId, now, now + mAuthIssuerConfig.authorizationValidityMs);
+        return new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
+                walletUriBase, publicKeyId, walletUriBaseId, now,
+                now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
     @Nullable
@@ -509,9 +513,9 @@ public class AuthRepository {
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, authRecord.scope);
             final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, reissueContentValues);
             reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
-                    authRecord.cluster, authRecord.scope, authRecord.walletUriBase,
-                    authRecord.publicKeyId, authRecord.walletUriBaseId, now,
-                    now + mAuthIssuerConfig.authorizationValidityMs);
+                    authRecord.accountLabel, authRecord.cluster, authRecord.scope,
+                    authRecord.walletUriBase, authRecord.publicKeyId, authRecord.walletUriBaseId,
+                    now, now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);
             // Note: reissue is net-neutral on the number of authorizations per identity, so there's
@@ -642,6 +646,7 @@ public class AuthRepository {
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
                 ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER +
                 ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
+                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_LABEL +
                 ", " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
                 " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                 " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
@@ -660,11 +665,11 @@ public class AuthRepository {
                 final byte[] scope = c.getBlob(4);
                 final String cluster = c.getString(5);
                 final byte[] publicKey = c.getBlob(6);
-                final Uri walletUriBase = c.isNull(7) ?
-                        null : Uri.parse(c.getString(7));
-                final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey, cluster,
-                        scope, walletUriBase, publicKeyId, walletUriBaseId, issued,
-                        issued + mAuthIssuerConfig.authorizationValidityMs);
+                final String accountLabel = c.isNull(7) ? null : c.getString(7);
+                final Uri walletUriBase = c.isNull(8) ? null : Uri.parse(c.getString(8));
+                final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey,
+                        accountLabel, cluster, scope, walletUriBase, publicKeyId, walletUriBaseId,
+                        issued, issued + mAuthIssuerConfig.authorizationValidityMs);
                 authorizations.add(authRecord);
             }
         }

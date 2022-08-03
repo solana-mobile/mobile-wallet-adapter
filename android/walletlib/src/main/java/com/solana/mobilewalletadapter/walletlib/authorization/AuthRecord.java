@@ -29,6 +29,9 @@ public class AuthRecord {
     @NonNull
     public final byte[] publicKey;
 
+    @Nullable
+    public final String accountLabel;
+
     @NonNull
     public final String cluster;
 
@@ -49,6 +52,7 @@ public class AuthRecord {
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
                            @NonNull byte[] publicKey,
+                           @Nullable String accountLabel,
                            @NonNull String cluster,
                            @NonNull byte[] scope,
                            @Nullable Uri walletUriBase,
@@ -61,6 +65,7 @@ public class AuthRecord {
         this.id = id;
         this.identity = identity;
         this.publicKey = publicKey;
+        this.accountLabel = accountLabel;
         this.cluster = cluster;
         this.scope = scope;
         this.walletUriBase = walletUriBase;
