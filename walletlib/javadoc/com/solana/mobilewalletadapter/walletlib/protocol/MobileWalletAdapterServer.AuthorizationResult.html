@@ -158,15 +158,20 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#authToken">authToken</a></span></code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#accountLabel">accountLabel</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#authToken">authToken</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code>byte[]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#publicKey">publicKey</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#walletUriBase">walletUriBase</a></span></code></th>
 <td class="colLast">&nbsp;</td>
@@ -189,8 +194,9 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,byte%5B%5D,android.net.Uri)">AuthorizationResult</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,byte%5B%5D,java.lang.String,android.net.Uri)">AuthorizationResult</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                    byte[]&nbsp;publicKey,
+                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;accountLabel,
                    <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -261,6 +267,16 @@ public final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html
 public final&nbsp;byte[] publicKey</pre>
 </li>
 </ul>
+<a id="accountLabel">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>accountLabel</h4>
+<pre>@Nullable
+public final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> accountLabel</pre>
+</li>
+</ul>
 <a id="walletUriBase">
 <!--   -->
 </a>
@@ -281,7 +297,7 @@ public final&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(java.lang.String,byte[],android.net.Uri)">
+<a id="&lt;init&gt;(java.lang.String,byte[],java.lang.String,android.net.Uri)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -291,6 +307,8 @@ public final&nbsp;<a href="https://d.android.com/reference/android/net/Uri.html?
                            <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;authToken,
                            @NonNull
                            byte[]&nbsp;publicKey,
+                           @Nullable
+                           <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;accountLabel,
                            @Nullable
                            <a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a>&nbsp;walletUriBase)</pre>
 </li>
