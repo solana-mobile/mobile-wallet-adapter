@@ -4,6 +4,7 @@ import {
     AuthorizationResult,
     AuthToken,
     Base64EncodedAddress,
+    Finality,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
@@ -241,10 +242,52 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             const minContextSlot = options?.minContextSlot;
             try {
                 return await this.transact(async (wallet) => {
-                    await this.performReauthorization(wallet, authToken);
+                    let targetCommitment: Finality;
+                    switch (connection.commitment) {
+                        case 'confirmed':
+                        case 'finalized':
+                        case 'processed':
+                            targetCommitment = connection.commitment;
+                            break;
+                        default:
+                            targetCommitment = 'finalized';
+                    }
+                    let targetPreflightCommitment: Finality;
+                    switch (options?.preflightCommitment) {
+                        case 'confirmed':
+                        case 'finalized':
+                        case 'processed':
+                            targetPreflightCommitment = options.preflightCommitment;
+                            break;
+                        case undefined:
+                            targetPreflightCommitment = targetCommitment;
+                        default:
+                            targetPreflightCommitment = 'finalized';
+                    }
+                    await Promise.all([
+                        this.performReauthorization(wallet, authToken),
+                        (async () => {
+                            if (transaction.recentBlockhash == null) {
+                                const preflightCommitmentScore =
+                                    targetPreflightCommitment === 'finalized'
+                                        ? 2
+                                        : targetPreflightCommitment === 'confirmed'
+                                        ? 1
+                                        : 0;
+                                const targetCommitmentScore =
+                                    targetCommitment === 'finalized' ? 2 : targetCommitment === 'confirmed' ? 1 : 0;
+                                const { blockhash } = await connection.getLatestBlockhash({
+                                    commitment:
+                                        preflightCommitmentScore < targetCommitmentScore
+                                            ? targetPreflightCommitment
+                                            : targetCommitment,
+                                });
+                                transaction.recentBlockhash = blockhash;
+                            }
+                        })(),
+                    ]);
+                    transaction.feePayer ||= this.publicKey ?? undefined;
                     const signatures = await wallet.signAndSendTransactions({
-                        connection,
-                        fee_payer: transaction.feePayer,
                         minContextSlot,
                         transactions: [transaction],
                     });

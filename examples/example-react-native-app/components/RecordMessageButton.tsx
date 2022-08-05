@@ -58,7 +58,6 @@ export default function RecordMessageButton({children, message}: Props) {
           }),
         );
         return await wallet.signAndSendTransactions({
-          connection,
           transactions: [memoProgramTransaction],
         });
       });
