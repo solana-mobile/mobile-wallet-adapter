@@ -7,7 +7,6 @@ package com.solana.mobilewalletadapter.fakewallet
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -91,7 +90,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
                 request.request.completeWithAuthorize(
                     publicKey.encoded,
-                    "fakewallet [${Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)}]",
+                    "fakewallet",
                     null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray()
                 )
