@@ -145,7 +145,7 @@ Whether launched from a web browser or a native dapp endpoint, the Intent’s ac
 
 #### iOS
 
-__TODO__
+_iOS support is planned for a future version of this specification_
 
 #### Desktop
 
@@ -930,7 +930,7 @@ When the wallet determines that an origin attestation is necessary, it returns t
 
 ### iOS
 
-__TODO__
+_iOS support is planned for a future version of this specification_
 
 ### Remote
 
