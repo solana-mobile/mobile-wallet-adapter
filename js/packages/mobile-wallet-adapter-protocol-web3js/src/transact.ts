@@ -1,10 +1,9 @@
-import { Connection, PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
+import { Transaction, TransactionSignature } from '@solana/web3.js';
 import {
     AuthorizeAPI,
     Base64EncodedAddress,
     CloneAuthorizationAPI,
     DeauthorizeAPI,
-    Finality,
     MobileWallet,
     ReauthorizeAPI,
     transact as baseTransact,
@@ -16,8 +15,6 @@ import { fromUint8Array, toUint8Array } from './base64Utils';
 
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
-        connection: Connection;
-        fee_payer?: PublicKey;
         minContextSlot?: number;
         transactions: Transaction[];
     }): Promise<TransactionSignature[]>;
@@ -51,43 +48,13 @@ export async function transact<TReturn>(
                     switch (p) {
                         case 'signAndSendTransactions':
                             target[p] = async function ({
-                                connection,
-                                fee_payer: feePayer,
                                 minContextSlot,
                                 transactions,
                                 ...rest
                             }: Parameters<Web3MobileWallet['signAndSendTransactions']>[0]) {
-                                let latestBlockhashPromise: ReturnType<
-                                    InstanceType<typeof Connection>['getLatestBlockhash']
-                                >;
-                                let targetCommitment: Finality;
-                                switch (connection.commitment) {
-                                    case 'confirmed':
-                                    case 'finalized':
-                                    case 'processed':
-                                        targetCommitment = connection.commitment;
-                                        break;
-                                    default:
-                                        targetCommitment = 'finalized';
-                                }
-                                function getLatestBlockhashPromise() {
-                                    if (latestBlockhashPromise == null) {
-                                        latestBlockhashPromise = connection.getLatestBlockhash({
-                                            commitment: targetCommitment,
-                                        });
-                                    }
-                                    return latestBlockhashPromise;
-                                }
                                 const payloads = await Promise.all(
                                     transactions.map(async (transaction) => {
-                                        if (transaction.feePayer == null) {
-                                            transaction.feePayer = feePayer;
-                                        }
-                                        if (transaction.recentBlockhash == null) {
-                                            const { blockhash } = await getLatestBlockhashPromise();
-                                            transaction.recentBlockhash = blockhash;
-                                        }
-                                        const serializedTransaction = transaction.serialize({
+                                        const serializedTransaction = await transaction.serialize({
                                             requireAllSignatures: false,
                                             verifySignatures: false,
                                         });
