@@ -42,7 +42,7 @@ For dApps,
 
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:0.2.0'
+    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:0.9.0'
 }
 ```
 
@@ -50,7 +50,7 @@ For wallets,
 
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:0.2.0'
+    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:0.9.0'
 }
 ```
 
