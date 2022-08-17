@@ -1,0 +1,8 @@
+{
+    "extends": "../../tsconfig.json",
+    "include": ["src", "rollup.config.ts"],
+    "compilerOptions": {
+        "declarationDir": "./lib/types",
+        "isolatedModules": false
+    }
+}

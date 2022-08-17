@@ -1,0 +1,16 @@
+<script type="module">
+    import {attestOrigin, generateKeypair} from '../lib/index.js'
+
+    const abortController = new AbortController();
+    const abortSignal = abortController.signal
+
+    const attestationEndpoint = new URL('/demo/attest-origin.html', window.origin);
+
+    // The wallet calls for a keypair to be generated.
+    const publicKey = await generateKeypair(attestationEndpoint, {abortSignal})
+    console.log('I am a wallet, and I obtained this public key', publicKey);
+
+    // The dApp requests a token on the basis of that keypair.
+    const originAttestationToken = await attestOrigin(attestationEndpoint, {abortSignal});
+    console.log('I am a dApp, and I was granted this origin attestation token', originAttestationToken);
+</script>
