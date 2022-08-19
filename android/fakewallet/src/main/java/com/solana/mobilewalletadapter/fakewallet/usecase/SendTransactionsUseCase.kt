@@ -87,6 +87,7 @@ object SendTransactionsUseCase {
         // Parameter 1 - options
         val opt = JSONObject()
         opt.put("encoding", "base64")
+        opt.put("preflightCommitment", "processed")
         if (minContextSlot != null) {
             opt.put("minContextSlot", minContextSlot)
         }
