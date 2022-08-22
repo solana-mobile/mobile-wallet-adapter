@@ -37,7 +37,7 @@ public class RxLocalAssociationScenario {
         return mLocalAssociationScenario.getPort();
     }
 
-    @Nullable
+    @NonNull
     public MobileWalletAdapterSession getSession() {
         return mLocalAssociationScenario.getSession();
     }

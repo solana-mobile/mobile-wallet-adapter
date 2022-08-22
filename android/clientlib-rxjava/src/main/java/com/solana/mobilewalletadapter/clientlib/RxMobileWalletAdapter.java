@@ -22,9 +22,6 @@ public class RxMobileWalletAdapter {
     @IntRange(from = 0)
     private final int mClientTimeoutMs;
 
-    @NonNull
-    private final RxLocalAssociationScenario mRxLocalAssociationScenario;
-
     @Nullable
     private final Uri mEndpointPrefix;
 
@@ -32,14 +29,13 @@ public class RxMobileWalletAdapter {
      * Allow only a single MWA connection at a time
      */
     @NonNull
-    private Semaphore mSemaphore = new Semaphore(1);
+    private final Semaphore mSemaphore = new Semaphore(1);
 
     public RxMobileWalletAdapter(
             @IntRange(from = 0) int clientTimeoutMs,
             @Nullable Uri endpointPrefix
     ) {
         this.mClientTimeoutMs = clientTimeoutMs;
-        this.mRxLocalAssociationScenario = new RxLocalAssociationScenario(clientTimeoutMs);
         this.mEndpointPrefix = endpointPrefix;
     }
 
@@ -48,20 +44,21 @@ public class RxMobileWalletAdapter {
         try {
             mSemaphore.acquire();
 
-            // Launch the Association intent
+            // Create and launch the Association intent
+            RxLocalAssociationScenario rxLocalAssociationScenario = new RxLocalAssociationScenario(mClientTimeoutMs);
             activityResultSender.launch(
                     LocalAssociationIntentCreator.createAssociationIntent(
-                            mEndpointPrefix, mRxLocalAssociationScenario.getPort(), mRxLocalAssociationScenario.getSession()
+                            mEndpointPrefix, rxLocalAssociationScenario.getPort(), rxLocalAssociationScenario.getSession()
                     )
             );
 
             // Return the chain of [Single] (start->execute->close)
-            return mRxLocalAssociationScenario
+            return rxLocalAssociationScenario
                     .start()
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .doFinally(() -> {
-                                mRxLocalAssociationScenario.close().blockingAwait(mClientTimeoutMs, TimeUnit.MILLISECONDS);
+                        rxLocalAssociationScenario.close().blockingAwait(mClientTimeoutMs, TimeUnit.MILLISECONDS);
                                 mSemaphore.release();
                             }
                     );
