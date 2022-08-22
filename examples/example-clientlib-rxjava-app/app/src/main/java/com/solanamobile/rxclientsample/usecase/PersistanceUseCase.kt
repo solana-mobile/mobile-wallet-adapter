@@ -9,7 +9,7 @@ sealed class WalletConnection
 object NotConnected : WalletConnection()
 
 data class Connected(
-    val publickKey: PublicKey,
+    val publicKey: PublicKey,
     val authToken: String
 ): WalletConnection()
 
