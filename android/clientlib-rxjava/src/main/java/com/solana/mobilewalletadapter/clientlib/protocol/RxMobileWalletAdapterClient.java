@@ -37,8 +37,9 @@ public class RxMobileWalletAdapterClient {
     public Single<AuthorizationResult> authorize(@Nullable Uri identityUri,
                                                  @Nullable Uri iconUri,
                                                  @Nullable String identityName,
-                                                 @Nullable String cluster) {
+                                                 @Nullable RpcCluster rpcCluster) {
         try {
+            String cluster = rpcCluster == null ? null : rpcCluster.getClusterName();
             AuthorizationFuture authorizationFuture = mMobileWalletAdapterClient.authorize(identityUri, iconUri, identityName, cluster);
             return Single.fromFuture(authorizationFuture);
         } catch (Exception e) {
