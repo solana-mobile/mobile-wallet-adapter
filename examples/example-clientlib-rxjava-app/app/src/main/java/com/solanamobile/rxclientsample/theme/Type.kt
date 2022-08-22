@@ -1,4 +1,4 @@
-package com.solanamobile.rxclientsample.ui.theme
+package com.solanamobile.rxclientsample.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

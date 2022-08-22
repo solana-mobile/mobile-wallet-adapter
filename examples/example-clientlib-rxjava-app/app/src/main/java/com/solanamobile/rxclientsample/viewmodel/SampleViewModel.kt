@@ -2,72 +2,173 @@ package com.solanamobile.rxclientsample.viewmodel
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.portto.solana.web3.PublicKey
+import com.portto.solana.web3.SerializeConfig
+import com.portto.solana.web3.Transaction
+import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.RxMobileWalletAdapter
+import com.solanamobile.rxclientsample.usecase.Connected
+import com.solanamobile.rxclientsample.usecase.NotConnected
+import com.solanamobile.rxclientsample.usecase.PersistanceUseCase
+import com.solanamobile.rxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.bitcoinj.core.Base58
 import javax.inject.Inject
 
 data class SampleViewState(
-    val isConnected: Boolean = false,
-    val userAddress: String = ""
+    val isLoading: Boolean = false,
+    val canTransact: Boolean = false,
+    val solBalance: Double = 0.0,
+    val userAddress: String = "",
+    val memoTx: String = ""
 )
+
+val solanaUri = Uri.parse("https://solana.com")
+val iconUri = Uri.parse("favicon.ico")
+val identityName = "Solana"
 
 @HiltViewModel
 class SampleViewModel @Inject constructor(
-    private val rxWalletAdapter: RxMobileWalletAdapter
-) : ViewModel() {
+    private val walletAdapter: RxMobileWalletAdapter,
+    private val solanaRpcUseCase: SolanaRpcUseCase,
+    private val persistanceUseCase: PersistanceUseCase
+): ViewModel() {
 
-    private var token = "" //TODO: BAD!
+    private fun SampleViewState.updateViewState() {
+        _state.update { this }
+    }
 
     private val _state = MutableStateFlow(SampleViewState())
-
-    private val compositeDisposable = CompositeDisposable()
 
     val viewState: StateFlow<SampleViewState>
         get() = _state
 
-    override fun onCleared() {
-        compositeDisposable.dispose()
-        super.onCleared()
+    fun loadConnection() {
+        val connection = persistanceUseCase.getWalletConnection()
+        if (connection is Connected) {
+            _state.value.copy(
+                isLoading = true,
+                canTransact = true,
+                userAddress = connection.publickKey.toBase58()
+            ).updateViewState()
+
+            viewModelScope.launch {
+                val balance = solanaRpcUseCase.getBalance(connection.publickKey)
+
+                _state.value.copy(
+                    isLoading = false,
+                    solBalance = balance
+                ).updateViewState()
+            }
+        }
     }
 
-    fun connectToWallet(sender: ActivityResultSender) {
-        rxWalletAdapter.transact(sender)
-            .subscribe { rxMobileClient ->
-                rxMobileClient
-                    .authorize(
-                        Uri.parse("https://solana.com"), Uri.parse("favicon.ico"), "Solana"
-                    )
-                    .subscribe { result ->
-                        token = result.authToken
+    fun addFunds(sender: ActivityResultSender) {
+        viewModelScope.launch {
+            val conn = persistanceUseCase.getWalletConnection()
+            RpcCluster.
 
-                        _state.update {
-                            _state.value.copy(
-                                isConnected = true,
-                                userAddress = result.publicKey
-                            )
-                        }
-                    }.apply { compositeDisposable.add(this) }
-            }.apply { compositeDisposable.add(this) }
+            val currentConn = walletAdapter.transact(sender) {
+                when (conn) {
+                   is NotConnected -> {
+                       val authed = authorize(solanaUri, iconUri, identityName, RpcCluster.Devnet)
+                       Connected(PublicKey(authed.publicKey), authed.authToken)
+                   }
+                   is Connected -> {
+                       val reauthed = reauthorize(solanaUri, iconUri, identityName, conn.authToken)
+                       Connected(PublicKey(reauthed.publicKey), reauthed.authToken)
+                   }
+                }
+            }
+
+            persistanceUseCase.persistConnection(currentConn.publickKey, currentConn.authToken)
+
+            _state.value.copy(
+                isLoading = true
+            ).updateViewState()
+
+            val tx = solanaRpcUseCase.requestAirdrop(currentConn.publickKey)
+            val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
+
+            if (confirmed) {
+                val balance = solanaRpcUseCase.getBalance(currentConn.publickKey)
+
+                _state.value.copy(
+                    isLoading = false,
+                    canTransact = true,
+                    solBalance = balance,
+                    userAddress = currentConn.publickKey.toBase58()
+                ).updateViewState()
+            } else {
+                _state.value.copy(
+                    isLoading = false,
+                    canTransact = true,
+                    solBalance = 0.0,
+                    userAddress = "Error airdropping"
+                ).updateViewState()
+            }
+        }
+    }
+
+    fun publishMemo(sender: ActivityResultSender, memoText: String) {
+        val conn = persistanceUseCase.getWalletConnection()
+
+        if (conn is Connected) {
+            _state.value.copy(
+                isLoading = true
+            ).updateViewState()
+
+            viewModelScope.launch {
+                val blockHash = solanaRpcUseCase.getLatestBlockHash()
+
+                val tx = Transaction()
+                tx.add(MemoProgram.writeUtf8(conn.publickKey, memoText))
+                tx.setRecentBlockHash(blockHash!!)
+                tx.feePayer = conn.publickKey
+
+                val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
+
+                val result = walletAdapter.transact(sender) {
+                    reauthorize(solanaUri, iconUri, identityName, conn.authToken)
+                    signAndSendTransactions(arrayOf(bytes))
+                }
+
+                result.signatures.firstOrNull()?.let { sig ->
+                    val readableSig = Base58.encode(sig)
+
+                    _state.value.copy(
+                        isLoading = false,
+                        memoTx = readableSig
+                    ).updateViewState()
+
+                    //Clear out the recent transaction
+                    delay(5000)
+                    _state.value.copy(memoTx = "").updateViewState()
+                }
+            }
+        }
     }
 
     fun disconnect(sender: ActivityResultSender) {
-        rxWalletAdapter.transact(sender)
-            .subscribe { rxMobileClient ->
-                rxMobileClient
-                    .deauthorize(token)
-                    .subscribe {
-                        _state.update {
-                            _state.value.copy(
-                                isConnected = false,
-                                userAddress = ""
-                            )
-                        }
-                    }.apply { compositeDisposable.add(this) }
-            }.apply { compositeDisposable.add(this) }
+        viewModelScope.launch {
+            val conn = persistanceUseCase.getWalletConnection()
+
+            if (conn is Connected) {
+                walletAdapter.transact(sender) {
+                    deauthorize(conn.authToken)
+                }
+
+                persistanceUseCase.clearConnection()
+
+                SampleViewState().updateViewState()
+            }
+        }
     }
 }
