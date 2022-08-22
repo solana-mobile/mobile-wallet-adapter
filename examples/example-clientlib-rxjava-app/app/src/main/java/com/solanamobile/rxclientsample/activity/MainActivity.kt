@@ -10,7 +10,7 @@ import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solanamobile.rxclientsample.ui.SampleScreen
-import com.solanamobile.rxclientsample.ui.theme.RxClientSampleTheme
+import com.solanamobile.rxclientsample.theme.KtxClientSampleTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity(), ActivityResultSender {
         super.onCreate(savedInstanceState)
 
         setContent {
-            RxClientSampleTheme {
+            KtxClientSampleTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
