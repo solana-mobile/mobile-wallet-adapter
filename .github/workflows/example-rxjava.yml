@@ -1,0 +1,33 @@
+name: Build clientlib-rxjava Sample App
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'android/**', '.github/**', 'examples/example-clientlib-rxjava-app/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'android/**', '.github/**', 'examples/example-clientlib-rxjava-app/**' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: examples/example-clientlib-rxjava-app
+
+    steps:
+      # Setup
+      - uses: actions/checkout@v3
+      - name: set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+
+      # Build
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle and run tests
+        run: ./gradlew build
