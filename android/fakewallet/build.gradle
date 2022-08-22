@@ -54,7 +54,7 @@ dependencies {
     implementation 'androidx.room:room-ktx:2.4.3'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'com.solanamobile:digital-asset-links-android:1.0.0'
-    implementation 'io.coil-kt:coil:2.1.0'
+    implementation 'io.coil-kt:coil:2.2.0'
     implementation 'io.coil-kt:coil-svg:2.1.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
