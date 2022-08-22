@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 
-enum RpcCluster {
+public enum RpcCluster {
     MAINNET_BETA(ProtocolContract.CLUSTER_MAINNET_BETA),
     TESTNET(ProtocolContract.CLUSTER_TESTNET),
     DEVNET(ProtocolContract.CLUSTER_DEVNET);
