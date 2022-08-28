@@ -16,4 +16,12 @@ module.exports = {
       ? [...process.env.RN_SRC_EXT.split(',').concat(defaultSourceExts), 'cjs']
       : [...defaultSourceExts, 'cjs'],
   },
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: false,
+        inlineRequires: true,
+      },
+    }),
+  },
 };
