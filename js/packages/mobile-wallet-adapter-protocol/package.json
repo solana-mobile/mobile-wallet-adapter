@@ -38,12 +38,12 @@
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
-    "dependencies": {
-        "react-native": "^0.69.1"
-    },
     "devDependencies": {
         "@types/react-native": "^0.69.3",
         "agadoo": "^2.0.0",
         "cross-env": "^7.0.3"
+    },
+    "peerDependencies": {
+        "react-native": ">0.69"
     }
 }
