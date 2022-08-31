@@ -42,7 +42,12 @@ class MainActivity : AppCompatActivity() {
                         viewBinding.btnSignAndSendTxnX1.isEnabled = isAuthorized
                         viewBinding.btnSignAndSendTxnX3.isEnabled = isAuthorized
                         viewBinding.btnSignAndSendTxnX20.isEnabled = isAuthorized
+                        viewBinding.cbHasAuthToken.isChecked = isAuthorized
                     }
+
+                    viewBinding.tvWalletUriPrefix.text =
+                        uiState.walletUriBase?.toString()
+                            ?: getString(R.string.string_no_wallet_uri_prefix)
 
                     if (uiState.messages.isNotEmpty()) {
                         val message = uiState.messages.first()

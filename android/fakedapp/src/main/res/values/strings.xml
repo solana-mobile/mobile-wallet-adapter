@@ -27,4 +27,7 @@
     <string name="label_sign_and_send_txn_x1">Sign and send txn x1</string>
     <string name="label_sign_and_send_txn_x3">x3</string>
     <string name="label_sign_and_send_txn_x20">x20</string>
+    <string name="label_has_auth_token">Has auth token?</string>
+    <string name="label_wallet_uri_prefix">Wallet URI prefix:</string>
+    <string name="string_no_wallet_uri_prefix">&lt;none&gt;</string>
 </resources>

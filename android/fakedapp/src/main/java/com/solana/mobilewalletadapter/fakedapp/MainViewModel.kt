@@ -61,7 +61,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun reauthorize(sender: StartActivityForResultSender) = viewModelScope.launch {
-        val result = localAssociateAndExecute(sender) { client ->
+        val result = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             doReauthorize(client)
         }
 
@@ -69,7 +69,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deauthorize(sender: StartActivityForResultSender) = viewModelScope.launch {
-        val result = localAssociateAndExecute(sender) { client ->
+        val result = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             doDeauthorize(client)
         }
 
@@ -77,7 +77,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getCapabilities(sender: StartActivityForResultSender) = viewModelScope.launch {
-        val result = localAssociateAndExecute(sender) { client ->
+        val result = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             doGetCapabilities(client)
         }
 
@@ -100,7 +100,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
 
-        val signedTransactions = localAssociateAndExecute(sender) { client ->
+        val signedTransactions = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             val authorized = doReauthorize(client)
             if (!authorized) {
                 return@localAssociateAndExecute null
@@ -176,7 +176,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signMessages(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
-        val signedMessages = localAssociateAndExecute(sender) { client ->
+        val signedMessages = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             val authorized = doReauthorize(client)
             if (!authorized) {
                 return@localAssociateAndExecute null
@@ -195,7 +195,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
 
-        val signatures = localAssociateAndExecute(sender) { client ->
+        val signatures = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             val authorized = doReauthorize(client)
             if (!authorized) {
                 return@localAssociateAndExecute null
@@ -242,7 +242,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     authToken = result.authToken,
-                    publicKey = result.publicKey
+                    publicKey = result.publicKey,
+                    walletUriBase = result.walletUriBase
                 )
             }
             authorized = true
@@ -287,7 +288,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     authToken = result.authToken,
-                    publicKey = result.publicKey
+                    publicKey = result.publicKey,
+                    walletUriBase = result.walletUriBase
                 )
             }
             reauthorized = true
@@ -300,7 +302,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     when (cause.code) {
                         ProtocolContract.ERROR_AUTHORIZATION_FAILED -> {
                             Log.e(TAG, "Not reauthorized", cause)
-                            _uiState.update { it.copy(authToken = null) }
+                            _uiState.update {
+                                it.copy(
+                                    authToken = null,
+                                    publicKey = null,
+                                    walletUriBase = null
+                                )
+                            }
                         }
                         else ->
                             Log.e(TAG, "Remote exception for reauthorize", cause)
@@ -326,7 +334,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             client.deauthorize(_uiState.value.authToken!!).get()
             Log.d(TAG, "Deauthorized")
-            _uiState.update { it.copy(authToken = null) }
+            _uiState.update { it.copy(authToken = null, publicKey = null, walletUriBase = null) }
             deauthorized = true
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
@@ -558,6 +566,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     data class UiState(
         val authToken: String? = null,
         val publicKey: ByteArray? = null, // TODO(#44): support multiple addresses
+        val walletUriBase: Uri? = null,
         val messages: List<String> = emptyList()
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
@@ -573,6 +582,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (other.publicKey == null) return false
                 if (!publicKey.contentEquals(other.publicKey)) return false
             } else if (other.publicKey != null) return false
+            if (walletUriBase != other.walletUriBase) return false
             if (messages != other.messages) return false
 
             return true
@@ -581,6 +591,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         override fun hashCode(): Int {
             var result = authToken?.hashCode() ?: 0
             result = 31 * result + (publicKey?.contentHashCode() ?: 0)
+            result = 31 * result + (walletUriBase?.hashCode() ?: 0)
             result = 31 * result + messages.hashCode()
             return result
         }
