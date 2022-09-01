@@ -42,6 +42,15 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun isWalletAvailable(promise: Promise) {
+        promise.resolve(
+            LocalAssociationIntentCreator.isWalletEndpointAvailable(
+                reactApplicationContext.packageManager
+            )
+        )
+    }
+
+    @ReactMethod
     fun startSession(config: ReadableMap?, promise: Promise) = launch {
         mutex.lock()
         Log.d(name, "startSession with config $config")
