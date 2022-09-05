@@ -1,7 +1,7 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-protocol-web3js",
     "description": "A convenience wrapper that enables you to call Solana Mobile Stack protocol methods using objects from @solana/web3.js",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "author": "Steven Luscher <steven.luscher@solanamobile.com>",
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
@@ -40,7 +40,7 @@
         "@solana/web3.js": "^1.48.0"
     },
     "dependencies": {
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^0.9.0",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^0.9.1",
         "bs58": "^5.0.0",
         "js-base64": "^3.7.2"
     },
