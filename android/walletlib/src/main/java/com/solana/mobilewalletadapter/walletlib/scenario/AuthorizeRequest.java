@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
+import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
 public class AuthorizeRequest extends BaseScenarioRequest {
     private static final String TAG = AuthorizeRequest.class.getSimpleName();
@@ -71,6 +72,11 @@ public class AuthorizeRequest extends BaseScenarioRequest {
 
     public void completeWithDecline() {
         mRequest.complete(null);
+    }
+
+    public void completeWithClusterNotSupported() {
+        mRequest.completeExceptionally(new MobileWalletAdapterServer.ClusterNotSupportedException(
+                "Unsupported or invalid cluster specified"));
     }
 
     /*package*/ static class Result {

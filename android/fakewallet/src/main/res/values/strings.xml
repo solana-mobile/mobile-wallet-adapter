@@ -12,6 +12,7 @@
     <string name="label_authorize_dapp">Authorize dapp</string>
     <string name="label_verification_state">Status:</string>
     <string name="label_verification_scope">Scope:</string>
+    <string name="label_simulate_cluster_not_supported">Simulate cluster not supported</string>
 
     <!-- Sign Payload fragment strings -->
     <string name="label_sign_transactions">Sign transaction(s)</string>
@@ -23,12 +24,12 @@
 
     <!-- Send Transaction fragment strings -->
     <string name="label_send_transactions">Sending transaction(s)</string>
-    <string name="label_cluster">Cluster:</string>
     <string name="label_simulate_transactions_submitted">Simulate submitted</string>
     <string name="label_simulate_transactions_not_submitted">Simulate submit failed</string>
     <string name="label_send_transaction_to_cluster">Send transaction to cluster</string>
 
     <!-- Common strings -->
+    <string name="label_cluster">Cluster:</string>
     <string name="label_authorize">Authorize</string>
     <string name="label_decline">Decline</string>
 

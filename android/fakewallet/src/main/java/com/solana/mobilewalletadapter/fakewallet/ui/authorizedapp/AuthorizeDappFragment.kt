@@ -63,6 +63,7 @@ class AuthorizeDappFragment : Fragment() {
                             viewBinding.textName.text = request.request.identityName ?: "<no name>"
                             viewBinding.textUri.text =
                                 request.request.identityUri?.toString() ?: "<no URI>"
+                            viewBinding.textCluster.text = request.request.cluster
                             viewBinding.textVerificationState.setText(
                                 when (request.sourceVerificationState) {
                                     is ClientTrustUseCase.VerificationInProgress -> R.string.str_verification_in_progress
@@ -101,6 +102,13 @@ class AuthorizeDappFragment : Fragment() {
             request?.let {
                 Log.w(TAG, "Not authorizing dapp")
                 activityViewModel.authorizeDapp(it, false)
+            }
+        }
+
+        viewBinding.btnSimulateClusterNotSupported.setOnClickListener {
+            request?.let {
+                Log.w(TAG, "Simulating cluster not supported")
+                activityViewModel.authorizeDappSimulateClusterNotSupported(it)
             }
         }
     }

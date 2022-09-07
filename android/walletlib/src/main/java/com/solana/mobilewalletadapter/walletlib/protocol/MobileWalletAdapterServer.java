@@ -127,6 +127,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 ) {
                     assert(!(cause instanceof AuthorizationNotValidException) || request instanceof ReauthorizeRequest);
                     handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request failed", null);
+                } else if (cause instanceof ClusterNotSupportedException) { // NOTE: ClusterNotSupportedException only expected for authorize requests
+                    assert(request instanceof AuthorizeRequest);
+                    handleRpcError(request.id, ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED, "invalid or unsupported cluster for authorization request", null);
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request", null);
                 }
@@ -996,5 +999,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     public static class TooManyPayloadsException extends MobileWalletAdapterServerException {
         public TooManyPayloadsException(@NonNull String m) { super(m); }
+    }
+
+    public static class ClusterNotSupportedException extends MobileWalletAdapterServerException {
+        public ClusterNotSupportedException(@NonNull String m) { super(m); }
     }
 }
