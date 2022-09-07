@@ -100,6 +100,16 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
+    fun authorizeDappSimulateClusterNotSupported(
+        request: MobileWalletAdapterServiceRequest.AuthorizeDapp
+    ) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+
+        request.request.completeWithClusterNotSupported()
+    }
+
     fun signPayloadsSimulateSign(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return

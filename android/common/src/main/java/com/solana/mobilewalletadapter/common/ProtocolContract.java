@@ -69,7 +69,9 @@ public class ProtocolContract {
     public static final int ERROR_INVALID_PAYLOADS = -2;
     public static final int ERROR_NOT_SIGNED = -3;
     public static final int ERROR_NOT_SUBMITTED = -4;
-    public static final int ERROR_TOO_MANY_PAYLOADS = -5;
+    public static final int ERROR_NOT_CLONED = -5;
+    public static final int ERROR_TOO_MANY_PAYLOADS = -6;
+    public static final int ERROR_CLUSTER_NOT_SUPPORTED = -7;
     public static final int ERROR_ATTEST_ORIGIN_ANDROID = -100;
 
     public static final String DATA_INVALID_PAYLOADS_VALID = "valid"; // Type: JSON array of Boolean

@@ -126,6 +126,12 @@ public abstract class Scenario {
             new MobileWalletAdapterServer.MethodHandlers() {
         @Override
         public void authorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
+            // Clear the active auth token immediately upon beginning authorization; it will be
+            // set to valid only on successful completion
+            synchronized (mLock) {
+                mActiveAuthorization = null;
+            }
+
             final NotifyingCompletableFuture<AuthorizeRequest.Result> future = new NotifyingCompletableFuture<>();
             future.notifyOnComplete(f -> mIoHandler.post(() -> { // Note: run in IO thread context
                 try {
@@ -149,18 +155,16 @@ public abstract class Scenario {
                                 authToken, authorize.publicKey, authorize.accountLabel,
                                 authorize.walletUriBase));
                     } else {
-                        synchronized (mLock) {
-                            mActiveAuthorization = null;
-                        }
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
                                 "authorize request declined"));
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    throw new RuntimeException("Unexpected exception while waiting for authorization", e);
+                } catch (ExecutionException e) {
+                    final Throwable cause = e.getCause();
+                    assert(cause instanceof Exception); // expected to always be an Exception
+                    request.completeExceptionally((Exception)cause);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Unexpected interruption while waiting for authorization", e);
                 } catch (CancellationException e) {
-                    synchronized (mLock) {
-                        mActiveAuthorization = null;
-                    }
                     request.cancel(true);
                 }
             }));
@@ -172,11 +176,14 @@ public abstract class Scenario {
 
         @Override
         public void reauthorize(@NonNull MobileWalletAdapterServer.ReauthorizeRequest request) {
+            // Clear the active auth token immediately upon beginning reauthorization; it will be
+            // set to valid only on successful completion
+            synchronized (mLock) {
+                mActiveAuthorization = null;
+            }
+
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
             if (authRecord == null) {
-                synchronized (mLock) {
-                    mActiveAuthorization = null;
-                }
                 mIoHandler.post(() -> request.completeExceptionally(
                         new MobileWalletAdapterServer.AuthorizationNotValidException(
                                 "auth_token not valid for this request")));
@@ -188,9 +195,6 @@ public abstract class Scenario {
                 try {
                     final Boolean reauthorize = f.get(); // won't block
                     if (!reauthorize) {
-                        synchronized (mLock) {
-                            mActiveAuthorization = null;
-                        }
                         mIoHandler.post(() -> request.completeExceptionally(
                                 new MobileWalletAdapterServer.RequestDeclinedException(
                                         "app declined reauthorization request")));
@@ -202,9 +206,6 @@ public abstract class Scenario {
                     if (reissuedAuthRecord == null) {
                         // No need to explicitly revoke the old auth token; that is part of the
                         // reissue method contract
-                        synchronized (mLock) {
-                            mActiveAuthorization = null;
-                        }
                         mIoHandler.post(() -> request.completeExceptionally(
                                 new MobileWalletAdapterServer.RequestDeclinedException(
                                         "auth_token not valid for reissue")));
@@ -229,9 +230,6 @@ public abstract class Scenario {
                 } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException("Unexpected exception while waiting for reauthorization", e);
                 } catch (CancellationException e) {
-                    synchronized (mLock) {
-                        mActiveAuthorization = null;
-                    }
                     request.cancel(true);
                 }
             }));

@@ -256,6 +256,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     when (cause.code) {
                         ProtocolContract.ERROR_AUTHORIZATION_FAILED ->
                             Log.e(TAG, "Not authorized", cause)
+                        ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED ->
+                            Log.e(TAG, "Cluster not supported", cause)
                         else ->
                             Log.e(TAG, "Remote exception for authorize", cause)
                     }
