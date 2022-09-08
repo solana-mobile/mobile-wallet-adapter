@@ -12,11 +12,9 @@ import androidx.annotation.Nullable;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public class AuthorizeRequest extends BaseScenarioRequest {
+public class AuthorizeRequest
+        extends BaseScenarioRequest<NotifyingCompletableFuture<AuthorizeRequest.Result>> {
     private static final String TAG = AuthorizeRequest.class.getSimpleName();
-
-    @NonNull
-    private final NotifyingCompletableFuture<Result> mRequest;
 
     @Nullable
     protected final String mIdentityName;
@@ -36,7 +34,6 @@ public class AuthorizeRequest extends BaseScenarioRequest {
                                  @Nullable Uri iconUri,
                                  @NonNull String cluster) {
         super(request);
-        mRequest = request;
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;

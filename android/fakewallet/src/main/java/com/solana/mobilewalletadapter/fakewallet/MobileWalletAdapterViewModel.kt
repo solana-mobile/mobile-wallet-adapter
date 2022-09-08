@@ -110,6 +110,16 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithClusterNotSupported()
     }
 
+    fun authorizeDappSimulateInternalError(
+        request: MobileWalletAdapterServiceRequest.AuthorizeDapp
+    ) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+
+        request.request.completeWithInternalError(RuntimeException("Internal error during authorize: -1234"))
+    }
+
     fun signPayloadsSimulateSign(request: MobileWalletAdapterServiceRequest.SignPayloads) {
         if (rejectStaleRequest(request)) {
             return
@@ -174,6 +184,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
         request.request.completeWithTooManyPayloads()
+    }
+
+    fun signPayloadsSimulateInternalError(request: MobileWalletAdapterServiceRequest.SignPayloads) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithInternalError(RuntimeException("Internal error during signing: -1234"))
     }
 
     fun signAndSendTransactionsSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
@@ -289,6 +306,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
         request.request.completeWithTooManyPayloads()
+    }
+
+    fun signAndSendTransactionsSimulateInternalError(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+        request.request.completeWithInternalError(RuntimeException("Internal error during sign_and_send_transactions: -1234"))
     }
 
     private fun rejectStaleRequest(request: MobileWalletAdapterServiceRequest): Boolean {

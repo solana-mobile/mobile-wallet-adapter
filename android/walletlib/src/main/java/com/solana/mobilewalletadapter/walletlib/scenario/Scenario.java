@@ -227,8 +227,12 @@ public abstract class Scenario {
                             new MobileWalletAdapterServer.AuthorizationResult(
                                     authToken, authRecord.publicKey, authRecord.accountLabel,
                                     authRecord.walletUriBase)));
-                } catch (ExecutionException | InterruptedException e) {
-                    throw new RuntimeException("Unexpected exception while waiting for reauthorization", e);
+                } catch (ExecutionException e) {
+                    final Throwable cause = e.getCause();
+                    assert(cause instanceof Exception); // expected to always be an Exception
+                    request.completeExceptionally((Exception)cause);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Unexpected interruption while waiting for reauthorization", e);
                 } catch (CancellationException e) {
                     request.cancel(true);
                 }

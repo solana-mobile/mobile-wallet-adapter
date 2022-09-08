@@ -9,9 +9,10 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.concurrent.Future;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
-/*package*/ abstract class BaseVerifiableIdentityRequest extends BaseScenarioRequest
+/*package*/ abstract class BaseVerifiableIdentityRequest<T extends NotifyingCompletableFuture<?>>
+        extends BaseScenarioRequest<T>
         implements VerifiableIdentityRequest {
 
     @Nullable
@@ -29,7 +30,7 @@ import java.util.concurrent.Future;
     @NonNull
     protected final byte[] mAuthorizationScope;
 
-    protected BaseVerifiableIdentityRequest(@NonNull Future<?> request,
+    protected BaseVerifiableIdentityRequest(@NonNull T request,
                                             @Nullable String identityName,
                                             @Nullable Uri identityUri,
                                             @Nullable Uri iconUri,

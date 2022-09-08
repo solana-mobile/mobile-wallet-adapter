@@ -108,6 +108,18 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
+    @NonNull
+    private static String safeGetMessage(@Nullable Throwable t) {
+        if (t == null) {
+            return "";
+        }
+        final String tMessage = t.getMessage();
+        if (tMessage == null) {
+            return "";
+        }
+        return tMessage;
+    }
+
     // =============================================================================================
     // authorize/reauthorize shared types and methods
     // =============================================================================================
@@ -131,7 +143,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     assert(request instanceof AuthorizeRequest);
                     handleRpcError(request.id, ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED, "invalid or unsupported cluster for authorization request", null);
                 } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request", null);
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request: '" + safeGetMessage(cause) + '\'', null);
                 }
                 return;
             } catch (CancellationException e) {
@@ -425,7 +437,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             try {
                 request.get();
             } catch (ExecutionException | CancellationException e) {
-                handleRpcError(request.id, ERROR_INTERNAL, "Error while processing deauthorize request", null);
+                final String message = (e instanceof ExecutionException ? safeGetMessage(e.getCause()) : "");
+                handleRpcError(request.id, ERROR_INTERNAL, "Error while processing deauthorize request: '" + message + '\'', null);
                 return;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Should never occur!");
@@ -604,7 +617,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 } else if (cause instanceof TooManyPayloadsException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of payloads provided for signing exceeds implementation limit", null);
                 } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request: '" + safeGetMessage(cause) + '\'', null);
                 }
                 return;
             } catch (CancellationException e) {
@@ -903,7 +916,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 } else if (cause instanceof  TooManyPayloadsException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of transactions provided for signing exceeds implementation limit", null);
                 } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request", null);
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing sign request: '" + safeGetMessage(cause) + '\'', null);
                 }
                 return;
             } catch (CancellationException e) {

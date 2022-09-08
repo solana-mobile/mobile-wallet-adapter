@@ -5,6 +5,7 @@
 package com.solana.mobilewalletadapter.fakewallet.ui.signpayload
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,7 @@ import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentSignPayloadBinding
+import com.solana.mobilewalletadapter.fakewallet.ui.authorizedapp.AuthorizeDappFragment
 import kotlinx.coroutines.launch
 
 class SignPayloadFragment : Fragment() {
@@ -69,6 +71,10 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.btnSimulateTooManyPayloads.setOnClickListener {
                                 activityViewModel.signPayloadsSimulateTooManyPayloads(request)
                             }
+
+                            viewBinding.btnSimulateInternalError.setOnClickListener {
+                                activityViewModel.signPayloadsSimulateInternalError(request)
+                            }
                         }
                         is MobileWalletAdapterServiceRequest.SignAndSendTransactions -> {
                             request.signatures?.run {
@@ -99,6 +105,10 @@ class SignPayloadFragment : Fragment() {
 
                             viewBinding.btnSimulateTooManyPayloads.setOnClickListener {
                                 activityViewModel.signAndSendTransactionsSimulateTooManyPayloads(request)
+                            }
+
+                            viewBinding.btnSimulateInternalError.setOnClickListener {
+                                activityViewModel.signAndSendTransactionsSimulateInternalError(request)
                             }
                         }
                         else -> {

@@ -11,10 +11,8 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
-public class ReauthorizeRequest extends BaseVerifiableIdentityRequest {
-    @NonNull
-    private final NotifyingCompletableFuture<Boolean> mRequest;
-
+public class ReauthorizeRequest
+        extends BaseVerifiableIdentityRequest<NotifyingCompletableFuture<Boolean>> {
     /*package*/ ReauthorizeRequest(@NonNull NotifyingCompletableFuture<Boolean> request,
                                    @Nullable String identityName,
                                    @Nullable Uri identityUri,
@@ -22,7 +20,6 @@ public class ReauthorizeRequest extends BaseVerifiableIdentityRequest {
                                    @NonNull String cluster,
                                    @NonNull byte[] authorizationScope) {
         super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
-        mRequest = request;
     }
 
     public void completeWithReauthorize() {
