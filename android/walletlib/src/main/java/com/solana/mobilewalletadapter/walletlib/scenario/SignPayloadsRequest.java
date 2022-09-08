@@ -12,10 +12,8 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
-public abstract class SignPayloadsRequest extends BaseVerifiableIdentityRequest {
-    @NonNull
-    protected final MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult> mRequest;
-
+public abstract class SignPayloadsRequest
+        extends BaseVerifiableIdentityRequest<MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult>> {
     @NonNull
     protected final byte[] mAuthorizedPublicKey;
 
@@ -27,7 +25,6 @@ public abstract class SignPayloadsRequest extends BaseVerifiableIdentityRequest 
                                   @NonNull byte[] authorizedPublicKey,
                                   @NonNull String cluster) {
         super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
-        mRequest = request;
         mAuthorizedPublicKey = authorizedPublicKey;
     }
 

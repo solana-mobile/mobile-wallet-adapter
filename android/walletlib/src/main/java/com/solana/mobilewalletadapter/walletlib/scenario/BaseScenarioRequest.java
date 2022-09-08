@@ -6,18 +6,24 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import androidx.annotation.NonNull;
 
-import java.util.concurrent.Future;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
-/*package*/ abstract class BaseScenarioRequest implements ScenarioRequest {
+/*package*/ abstract class BaseScenarioRequest<T extends NotifyingCompletableFuture<?>>
+        implements ScenarioRequest {
     @NonNull
-    private final Future<?> mRequest;
+    protected final T mRequest;
 
-    protected BaseScenarioRequest(@NonNull Future<?> request) {
+    protected BaseScenarioRequest(@NonNull T request) {
         mRequest = request;
     }
 
     @Override
     public void cancel() {
         mRequest.cancel(true);
+    }
+
+    @Override
+    public void completeWithInternalError(@NonNull Exception e) {
+        mRequest.completeExceptionally(e);
     }
 }

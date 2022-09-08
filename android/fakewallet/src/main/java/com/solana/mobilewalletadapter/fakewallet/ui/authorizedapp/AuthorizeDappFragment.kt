@@ -111,6 +111,13 @@ class AuthorizeDappFragment : Fragment() {
                 activityViewModel.authorizeDappSimulateClusterNotSupported(it)
             }
         }
+
+        viewBinding.btnSimulateInternalError.setOnClickListener {
+            request?.let {
+                Log.w(TAG, "Simulating internal error")
+                activityViewModel.authorizeDappSimulateInternalError(it)
+            }
+        }
     }
 
     companion object {
