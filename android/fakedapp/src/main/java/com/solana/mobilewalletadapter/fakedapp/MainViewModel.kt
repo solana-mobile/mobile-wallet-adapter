@@ -190,10 +190,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (!authorized) {
                 return@localAssociateAndExecute null
             }
-            val messages = Array(numMessages) {
-                Random.nextBytes(1232)
-            }
-            doSignMessages(client, messages, arrayOf(_uiState.value.publicKey!!))
+            val message = "To avoid digital dognappers, sign below to authenticate with CryptoCorgis.".toByteArray(Charsets.UTF_8)
+            doSignMessages(client, arrayOf(message), arrayOf(_uiState.value.publicKey!!))
         }
 
         showMessage(if (signedMessages != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
@@ -444,7 +442,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         var signedMessages: Array<ByteArray>? = null
         try {
             val result = client.signMessages(messages, addresses).get()
-            Log.d(TAG, "Signed message(s): $result")
+            Log.d(TAG, "Signed message base58: ${Base58EncodeUseCase(result.signedPayloads[0])}")
             signedMessages = result.signedPayloads
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
