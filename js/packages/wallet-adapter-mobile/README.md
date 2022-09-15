@@ -17,6 +17,7 @@ new SolanaMobileWalletAdapter({
         icon: 'relative/path/to/icon.png',
     },
     authorizationResultCache: createDefaultAuthorizationResultCache(),
+    cluster: WalletAdapterNetwork.Devnet,
 });
 ```
 
@@ -32,6 +33,7 @@ const wallets = useMemo(() => [
             icon: 'relative/path/to/icon.png',
        },
         authorizationResultCache: createDefaultAuthorizationResultCache(),
+        cluster: WalletAdapterNetwork.Devnet,
     });
     new PhantomWalletAdapter(),
     /* ... other wallets ... */
@@ -72,3 +74,6 @@ export interface AuthorizationResultCache {
 
 Alternatively, you can use the included `createDefaultAuthorizationResultCache()` method to create a cache that reads and writes the adapter's last-obtained `AuthorizationResult` to your browser's local storage, if available.
 
+### Cluster
+
+Each authorization a dApp makes with a wallet is tied to a particular Solana cluster. If a dApp wants to change the cluster on which to transact, it must seek an authorization for that cluster.
