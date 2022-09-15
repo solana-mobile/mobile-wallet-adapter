@@ -60,6 +60,18 @@ The `AppIdentity` config identifies your app to a native mobile wallet. When som
 - `uri` &ndash; The uri of your application. This uri may be required to participate in [dApp identity verification](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md#dapp-identity-verification) as part of the mobile wallet adapter protocol specification.
 - `icon` &ndash; An icon file path, relative to the `uri`.
 
+### Address selector
+
+The Mobile Wallet Adapter specification allows a wallet to authorize a dApp to use one or more addresses. dApps must supply code to select a single address for use in the adapter. That code must conform to the `AddressSelector` interface.
+
+```typescript
+export interface AddressSelector {
+    select(addresses: Base64EncodedAddress[]): Promise<Base64EncodedAddress>;
+}
+```
+
+Alternatively, you can use the included `createDefaultAddressSelector()` method to create a selector that always chooses the first address in the list.
+
 ### Authorization result cache
 
 The first time that someone authorizes a native wallet app for use with your application, you should cache that authorization for future use. You can supply your own implementation that conforms to the `AuthorizationResultCache` interface.
