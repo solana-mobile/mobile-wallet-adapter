@@ -24,7 +24,7 @@ export default function FundAccountButton({children, publicKey}: Props) {
       publicKey,
       LAMPORTS_PER_AIRDROP,
     );
-    return await connection.confirmTransaction(signature, 'finalized');
+    return await connection.confirmTransaction(signature);
   }, [connection]);
   return (
     <Button

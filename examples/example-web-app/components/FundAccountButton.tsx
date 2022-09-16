@@ -21,7 +21,7 @@ export default function FundAccountButton({ children }: Props) {
     const requestAirdropGuarded = useGuardedCallback(
         async (publicKey) => {
             const signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_AIRDROP);
-            return await connection.confirmTransaction(signature, 'finalized');
+            return await connection.confirmTransaction(signature);
         },
         [connection],
     );

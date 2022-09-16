@@ -29,10 +29,7 @@ export default function RecordMessageButton({ children, message }: Props) {
     const recordMessageGuarded = useGuardedCallback(
         async (messageBuffer: Buffer): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
             const memoProgramTransaction = new Transaction({
-                ...(await connection.getLatestBlockhash({
-                    // FIXME(#199): `fakewallet` always simulates transactions at `finalized` commitment
-                    commitment: 'finalized',
-                })),
+                ...(await connection.getLatestBlockhash()),
                 feePayer: publicKey,
             }).add(
                 new TransactionInstruction({

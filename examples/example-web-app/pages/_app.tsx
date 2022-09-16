@@ -41,7 +41,7 @@ function ExampleMobileDApp({ Component, pageProps }: AppProps) {
     return (
         <ThemeProvider theme={theme}>
             <SnackbarProvider autoHideDuration={10000}>
-                <ConnectionProvider endpoint={ENDPOINT}>
+                <ConnectionProvider config={{ commitment: 'processed' }} endpoint={ENDPOINT}>
                     <WalletProvider wallets={wallets}>
                         <Component {...pageProps} />
                     </WalletProvider>
