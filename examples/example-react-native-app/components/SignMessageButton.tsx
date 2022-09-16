@@ -2,7 +2,14 @@ import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import {fromUint8Array} from 'js-base64';
 import React, {useContext, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Button, Dialog, Paragraph, Portal, Text} from 'react-native-paper';
+import {
+  Button,
+  Dialog,
+  IconButton,
+  Paragraph,
+  Portal,
+  Text,
+} from 'react-native-paper';
 
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
@@ -67,13 +74,14 @@ export default function SignMessageButton({children, message}: Props) {
           style={styles.actionButton}>
           {children}
         </Button>
-        <Button
+        <IconButton
+          icon="help"
           mode="outlined"
           onPress={() => {
             setSignMessageTutorialOpen(true);
-          }}>
-          ?
-        </Button>
+          }}
+          style={styles.infoButton}
+        />
       </View>
       <Portal>
         <Dialog
@@ -127,8 +135,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginEnd: 8,
   },
+  infoButton: {
+    margin: 0,
+  },
   buttonGroup: {
-    display: 'flex',
     flexDirection: 'row',
     width: '100%',
   },

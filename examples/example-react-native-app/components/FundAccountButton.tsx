@@ -28,6 +28,7 @@ export default function FundAccountButton({children, publicKey}: Props) {
   }, [connection]);
   return (
     <Button
+      icon="hand-coin-outline"
       mode="elevated"
       loading={airdropInProgress}
       onPress={async () => {

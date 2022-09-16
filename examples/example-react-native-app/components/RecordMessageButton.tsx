@@ -10,7 +10,13 @@ import {
 import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import React, {useContext, useState} from 'react';
 import {Linking, StyleSheet, View} from 'react-native';
-import {Button, Dialog, Paragraph, Portal} from 'react-native-paper';
+import {
+  Button,
+  Dialog,
+  IconButton,
+  Paragraph,
+  Portal,
+} from 'react-native-paper';
 import {TextEncoder} from 'text-encoding';
 
 import useAuthorization from '../utils/useAuthorization';
@@ -116,13 +122,14 @@ export default function RecordMessageButton({children, message}: Props) {
           style={styles.actionButton}>
           {children}
         </Button>
-        <Button
+        <IconButton
+          icon="help"
           mode="outlined"
           onPress={() => {
             setRecordMessageTutorialOpen(true);
-          }}>
-          ?
-        </Button>
+          }}
+          style={styles.infoButton}
+        />
       </View>
       <Portal>
         <Dialog
@@ -155,6 +162,9 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginEnd: 8,
+  },
+  infoButton: {
+    margin: 0,
   },
   buttonGroup: {
     display: 'flex',
