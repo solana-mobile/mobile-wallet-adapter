@@ -42,10 +42,7 @@ export default function RecordMessageButton({children, message}: Props) {
       const [signature] = await transact(async wallet => {
         const [freshAccount, latestBlockhash] = await Promise.all([
           authorizeSession(wallet),
-          connection.getLatestBlockhash({
-            // FIXME(#199): `fakewallet` always simulates transactions at `finalized` commitment
-            commitment: 'finalized',
-          }),
+          connection.getLatestBlockhash(),
         ]);
         const memoProgramTransaction = new Transaction({
           ...latestBlockhash,
