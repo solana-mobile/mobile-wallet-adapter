@@ -1,5 +1,11 @@
 import React, {Suspense, useMemo, useState} from 'react';
-import {ActivityIndicator, Linking, StyleSheet, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import {
   Button,
   Card,
@@ -8,6 +14,7 @@ import {
   Surface,
   useTheme,
 } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import {Account} from '../utils/useAuthorization';
 import AccountBalance from './AccountBalance';
@@ -55,16 +62,23 @@ export default function AccountInfo({
             </FundAccountButton>
           </View>
         </Suspense>
-        <Subheading
-          numberOfLines={1}
+        <TouchableWithoutFeedback
           onPress={() => {
             Linking.openURL(
               `https://explorer.solana.com/address/${selectedAccountPublicKeyBase58String}?cluster=devnet`,
             );
-          }}
-          style={styles.keyRow}>
-          {'\u{1f5dd} ' + selectedAccountLabel}
-        </Subheading>
+          }}>
+          <View style={styles.labelRow}>
+            <Icon
+              name="account-balance-wallet"
+              size={18}
+              style={styles.labelIcon}
+            />
+            <Subheading numberOfLines={1} style={styles.keyRow}>
+              {selectedAccountLabel}
+            </Subheading>
+          </View>
+        </TouchableWithoutFeedback>
         {accounts.length > 1 ? (
           <Menu
             anchor={
@@ -119,6 +133,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  labelIcon: {
+    marginRight: 4,
+    top: 4,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   container: {
     paddingVertical: 12,
