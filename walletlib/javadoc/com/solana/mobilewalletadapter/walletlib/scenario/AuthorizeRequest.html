@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -176,6 +176,11 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mIdentityUri">mIdentityUri</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><code>protected T</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mRequest">mRequest</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
 </table>
 </li>
 </ul>
@@ -218,21 +223,26 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completeWithInternalError(java.lang.Exception)">completeWithInternalError</a></span>&#8203;(<a href="https://d.android.com/reference/java/lang/Exception.html?is-external=true" title="class or interface in java.lang" class="externalLink">Exception</a>&nbsp;e)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCluster()">getCluster</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIconRelativeUri()">getIconRelativeUri</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIdentityName()">getIdentityName</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/android/net/Uri.html?is-external=true" title="class or interface in android.net" class="externalLink">Uri</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIdentityUri()">getIdentityUri</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
@@ -294,11 +304,21 @@ protected final&nbsp;<a href="https://d.android.com/reference/android/net/Uri.ht
 <a id="mCluster">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>mCluster</h4>
 <pre>@NonNull
 protected final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> mCluster</pre>
+</li>
+</ul>
+<a id="mRequest">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>mRequest</h4>
+<pre>@NonNull
+protected final&nbsp;T extends com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;?&gt; mRequest</pre>
 </li>
 </ul>
 </li>
@@ -388,13 +408,27 @@ public&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-ex
 <a id="cancel()">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>cancel</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;cancel()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="ScenarioRequest.html#cancel()">cancel</a></code>&nbsp;in interface&nbsp;<code><a href="ScenarioRequest.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">ScenarioRequest</a></code></dd>
+</dl>
+</li>
+</ul>
+<a id="completeWithInternalError(java.lang.Exception)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>completeWithInternalError</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;completeWithInternalError&#8203;(@NonNull
+                                      <a href="https://d.android.com/reference/java/lang/Exception.html?is-external=true" title="class or interface in java.lang" class="externalLink">Exception</a>&nbsp;e)</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="ScenarioRequest.html#completeWithInternalError(java.lang.Exception)">completeWithInternalError</a></code>&nbsp;in interface&nbsp;<code><a href="ScenarioRequest.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">ScenarioRequest</a></code></dd>
 </dl>
 </li>
 </ul>
