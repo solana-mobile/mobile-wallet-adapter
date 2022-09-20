@@ -5,10 +5,12 @@
 package com.solana.mobilewalletadapter.fakedapp
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.GuardedBy
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,6 +22,10 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var viewBinding: ActivityMainBinding
+    private val activityResultLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            intentSender.onActivityComplete()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -143,7 +149,7 @@ class MainActivity : AppCompatActivity() {
                 check(callback == null) { "Received an activity start request while another is pending" }
                 callback = onActivityCompleteCallback
             }
-            this@MainActivity.startActivityForResult(intent, WALLET_ACTIVITY_REQUEST_CODE)
+            activityResultLauncher.launch(intent)
         }
 
         fun onActivityComplete() {
@@ -152,16 +158,5 @@ class MainActivity : AppCompatActivity() {
                 callback = null
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            WALLET_ACTIVITY_REQUEST_CODE -> intentSender.onActivityComplete()
-        }
-    }
-
-    companion object {
-        private const val WALLET_ACTIVITY_REQUEST_CODE = 1234
     }
 }
