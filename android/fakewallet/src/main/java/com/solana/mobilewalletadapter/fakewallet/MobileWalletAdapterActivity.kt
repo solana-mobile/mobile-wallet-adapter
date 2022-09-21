@@ -25,6 +25,7 @@ class MobileWalletAdapterActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.mobileWalletAdapterServiceEvents.collect { request ->
                     if (request is MobileWalletAdapterServiceRequest.SessionTerminated) {
+                        setResult(RESULT_OK, intent)
                         finish()
                     }
                 }
