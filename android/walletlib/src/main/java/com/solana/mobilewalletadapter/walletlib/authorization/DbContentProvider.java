@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 
 /*package*/ abstract class DbContentProvider<T> {
     private final SQLiteDatabase mDb;
@@ -56,5 +57,9 @@ import android.database.sqlite.SQLiteDatabase;
 
     protected Cursor rawQuery(String sql, String[] selectionArgs) {
         return mDb.rawQuery(sql, selectionArgs);
+    }
+
+    protected SQLiteStatement compileStatement(String sql) {
+        return mDb.compileStatement(sql);
     }
 }

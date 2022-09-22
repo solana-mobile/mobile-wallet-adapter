@@ -494,12 +494,7 @@ public class AuthRepository {
         Log.d(TAG, "Revoking AuthRecord " + authRecord);
         authRecord.setRevoked();
 
-        final SQLiteStatement deleteAuthorizations = db
-                .compileStatement(
-                        "DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                        " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "=?");
-        deleteAuthorizations.bindLong(1, authRecord.id);
-        final int deleteCount = deleteAuthorizations.executeUpdateDelete();
+        final int deleteCount = mAuthorizationsDao.deleteByAuthRecordId(authRecord.id);
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedIdentities(db);
@@ -514,11 +509,7 @@ public class AuthRepository {
 
         Log.d(TAG, "Revoking IdentityRecord " + identityRecord + " and all related AuthRecords");
 
-        final SQLiteStatement deleteAuthorizations = db
-                .compileStatement("DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                        " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?");
-        deleteAuthorizations.bindLong(1, identityRecord.getId());
-        deleteAuthorizations.executeUpdateDelete();
+        mAuthorizationsDao.deleteByIdentityRecordId(identityRecord.getId());
 
         final SQLiteStatement deleteIdentity = db
                 .compileStatement("DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
