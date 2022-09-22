@@ -12,15 +12,26 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 public class IdentityRecord {
+    @IntRange(from = 1)
     private final int id;
+
+    @NonNull
     private final String name;
+
+    @NonNull
     private final Uri uri;
+
+    @NonNull
     private final Uri relativeIconUri;
+
+    @NonNull
     private final byte[] secretKeyCiphertext;
+
+    @NonNull
     private final byte[] secretKeyIV;
 
     @IntRange(from = 1)
-    /*package*/ int getId() {
+        /*package*/ int getId() {
         return id;
     }
 
@@ -53,6 +64,13 @@ public class IdentityRecord {
     /*package*/ IdentityRecord(IdentityRecordBuilder builder) {
         // N.B. This is a package-visibility constructor; these values will all be validated by
         // other components within this package.
+        if (builder.id <= 0) {
+            throw new IllegalArgumentException("id must be > 0");
+        }
+        if (builder.name == null || builder.uri == null || builder.relativeIconUri == null
+                || builder.secretKeyCiphertext == null || builder.secretKeyIV == null) {
+            throw new IllegalArgumentException("Missing argument");
+        }
         this.id = builder.id;
         this.name = builder.name;
         this.uri = builder.uri;
@@ -85,34 +103,28 @@ public class IdentityRecord {
                 '}';
     }
 
-    public static class IdentityRecordBuilder {
-        @IntRange(from = 1)
+    /*package*/ static class IdentityRecordBuilder {
         private int id;
 
-        @NonNull
         private String name;
 
-        @NonNull
         private Uri uri;
 
-        @NonNull
         private Uri relativeIconUri;
 
-        @NonNull
         private byte[] secretKeyCiphertext;
 
-        @NonNull
         private byte[] secretKeyIV;
 
         /*package*/ IdentityRecordBuilder() {
         }
 
-        public IdentityRecordBuilder setId(int id) {
+        public IdentityRecordBuilder setId(@IntRange(from = 1) int id) {
             this.id = id;
             return this;
         }
 
-        public IdentityRecordBuilder setName(String name) {
+        public IdentityRecordBuilder setName(@NonNull String name) {
             this.name = name;
             return this;
         }

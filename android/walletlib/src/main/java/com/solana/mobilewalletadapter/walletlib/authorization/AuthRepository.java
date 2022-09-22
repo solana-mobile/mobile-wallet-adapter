@@ -177,7 +177,8 @@ public class AuthRepository {
         // Look up the identity secret key for the key specified in this JWT
         final IdentityRecord identityRecord = mIdentityRecordDao.findIdentityById(identityIdStr);
         if (identityRecord == null) {
-            return null; // Identity not found
+            Log.w(TAG, "Identity not found: " + identityIdStr);
+            return null;
         }
 
         // Verify the HMAC on the auth token
@@ -350,8 +351,8 @@ public class AuthRepository {
             Log.d(TAG, "Creating IdentityRecord for " + name + '/' + uri + '/' + relativeIconUri);
 
             final Pair<byte[], byte[]> p = createEncryptedHmacSha256SecretKey();
-            byte[] identityKeyCiphertext = p.first;
-            byte[] identityKeyIV = p.second;
+            final byte[] identityKeyCiphertext = p.first;
+            final byte[] identityKeyIV = p.second;
 
             final ContentValues identityContentValues = new ContentValues(5);
             identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
