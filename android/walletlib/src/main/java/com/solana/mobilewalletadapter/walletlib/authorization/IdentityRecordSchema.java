@@ -1,6 +1,10 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
-public interface IdentityRecordSchema {
+/*package*/ interface IdentityRecordSchema {
     String TABLE_IDENTITIES = "identities";
     String COLUMN_IDENTITIES_ID = "id"; // type: int
     String COLUMN_IDENTITIES_NAME = "name"; // type: String

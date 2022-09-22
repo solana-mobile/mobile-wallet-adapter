@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -177,7 +178,8 @@ public class AuthRepository {
         // Look up the identity secret key for the key specified in this JWT
         final IdentityRecord identityRecord = mIdentityRecordDao.findIdentityById(identityIdStr);
         if (identityRecord == null) {
-            return null; // Identity not found
+            Log.w(TAG, "Identity not found: " + identityIdStr);
+            return null;
         }
 
         // Verify the HMAC on the auth token
@@ -350,25 +352,23 @@ public class AuthRepository {
             Log.d(TAG, "Creating IdentityRecord for " + name + '/' + uri + '/' + relativeIconUri);
 
             final Pair<byte[], byte[]> p = createEncryptedHmacSha256SecretKey();
-            byte[] identityKeyCiphertext = p.first;
-            byte[] identityKeyIV = p.second;
+            final byte[] identityKeyCiphertext = p.first;
+            final byte[] identityKeyIV = p.second;
 
-            final ContentValues identityContentValues = new ContentValues(5);
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_URI, uri.toString());
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri.toString());
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
-            identityId = (int) mIdentityRecordDao.insert(IdentityRecordSchema.TABLE_IDENTITIES, identityContentValues);
+            identityId = (int) mIdentityRecordDao.insert(name, uri.toString(), relativeIconUri.toString(), identityKeyCiphertext, identityKeyIV);
 
-            identityRecord = new IdentityRecord.IdentityRecordBuilder()
-                    .setId(identityId)
-                    .setName(name)
-                    .setUri(uri)
-                    .setRelativeIconUri(relativeIconUri)
-                    .setSecretKeyCiphertext(identityKeyCiphertext)
-                    .setSecretKeyIV(identityKeyIV)
-                    .build();
+            if (identityId >= 1) {
+                identityRecord = new IdentityRecord.IdentityRecordBuilder()
+                        .setId(identityId)
+                        .setName(name)
+                        .setUri(uri)
+                        .setRelativeIconUri(relativeIconUri)
+                        .setSecretKeyCiphertext(identityKeyCiphertext)
+                        .setSecretKeyIV(identityKeyIV)
+                        .build();
+            } else {
+                throw new SQLException("Error inserting IdentityRecord");
+            }
         }
 
 
