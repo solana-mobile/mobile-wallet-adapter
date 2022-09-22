@@ -12,23 +12,43 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 public class IdentityRecord {
+    private final int id;
+    private final String name;
+    private final Uri uri;
+    private final Uri relativeIconUri;
+    private final byte[] secretKeyCiphertext;
+    private final byte[] secretKeyIV;
+
     @IntRange(from = 1)
-    /*package*/ final int id;
+    /*package*/ int getId() {
+        return id;
+    }
 
     @NonNull
-    public final String name;
+    public String getName() {
+        return name;
+    }
 
     @NonNull
-    public final Uri uri;
+    public Uri getUri() {
+        return uri;
+    }
 
     @NonNull
-    public final Uri relativeIconUri;
+    public Uri getRelativeIconUri() {
+        return relativeIconUri;
+    }
 
     @NonNull
-    /*package*/ final byte[] secretKeyCiphertext;
+    /*package*/  byte[] getSecretKeyCiphertext() {
+        return secretKeyCiphertext;
+    }
 
     @NonNull
-    /*package*/ final byte[] secretKeyIV;
+    /*package*/  byte[] getSecretKeyIV() {
+        return secretKeyIV;
+    }
+
 
     /*package*/ IdentityRecord(IdentityRecordBuilder builder) {
         // N.B. This is a package-visibility constructor; these values will all be validated by
@@ -84,7 +104,7 @@ public class IdentityRecord {
         @NonNull
         private byte[] secretKeyIV;
 
-        public IdentityRecordBuilder() {
+        /*package*/ IdentityRecordBuilder() {
         }
 
         public IdentityRecordBuilder setId(int id) {
