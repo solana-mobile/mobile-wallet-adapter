@@ -270,8 +270,8 @@ public abstract class Scenario {
             }
 
             mIoHandler.post(() -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
-                    request, authRecord.identity.name, authRecord.identity.uri,
-                    authRecord.identity.relativeIconUri, authRecord.scope,
+                    request, authRecord.identity.getName(), authRecord.identity.getUri(),
+                    authRecord.identity.getRelativeIconUri(), authRecord.scope,
                     authRecord.publicKey, authRecord.cluster)));
         }
 
@@ -289,8 +289,8 @@ public abstract class Scenario {
 
             try {
                 final SignMessagesRequest smr = new SignMessagesRequest(request,
-                        authRecord.identity.name, authRecord.identity.uri,
-                        authRecord.identity.relativeIconUri, authRecord.scope,
+                        authRecord.identity.getName(), authRecord.identity.getUri(),
+                        authRecord.identity.getRelativeIconUri(), authRecord.scope,
                         authRecord.publicKey, authRecord.cluster);
                 mIoHandler.post(() -> mCallbacks.onSignMessagesRequest(smr));
             } catch (IllegalArgumentException e) {
@@ -313,8 +313,8 @@ public abstract class Scenario {
             }
 
             mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionsRequest(
-                    new SignAndSendTransactionsRequest(request, authRecord.identity.name,
-                            authRecord.identity.uri, authRecord.identity.relativeIconUri,
+                    new SignAndSendTransactionsRequest(request, authRecord.identity.getName(),
+                            authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
                             authRecord.scope, authRecord.publicKey, authRecord.cluster)));
         }
     };

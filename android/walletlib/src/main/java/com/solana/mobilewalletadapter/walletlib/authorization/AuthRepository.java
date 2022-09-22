@@ -184,7 +184,7 @@ public class AuthRepository {
 
         // Verify the HMAC on the auth token
         final SecretKeySpec identityKey = decryptHmacSha256SecretKey(
-                identityRecord.secretKeyCiphertext, identityRecord.secretKeyIV);
+                identityRecord.getSecretKeyCiphertext(), identityRecord.getSecretKeyIV());
         final boolean verified;
         try {
             final Mac hmac = Mac.getInstance("HmacSHA256");
@@ -265,7 +265,7 @@ public class AuthRepository {
         final JSONObject o = new JSONObject();
         try {
             o.put(AUTH_TOKEN_CONTENT_TYPE, getAuthTokenContentType());
-            o.put(AUTH_TOKEN_IDENTITY_ID, Integer.toString(authRecord.identity.id));
+            o.put(AUTH_TOKEN_IDENTITY_ID, Integer.toString(authRecord.identity.getId()));
             o.put(AUTH_TOKEN_TOKEN_ID, Integer.toString(authRecord.id));
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Error encoding auth record as JSON", e);
@@ -275,7 +275,7 @@ public class AuthRepository {
         // To create an AuthRecord requires that the DB have been previously opened; we can thus
         // rely on mSecretKey being initialized and valid.
         final SecretKeySpec identityKey = decryptHmacSha256SecretKey(
-                authRecord.identity.secretKeyCiphertext, authRecord.identity.secretKeyIV);
+                authRecord.identity.getSecretKeyCiphertext(), authRecord.identity.getSecretKeyIV());
 
         // Verify the HMAC on the auth token
         final byte[] payloadHmac;
@@ -344,7 +344,7 @@ public class AuthRepository {
         IdentityRecord identityRecord = mIdentityRecordDao
                 .findIdentityByParams(name, uri.toString(), relativeIconUri.toString());
         if (identityRecord != null) {
-            identityId = identityRecord.id;
+            identityId = identityRecord.getId();
         }
 
         // If no matching identity exists, create one
@@ -429,7 +429,7 @@ public class AuthRepository {
         final long now = System.currentTimeMillis();
 
         final ContentValues authContentValues = new ContentValues(6);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.id);
+        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.getId());
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
         authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
@@ -446,7 +446,7 @@ public class AuthRepository {
                 " WHERE " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
                 " ORDER BY " + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
                 " DESC LIMIT -1 OFFSET ?)");
-        purgeOldestStatement.bindLong(1, identityRecord.id);
+        purgeOldestStatement.bindLong(1, identityRecord.getId());
         purgeOldestStatement.bindLong(2, mAuthIssuerConfig.maxOutstandingTokensPerIdentity);
         final int purgeCount = purgeOldestStatement.executeUpdateDelete();
         if (purgeCount > 0) {
@@ -480,7 +480,7 @@ public class AuthRepository {
             reissued = authRecord;
         } else {
             final ContentValues reissueContentValues = new ContentValues(6);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.id);
+            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.getId());
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
             reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER, authRecord.cluster);
@@ -529,13 +529,13 @@ public class AuthRepository {
         final SQLiteStatement deleteAuthorizations = db
                 .compileStatement("DELETE FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
                         " WHERE " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?");
-        deleteAuthorizations.bindLong(1, identityRecord.id);
+        deleteAuthorizations.bindLong(1, identityRecord.getId());
         deleteAuthorizations.executeUpdateDelete();
 
         final SQLiteStatement deleteIdentity = db
                 .compileStatement("DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
                         " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?");
-        deleteIdentity.bindLong(1, identityRecord.id);
+        deleteIdentity.bindLong(1, identityRecord.getId());
         final int deleteCount = deleteIdentity.executeUpdateDelete();
 
         // There may now be unreferenced authorization data; if so, delete them
@@ -604,7 +604,7 @@ public class AuthRepository {
                 " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                 " = " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_ID +
                 " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
-                new String[] { Integer.toString(identityRecord.id) })) {
+                new String[] { Integer.toString(identityRecord.getId()) })) {
             while (c.moveToNext()) {
                 final int id = c.getInt(0);
                 final long issued = c.getLong(1);
