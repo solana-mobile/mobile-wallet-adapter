@@ -85,24 +85,20 @@ import java.util.List;
     }
 
     @Override
-    /*package*/ IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
-        try {
-            final int id = cursor.getInt(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ID));
-            final String name = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_NAME));
-            final String uri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_URI));
-            final String iconRelativeUri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI));
-            final byte[] identityKeyCiphertext = cursor.getBlob(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY));
-            final byte[] identityKeyIV = cursor.getBlob(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV));
-            return new IdentityRecord.IdentityRecordBuilder()
-                    .setId(id)
-                    .setName(name)
-                    .setUri(Uri.parse(uri))
-                    .setRelativeIconUri(Uri.parse(iconRelativeUri))
-                    .setSecretKeyCiphertext(identityKeyCiphertext)
-                    .setSecretKeyIV(identityKeyIV)
-                    .build();
-        } catch (IllegalArgumentException e) {
-            return new IdentityRecord.IdentityRecordBuilder().build();
-        }
+        /*package*/ IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
+        final int id = cursor.getInt(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ID));
+        final String name = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_NAME));
+        final String uri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_URI));
+        final String iconRelativeUri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI));
+        final byte[] identityKeyCiphertext = cursor.getBlob(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY));
+        final byte[] identityKeyIV = cursor.getBlob(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV));
+        return new IdentityRecord.IdentityRecordBuilder()
+                .setId(id)
+                .setName(name)
+                .setUri(Uri.parse(uri))
+                .setRelativeIconUri(Uri.parse(iconRelativeUri))
+                .setSecretKeyCiphertext(identityKeyCiphertext)
+                .setSecretKeyIV(identityKeyIV)
+                .build();
     }
 }
