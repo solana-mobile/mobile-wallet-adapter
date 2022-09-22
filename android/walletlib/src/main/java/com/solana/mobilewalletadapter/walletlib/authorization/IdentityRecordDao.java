@@ -58,9 +58,7 @@ import java.util.List;
     @Override
     public IdentityRecord findIdentityByParams(String name, String uri, String relativeIconUri) {
         try (final Cursor c = super.query(IdentityRecordSchema.TABLE_IDENTITIES,
-                new String[]{IdentityRecordSchema.COLUMN_IDENTITIES_ID,
-                        IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY,
-                        IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV},
+                IDENTITY_RECORD_COLUMNS,
                 IdentityRecordSchema.COLUMN_IDENTITIES_NAME + "=? AND " +
                         IdentityRecordSchema.COLUMN_IDENTITIES_URI + "=? AND " +
                         IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
