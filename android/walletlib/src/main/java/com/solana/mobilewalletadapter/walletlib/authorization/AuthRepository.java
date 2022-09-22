@@ -72,6 +72,7 @@ public class AuthRepository {
     private boolean mInitialized = false;
     private SecretKey mSecretKey;
     private AuthDatabase mAuthDb;
+    private IdentityRecordDao mIdentityRecordDao;
 
     public AuthRepository(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -101,6 +102,7 @@ public class AuthRepository {
             }
 
             mAuthDb = new AuthDatabase(mContext, mAuthIssuerConfig);
+            mIdentityRecordDao = new IdentityRecordDao(mAuthDb.getWritableDatabase());
             mInitialized = true;
         }
 
@@ -611,36 +613,8 @@ public class AuthRepository {
 
     @NonNull
     public synchronized List<IdentityRecord> getAuthorizedIdentities() {
-        final SQLiteDatabase db = ensureStarted();
-
-        final ArrayList<IdentityRecord> identities = new ArrayList<>();
-        try (final Cursor c = db.query(IdentityRecordSchema.TABLE_IDENTITIES,
-                IDENTITY_RECORD_COLUMNS,
-                null,
-                null,
-                null,
-                null,
-                IdentityRecordSchema.COLUMN_IDENTITIES_NAME)) {
-            while (c.moveToNext()) {
-                final int id = c.getInt(0);
-                final String name = c.getString(1);
-                final String uri = c.getString(2);
-                final String iconRelativeUri = c.getString(3);
-                final byte[] identityKeyCiphertext = c.getBlob(4);
-                final byte[] identityKeyIV = c.getBlob(5);
-                // Note: values should never be null, but protect against bugs and corruption
-                final IdentityRecord identity = new IdentityRecord.IdentityRecordBuilder()
-                        .setId(id)
-                        .setName(name)
-                        .setUri(Uri.parse(uri))
-                        .setRelativeIconUri(Uri.parse(iconRelativeUri))
-                        .setSecretKeyCiphertext(identityKeyCiphertext)
-                        .setSecretKeyIV(identityKeyIV)
-                        .build();
-                identities.add(identity);
-            }
-        }
-        return identities;
+        ensureStarted();
+        return mIdentityRecordDao.getAuthorizedIdentities();
     }
 
     @NonNull
