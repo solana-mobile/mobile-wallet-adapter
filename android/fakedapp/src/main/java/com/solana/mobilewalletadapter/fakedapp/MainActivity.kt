@@ -24,9 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private val activityResultLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (it.resultCode == RESULT_OK) {
-                intentSender.onActivityComplete()
-            }
+            intentSender.onActivityComplete()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
