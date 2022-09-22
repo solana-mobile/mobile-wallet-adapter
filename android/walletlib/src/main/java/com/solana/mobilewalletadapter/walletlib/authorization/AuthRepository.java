@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -356,14 +357,18 @@ public class AuthRepository {
 
             identityId = (int) mIdentityRecordDao.insert(name, uri.toString(), relativeIconUri.toString(), identityKeyCiphertext, identityKeyIV);
 
-            identityRecord = new IdentityRecord.IdentityRecordBuilder()
-                    .setId(identityId)
-                    .setName(name)
-                    .setUri(uri)
-                    .setRelativeIconUri(relativeIconUri)
-                    .setSecretKeyCiphertext(identityKeyCiphertext)
-                    .setSecretKeyIV(identityKeyIV)
-                    .build();
+            if (identityId >= 1) {
+                identityRecord = new IdentityRecord.IdentityRecordBuilder()
+                        .setId(identityId)
+                        .setName(name)
+                        .setUri(uri)
+                        .setRelativeIconUri(relativeIconUri)
+                        .setSecretKeyCiphertext(identityKeyCiphertext)
+                        .setSecretKeyIV(identityKeyIV)
+                        .build();
+            } else {
+                throw new SQLException("Error inserting IdentityRecord");
+            }
         }
 
 

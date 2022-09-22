@@ -85,7 +85,7 @@ import java.util.List;
     }
 
     @Override
-        /*package*/ IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
+    protected IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
         final int id = cursor.getInt(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ID));
         final String name = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_NAME));
         final String uri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_URI));
