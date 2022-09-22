@@ -197,8 +197,14 @@ public class AuthRepository {
             final String iconRelativeUri = c.getString(3);
             final byte[] keyCiphertext = c.getBlob(4);
             final byte[] keyIV = c.getBlob(5);
-            identityRecord = new IdentityRecord(id, name, Uri.parse(uri),
-                    Uri.parse(iconRelativeUri), keyCiphertext, keyIV);
+            identityRecord = new IdentityRecord.IdentityRecordBuilder()
+                    .setId(id)
+                    .setName(name)
+                    .setUri(Uri.parse(uri))
+                    .setRelativeIconUri(Uri.parse(iconRelativeUri))
+                    .setSecretKeyCiphertext(keyCiphertext)
+                    .setSecretKeyIV(keyIV)
+                    .build();
         }
 
         // Verify the HMAC on the auth token
@@ -396,8 +402,14 @@ public class AuthRepository {
             identityId = (int) db.insert(AuthDatabase.TABLE_IDENTITIES, null, identityContentValues);
         }
 
-        final IdentityRecord identityRecord = new IdentityRecord(identityId, name, uri,
-                relativeIconUri, identityKeyCiphertext, identityKeyIV);
+        final IdentityRecord identityRecord = new IdentityRecord.IdentityRecordBuilder()
+                .setId(identityId)
+                .setName(name)
+                .setUri(uri)
+                .setRelativeIconUri(relativeIconUri)
+                .setSecretKeyCiphertext(identityKeyCiphertext)
+                .setSecretKeyIV(identityKeyIV)
+                .build();
 
         // Next, try and look up the public key
         int publicKeyId = -1;
@@ -625,8 +637,14 @@ public class AuthRepository {
                 final byte[] identityKeyCiphertext = c.getBlob(4);
                 final byte[] identityKeyIV = c.getBlob(5);
                 // Note: values should never be null, but protect against bugs and corruption
-                final IdentityRecord identity = new IdentityRecord(id, name, Uri.parse(uri),
-                        Uri.parse(iconRelativeUri), identityKeyCiphertext, identityKeyIV);
+                final IdentityRecord identity = new IdentityRecord.IdentityRecordBuilder()
+                        .setId(id)
+                        .setName(name)
+                        .setUri(Uri.parse(uri))
+                        .setRelativeIconUri(Uri.parse(iconRelativeUri))
+                        .setSecretKeyCiphertext(identityKeyCiphertext)
+                        .setSecretKeyIV(identityKeyIV)
+                        .build();
                 identities.add(identity);
             }
         }
