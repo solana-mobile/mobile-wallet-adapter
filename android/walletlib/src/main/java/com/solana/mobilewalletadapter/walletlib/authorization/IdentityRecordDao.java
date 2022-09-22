@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -80,6 +81,14 @@ import java.util.List;
         identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
         identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
         return super.insert(IdentityRecordSchema.TABLE_IDENTITIES, identityContentValues);
+    }
+
+    @Override
+    public int deleteById(int id) {
+        final SQLiteStatement deleteIdentity = compileStatement("DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
+                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?");
+        deleteIdentity.bindLong(1, id);
+        return deleteIdentity.executeUpdateDelete();
     }
 
     @Override
