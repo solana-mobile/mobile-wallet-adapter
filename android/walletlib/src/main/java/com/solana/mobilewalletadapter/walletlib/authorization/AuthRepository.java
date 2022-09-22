@@ -72,6 +72,7 @@ public class AuthRepository {
     private SecretKey mSecretKey;
     private AuthDatabase mAuthDb;
     private IdentityRecordDao mIdentityRecordDao;
+    private AuthorizationsDao mAuthorizationsDao;
 
     public AuthRepository(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -101,7 +102,9 @@ public class AuthRepository {
             }
 
             mAuthDb = new AuthDatabase(mContext, mAuthIssuerConfig);
-            mIdentityRecordDao = new IdentityRecordDao(mAuthDb.getWritableDatabase());
+            SQLiteDatabase database = mAuthDb.getWritableDatabase();
+            mIdentityRecordDao = new IdentityRecordDao(database);
+            mAuthorizationsDao = new AuthorizationsDao(database);
             mInitialized = true;
         }
 
@@ -426,14 +429,7 @@ public class AuthRepository {
 
         final long now = System.currentTimeMillis();
 
-        final ContentValues authContentValues = new ContentValues(6);
-        authContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.getId());
-        authContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED, now);
-        authContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
-        authContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
-        authContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
-        authContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE, scope);
-        final int id = (int) db.insert(AuthorizationsSchema.TABLE_AUTHORIZATIONS, null, authContentValues);
+        final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, publicKeyId, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
         final SQLiteStatement purgeOldestStatement = db.compileStatement(
@@ -477,14 +473,8 @@ public class AuthRepository {
             Log.d(TAG, "AuthRecord still valid; reissuing same AuthRecord: " + authRecord);
             reissued = authRecord;
         } else {
-            final ContentValues reissueContentValues = new ContentValues(6);
-            reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.getId());
-            reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED, now);
-            reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
-            reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER, authRecord.cluster);
-            reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, authRecord.walletUriBaseId);
-            reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE, authRecord.scope);
-            final int id = (int) db.insert(AuthorizationsSchema.TABLE_AUTHORIZATIONS, null, reissueContentValues);
+            final int id = (int) mAuthorizationsDao.insert(authRecord.identity.getId(), now,
+                    authRecord.publicKeyId, authRecord.cluster, authRecord.walletUriBaseId, authRecord.scope);
             reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
                     authRecord.accountLabel, authRecord.cluster, authRecord.scope,
                     authRecord.walletUriBase, authRecord.publicKeyId, authRecord.walletUriBaseId,
