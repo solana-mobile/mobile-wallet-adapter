@@ -16,14 +16,6 @@ import androidx.annotation.NonNull;
     private static final String DATABASE_NAME_SUFFIX = "-solana-wallet-lib-auth.db";
     private static final int DATABASE_SCHEMA_VERSION = 5;
 
-    /*package*/ static final String TABLE_IDENTITIES = "identities";
-    /*package*/ static final String COLUMN_IDENTITIES_ID = "id"; // type: int
-    /*package*/ static final String COLUMN_IDENTITIES_NAME = "name"; // type: String
-    /*package*/ static final String COLUMN_IDENTITIES_URI = "uri"; // type: String
-    /*package*/ static final String COLUMN_IDENTITIES_ICON_RELATIVE_URI = "icon_relative_uri"; // type: String
-    /*package*/ static final String COLUMN_IDENTITIES_SECRET_KEY = "secret_key"; // type: byte[]
-    /*package*/ static final String COLUMN_IDENTITIES_SECRET_KEY_IV = "secret_key_iv"; // type: byte[]
-
     /*package*/ static final String TABLE_AUTHORIZATIONS = "authorizations";
     /*package*/ static final String COLUMN_AUTHORIZATIONS_ID = "id"; // type: int
     /*package*/ static final String COLUMN_AUTHORIZATIONS_IDENTITY_ID = "identity_id"; // type: long
@@ -42,14 +34,6 @@ import androidx.annotation.NonNull;
     /*package*/ static final String COLUMN_WALLET_URI_BASE_ID = "id"; // type: long
     /*package*/ static final String COLUMN_WALLET_URI_BASE_URI = "uri"; // type: String
 
-    private static final String CREATE_TABLE_IDENTITIES =
-            "CREATE TABLE " + TABLE_IDENTITIES + " (" +
-                    COLUMN_IDENTITIES_ID + " INTEGER NOT NULL PRIMARY KEY," +
-                    COLUMN_IDENTITIES_NAME + " TEXT NOT NULL," +
-                    COLUMN_IDENTITIES_URI + " TEXT NOT NULL," +
-                    COLUMN_IDENTITIES_ICON_RELATIVE_URI + " TEXT NOT NULL," +
-                    COLUMN_IDENTITIES_SECRET_KEY + " BLOB NOT NULL," +
-                    COLUMN_IDENTITIES_SECRET_KEY_IV + " BLOB NOT NULL)";
     private static final String CREATE_TABLE_AUTHORIZATIONS =
             "CREATE TABLE " + TABLE_AUTHORIZATIONS + " (" +
                     COLUMN_AUTHORIZATIONS_ID + " INTEGER NOT NULL PRIMARY KEY," +
@@ -80,7 +64,7 @@ import androidx.annotation.NonNull;
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(CREATE_TABLE_IDENTITIES);
+        db.execSQL(IdentityRecordSchema.CREATE_TABLE_IDENTITIES);
         db.execSQL(CREATE_TABLE_AUTHORIZATIONS);
         db.execSQL(CREATE_TABLE_PUBLIC_KEYS);
         db.execSQL(CREATE_TABLE_WALLET_URI_BASE);
@@ -89,7 +73,7 @@ import androidx.annotation.NonNull;
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.w(TAG, "Old database schema detected; pre-v1.0.0, no DB schema backward compatibility is implemented");
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_IDENTITIES);
+        db.execSQL("DROP TABLE IF EXISTS " + IdentityRecordSchema.TABLE_IDENTITIES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_AUTHORIZATIONS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PUBLIC_KEYS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET_URI_BASE);

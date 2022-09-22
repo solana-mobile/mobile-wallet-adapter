@@ -4,6 +4,8 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
+import static com.solana.mobilewalletadapter.walletlib.authorization.IdentityRecordSchema.IDENTITY_RECORD_COLUMNS;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -174,14 +176,9 @@ public class AuthRepository {
 
         // Look up the identity secret key for the key specified in this JWT
         final IdentityRecord identityRecord;
-        try (final Cursor c = db.query(AuthDatabase.TABLE_IDENTITIES,
-                new String[] { AuthDatabase.COLUMN_IDENTITIES_ID,
-                        AuthDatabase.COLUMN_IDENTITIES_NAME,
-                        AuthDatabase.COLUMN_IDENTITIES_URI,
-                        AuthDatabase.COLUMN_IDENTITIES_ICON_RELATIVE_URI,
-                        AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY,
-                        AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY_IV },
-                AuthDatabase.COLUMN_IDENTITIES_ID + "=?",
+        try (final Cursor c = db.query(IdentityRecordSchema.TABLE_IDENTITIES,
+                IDENTITY_RECORD_COLUMNS,
+                IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?",
                 new String[] { identityIdStr },
                 null,
                 null,
@@ -367,13 +364,13 @@ public class AuthRepository {
         int identityId = -1;
         byte[] identityKeyCiphertext = null;
         byte[] identityKeyIV = null;
-        try (final Cursor c = db.query(AuthDatabase.TABLE_IDENTITIES,
-                new String[] { AuthDatabase.COLUMN_IDENTITIES_ID,
-                        AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY,
-                        AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY_IV },
-                AuthDatabase.COLUMN_IDENTITIES_NAME + "=? AND " +
-                        AuthDatabase.COLUMN_IDENTITIES_URI + "=? AND " +
-                        AuthDatabase.COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
+        try (final Cursor c = db.query(IdentityRecordSchema.TABLE_IDENTITIES,
+                new String[] { IdentityRecordSchema.COLUMN_IDENTITIES_ID,
+                        IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY,
+                        IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV },
+                IdentityRecordSchema.COLUMN_IDENTITIES_NAME + "=? AND " +
+                        IdentityRecordSchema.COLUMN_IDENTITIES_URI + "=? AND " +
+                        IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
                 new String[] { name, uri.toString(), relativeIconUri.toString() },
                 null,
                 null,
@@ -394,12 +391,12 @@ public class AuthRepository {
             identityKeyIV = p.second;
 
             final ContentValues identityContentValues = new ContentValues(5);
-            identityContentValues.put(AuthDatabase.COLUMN_IDENTITIES_NAME, name);
-            identityContentValues.put(AuthDatabase.COLUMN_IDENTITIES_URI, uri.toString());
-            identityContentValues.put(AuthDatabase.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri.toString());
-            identityContentValues.put(AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
-            identityContentValues.put(AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
-            identityId = (int) db.insert(AuthDatabase.TABLE_IDENTITIES, null, identityContentValues);
+            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
+            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_URI, uri.toString());
+            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri.toString());
+            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
+            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
+            identityId = (int) db.insert(IdentityRecordSchema.TABLE_IDENTITIES, null, identityContentValues);
         }
 
         final IdentityRecord identityRecord = new IdentityRecord.IdentityRecordBuilder()
@@ -570,8 +567,8 @@ public class AuthRepository {
         deleteAuthorizations.executeUpdateDelete();
 
         final SQLiteStatement deleteIdentity = db
-                .compileStatement("DELETE FROM " + AuthDatabase.TABLE_IDENTITIES +
-                        " WHERE " + AuthDatabase.COLUMN_IDENTITIES_ID + "=?");
+                .compileStatement("DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
+                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?");
         deleteIdentity.bindLong(1, identityRecord.id);
         final int deleteCount = deleteIdentity.executeUpdateDelete();
 
@@ -585,8 +582,8 @@ public class AuthRepository {
     @GuardedBy("this")
     private void deleteUnreferencedIdentities(@NonNull SQLiteDatabase db) {
         final SQLiteStatement deleteUnreferencedIdentities = db.compileStatement(
-                "DELETE FROM " + AuthDatabase.TABLE_IDENTITIES +
-                        " WHERE " + AuthDatabase.COLUMN_IDENTITIES_ID + " NOT IN " +
+                "DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
+                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + " NOT IN " +
                         "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
                         " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedIdentities.executeUpdateDelete();
@@ -617,18 +614,13 @@ public class AuthRepository {
         final SQLiteDatabase db = ensureStarted();
 
         final ArrayList<IdentityRecord> identities = new ArrayList<>();
-        try (final Cursor c = db.query(AuthDatabase.TABLE_IDENTITIES,
-                new String[] { AuthDatabase.COLUMN_IDENTITIES_ID,
-                        AuthDatabase.COLUMN_IDENTITIES_NAME,
-                        AuthDatabase.COLUMN_IDENTITIES_URI,
-                        AuthDatabase.COLUMN_IDENTITIES_ICON_RELATIVE_URI,
-                        AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY,
-                        AuthDatabase.COLUMN_IDENTITIES_SECRET_KEY_IV },
+        try (final Cursor c = db.query(IdentityRecordSchema.TABLE_IDENTITIES,
+                IDENTITY_RECORD_COLUMNS,
                 null,
                 null,
                 null,
                 null,
-                AuthDatabase.COLUMN_IDENTITIES_NAME)) {
+                IdentityRecordSchema.COLUMN_IDENTITIES_NAME)) {
             while (c.moveToNext()) {
                 final int id = c.getInt(0);
                 final String name = c.getString(1);
