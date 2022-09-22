@@ -177,33 +177,9 @@ public class AuthRepository {
         }
 
         // Look up the identity secret key for the key specified in this JWT
-        final IdentityRecord identityRecord;
-        try (final Cursor c = db.query(IdentityRecordSchema.TABLE_IDENTITIES,
-                IDENTITY_RECORD_COLUMNS,
-                IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?",
-                new String[] { identityIdStr },
-                null,
-                null,
-                null)) {
-            if (!c.moveToNext()) {
-                Log.w(TAG, "Identity not found: " + identityIdStr);
-                return null;
-            }
-
-            final int id = c.getInt(0);
-            final String name = c.getString(1);
-            final String uri = c.getString(2);
-            final String iconRelativeUri = c.getString(3);
-            final byte[] keyCiphertext = c.getBlob(4);
-            final byte[] keyIV = c.getBlob(5);
-            identityRecord = new IdentityRecord.IdentityRecordBuilder()
-                    .setId(id)
-                    .setName(name)
-                    .setUri(Uri.parse(uri))
-                    .setRelativeIconUri(Uri.parse(iconRelativeUri))
-                    .setSecretKeyCiphertext(keyCiphertext)
-                    .setSecretKeyIV(keyIV)
-                    .build();
+        final IdentityRecord identityRecord = mIdentityRecordDao.findIdentityById(identityIdStr);
+        if (identityRecord == null) {
+            return null; // Identity not found
         }
 
         // Verify the HMAC on the auth token
@@ -364,24 +340,11 @@ public class AuthRepository {
 
         // First, try and look up a matching identity
         int identityId = -1;
-        byte[] identityKeyCiphertext = null;
-        byte[] identityKeyIV = null;
-        try (final Cursor c = db.query(IdentityRecordSchema.TABLE_IDENTITIES,
-                new String[] { IdentityRecordSchema.COLUMN_IDENTITIES_ID,
-                        IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY,
-                        IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV },
-                IdentityRecordSchema.COLUMN_IDENTITIES_NAME + "=? AND " +
-                        IdentityRecordSchema.COLUMN_IDENTITIES_URI + "=? AND " +
-                        IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
-                new String[] { name, uri.toString(), relativeIconUri.toString() },
-                null,
-                null,
-                null)) {
-            if (c.moveToNext()) {
-                identityId = c.getInt(0);
-                identityKeyCiphertext = c.getBlob(1);
-                identityKeyIV = c.getBlob(2);
-            }
+
+        IdentityRecord identityRecord = mIdentityRecordDao
+                .findIdentityByParams(name, uri.toString(), relativeIconUri.toString());
+        if (identityRecord != null) {
+            identityId = identityRecord.id;
         }
 
         // If no matching identity exists, create one
@@ -389,8 +352,8 @@ public class AuthRepository {
             Log.d(TAG, "Creating IdentityRecord for " + name + '/' + uri + '/' + relativeIconUri);
 
             final Pair<byte[], byte[]> p = createEncryptedHmacSha256SecretKey();
-            identityKeyCiphertext = p.first;
-            identityKeyIV = p.second;
+            byte[] identityKeyCiphertext = p.first;
+            byte[] identityKeyIV = p.second;
 
             final ContentValues identityContentValues = new ContentValues(5);
             identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
@@ -398,17 +361,18 @@ public class AuthRepository {
             identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri.toString());
             identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
             identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
-            identityId = (int) db.insert(IdentityRecordSchema.TABLE_IDENTITIES, null, identityContentValues);
+            identityId = (int) mIdentityRecordDao.insert(IdentityRecordSchema.TABLE_IDENTITIES, identityContentValues);
+
+            identityRecord = new IdentityRecord.IdentityRecordBuilder()
+                    .setId(identityId)
+                    .setName(name)
+                    .setUri(uri)
+                    .setRelativeIconUri(relativeIconUri)
+                    .setSecretKeyCiphertext(identityKeyCiphertext)
+                    .setSecretKeyIV(identityKeyIV)
+                    .build();
         }
 
-        final IdentityRecord identityRecord = new IdentityRecord.IdentityRecordBuilder()
-                .setId(identityId)
-                .setName(name)
-                .setUri(uri)
-                .setRelativeIconUri(relativeIconUri)
-                .setSecretKeyCiphertext(identityKeyCiphertext)
-                .setSecretKeyIV(identityKeyIV)
-                .build();
 
         // Next, try and look up the public key
         int publicKeyId = -1;
