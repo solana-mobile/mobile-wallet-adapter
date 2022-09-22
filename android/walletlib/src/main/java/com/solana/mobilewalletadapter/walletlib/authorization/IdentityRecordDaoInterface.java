@@ -18,4 +18,6 @@ import java.util.List;
 
     @Nullable
     IdentityRecord findIdentityByParams(String name, String uri, String relativeIconUri);
+
+    long insert(String name, String uri, String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV);
 }

@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -70,6 +71,17 @@ import java.util.List;
             }
             return cursorToEntity(c);
         }
+    }
+
+    @Override
+    public long insert(String name, String uri, String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV) {
+        final ContentValues identityContentValues = new ContentValues(5);
+        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
+        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_URI, uri);
+        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri);
+        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
+        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
+        return super.insert(IdentityRecordSchema.TABLE_IDENTITIES, identityContentValues);
     }
 
     @Override

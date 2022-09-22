@@ -354,13 +354,7 @@ public class AuthRepository {
             final byte[] identityKeyCiphertext = p.first;
             final byte[] identityKeyIV = p.second;
 
-            final ContentValues identityContentValues = new ContentValues(5);
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_URI, uri.toString());
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri.toString());
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
-            identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
-            identityId = (int) mIdentityRecordDao.insert(IdentityRecordSchema.TABLE_IDENTITIES, identityContentValues);
+            identityId = (int) mIdentityRecordDao.insert(name, uri.toString(), relativeIconUri.toString(), identityKeyCiphertext, identityKeyIV);
 
             identityRecord = new IdentityRecord.IdentityRecordBuilder()
                     .setId(identityId)
