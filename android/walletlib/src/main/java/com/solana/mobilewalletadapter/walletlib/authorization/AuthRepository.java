@@ -4,8 +4,6 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
-import static com.solana.mobilewalletadapter.walletlib.authorization.IdentityRecordSchema.IDENTITY_RECORD_COLUMNS;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
