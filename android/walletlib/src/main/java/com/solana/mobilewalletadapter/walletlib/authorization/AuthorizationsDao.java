@@ -12,7 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*package*/ class AuthorizationsDao extends DbContentProvider<AuthRecord>
-        implements AuthorizationsSchema, AuthorizationsDaoInterface {
+        implements AuthorizationsSchema, PublicKeysSchema,
+        WalletUriBaseSchema, AuthorizationsDaoInterface {
 
     AuthorizationsDao(SQLiteDatabase db) {
         super(db);
@@ -41,20 +42,20 @@ import java.util.List;
     @Override
     public long insert(int id, long timeStamp, int publicKeyId, String cluster, int walletUriBaseId, byte[] scope) {
         final ContentValues reissueContentValues = new ContentValues(6);
-        reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID, id);
-        reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED, timeStamp);
-        reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
-        reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
-        reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
-        reissueContentValues.put(AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE, scope);
-        return super.insert(AuthorizationsSchema.TABLE_AUTHORIZATIONS, reissueContentValues);
+        reissueContentValues.put(COLUMN_AUTHORIZATIONS_IDENTITY_ID, id);
+        reissueContentValues.put(COLUMN_AUTHORIZATIONS_ISSUED, timeStamp);
+        reissueContentValues.put(COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
+        reissueContentValues.put(COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
+        reissueContentValues.put(COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
+        reissueContentValues.put(COLUMN_AUTHORIZATIONS_SCOPE, scope);
+        return super.insert(TABLE_AUTHORIZATIONS, reissueContentValues);
     }
 
     @Override
     public int deleteByAuthRecordId(int authRecordId) {
         final SQLiteStatement deleteAuthorizations = compileStatement(
-                "DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                        " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "=?");
+                "DELETE FROM " + TABLE_AUTHORIZATIONS +
+                        " WHERE " + COLUMN_AUTHORIZATIONS_ID + "=?");
         deleteAuthorizations.bindLong(1, authRecordId);
         return deleteAuthorizations.executeUpdateDelete();
     }
@@ -62,8 +63,8 @@ import java.util.List;
     @Override
     public void deleteByIdentityRecordId(int identityRecordId) {
         final SQLiteStatement deleteAuthorizations = compileStatement(
-                "DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                        " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?");
+                "DELETE FROM " + TABLE_AUTHORIZATIONS +
+                        " WHERE " + COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?");
         deleteAuthorizations.bindLong(1, identityRecordId);
         deleteAuthorizations.executeUpdateDelete();
     }
@@ -71,23 +72,23 @@ import java.util.List;
     public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord, long authorizationValidityMs) {
         final ArrayList<AuthRecord> authorizations = new ArrayList<>();
         try (final Cursor cursor = super.rawQuery("SELECT " +
-                        AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
-                        ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW +
-                        ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_LABEL +
-                        ", " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                        " INNER JOIN " + PublicKeysSchema.TABLE_PUBLIC_KEYS +
-                        " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        " = " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID +
-                        " INNER JOIN " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
-                        " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        " = " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID +
-                        " WHERE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
+                        TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ISSUED +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_SCOPE +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CLUSTER +
+                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_RAW +
+                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_LABEL +
+                        ", " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_URI +
+                        " FROM " + TABLE_AUTHORIZATIONS +
+                        " INNER JOIN " + TABLE_PUBLIC_KEYS +
+                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        " = " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_ID +
+                        " INNER JOIN " + TABLE_WALLET_URI_BASE +
+                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        " = " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_ID +
+                        " WHERE " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
                 new String[]{Integer.toString(identityRecord.getId())})) {
             while (cursor.moveToNext()) {
                 authorizations.add(cursorToEntity(cursor, identityRecord, authorizationValidityMs));
@@ -99,23 +100,23 @@ import java.util.List;
     @Override
     public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, String tokenIdStr, long authorizationValidityMs) {
         try (final Cursor cursor = super.rawQuery("SELECT " +
-                        AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE +
-                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
-                        ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW +
-                        ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_LABEL +
-                        ", " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                        " INNER JOIN " + PublicKeysSchema.TABLE_PUBLIC_KEYS +
-                        " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        " = " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID +
-                        " INNER JOIN " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
-                        " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        " = " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID +
-                        " WHERE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "=?",
+                        TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ISSUED +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_SCOPE +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CLUSTER +
+                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_RAW +
+                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_LABEL +
+                        ", " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_URI +
+                        " FROM " + TABLE_AUTHORIZATIONS +
+                        " INNER JOIN " + TABLE_PUBLIC_KEYS +
+                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        " = " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_ID +
+                        " INNER JOIN " + TABLE_WALLET_URI_BASE +
+                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        " = " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_ID +
+                        " WHERE " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID + "=?",
                 new String[]{tokenIdStr})) {
             if (!cursor.moveToNext()) {
                 return null;

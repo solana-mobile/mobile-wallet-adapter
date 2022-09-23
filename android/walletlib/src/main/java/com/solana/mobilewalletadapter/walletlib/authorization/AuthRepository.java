@@ -143,7 +143,7 @@ public class AuthRepository {
 
     @Nullable
     public synchronized AuthRecord fromAuthToken(@NonNull String authToken) {
-        final SQLiteDatabase db = ensureStarted();
+        ensureStarted();
 
         final byte[] payload = Base64.decode(authToken, Base64.DEFAULT);
         if (payload.length < AUTH_TOKEN_HMAC_LENGTH_BYTES) {
@@ -424,7 +424,7 @@ public class AuthRepository {
 
     @Nullable
     public synchronized AuthRecord reissue(@NonNull AuthRecord authRecord) {
-        final SQLiteDatabase db = ensureStarted();
+        ensureStarted();
         assert (!authRecord.isRevoked());
 
         final long now = System.currentTimeMillis();

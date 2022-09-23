@@ -27,11 +27,11 @@ import java.util.List;
     @NonNull
     public List<IdentityRecord> getAuthorizedIdentities() {
         final ArrayList<IdentityRecord> identities = new ArrayList<>();
-        try (final Cursor c = super.query(IdentityRecordSchema.TABLE_IDENTITIES,
+        try (final Cursor c = super.query(TABLE_IDENTITIES,
                 IDENTITY_RECORD_COLUMNS,
                 null,
                 null,
-                IdentityRecordSchema.COLUMN_IDENTITIES_NAME)) {
+                COLUMN_IDENTITIES_NAME)) {
             while (c.moveToNext()) {
                 identities.add(cursorToEntity(c));
             }
@@ -42,9 +42,9 @@ import java.util.List;
     @Override
     @Nullable
     public IdentityRecord findIdentityById(String id) {
-        try (final Cursor c = super.query(IdentityRecordSchema.TABLE_IDENTITIES,
+        try (final Cursor c = super.query(TABLE_IDENTITIES,
                 IDENTITY_RECORD_COLUMNS,
-                IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?",
+                COLUMN_IDENTITIES_ID + "=?",
                 new String[]{id},
                 null)) {
             if (!c.moveToNext()) {
@@ -58,11 +58,11 @@ import java.util.List;
     @Nullable
     @Override
     public IdentityRecord findIdentityByParams(String name, String uri, String relativeIconUri) {
-        try (final Cursor c = super.query(IdentityRecordSchema.TABLE_IDENTITIES,
+        try (final Cursor c = super.query(TABLE_IDENTITIES,
                 IDENTITY_RECORD_COLUMNS,
-                IdentityRecordSchema.COLUMN_IDENTITIES_NAME + "=? AND " +
-                        IdentityRecordSchema.COLUMN_IDENTITIES_URI + "=? AND " +
-                        IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
+                COLUMN_IDENTITIES_NAME + "=? AND " +
+                        COLUMN_IDENTITIES_URI + "=? AND " +
+                        COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
                 new String[]{name, uri, relativeIconUri},
                 null)) {
             if (!c.moveToNext()) {
@@ -75,30 +75,30 @@ import java.util.List;
     @Override
     public long insert(String name, String uri, String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV) {
         final ContentValues identityContentValues = new ContentValues(5);
-        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_NAME, name);
-        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_URI, uri);
-        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri);
-        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
-        identityContentValues.put(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
-        return super.insert(IdentityRecordSchema.TABLE_IDENTITIES, identityContentValues);
+        identityContentValues.put(COLUMN_IDENTITIES_NAME, name);
+        identityContentValues.put(COLUMN_IDENTITIES_URI, uri);
+        identityContentValues.put(COLUMN_IDENTITIES_ICON_RELATIVE_URI, relativeIconUri);
+        identityContentValues.put(COLUMN_IDENTITIES_SECRET_KEY, identityKeyCiphertext);
+        identityContentValues.put(COLUMN_IDENTITIES_SECRET_KEY_IV, identityKeyIV);
+        return super.insert(TABLE_IDENTITIES, identityContentValues);
     }
 
     @Override
     public int deleteById(int id) {
-        final SQLiteStatement deleteIdentity = compileStatement("DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
-                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?");
+        final SQLiteStatement deleteIdentity = compileStatement("DELETE FROM " + TABLE_IDENTITIES +
+                " WHERE " + COLUMN_IDENTITIES_ID + "=?");
         deleteIdentity.bindLong(1, id);
         return deleteIdentity.executeUpdateDelete();
     }
 
     @Override
     protected IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
-        final int id = cursor.getInt(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ID));
-        final String name = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_NAME));
-        final String uri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_URI));
-        final String iconRelativeUri = cursor.getString(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_ICON_RELATIVE_URI));
-        final byte[] identityKeyCiphertext = cursor.getBlob(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY));
-        final byte[] identityKeyIV = cursor.getBlob(cursor.getColumnIndexOrThrow(IdentityRecordSchema.COLUMN_IDENTITIES_SECRET_KEY_IV));
+        final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_ID));
+        final String name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_NAME));
+        final String uri = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_URI));
+        final String iconRelativeUri = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_ICON_RELATIVE_URI));
+        final byte[] identityKeyCiphertext = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_SECRET_KEY));
+        final byte[] identityKeyIV = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_SECRET_KEY_IV));
         return new IdentityRecord.IdentityRecordBuilder()
                 .setId(id)
                 .setName(name)
