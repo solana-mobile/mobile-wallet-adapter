@@ -9,6 +9,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /*package*/ abstract class DbContentProvider<T> {
     private final SQLiteDatabase mDb;
 
@@ -47,6 +50,23 @@ import android.database.sqlite.SQLiteStatement;
 
         return mDb.query(tableName, columns, selection,
                 selectionArgs, groupBy, having, orderBy, limit);
+    }
+
+    protected Cursor queryWithFactory(@NonNull SQLiteDatabase.CursorFactory factory,
+                                      @NonNull String tableName,
+                                      @NonNull String[] columns,
+                                      @Nullable String selection,
+                                      @Nullable String[] selectionArgs) {
+        return mDb.queryWithFactory(factory,
+                false,
+                tableName,
+                columns,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null,
+                null);
     }
 
     protected int update(String tableName, ContentValues values,

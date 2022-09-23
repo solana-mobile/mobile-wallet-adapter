@@ -4,13 +4,9 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
@@ -73,6 +69,7 @@ public class AuthRepository {
     private IdentityRecordDao mIdentityRecordDao;
     private AuthorizationsDao mAuthorizationsDao;
     private WalletUriBaseDao mWalletUriBaseDao;
+    private PublicKeysDao mPublicKeysDao;
 
     public AuthRepository(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -89,9 +86,8 @@ public class AuthRepository {
         mAuthDb.close();
     }
 
-    @NonNull
     @GuardedBy("this")
-    private SQLiteDatabase ensureStarted() {
+    private void ensureStarted() {
         if (!mInitialized) {
             mSecretKey = getSecretKey();
             if (mSecretKey == null) {
@@ -106,10 +102,9 @@ public class AuthRepository {
             mIdentityRecordDao = new IdentityRecordDao(database);
             mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig);
             mWalletUriBaseDao = new WalletUriBaseDao(database);
+            mPublicKeysDao = new PublicKeysDao(database);
             mInitialized = true;
         }
-
-        return mAuthDb.getWritableDatabase();
     }
 
     // Note: only uses final mAuthIssuerConfig, does not require any locks
@@ -303,7 +298,7 @@ public class AuthRepository {
                                          @NonNull String cluster,
                                          @Nullable Uri walletUriBase,
                                          @Nullable byte[] scope) {
-        final SQLiteDatabase db = ensureStarted();
+        ensureStarted();
 
         if (scope == null) {
             scope = new byte[0];
@@ -344,32 +339,14 @@ public class AuthRepository {
 
 
         // Next, try and look up the public key
-        int publicKeyId = -1;
-        final SQLiteDatabase.CursorFactory publicKeyCursorFactory = (db1, masterQuery, editTable, query) -> {
-            query.bindBlob(1, publicKey);
-            return new SQLiteCursor(masterQuery, editTable, query);
-        };
-        try (final Cursor c = db.queryWithFactory(publicKeyCursorFactory,
-                false,
-                PublicKeysSchema.TABLE_PUBLIC_KEYS,
-                new String[]{PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID},
-                PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW + "=?",
-                null,
-                null,
-                null,
-                null,
-                null)) {
-            if (c.moveToNext()) {
-                publicKeyId = c.getInt(0);
-            }
-        }
+        final PublicKey pk = mPublicKeysDao.query(publicKey);
 
+        final int publicKeyId;
         // If no matching public key exists, create one
-        if (publicKeyId == -1) {
-            final ContentValues publicKeyContentValues = new ContentValues(2);
-            publicKeyContentValues.put(PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW, publicKey);
-            publicKeyContentValues.put(PublicKeysSchema.COLUMN_PUBLIC_KEYS_LABEL, accountLabel);
-            publicKeyId = (int) db.insert(PublicKeysSchema.TABLE_PUBLIC_KEYS, null, publicKeyContentValues);
+        if (pk == null) {
+            publicKeyId = (int) mPublicKeysDao.insert(publicKey, accountLabel);
+        } else {
+            publicKeyId = pk.id;
         }
 
         // Next, try and look up the wallet URI base
@@ -393,7 +370,7 @@ public class AuthRepository {
             Log.v(TAG, "Purged " + purgeCount + " oldest authorizations for identity: " + identityRecord);
             // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
             // thus know that the identity remains referenced; no need to purge unused identities.
-            deleteUnreferencedPublicKeys(db);
+            deleteUnreferencedPublicKeys();
             deleteUnreferencedWalletUriBase();
         }
 
@@ -435,7 +412,7 @@ public class AuthRepository {
     }
 
     public synchronized boolean revoke(@NonNull AuthRecord authRecord) {
-        final SQLiteDatabase db = ensureStarted();
+        ensureStarted();
 
         Log.d(TAG, "Revoking AuthRecord " + authRecord);
         authRecord.setRevoked();
@@ -444,14 +421,14 @@ public class AuthRepository {
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedIdentities();
-        deleteUnreferencedPublicKeys(db);
+        deleteUnreferencedPublicKeys();
         deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
     }
 
     public synchronized boolean revoke(@NonNull IdentityRecord identityRecord) {
-        final SQLiteDatabase db = ensureStarted();
+        ensureStarted();
 
         Log.d(TAG, "Revoking IdentityRecord " + identityRecord + " and all related AuthRecords");
 
@@ -459,7 +436,7 @@ public class AuthRepository {
         final int deleteCount = mIdentityRecordDao.deleteById(identityRecord.getId());
 
         // There may now be unreferenced authorization data; if so, delete them
-        deleteUnreferencedPublicKeys(db);
+        deleteUnreferencedPublicKeys();
         deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
@@ -471,13 +448,8 @@ public class AuthRepository {
     }
 
     @GuardedBy("this")
-    private void deleteUnreferencedPublicKeys(@NonNull SQLiteDatabase db) {
-        final SQLiteStatement deleteUnreferencedPublicKeys = db.compileStatement(
-                "DELETE FROM " + PublicKeysSchema.TABLE_PUBLIC_KEYS +
-                        " WHERE " + PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
-        deleteUnreferencedPublicKeys.executeUpdateDelete();
+    private void deleteUnreferencedPublicKeys() {
+        mPublicKeysDao.deleteUnreferencedPublicKeys();
     }
 
     @GuardedBy("this")
