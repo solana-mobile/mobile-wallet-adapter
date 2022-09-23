@@ -75,7 +75,7 @@ import java.util.List;
 
     @IntRange(from = -1)
     @Override
-    public long insert(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV) {
+    public long insert(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri, @NonNull byte[] identityKeyCiphertext, @NonNull byte[] identityKeyIV) {
         final ContentValues identityContentValues = new ContentValues(5);
         identityContentValues.put(COLUMN_IDENTITIES_NAME, name);
         identityContentValues.put(COLUMN_IDENTITIES_URI, uri);

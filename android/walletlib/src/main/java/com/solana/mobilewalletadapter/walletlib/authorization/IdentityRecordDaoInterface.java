@@ -21,7 +21,7 @@ import java.util.List;
     IdentityRecord findIdentityByParams(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri);
 
     @IntRange(from = -1)
-    long insert(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV);
+    long insert(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri, @NonNull byte[] identityKeyCiphertext, @NonNull byte[] identityKeyIV);
 
     @IntRange(from = -1)
     int deleteById(@IntRange(from = 1) int id);

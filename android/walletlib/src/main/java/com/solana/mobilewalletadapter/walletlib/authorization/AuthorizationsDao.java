@@ -49,6 +49,7 @@ import java.util.List;
                 issued, issued + authorizationValidityMs);
     }
 
+    @IntRange(from = -1)
     @Override
     public long insert(@IntRange(from = 1) int id, long timeStamp, @IntRange(from = 1) int publicKeyId, @NonNull String cluster, @IntRange(from = 1) int walletUriBaseId, @Nullable byte[] scope) {
         final ContentValues contentValues = new ContentValues(6);
@@ -61,6 +62,7 @@ import java.util.List;
         return super.insert(TABLE_AUTHORIZATIONS, contentValues);
     }
 
+    @IntRange(from = 0)
     @Override
     public int deleteByAuthRecordId(@IntRange(from = 1) int authRecordId) {
         final SQLiteStatement deleteAuthorizations = compileStatement(
@@ -79,6 +81,7 @@ import java.util.List;
         deleteAuthorizations.executeUpdateDelete();
     }
 
+    @NonNull
     public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord) {
         final ArrayList<AuthRecord> authorizations = new ArrayList<>();
         try (final Cursor cursor = super.rawQuery("SELECT " +
@@ -107,6 +110,7 @@ import java.util.List;
         return authorizations;
     }
 
+    @Nullable
     @Override
     public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, @NonNull String tokenIdStr) {
         try (final Cursor cursor = super.rawQuery("SELECT " +
