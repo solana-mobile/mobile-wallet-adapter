@@ -375,10 +375,12 @@ public class AuthRepository {
         // Next, try and look up the wallet URI base
         WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
 
-        int walletUriBaseId = -1;
+        int walletUriBaseId;
         // If no matching wallet URI base exists, create one
         if (walletUri == null) {
             walletUriBaseId = (int) mWalletUriBaseDao.insert(walletUriBase);
+        } else {
+            walletUriBaseId = walletUri.id;
         }
 
         final long now = System.currentTimeMillis();
