@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) 2022 Solana Mobile Inc.
+ */
+
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
 
-public class WalletUri {
+/*package*/ class WalletUri {
     @IntRange(from = 1)
     final int id;
 

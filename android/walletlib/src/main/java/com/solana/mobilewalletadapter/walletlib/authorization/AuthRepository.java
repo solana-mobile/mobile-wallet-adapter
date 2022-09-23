@@ -104,7 +104,7 @@ public class AuthRepository {
             mAuthDb = new AuthDatabase(mContext, mAuthIssuerConfig);
             final SQLiteDatabase database = mAuthDb.getWritableDatabase();
             mIdentityRecordDao = new IdentityRecordDao(database);
-            mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig.authorizationValidityMs);
+            mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig);
             mWalletUriBaseDao = new WalletUriBaseDao(database);
             mInitialized = true;
         }
@@ -375,7 +375,7 @@ public class AuthRepository {
         // Next, try and look up the wallet URI base
         final WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
 
-        int walletUriBaseId;
+        final int walletUriBaseId;
         // If no matching wallet URI base exists, create one
         if (walletUri == null) {
             walletUriBaseId = (int) mWalletUriBaseDao.insert(walletUriBase);
@@ -388,7 +388,7 @@ public class AuthRepository {
         final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, publicKeyId, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
-        final int purgeCount = mAuthorizationsDao.purgeOldestEntries(identityRecord.getId(), mAuthIssuerConfig.maxOutstandingTokensPerIdentity);
+        final int purgeCount = mAuthorizationsDao.purgeOldestEntries(identityRecord.getId());
         if (purgeCount > 0) {
             Log.v(TAG, "Purged " + purgeCount + " oldest authorizations for identity: " + identityRecord);
             // Note: we only purge if we exceeded the max outstanding authorizations per identity. We

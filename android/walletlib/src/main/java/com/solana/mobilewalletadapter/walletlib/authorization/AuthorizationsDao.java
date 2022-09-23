@@ -21,12 +21,12 @@ import java.util.List;
         implements AuthorizationsSchema, PublicKeysSchema,
         WalletUriBaseSchema, AuthorizationsDaoInterface {
 
-    @IntRange(from = 1)
-    private final long authorizationValidityMs;
+    @NonNull
+    private final AuthIssuerConfig authIssuerConfig;
 
-    AuthorizationsDao(SQLiteDatabase db, @IntRange(from = 1) long authorizationValidityMs) {
+    AuthorizationsDao(@NonNull SQLiteDatabase db, @NonNull AuthIssuerConfig authIssuerConfig) {
         super(db);
-        this.authorizationValidityMs = authorizationValidityMs;
+        this.authIssuerConfig = authIssuerConfig;
     }
 
     @Override
@@ -47,7 +47,7 @@ import java.util.List;
         final Uri walletUriBase = cursor.isNull(8) ? null : Uri.parse(cursor.getString(8));
         return new AuthRecord(id, identityRecord, publicKey,
                 accountLabel, cluster, scope, walletUriBase, publicKeyId, walletUriBaseId,
-                issued, issued + authorizationValidityMs);
+                issued, issued + authIssuerConfig.authorizationValidityMs);
     }
 
     @IntRange(from = -1)
@@ -143,7 +143,7 @@ import java.util.List;
 
     @IntRange(from = 0)
     @Override
-    public int purgeOldestEntries(@IntRange(from = 1) int identityId, @IntRange(from = 1) int maxOutstandingTokensPerIdentity) {
+    public int purgeOldestEntries(@IntRange(from = 1) int identityId) {
         final SQLiteStatement purgeOldestStatement = compileStatement(
                 "DELETE FROM " + TABLE_AUTHORIZATIONS +
                         " WHERE " + COLUMN_AUTHORIZATIONS_ID + " IN " +
@@ -153,7 +153,7 @@ import java.util.List;
                         " ORDER BY " + COLUMN_AUTHORIZATIONS_ISSUED +
                         " DESC LIMIT -1 OFFSET ?)");
         purgeOldestStatement.bindLong(1, identityId);
-        purgeOldestStatement.bindLong(2, maxOutstandingTokensPerIdentity);
+        purgeOldestStatement.bindLong(2, authIssuerConfig.maxOutstandingTokensPerIdentity);
         return purgeOldestStatement.executeUpdateDelete();
     }
 }
