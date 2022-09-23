@@ -96,6 +96,16 @@ import java.util.List;
 
     @NonNull
     @Override
+    public void deleteUnreferencedIdentities() {
+        final SQLiteStatement deleteUnreferencedIdentities = compileStatement(
+                "DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
+                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
+                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
+        deleteUnreferencedIdentities.executeUpdateDelete();
+    }
+
+    @Override
     protected IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
         final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_ID));
         final String name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_NAME));

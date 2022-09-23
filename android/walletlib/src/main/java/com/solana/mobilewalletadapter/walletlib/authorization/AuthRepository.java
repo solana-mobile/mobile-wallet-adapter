@@ -453,7 +453,7 @@ public class AuthRepository {
         final int deleteCount = mAuthorizationsDao.deleteByAuthRecordId(authRecord.id);
 
         // There may now be unreferenced authorization data; if so, delete them
-        deleteUnreferencedIdentities(db);
+        deleteUnreferencedIdentities();
         deleteUnreferencedPublicKeys(db);
         deleteUnreferencedWalletUriBase(db);
 
@@ -476,13 +476,8 @@ public class AuthRepository {
     }
 
     @GuardedBy("this")
-    private void deleteUnreferencedIdentities(@NonNull SQLiteDatabase db) {
-        final SQLiteStatement deleteUnreferencedIdentities = db.compileStatement(
-                "DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
-                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
-        deleteUnreferencedIdentities.executeUpdateDelete();
+    private void deleteUnreferencedIdentities() {
+        mIdentityRecordDao.deleteUnreferencedIdentities();
     }
 
     @GuardedBy("this")

@@ -25,4 +25,6 @@ import java.util.List;
 
     @IntRange(from = -1)
     int deleteById(@IntRange(from = 1) int id);
+
+    void deleteUnreferencedIdentities();
 }
