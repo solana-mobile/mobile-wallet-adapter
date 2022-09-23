@@ -373,26 +373,12 @@ public class AuthRepository {
         }
 
         // Next, try and look up the wallet URI base
-        int walletUriBaseId = -1;
-        try (final Cursor c = db.query(WalletUriBaseSchema.TABLE_WALLET_URI_BASE,
-                new String[]{WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID},
-                WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
-                        (walletUriBase != null ? "=?" : " IS NULL"),
-                (walletUriBase != null ? new String[]{walletUriBase.toString()} : null),
-                null,
-                null,
-                null)) {
-            if (c.moveToNext()) {
-                walletUriBaseId = c.getInt(0);
-            }
-        }
+        WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
 
+        int walletUriBaseId = -1;
         // If no matching wallet URI base exists, create one
-        if (walletUriBaseId == -1) {
-            final ContentValues walletUriBaseContentValues = new ContentValues(1);
-            walletUriBaseContentValues.put(WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI,
-                    walletUriBase != null ? walletUriBase.toString() : null);
-            walletUriBaseId = (int) db.insert(WalletUriBaseSchema.TABLE_WALLET_URI_BASE, null, walletUriBaseContentValues);
+        if (walletUri == null) {
+            walletUriBaseId = (int) mWalletUriBaseDao.insert(walletUriBase);
         }
 
         final long now = System.currentTimeMillis();
