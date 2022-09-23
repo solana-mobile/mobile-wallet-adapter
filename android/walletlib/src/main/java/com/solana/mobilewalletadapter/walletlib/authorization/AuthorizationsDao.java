@@ -21,12 +21,12 @@ import java.util.List;
         implements AuthorizationsSchema, PublicKeysSchema,
         WalletUriBaseSchema, AuthorizationsDaoInterface {
 
-    @IntRange(from = 1)
-    private final long authorizationValidityMs;
+    @NonNull
+    private final AuthIssuerConfig authIssuerConfig;
 
-    AuthorizationsDao(SQLiteDatabase db, @IntRange(from = 1) long authorizationValidityMs) {
+    AuthorizationsDao(@NonNull SQLiteDatabase db, @NonNull AuthIssuerConfig authIssuerConfig) {
         super(db);
-        this.authorizationValidityMs = authorizationValidityMs;
+        this.authIssuerConfig = authIssuerConfig;
     }
 
     @Override
@@ -34,6 +34,7 @@ import java.util.List;
         throw new UnsupportedOperationException("Use cursorToEntity(cursor, identityRecord)");
     }
 
+    @NonNull
     private AuthRecord cursorToEntity(Cursor cursor, @NonNull IdentityRecord identityRecord) {
         final int id = cursor.getInt(0);
         final long issued = cursor.getLong(1);
@@ -46,7 +47,7 @@ import java.util.List;
         final Uri walletUriBase = cursor.isNull(8) ? null : Uri.parse(cursor.getString(8));
         return new AuthRecord(id, identityRecord, publicKey,
                 accountLabel, cluster, scope, walletUriBase, publicKeyId, walletUriBaseId,
-                issued, issued + authorizationValidityMs);
+                issued, issued + authIssuerConfig.authorizationValidityMs);
     }
 
     @IntRange(from = -1)
@@ -138,5 +139,21 @@ import java.util.List;
 
             return cursorToEntity(cursor, identityRecord);
         }
+    }
+
+    @IntRange(from = 0)
+    @Override
+    public int purgeOldestEntries(@IntRange(from = 1) int identityId) {
+        final SQLiteStatement purgeOldestStatement = compileStatement(
+                "DELETE FROM " + TABLE_AUTHORIZATIONS +
+                        " WHERE " + COLUMN_AUTHORIZATIONS_ID + " IN " +
+                        "(SELECT " + COLUMN_AUTHORIZATIONS_ID +
+                        " FROM " + TABLE_AUTHORIZATIONS +
+                        " WHERE " + COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
+                        " ORDER BY " + COLUMN_AUTHORIZATIONS_ISSUED +
+                        " DESC LIMIT -1 OFFSET ?)");
+        purgeOldestStatement.bindLong(1, identityId);
+        purgeOldestStatement.bindLong(2, authIssuerConfig.maxOutstandingTokensPerIdentity);
+        return purgeOldestStatement.executeUpdateDelete();
     }
 }

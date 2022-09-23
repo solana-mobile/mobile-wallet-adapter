@@ -13,4 +13,9 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
             "CREATE TABLE " + TABLE_WALLET_URI_BASE + " (" +
                     COLUMN_WALLET_URI_BASE_ID + " INTEGER NOT NULL PRIMARY KEY," +
                     COLUMN_WALLET_URI_BASE_URI + " TEXT)";
+
+    String[] WALLET_URI_BASE_COLUMNS = new String[]{
+            COLUMN_WALLET_URI_BASE_ID,
+            COLUMN_WALLET_URI_BASE_URI
+    };
 }

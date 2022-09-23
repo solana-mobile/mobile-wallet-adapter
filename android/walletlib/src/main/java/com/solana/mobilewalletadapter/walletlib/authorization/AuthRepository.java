@@ -72,6 +72,7 @@ public class AuthRepository {
     private AuthDatabase mAuthDb;
     private IdentityRecordDao mIdentityRecordDao;
     private AuthorizationsDao mAuthorizationsDao;
+    private WalletUriBaseDao mWalletUriBaseDao;
 
     public AuthRepository(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -103,7 +104,8 @@ public class AuthRepository {
             mAuthDb = new AuthDatabase(mContext, mAuthIssuerConfig);
             final SQLiteDatabase database = mAuthDb.getWritableDatabase();
             mIdentityRecordDao = new IdentityRecordDao(database);
-            mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig.authorizationValidityMs);
+            mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig);
+            mWalletUriBaseDao = new WalletUriBaseDao(database);
             mInitialized = true;
         }
 
@@ -371,26 +373,14 @@ public class AuthRepository {
         }
 
         // Next, try and look up the wallet URI base
-        int walletUriBaseId = -1;
-        try (final Cursor c = db.query(WalletUriBaseSchema.TABLE_WALLET_URI_BASE,
-                new String[]{WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID},
-                WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
-                        (walletUriBase != null ? "=?" : " IS NULL"),
-                (walletUriBase != null ? new String[]{walletUriBase.toString()} : null),
-                null,
-                null,
-                null)) {
-            if (c.moveToNext()) {
-                walletUriBaseId = c.getInt(0);
-            }
-        }
+        final WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
 
+        final int walletUriBaseId;
         // If no matching wallet URI base exists, create one
-        if (walletUriBaseId == -1) {
-            final ContentValues walletUriBaseContentValues = new ContentValues(1);
-            walletUriBaseContentValues.put(WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI,
-                    walletUriBase != null ? walletUriBase.toString() : null);
-            walletUriBaseId = (int) db.insert(WalletUriBaseSchema.TABLE_WALLET_URI_BASE, null, walletUriBaseContentValues);
+        if (walletUri == null) {
+            walletUriBaseId = (int) mWalletUriBaseDao.insert(walletUriBase);
+        } else {
+            walletUriBaseId = walletUri.id;
         }
 
         final long now = System.currentTimeMillis();
@@ -398,23 +388,13 @@ public class AuthRepository {
         final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, publicKeyId, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
-        final SQLiteStatement purgeOldestStatement = db.compileStatement(
-                "DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + " IN " +
-                "(SELECT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
-                " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
-                " ORDER BY " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
-                " DESC LIMIT -1 OFFSET ?)");
-        purgeOldestStatement.bindLong(1, identityRecord.getId());
-        purgeOldestStatement.bindLong(2, mAuthIssuerConfig.maxOutstandingTokensPerIdentity);
-        final int purgeCount = purgeOldestStatement.executeUpdateDelete();
+        final int purgeCount = mAuthorizationsDao.purgeOldestEntries(identityRecord.getId());
         if (purgeCount > 0) {
             Log.v(TAG, "Purged " + purgeCount + " oldest authorizations for identity: " + identityRecord);
             // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
             // thus know that the identity remains referenced; no need to purge unused identities.
             deleteUnreferencedPublicKeys(db);
-            deleteUnreferencedWalletUriBase(db);
+            deleteUnreferencedWalletUriBase();
         }
 
         return new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
@@ -463,9 +443,9 @@ public class AuthRepository {
         final int deleteCount = mAuthorizationsDao.deleteByAuthRecordId(authRecord.id);
 
         // There may now be unreferenced authorization data; if so, delete them
-        deleteUnreferencedIdentities(db);
+        deleteUnreferencedIdentities();
         deleteUnreferencedPublicKeys(db);
-        deleteUnreferencedWalletUriBase(db);
+        deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
     }
@@ -480,19 +460,14 @@ public class AuthRepository {
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedPublicKeys(db);
-        deleteUnreferencedWalletUriBase(db);
+        deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
     }
 
     @GuardedBy("this")
-    private void deleteUnreferencedIdentities(@NonNull SQLiteDatabase db) {
-        final SQLiteStatement deleteUnreferencedIdentities = db.compileStatement(
-                "DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
-                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
-        deleteUnreferencedIdentities.executeUpdateDelete();
+    private void deleteUnreferencedIdentities() {
+        mIdentityRecordDao.deleteUnreferencedIdentities();
     }
 
     @GuardedBy("this")
@@ -506,13 +481,8 @@ public class AuthRepository {
     }
 
     @GuardedBy("this")
-    private void deleteUnreferencedWalletUriBase(@NonNull SQLiteDatabase db) {
-        final SQLiteStatement deleteUnreferencedWalletUriBase = db.compileStatement(
-                "DELETE FROM " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
-                        " WHERE " + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
-        deleteUnreferencedWalletUriBase.executeUpdateDelete();
+    private void deleteUnreferencedWalletUriBase() {
+        mWalletUriBaseDao.deleteUnreferencedWalletUriBase();
     }
 
     @NonNull
