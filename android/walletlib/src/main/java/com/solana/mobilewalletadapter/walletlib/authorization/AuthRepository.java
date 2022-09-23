@@ -398,17 +398,7 @@ public class AuthRepository {
         final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, publicKeyId, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
-        final SQLiteStatement purgeOldestStatement = db.compileStatement(
-                "DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + " IN " +
-                "(SELECT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
-                " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
-                " ORDER BY " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
-                " DESC LIMIT -1 OFFSET ?)");
-        purgeOldestStatement.bindLong(1, identityRecord.getId());
-        purgeOldestStatement.bindLong(2, mAuthIssuerConfig.maxOutstandingTokensPerIdentity);
-        final int purgeCount = purgeOldestStatement.executeUpdateDelete();
+        final int purgeCount = mAuthorizationsDao.purgeOldestEntries(identityRecord.getId(), mAuthIssuerConfig.maxOutstandingTokensPerIdentity);
         if (purgeCount > 0) {
             Log.v(TAG, "Purged " + purgeCount + " oldest authorizations for identity: " + identityRecord);
             // Note: we only purge if we exceeded the max outstanding authorizations per identity. We

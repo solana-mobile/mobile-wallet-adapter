@@ -139,4 +139,18 @@ import java.util.List;
             return cursorToEntity(cursor, identityRecord);
         }
     }
+
+    @Override
+    public int purgeOldestEntries(@IntRange(from = 1) int identityId, @IntRange(from = 1) int maxOutstandingTokensPerIdentity) {
+        final SQLiteStatement purgeOldestStatement = compileStatement(
+                "DELETE FROM " + TABLE_AUTHORIZATIONS +
+                        " WHERE " + COLUMN_AUTHORIZATIONS_ID + " IN " +
+                        "(SELECT " + COLUMN_AUTHORIZATIONS_ID +
+                        " FROM " + TABLE_AUTHORIZATIONS +
+                        " WHERE " + COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
+                        " ORDER BY " + COLUMN_AUTHORIZATIONS_ISSUED +
+                        " DESC LIMIT -1 OFFSET ?)");
+        purgeOldestStatement.bindLong(1, identityId);
+        purgeOldestStatement.bindLong(2, maxOutstandingTokensPerIdentity);
+        return purgeOldestStatement.executeUpdateDelete();    }
 }
