@@ -20,8 +20,9 @@ public class PublicKeysDao extends DbContentProvider<PublicKey> implements Publi
         super(db);
     }
 
+    @NonNull
     @Override
-    protected PublicKey cursorToEntity(Cursor cursor) {
+    protected PublicKey cursorToEntity(@NonNull Cursor cursor) {
         final int publicKeyId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_PUBLIC_KEYS_ID));
         final byte[] publicKey = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_PUBLIC_KEYS_RAW));
         final String accountLabel = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PUBLIC_KEYS_LABEL));
