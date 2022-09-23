@@ -11,16 +11,17 @@ import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 
 import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /*package*/ class WalletUriBaseDao extends DbContentProvider<WalletUri> implements WalletUriBaseDaoInterface, WalletUriBaseSchema {
 
-    WalletUriBaseDao(SQLiteDatabase db) {
+    WalletUriBaseDao(@NonNull SQLiteDatabase db) {
         super(db);
     }
 
     @Override
-    protected WalletUri cursorToEntity(Cursor cursor) {
+    protected WalletUri cursorToEntity(@NonNull Cursor cursor) {
         final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WALLET_URI_BASE_ID));
         final String uri = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WALLET_URI_BASE_URI));
         return new WalletUri(id, uri);
