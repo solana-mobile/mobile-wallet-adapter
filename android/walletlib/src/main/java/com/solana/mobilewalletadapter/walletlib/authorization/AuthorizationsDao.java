@@ -29,13 +29,14 @@ import java.util.List;
         this.authIssuerConfig = authIssuerConfig;
     }
 
+    @NonNull
     @Override
-    protected AuthRecord cursorToEntity(Cursor cursor) {
+    protected AuthRecord cursorToEntity(@NonNull Cursor cursor) {
         throw new UnsupportedOperationException("Use cursorToEntity(cursor, identityRecord)");
     }
 
     @NonNull
-    private AuthRecord cursorToEntity(Cursor cursor, @NonNull IdentityRecord identityRecord) {
+    private AuthRecord cursorToEntity(@NonNull Cursor cursor, @NonNull IdentityRecord identityRecord) {
         final int id = cursor.getInt(0);
         final long issued = cursor.getLong(1);
         final int publicKeyId = cursor.getInt(2);

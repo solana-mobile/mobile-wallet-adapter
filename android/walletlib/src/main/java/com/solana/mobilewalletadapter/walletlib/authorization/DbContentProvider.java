@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -19,42 +20,51 @@ import androidx.annotation.Nullable;
         this.mDb = db;
     }
 
-    protected abstract T cursorToEntity(Cursor cursor);
+    @NonNull
+    protected abstract T cursorToEntity(@NonNull Cursor cursor);
 
-    protected long insert(String tableName, ContentValues values) {
+    @IntRange(from = -1)
+    protected long insert(@NonNull String tableName, @NonNull ContentValues values) {
         return mDb.insert(tableName, null, values);
     }
 
-    protected int delete(String tableName, String selection, String[] selectionArgs) {
+    @IntRange(from = 0)
+    protected int delete(@NonNull String tableName, @Nullable String selection, @Nullable String[] selectionArgs) {
         return mDb.delete(tableName, selection, selectionArgs);
     }
 
-    protected Cursor query(String tableName, String[] columns,
-                        String selection, String[] selectionArgs, String sortOrder) {
+    @NonNull
+    protected Cursor query(@NonNull String tableName, @Nullable String[] columns,
+                           @Nullable String selection, @Nullable String[] selectionArgs,
+                           @Nullable String sortOrder) {
 
         return mDb.query(tableName, columns,
                 selection, selectionArgs, null, null, sortOrder);
     }
 
-    protected Cursor query(String tableName, String[] columns,
-                        String selection, String[] selectionArgs, String sortOrder,
-                        String limit) {
+    @NonNull
+    protected Cursor query(@NonNull String tableName, @Nullable String[] columns,
+                           @Nullable String selection, @Nullable String[] selectionArgs,
+                           @Nullable String sortOrder, @Nullable String limit) {
 
         return mDb.query(tableName, columns, selection,
                 selectionArgs, null, null, sortOrder, limit);
     }
 
-    protected Cursor query(String tableName, String[] columns,
-                        String selection, String[] selectionArgs, String groupBy,
-                        String having, String orderBy, String limit) {
+    @NonNull
+    protected Cursor query(@NonNull String tableName, @Nullable String[] columns,
+                           @Nullable String selection, @Nullable String[] selectionArgs,
+                           @Nullable String groupBy, @Nullable String having,
+                           @Nullable String orderBy, @Nullable String limit) {
 
         return mDb.query(tableName, columns, selection,
                 selectionArgs, groupBy, having, orderBy, limit);
     }
 
+    @NonNull
     protected Cursor queryWithFactory(@NonNull SQLiteDatabase.CursorFactory factory,
                                       @NonNull String tableName,
-                                      @NonNull String[] columns,
+                                      @Nullable String[] columns,
                                       @Nullable String selection,
                                       @Nullable String[] selectionArgs) {
         return mDb.queryWithFactory(factory,
@@ -69,17 +79,20 @@ import androidx.annotation.Nullable;
                 null);
     }
 
-    protected int update(String tableName, ContentValues values,
-                      String selection, String[] selectionArgs) {
+    @IntRange(from = 0)
+    protected int update(@NonNull String tableName, @Nullable ContentValues values,
+                         @Nullable String selection, @Nullable String[] selectionArgs) {
         return mDb.update(tableName, values, selection,
                 selectionArgs);
     }
 
-    protected Cursor rawQuery(String sql, String[] selectionArgs) {
+    @NonNull
+    protected Cursor rawQuery(@NonNull String sql, @Nullable String[] selectionArgs) {
         return mDb.rawQuery(sql, selectionArgs);
     }
 
-    protected SQLiteStatement compileStatement(String sql) {
+    @NonNull
+    protected SQLiteStatement compileStatement(@NonNull String sql) {
         return mDb.compileStatement(sql);
     }
 }

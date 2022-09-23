@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
         super(db);
     }
 
+    @NonNull
     @Override
     protected WalletUri cursorToEntity(@NonNull Cursor cursor) {
         final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WALLET_URI_BASE_ID));

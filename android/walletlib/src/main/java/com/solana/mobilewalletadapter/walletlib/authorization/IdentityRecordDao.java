@@ -59,17 +59,17 @@ import java.util.List;
     @Nullable
     @Override
     public IdentityRecord findIdentityByParams(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri) {
-        try (final Cursor c = super.query(TABLE_IDENTITIES,
+        try (final Cursor cursor = super.query(TABLE_IDENTITIES,
                 IDENTITY_RECORD_COLUMNS,
                 COLUMN_IDENTITIES_NAME + "=? AND " +
                         COLUMN_IDENTITIES_URI + "=? AND " +
                         COLUMN_IDENTITIES_ICON_RELATIVE_URI + "=?",
                 new String[]{name, uri, relativeIconUri},
                 null)) {
-            if (!c.moveToNext()) {
+            if (!cursor.moveToNext()) {
                 return null;
             }
-            return cursorToEntity(c);
+            return cursorToEntity(cursor);
         }
     }
 
