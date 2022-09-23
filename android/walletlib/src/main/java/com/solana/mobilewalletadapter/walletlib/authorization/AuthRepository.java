@@ -72,6 +72,7 @@ public class AuthRepository {
     private AuthDatabase mAuthDb;
     private IdentityRecordDao mIdentityRecordDao;
     private AuthorizationsDao mAuthorizationsDao;
+    private WalletUriBaseDao mWalletUriBaseDao;
 
     public AuthRepository(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -104,6 +105,7 @@ public class AuthRepository {
             final SQLiteDatabase database = mAuthDb.getWritableDatabase();
             mIdentityRecordDao = new IdentityRecordDao(database);
             mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig.authorizationValidityMs);
+            mWalletUriBaseDao = new WalletUriBaseDao(database);
             mInitialized = true;
         }
 
@@ -404,7 +406,7 @@ public class AuthRepository {
             // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
             // thus know that the identity remains referenced; no need to purge unused identities.
             deleteUnreferencedPublicKeys(db);
-            deleteUnreferencedWalletUriBase(db);
+            deleteUnreferencedWalletUriBase();
         }
 
         return new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
@@ -455,7 +457,7 @@ public class AuthRepository {
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedIdentities();
         deleteUnreferencedPublicKeys(db);
-        deleteUnreferencedWalletUriBase(db);
+        deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
     }
@@ -470,7 +472,7 @@ public class AuthRepository {
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedPublicKeys(db);
-        deleteUnreferencedWalletUriBase(db);
+        deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
     }
@@ -491,13 +493,8 @@ public class AuthRepository {
     }
 
     @GuardedBy("this")
-    private void deleteUnreferencedWalletUriBase(@NonNull SQLiteDatabase db) {
-        final SQLiteStatement deleteUnreferencedWalletUriBase = db.compileStatement(
-                "DELETE FROM " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
-                        " WHERE " + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
-        deleteUnreferencedWalletUriBase.executeUpdateDelete();
+    private void deleteUnreferencedWalletUriBase() {
+        mWalletUriBaseDao.deleteUnreferencedWalletUriBase();
     }
 
     @NonNull
