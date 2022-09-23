@@ -37,7 +37,7 @@
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/web3.js": "^1.48.0"
+        "@solana/web3.js": "^1.58.0"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "^0.9.1",
