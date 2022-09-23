@@ -36,7 +36,6 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,6 +71,7 @@ public class AuthRepository {
     private SecretKey mSecretKey;
     private AuthDatabase mAuthDb;
     private IdentityRecordDao mIdentityRecordDao;
+    private AuthorizationsDao mAuthorizationsDao;
 
     public AuthRepository(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -101,7 +101,9 @@ public class AuthRepository {
             }
 
             mAuthDb = new AuthDatabase(mContext, mAuthIssuerConfig);
-            mIdentityRecordDao = new IdentityRecordDao(mAuthDb.getWritableDatabase());
+            final SQLiteDatabase database = mAuthDb.getWritableDatabase();
+            mIdentityRecordDao = new IdentityRecordDao(database);
+            mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig.authorizationValidityMs);
             mInitialized = true;
         }
 
@@ -141,7 +143,7 @@ public class AuthRepository {
 
     @Nullable
     public synchronized AuthRecord fromAuthToken(@NonNull String authToken) {
-        final SQLiteDatabase db = ensureStarted();
+        ensureStarted();
 
         final byte[] payload = Base64.decode(authToken, Base64.DEFAULT);
         if (payload.length < AUTH_TOKEN_HMAC_LENGTH_BYTES) {
@@ -204,43 +206,10 @@ public class AuthRepository {
         }
 
         // Create an AuthRecord for the auth token
-        final AuthRecord authRecord;
-        try (final Cursor c = db.rawQuery("SELECT " +
-                AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER +
-                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
-                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_LABEL +
-                ", " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
-                " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
-                " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
-                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
-                " INNER JOIN " + AuthDatabase.TABLE_WALLET_URI_BASE +
-                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                " = " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_ID +
-                " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID + "=?",
-                new String[] { tokenIdStr })) {
-            if (!c.moveToNext()) {
-                Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
-                return null;
-            }
-
-            final int id = c.getInt(0);
-            final long issued = c.getLong(1);
-            final int publicKeyId = c.getInt(2);
-            final int walletUriBaseId = c.getInt(3);
-            final byte[] scope = c.getBlob(4);
-            final String cluster = c.getString(5);
-            final byte[] publicKey = c.getBlob(6);
-            final String accountLabel = c.isNull(7) ? null : c.getString(7);
-            final Uri walletUriBase = c.isNull(8) ? null : Uri.parse(c.getString(8));
-            authRecord = new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
-                    walletUriBase, publicKeyId, walletUriBaseId, issued,
-                    issued + mAuthIssuerConfig.authorizationValidityMs);
+        final AuthRecord authRecord = mAuthorizationsDao.getAuthorization(identityRecord, tokenIdStr);
+        if (authRecord == null) {
+            Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
+            return null;
         }
 
         // Revoke this authorization if it is either from the future, or too old to be reissuable
@@ -255,7 +224,7 @@ public class AuthRepository {
 
     @NonNull
     public synchronized String toAuthToken(@NonNull AuthRecord authRecord) {
-        assert(!authRecord.isRevoked());
+        assert (!authRecord.isRevoked());
         if (authRecord.isRevoked()) {
             // Don't fail here if asserts are not enabled. Returning an invalid auth token is better
             // than crashing the app.
@@ -287,13 +256,13 @@ public class AuthRepository {
             throw new UnsupportedOperationException("Error generating HMAC for auth token payload", e);
         }
 
-        assert(payloadHmac.length == AUTH_TOKEN_HMAC_LENGTH_BYTES);
+        assert (payloadHmac.length == AUTH_TOKEN_HMAC_LENGTH_BYTES);
         final byte[] authToken = Arrays.copyOf(payload, payload.length + AUTH_TOKEN_HMAC_LENGTH_BYTES);
         System.arraycopy(payloadHmac, 0, authToken, payload.length, AUTH_TOKEN_HMAC_LENGTH_BYTES);
 
         Log.v(TAG, "Returning auth token for AuthRecord: " + authRecord);
 
-        return Base64.encodeToString(authToken,Base64.NO_PADDING | Base64.NO_WRAP);
+        return Base64.encodeToString(authToken, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
     @NonNull
@@ -380,9 +349,9 @@ public class AuthRepository {
         };
         try (final Cursor c = db.queryWithFactory(publicKeyCursorFactory,
                 false,
-                AuthDatabase.TABLE_PUBLIC_KEYS,
-                new String[] { AuthDatabase.COLUMN_PUBLIC_KEYS_ID },
-                AuthDatabase.COLUMN_PUBLIC_KEYS_RAW + "=?",
+                PublicKeysSchema.TABLE_PUBLIC_KEYS,
+                new String[]{PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID},
+                PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW + "=?",
                 null,
                 null,
                 null,
@@ -396,18 +365,18 @@ public class AuthRepository {
         // If no matching public key exists, create one
         if (publicKeyId == -1) {
             final ContentValues publicKeyContentValues = new ContentValues(2);
-            publicKeyContentValues.put(AuthDatabase.COLUMN_PUBLIC_KEYS_RAW, publicKey);
-            publicKeyContentValues.put(AuthDatabase.COLUMN_PUBLIC_KEYS_LABEL, accountLabel);
-            publicKeyId = (int) db.insert(AuthDatabase.TABLE_PUBLIC_KEYS, null, publicKeyContentValues);
+            publicKeyContentValues.put(PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW, publicKey);
+            publicKeyContentValues.put(PublicKeysSchema.COLUMN_PUBLIC_KEYS_LABEL, accountLabel);
+            publicKeyId = (int) db.insert(PublicKeysSchema.TABLE_PUBLIC_KEYS, null, publicKeyContentValues);
         }
 
         // Next, try and look up the wallet URI base
         int walletUriBaseId = -1;
-        try (final Cursor c = db.query(AuthDatabase.TABLE_WALLET_URI_BASE,
-                new String[] { AuthDatabase.COLUMN_WALLET_URI_BASE_ID },
-                AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
+        try (final Cursor c = db.query(WalletUriBaseSchema.TABLE_WALLET_URI_BASE,
+                new String[]{WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID},
+                WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
                         (walletUriBase != null ? "=?" : " IS NULL"),
-                (walletUriBase != null ? new String[] { walletUriBase.toString() } : null),
+                (walletUriBase != null ? new String[]{walletUriBase.toString()} : null),
                 null,
                 null,
                 null)) {
@@ -419,30 +388,23 @@ public class AuthRepository {
         // If no matching wallet URI base exists, create one
         if (walletUriBaseId == -1) {
             final ContentValues walletUriBaseContentValues = new ContentValues(1);
-            walletUriBaseContentValues.put(AuthDatabase.COLUMN_WALLET_URI_BASE_URI,
+            walletUriBaseContentValues.put(WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI,
                     walletUriBase != null ? walletUriBase.toString() : null);
-            walletUriBaseId = (int) db.insert(AuthDatabase.TABLE_WALLET_URI_BASE, null, walletUriBaseContentValues);
+            walletUriBaseId = (int) db.insert(WalletUriBaseSchema.TABLE_WALLET_URI_BASE, null, walletUriBaseContentValues);
         }
 
         final long now = System.currentTimeMillis();
 
-        final ContentValues authContentValues = new ContentValues(6);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, identityRecord.getId());
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
-        authContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, scope);
-        final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, authContentValues);
+        final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, publicKeyId, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
         final SQLiteStatement purgeOldestStatement = db.compileStatement(
-                "DELETE FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
-                " WHERE " + AuthDatabase.COLUMN_AUTHORIZATIONS_ID + " IN " +
-                "(SELECT " + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
-                " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
-                " WHERE " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
-                " ORDER BY " + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
+                "DELETE FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + " IN " +
+                "(SELECT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
+                " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?" +
+                " ORDER BY " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
                 " DESC LIMIT -1 OFFSET ?)");
         purgeOldestStatement.bindLong(1, identityRecord.getId());
         purgeOldestStatement.bindLong(2, mAuthIssuerConfig.maxOutstandingTokensPerIdentity);
@@ -462,8 +424,8 @@ public class AuthRepository {
 
     @Nullable
     public synchronized AuthRecord reissue(@NonNull AuthRecord authRecord) {
-        final SQLiteDatabase db = ensureStarted();
-        assert(!authRecord.isRevoked());
+        ensureStarted();
+        assert (!authRecord.isRevoked());
 
         final long now = System.currentTimeMillis();
         final long authRecordAgeMs = now - authRecord.issued;
@@ -477,14 +439,8 @@ public class AuthRepository {
             Log.d(TAG, "AuthRecord still valid; reissuing same AuthRecord: " + authRecord);
             reissued = authRecord;
         } else {
-            final ContentValues reissueContentValues = new ContentValues(6);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID, authRecord.identity.getId());
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED, now);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, authRecord.publicKeyId);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER, authRecord.cluster);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, authRecord.walletUriBaseId);
-            reissueContentValues.put(AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE, authRecord.scope);
-            final int id = (int) db.insert(AuthDatabase.TABLE_AUTHORIZATIONS, null, reissueContentValues);
+            final int id = (int) mAuthorizationsDao.insert(authRecord.identity.getId(), now,
+                    authRecord.publicKeyId, authRecord.cluster, authRecord.walletUriBaseId, authRecord.scope);
             reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
                     authRecord.accountLabel, authRecord.cluster, authRecord.scope,
                     authRecord.walletUriBase, authRecord.publicKeyId, authRecord.walletUriBaseId,
@@ -504,12 +460,7 @@ public class AuthRepository {
         Log.d(TAG, "Revoking AuthRecord " + authRecord);
         authRecord.setRevoked();
 
-        final SQLiteStatement deleteAuthorizations = db
-                .compileStatement(
-                        "DELETE FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
-                        " WHERE " + AuthDatabase.COLUMN_AUTHORIZATIONS_ID + "=?");
-        deleteAuthorizations.bindLong(1, authRecord.id);
-        final int deleteCount = deleteAuthorizations.executeUpdateDelete();
+        final int deleteCount = mAuthorizationsDao.deleteByAuthRecordId(authRecord.id);
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedIdentities(db);
@@ -524,17 +475,8 @@ public class AuthRepository {
 
         Log.d(TAG, "Revoking IdentityRecord " + identityRecord + " and all related AuthRecords");
 
-        final SQLiteStatement deleteAuthorizations = db
-                .compileStatement("DELETE FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
-                        " WHERE " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?");
-        deleteAuthorizations.bindLong(1, identityRecord.getId());
-        deleteAuthorizations.executeUpdateDelete();
-
-        final SQLiteStatement deleteIdentity = db
-                .compileStatement("DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
-                        " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + "=?");
-        deleteIdentity.bindLong(1, identityRecord.getId());
-        final int deleteCount = deleteIdentity.executeUpdateDelete();
+        mAuthorizationsDao.deleteByIdentityRecordId(identityRecord.getId());
+        final int deleteCount = mIdentityRecordDao.deleteById(identityRecord.getId());
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedPublicKeys(db);
@@ -548,28 +490,28 @@ public class AuthRepository {
         final SQLiteStatement deleteUnreferencedIdentities = db.compileStatement(
                 "DELETE FROM " + IdentityRecordSchema.TABLE_IDENTITIES +
                         " WHERE " + IdentityRecordSchema.COLUMN_IDENTITIES_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
-                        " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID +
+                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedIdentities.executeUpdateDelete();
     }
 
     @GuardedBy("this")
     private void deleteUnreferencedPublicKeys(@NonNull SQLiteDatabase db) {
         final SQLiteStatement deleteUnreferencedPublicKeys = db.compileStatement(
-                "DELETE FROM " + AuthDatabase.TABLE_PUBLIC_KEYS +
-                        " WHERE " + AuthDatabase.COLUMN_PUBLIC_KEYS_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
+                "DELETE FROM " + PublicKeysSchema.TABLE_PUBLIC_KEYS +
+                        " WHERE " + PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedPublicKeys.executeUpdateDelete();
     }
 
     @GuardedBy("this")
     private void deleteUnreferencedWalletUriBase(@NonNull SQLiteDatabase db) {
         final SQLiteStatement deleteUnreferencedWalletUriBase = db.compileStatement(
-                "DELETE FROM " + AuthDatabase.TABLE_WALLET_URI_BASE +
-                        " WHERE " + AuthDatabase.COLUMN_WALLET_URI_BASE_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                        " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS + ')');
+                "DELETE FROM " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
+                        " WHERE " + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedWalletUriBase.executeUpdateDelete();
     }
 
@@ -581,45 +523,8 @@ public class AuthRepository {
 
     @NonNull
     public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord) {
-        final SQLiteDatabase db = ensureStarted();
-
-        final ArrayList<AuthRecord> authorizations = new ArrayList<>();
-        try (final Cursor c = db.rawQuery("SELECT " +
-                AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_ISSUED +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_SCOPE +
-                ", " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_CLUSTER +
-                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_RAW +
-                ", " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_LABEL +
-                ", " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_URI +
-                " FROM " + AuthDatabase.TABLE_AUTHORIZATIONS +
-                " INNER JOIN " + AuthDatabase.TABLE_PUBLIC_KEYS +
-                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                " = " + AuthDatabase.TABLE_PUBLIC_KEYS + '.' + AuthDatabase.COLUMN_PUBLIC_KEYS_ID +
-                " INNER JOIN " + AuthDatabase.TABLE_WALLET_URI_BASE +
-                " ON " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                " = " + AuthDatabase.TABLE_WALLET_URI_BASE + '.' + AuthDatabase.COLUMN_WALLET_URI_BASE_ID +
-                " WHERE " + AuthDatabase.TABLE_AUTHORIZATIONS + '.' + AuthDatabase.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
-                new String[] { Integer.toString(identityRecord.getId()) })) {
-            while (c.moveToNext()) {
-                final int id = c.getInt(0);
-                final long issued = c.getLong(1);
-                final int publicKeyId = c.getInt(2);
-                final int walletUriBaseId = c.getInt(3);
-                final byte[] scope = c.getBlob(4);
-                final String cluster = c.getString(5);
-                final byte[] publicKey = c.getBlob(6);
-                final String accountLabel = c.isNull(7) ? null : c.getString(7);
-                final Uri walletUriBase = c.isNull(8) ? null : Uri.parse(c.getString(8));
-                final AuthRecord authRecord = new AuthRecord(id, identityRecord, publicKey,
-                        accountLabel, cluster, scope, walletUriBase, publicKeyId, walletUriBaseId,
-                        issued, issued + mAuthIssuerConfig.authorizationValidityMs);
-                authorizations.add(authRecord);
-            }
-        }
-        return authorizations;
+        ensureStarted();
+        return mAuthorizationsDao.getAuthorizations(identityRecord);
     }
 
     @NonNull
@@ -652,7 +557,7 @@ public class AuthRepository {
             final byte[] keyBytes = cipher.doFinal(keyCiphertext);
             return new SecretKeySpec(keyBytes, "HmacSHA256");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException |
-                InvalidAlgorithmParameterException |  InvalidKeyException | BadPaddingException e) {
+                InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException e) {
             throw new RuntimeException("Error while decrypting identity key", e);
         }
     }

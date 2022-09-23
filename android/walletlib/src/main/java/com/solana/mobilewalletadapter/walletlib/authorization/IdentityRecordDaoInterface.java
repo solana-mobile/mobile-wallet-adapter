@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -14,10 +15,14 @@ import java.util.List;
     List<IdentityRecord> getAuthorizedIdentities();
 
     @Nullable
-    IdentityRecord findIdentityById(String id);
+    IdentityRecord findIdentityById(@NonNull String id);
 
     @Nullable
-    IdentityRecord findIdentityByParams(String name, String uri, String relativeIconUri);
+    IdentityRecord findIdentityByParams(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri);
 
-    long insert(String name, String uri, String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV);
+    @IntRange(from = -1)
+    long insert(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri, @NonNull byte[] identityKeyCiphertext, @NonNull byte[] identityKeyIV);
+
+    @IntRange(from = -1)
+    int deleteById(@IntRange(from = 1) int id);
 }
