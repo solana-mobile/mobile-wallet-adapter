@@ -94,7 +94,6 @@ import java.util.List;
         return deleteIdentity.executeUpdateDelete();
     }
 
-    @NonNull
     @Override
     public void deleteUnreferencedIdentities() {
         final SQLiteStatement deleteUnreferencedIdentities = compileStatement(
@@ -105,6 +104,7 @@ import java.util.List;
         deleteUnreferencedIdentities.executeUpdateDelete();
     }
 
+    @NonNull
     @Override
     protected IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
         final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_ID));

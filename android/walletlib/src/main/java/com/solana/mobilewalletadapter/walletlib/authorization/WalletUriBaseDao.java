@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
 
 /*package*/ class WalletUriBaseDao extends DbContentProvider<WalletUri> implements WalletUriBaseDaoInterface, WalletUriBaseSchema {
@@ -21,6 +22,7 @@ import androidx.annotation.Nullable;
         return new WalletUri(id, uri);
     }
 
+    @IntRange(from = -1)
     @Override
     public long insert(@Nullable Uri uri) {
         final ContentValues walletUriBaseContentValues = new ContentValues(1);

@@ -373,7 +373,7 @@ public class AuthRepository {
         }
 
         // Next, try and look up the wallet URI base
-        WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
+        final WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
 
         int walletUriBaseId;
         // If no matching wallet URI base exists, create one

@@ -34,6 +34,7 @@ import java.util.List;
         throw new UnsupportedOperationException("Use cursorToEntity(cursor, identityRecord)");
     }
 
+    @NonNull
     private AuthRecord cursorToEntity(Cursor cursor, @NonNull IdentityRecord identityRecord) {
         final int id = cursor.getInt(0);
         final long issued = cursor.getLong(1);
@@ -140,6 +141,7 @@ import java.util.List;
         }
     }
 
+    @IntRange(from = 0)
     @Override
     public int purgeOldestEntries(@IntRange(from = 1) int identityId, @IntRange(from = 1) int maxOutstandingTokensPerIdentity) {
         final SQLiteStatement purgeOldestStatement = compileStatement(
@@ -152,5 +154,6 @@ import java.util.List;
                         " DESC LIMIT -1 OFFSET ?)");
         purgeOldestStatement.bindLong(1, identityId);
         purgeOldestStatement.bindLong(2, maxOutstandingTokensPerIdentity);
-        return purgeOldestStatement.executeUpdateDelete();    }
+        return purgeOldestStatement.executeUpdateDelete();
+    }
 }
