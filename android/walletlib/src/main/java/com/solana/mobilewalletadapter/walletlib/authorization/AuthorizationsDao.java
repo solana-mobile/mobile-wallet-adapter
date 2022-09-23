@@ -10,7 +10,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,16 +21,20 @@ import java.util.List;
         implements AuthorizationsSchema, PublicKeysSchema,
         WalletUriBaseSchema, AuthorizationsDaoInterface {
 
-    AuthorizationsDao(SQLiteDatabase db) {
+    @IntRange(from = 1)
+    private final long authorizationValidityMs;
+
+    AuthorizationsDao(SQLiteDatabase db, @IntRange(from = 1) long authorizationValidityMs) {
         super(db);
+        this.authorizationValidityMs = authorizationValidityMs;
     }
 
     @Override
     protected AuthRecord cursorToEntity(Cursor cursor) {
-        return null;
+        throw new UnsupportedOperationException("Use cursorToEntity(cursor, identityRecord)");
     }
 
-    private AuthRecord cursorToEntity(Cursor cursor, @NonNull IdentityRecord identityRecord, long authorizationValidityMs) {
+    private AuthRecord cursorToEntity(Cursor cursor, @NonNull IdentityRecord identityRecord) {
         final int id = cursor.getInt(0);
         final long issued = cursor.getLong(1);
         final int publicKeyId = cursor.getInt(2);
@@ -44,19 +50,19 @@ import java.util.List;
     }
 
     @Override
-    public long insert(int id, long timeStamp, int publicKeyId, String cluster, int walletUriBaseId, byte[] scope) {
-        final ContentValues reissueContentValues = new ContentValues(6);
-        reissueContentValues.put(COLUMN_AUTHORIZATIONS_IDENTITY_ID, id);
-        reissueContentValues.put(COLUMN_AUTHORIZATIONS_ISSUED, timeStamp);
-        reissueContentValues.put(COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
-        reissueContentValues.put(COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
-        reissueContentValues.put(COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
-        reissueContentValues.put(COLUMN_AUTHORIZATIONS_SCOPE, scope);
-        return super.insert(TABLE_AUTHORIZATIONS, reissueContentValues);
+    public long insert(@IntRange(from = 1) int id, long timeStamp, @IntRange(from = 1) int publicKeyId, @NonNull String cluster, @IntRange(from = 1) int walletUriBaseId, @Nullable byte[] scope) {
+        final ContentValues contentValues = new ContentValues(6);
+        contentValues.put(COLUMN_AUTHORIZATIONS_IDENTITY_ID, id);
+        contentValues.put(COLUMN_AUTHORIZATIONS_ISSUED, timeStamp);
+        contentValues.put(COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
+        contentValues.put(COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
+        contentValues.put(COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
+        contentValues.put(COLUMN_AUTHORIZATIONS_SCOPE, scope);
+        return super.insert(TABLE_AUTHORIZATIONS, contentValues);
     }
 
     @Override
-    public int deleteByAuthRecordId(int authRecordId) {
+    public int deleteByAuthRecordId(@IntRange(from = 1) int authRecordId) {
         final SQLiteStatement deleteAuthorizations = compileStatement(
                 "DELETE FROM " + TABLE_AUTHORIZATIONS +
                         " WHERE " + COLUMN_AUTHORIZATIONS_ID + "=?");
@@ -65,7 +71,7 @@ import java.util.List;
     }
 
     @Override
-    public void deleteByIdentityRecordId(int identityRecordId) {
+    public void deleteByIdentityRecordId(@IntRange(from = 1) int identityRecordId) {
         final SQLiteStatement deleteAuthorizations = compileStatement(
                 "DELETE FROM " + TABLE_AUTHORIZATIONS +
                         " WHERE " + COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?");
@@ -73,7 +79,7 @@ import java.util.List;
         deleteAuthorizations.executeUpdateDelete();
     }
 
-    public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord, long authorizationValidityMs) {
+    public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord) {
         final ArrayList<AuthRecord> authorizations = new ArrayList<>();
         try (final Cursor cursor = super.rawQuery("SELECT " +
                         TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID +
@@ -95,14 +101,14 @@ import java.util.List;
                         " WHERE " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_IDENTITY_ID + "=?",
                 new String[]{Integer.toString(identityRecord.getId())})) {
             while (cursor.moveToNext()) {
-                authorizations.add(cursorToEntity(cursor, identityRecord, authorizationValidityMs));
+                authorizations.add(cursorToEntity(cursor, identityRecord));
             }
         }
         return authorizations;
     }
 
     @Override
-    public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, String tokenIdStr, long authorizationValidityMs) {
+    public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, @NonNull String tokenIdStr) {
         try (final Cursor cursor = super.rawQuery("SELECT " +
                         TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ISSUED +
@@ -126,7 +132,7 @@ import java.util.List;
                 return null;
             }
 
-            return cursorToEntity(cursor, identityRecord, authorizationValidityMs);
+            return cursorToEntity(cursor, identityRecord);
         }
     }
 }

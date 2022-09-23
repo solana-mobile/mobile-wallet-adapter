@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -41,7 +42,7 @@ import java.util.List;
 
     @Override
     @Nullable
-    public IdentityRecord findIdentityById(String id) {
+    public IdentityRecord findIdentityById(@NonNull String id) {
         try (final Cursor c = super.query(TABLE_IDENTITIES,
                 IDENTITY_RECORD_COLUMNS,
                 COLUMN_IDENTITIES_ID + "=?",
@@ -57,7 +58,7 @@ import java.util.List;
 
     @Nullable
     @Override
-    public IdentityRecord findIdentityByParams(String name, String uri, String relativeIconUri) {
+    public IdentityRecord findIdentityByParams(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri) {
         try (final Cursor c = super.query(TABLE_IDENTITIES,
                 IDENTITY_RECORD_COLUMNS,
                 COLUMN_IDENTITIES_NAME + "=? AND " +
@@ -72,8 +73,9 @@ import java.util.List;
         }
     }
 
+    @IntRange(from = -1)
     @Override
-    public long insert(String name, String uri, String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV) {
+    public long insert(@NonNull String name, @NonNull String uri, @NonNull String relativeIconUri, byte[] identityKeyCiphertext, byte[] identityKeyIV) {
         final ContentValues identityContentValues = new ContentValues(5);
         identityContentValues.put(COLUMN_IDENTITIES_NAME, name);
         identityContentValues.put(COLUMN_IDENTITIES_URI, uri);
@@ -83,6 +85,7 @@ import java.util.List;
         return super.insert(TABLE_IDENTITIES, identityContentValues);
     }
 
+    @IntRange(from = -1)
     @Override
     public int deleteById(int id) {
         final SQLiteStatement deleteIdentity = compileStatement("DELETE FROM " + TABLE_IDENTITIES +
@@ -91,6 +94,7 @@ import java.util.List;
         return deleteIdentity.executeUpdateDelete();
     }
 
+    @NonNull
     @Override
     protected IdentityRecord cursorToEntity(@NonNull Cursor cursor) {
         final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IDENTITIES_ID));

@@ -101,9 +101,9 @@ public class AuthRepository {
             }
 
             mAuthDb = new AuthDatabase(mContext, mAuthIssuerConfig);
-            SQLiteDatabase database = mAuthDb.getWritableDatabase();
+            final SQLiteDatabase database = mAuthDb.getWritableDatabase();
             mIdentityRecordDao = new IdentityRecordDao(database);
-            mAuthorizationsDao = new AuthorizationsDao(database);
+            mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig.authorizationValidityMs);
             mInitialized = true;
         }
 
@@ -206,7 +206,7 @@ public class AuthRepository {
         }
 
         // Create an AuthRecord for the auth token
-        final AuthRecord authRecord = mAuthorizationsDao.getAuthorization(identityRecord, tokenIdStr, mAuthIssuerConfig.authorizationValidityMs);
+        final AuthRecord authRecord = mAuthorizationsDao.getAuthorization(identityRecord, tokenIdStr);
         if (authRecord == null) {
             Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
             return null;
@@ -524,7 +524,7 @@ public class AuthRepository {
     @NonNull
     public synchronized List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord) {
         ensureStarted();
-        return mAuthorizationsDao.getAuthorizations(identityRecord, mAuthIssuerConfig.authorizationValidityMs);
+        return mAuthorizationsDao.getAuthorizations(identityRecord);
     }
 
     @NonNull
