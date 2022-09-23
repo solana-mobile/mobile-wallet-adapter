@@ -95,4 +95,33 @@ import java.util.List;
         }
         return authorizations;
     }
+
+    @Override
+    public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, String tokenIdStr, long authorizationValidityMs) {
+        try (final Cursor cursor = super.rawQuery("SELECT " +
+                        AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
+                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
+                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE +
+                        ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
+                        ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW +
+                        ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_LABEL +
+                        ", " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
+                        " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                        " INNER JOIN " + PublicKeysSchema.TABLE_PUBLIC_KEYS +
+                        " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        " = " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID +
+                        " INNER JOIN " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
+                        " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
+                        " = " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID +
+                        " WHERE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "=?",
+                new String[]{tokenIdStr})) {
+            if (!cursor.moveToNext()) {
+                return null;
+            }
+
+            return cursorToEntity(cursor, identityRecord, authorizationValidityMs);
+        }
+    }
 }

@@ -206,43 +206,10 @@ public class AuthRepository {
         }
 
         // Create an AuthRecord for the auth token
-        final AuthRecord authRecord;
-        try (final Cursor c = db.rawQuery("SELECT " +
-                AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
-                ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED +
-                ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE +
-                ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
-                ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_RAW +
-                ", " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_LABEL +
-                ", " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_URI +
-                " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                " INNER JOIN " + PublicKeysSchema.TABLE_PUBLIC_KEYS +
-                " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                " = " + PublicKeysSchema.TABLE_PUBLIC_KEYS + '.' + PublicKeysSchema.COLUMN_PUBLIC_KEYS_ID +
-                " INNER JOIN " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE +
-                " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
-                " = " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE + '.' + WalletUriBaseSchema.COLUMN_WALLET_URI_BASE_ID +
-                " WHERE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "=?",
-                new String[] { tokenIdStr })) {
-            if (!c.moveToNext()) {
-                Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
-                return null;
-            }
-
-            final int id = c.getInt(0);
-            final long issued = c.getLong(1);
-            final int publicKeyId = c.getInt(2);
-            final int walletUriBaseId = c.getInt(3);
-            final byte[] scope = c.getBlob(4);
-            final String cluster = c.getString(5);
-            final byte[] publicKey = c.getBlob(6);
-            final String accountLabel = c.isNull(7) ? null : c.getString(7);
-            final Uri walletUriBase = c.isNull(8) ? null : Uri.parse(c.getString(8));
-            authRecord = new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
-                    walletUriBase, publicKeyId, walletUriBaseId, issued,
-                    issued + mAuthIssuerConfig.authorizationValidityMs);
+        final AuthRecord authRecord = mAuthorizationsDao.getAuthorization(identityRecord, tokenIdStr, mAuthIssuerConfig.authorizationValidityMs);
+        if (authRecord == null) {
+            Log.w(TAG, "Auth token has been revoked, or has expired and been purged");
+            return null;
         }
 
         // Revoke this authorization if it is either from the future, or too old to be reissuable

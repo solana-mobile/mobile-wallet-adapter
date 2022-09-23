@@ -13,4 +13,6 @@ import java.util.List;
     void deleteByIdentityRecordId(int identityRecordId);
 
     List<AuthRecord> getAuthorizations(@NonNull IdentityRecord identityRecord, long authorizationValidityMs);
+
+    AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, String tokenIdStr, long authorizationValidityMs);
 }
