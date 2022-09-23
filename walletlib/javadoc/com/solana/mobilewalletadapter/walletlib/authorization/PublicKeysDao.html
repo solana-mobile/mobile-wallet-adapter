@@ -407,7 +407,9 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <ul class="blockList">
 <li class="blockList">
 <h4>cursorToEntity</h4>
-<pre class="methodSignature">protected&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbsp;cursorToEntity&#8203;(<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;cursor)</pre>
+<pre class="methodSignature">@NonNull
+protected&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbsp;cursorToEntity&#8203;(@NonNull
+                                                                                          <a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;cursor)</pre>
 </li>
 </ul>
 <a id="insert(byte[],java.lang.String)">
@@ -449,7 +451,10 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>insert</h4>
-<pre class="methodSignature">protected&nbsp;long&nbsp;insert&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+<pre class="methodSignature">@IntRange(from=-1L)
+protected&nbsp;long&nbsp;insert&#8203;(@NonNull
+                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+                      @NonNull
                       <a href="https://d.android.com/reference/android/content/ContentValues.html?is-external=true" title="class or interface in android.content" class="externalLink">ContentValues</a>&nbsp;values)</pre>
 </li>
 </ul>
@@ -459,8 +464,12 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>delete</h4>
-<pre class="methodSignature">protected&nbsp;int&nbsp;delete&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+<pre class="methodSignature">@IntRange(from=0L)
+protected&nbsp;int&nbsp;delete&#8203;(@NonNull
+                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+                     @Nullable
                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;selection,
+                     @Nullable
                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;selectionArgs)</pre>
 </li>
 </ul>
@@ -470,10 +479,16 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>query</h4>
-<pre class="methodSignature">protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;query&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+<pre class="methodSignature">@NonNull
+protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;query&#8203;(@NonNull
+                       <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;columns,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;selection,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;selectionArgs,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;sortOrder)</pre>
 </li>
 </ul>
@@ -483,11 +498,18 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>query</h4>
-<pre class="methodSignature">protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;query&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+<pre class="methodSignature">@NonNull
+protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;query&#8203;(@NonNull
+                       <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;columns,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;selection,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;selectionArgs,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;sortOrder,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;limit)</pre>
 </li>
 </ul>
@@ -497,13 +519,22 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>query</h4>
-<pre class="methodSignature">protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;query&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+<pre class="methodSignature">@NonNull
+protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;query&#8203;(@NonNull
+                       <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;columns,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;selection,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;selectionArgs,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;groupBy,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;having,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;orderBy,
+                       @Nullable
                        <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;limit)</pre>
 </li>
 </ul>
@@ -513,11 +544,12 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>queryWithFactory</h4>
-<pre class="methodSignature">protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;queryWithFactory&#8203;(@NonNull
+<pre class="methodSignature">@NonNull
+protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;queryWithFactory&#8203;(@NonNull
                                   <a href="https://d.android.com/reference/android/database/sqlite/SQLiteDatabase.CursorFactory.html?is-external=true" title="class or interface in android.database.sqlite" class="externalLink">SQLiteDatabase.CursorFactory</a>&nbsp;factory,
                                   @NonNull
                                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
-                                  @NonNull
+                                  @Nullable
                                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;columns,
                                   @Nullable
                                   <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;selection,
@@ -531,9 +563,14 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>update</h4>
-<pre class="methodSignature">protected&nbsp;int&nbsp;update&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+<pre class="methodSignature">@IntRange(from=0L)
+protected&nbsp;int&nbsp;update&#8203;(@NonNull
+                     <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;tableName,
+                     @Nullable
                      <a href="https://d.android.com/reference/android/content/ContentValues.html?is-external=true" title="class or interface in android.content" class="externalLink">ContentValues</a>&nbsp;values,
+                     @Nullable
                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;selection,
+                     @Nullable
                      <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;selectionArgs)</pre>
 </li>
 </ul>
@@ -543,7 +580,10 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockList">
 <li class="blockList">
 <h4>rawQuery</h4>
-<pre class="methodSignature">protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;rawQuery&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;sql,
+<pre class="methodSignature">@NonNull
+protected&nbsp;<a href="https://d.android.com/reference/android/database/Cursor.html?is-external=true" title="class or interface in android.database" class="externalLink">Cursor</a>&nbsp;rawQuery&#8203;(@NonNull
+                          <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;sql,
+                          @Nullable
                           <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>[]&nbsp;selectionArgs)</pre>
 </li>
 </ul>
@@ -553,7 +593,9 @@ public&nbsp;com.solana.mobilewalletadapter.walletlib.authorization.PublicKey&nbs
 <ul class="blockListLast">
 <li class="blockList">
 <h4>compileStatement</h4>
-<pre class="methodSignature">protected&nbsp;<a href="https://d.android.com/reference/android/database/sqlite/SQLiteStatement.html?is-external=true" title="class or interface in android.database.sqlite" class="externalLink">SQLiteStatement</a>&nbsp;compileStatement&#8203;(<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;sql)</pre>
+<pre class="methodSignature">@NonNull
+protected&nbsp;<a href="https://d.android.com/reference/android/database/sqlite/SQLiteStatement.html?is-external=true" title="class or interface in android.database.sqlite" class="externalLink">SQLiteStatement</a>&nbsp;compileStatement&#8203;(@NonNull
+                                           <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;sql)</pre>
 </li>
 </ul>
 </li>
