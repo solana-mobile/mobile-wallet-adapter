@@ -1,7 +1,14 @@
-import { Transaction, TransactionSignature } from '@solana/web3.js';
+import {
+    Transaction as LegacyTransaction,
+    Transaction,
+    TransactionSignature,
+    VersionedMessage,
+    VersionedTransaction,
+} from '@solana/web3.js';
 import {
     AuthorizeAPI,
     Base64EncodedAddress,
+    Base64EncodedTransaction,
     CloneAuthorizationAPI,
     DeauthorizeAPI,
     MobileWallet,
@@ -14,14 +21,14 @@ import bs58 from 'bs58';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 
 interface Web3SignAndSendTransactionsAPI {
-    signAndSendTransactions(params: {
+    signAndSendTransactions<T extends LegacyTransaction | VersionedTransaction>(params: {
         minContextSlot?: number;
-        transactions: Transaction[];
+        transactions: T[];
     }): Promise<TransactionSignature[]>;
 }
 
 interface Web3SignTransactionsAPI {
-    signTransactions(params: { transactions: Transaction[] }): Promise<Transaction[]>;
+    signTransactions<T extends LegacyTransaction | VersionedTransaction>(params: { transactions: T[] }): Promise<T[]>;
 }
 
 interface Web3SignMessagesAPI {
@@ -36,6 +43,27 @@ export interface Web3MobileWallet
         Web3SignAndSendTransactionsAPI,
         Web3SignTransactionsAPI,
         Web3SignMessagesAPI {}
+
+function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTransaction): Base64EncodedTransaction {
+    const serializedTransaction =
+        'version' in transaction
+            ? transaction.serialize()
+            : transaction.serialize({
+                  requireAllSignatures: false,
+                  verifySignatures: false,
+              });
+    const payload = fromUint8Array(serializedTransaction);
+    return payload;
+}
+
+function getTransactionFromWireMessage(byteArray: Uint8Array): Transaction | VersionedTransaction {
+    const version = VersionedMessage.deserializeMessageVersion(byteArray);
+    if (version === 'legacy') {
+        return Transaction.from(byteArray);
+    } else {
+        return VersionedTransaction.deserialize(byteArray);
+    }
+}
 
 export async function transact<TReturn>(
     callback: (wallet: Web3MobileWallet) => TReturn,
@@ -52,15 +80,7 @@ export async function transact<TReturn>(
                                 transactions,
                                 ...rest
                             }: Parameters<Web3MobileWallet['signAndSendTransactions']>[0]) {
-                                const payloads = await Promise.all(
-                                    transactions.map(async (transaction) => {
-                                        const serializedTransaction = await transaction.serialize({
-                                            requireAllSignatures: false,
-                                            verifySignatures: false,
-                                        });
-                                        return serializedTransaction.toString('base64');
-                                    }),
-                                );
+                                const payloads = transactions.map(getPayloadFromTransaction);
                                 const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
                                     ...rest,
                                     ...(minContextSlot != null
@@ -91,22 +111,14 @@ export async function transact<TReturn>(
                                 transactions,
                                 ...rest
                             }: Parameters<Web3MobileWallet['signTransactions']>[0]) {
-                                const serializedTransactions = transactions.map((transaction) =>
-                                    transaction.serialize({
-                                        requireAllSignatures: false,
-                                        verifySignatures: false,
-                                    }),
-                                );
-                                const payloads = serializedTransactions.map((serializedTransaction) =>
-                                    serializedTransaction.toString('base64'),
-                                );
+                                const payloads = transactions.map(getPayloadFromTransaction);
                                 const { signed_payloads: base64EncodedCompiledTransactions } =
                                     await wallet.signTransactions({
                                         ...rest,
                                         payloads,
                                     });
                                 const compiledTransactions = base64EncodedCompiledTransactions.map(toUint8Array);
-                                const signedTransactions = compiledTransactions.map(Transaction.from);
+                                const signedTransactions = compiledTransactions.map(getTransactionFromWireMessage);
                                 return signedTransactions;
                             } as Web3MobileWallet[TMethodName];
                             break;
