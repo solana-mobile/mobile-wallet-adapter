@@ -44,7 +44,7 @@ type Base64EncodedSignedMessage = string;
 
 type Base64EncodedSignedTransaction = string;
 
-type Base64EncodedTransaction = string;
+export type Base64EncodedTransaction = string;
 
 export type Cluster = 'devnet' | 'testnet' | 'mainnet-beta';
 
