@@ -147,7 +147,7 @@ export async function transact<TReturn>(
                     try {
                         const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                         const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
-                        if (sequenceNumber <= lastKnownInboundSequenceNumber) {
+                        if (sequenceNumber != (lastKnownInboundSequenceNumber + 1)) {
                             throw new Error('Encrypted message has invalid sequence number');
                         }
                         lastKnownInboundSequenceNumber = sequenceNumber;
