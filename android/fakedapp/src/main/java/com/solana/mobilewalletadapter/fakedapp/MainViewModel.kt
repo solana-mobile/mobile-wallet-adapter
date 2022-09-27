@@ -32,6 +32,8 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.random.Random
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -39,6 +41,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiState = _uiState.asStateFlow()
 
     private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
+
+    private val lock = ReentrantLock()
+    private val condition = lock.newCondition()
 
     private var isWalletEndpointAvailable = false
 
@@ -140,8 +145,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
         }
 
+        localAssociateAndExecute(sender) { client ->
+            doAuthorize(client)
+        }
+
         val signedTransactions = localAssociateAndExecute(sender) { client ->
-            val authorized = doAuthorize(client)
+            val authorized = doReauthorize(client)
             if (!authorized) {
                 return@localAssociateAndExecute null
             }
@@ -503,6 +512,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return signatures
     }
 
+    @Volatile
+    private var isConditionWaiting = true
+
+    private fun releaseLock() {
+        lock.withLock {
+            isConditionWaiting = false
+            condition.signal()
+        }
+    }
+
     private suspend fun <T> localAssociateAndExecute(
         sender: StartActivityForResultSender,
         uriPrefix: Uri? = null,
@@ -519,6 +538,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 sender.startActivityForResult(associationIntent) {
                     viewModelScope.launch {
+                        releaseLock()
                         // Ensure this coroutine will wrap up in a timely fashion when the launched
                         // activity completes
                         delay(LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS)
@@ -531,7 +551,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@withPermit null
             }
 
-            return@withPermit withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 try {
                     val mobileWalletAdapterClient = try {
                         runInterruptible {
@@ -558,6 +578,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     localAssociation.close().get(LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 }
             }
+
+            isConditionWaiting = true
+            withContext(Dispatchers.IO) {
+                lock.withLock {
+                    while(isConditionWaiting) {
+                        condition.awaitUninterruptibly()
+                    }
+                }
+            }
+            return@withPermit result
         }
     }
 
