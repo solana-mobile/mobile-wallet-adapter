@@ -51,6 +51,8 @@ class MainActivity : AppCompatActivity() {
                         viewBinding.cbHasAuthToken.isChecked = isAuthorized
                     }
 
+                    viewBinding.tvAccountName.text =
+                        uiState.accountLabel ?: getString(R.string.string_no_account_name)
                     viewBinding.tvWalletUriPrefix.text =
                         uiState.walletUriBase?.toString()
                             ?: getString(R.string.string_no_wallet_uri_prefix)

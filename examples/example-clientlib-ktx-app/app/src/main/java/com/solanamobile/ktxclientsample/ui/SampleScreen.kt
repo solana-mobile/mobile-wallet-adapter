@@ -15,6 +15,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
@@ -179,9 +180,18 @@ fun SampleScreen(
                         .padding(end = 8.dp)
                 )
 
+                val accountLabel = if (viewState.canTransact) {
+                    if (viewState.userLabel.isNotEmpty()) {
+                        "${viewState.userLabel} - ${viewState.userAddress}"
+                    } else {
+                        viewState.userAddress
+                    }
+                } else ""
+
                 Text(
-                    text = if (viewState.canTransact) viewState.userAddress else "",
-                    maxLines = 1
+                    text = accountLabel,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
