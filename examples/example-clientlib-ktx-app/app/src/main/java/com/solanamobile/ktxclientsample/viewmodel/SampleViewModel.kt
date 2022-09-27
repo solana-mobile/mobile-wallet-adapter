@@ -28,6 +28,7 @@ data class SampleViewState(
     val canTransact: Boolean = false,
     val solBalance: Double = 0.0,
     val userAddress: String = "",
+    val userLabel: String = "",
     val memoTx: String = ""
 )
 
@@ -57,11 +58,12 @@ class SampleViewModel @Inject constructor(
             _state.value.copy(
                 isLoading = true,
                 canTransact = true,
-                userAddress = connection.publickKey.toBase58()
+                userAddress = connection.publicKey.toBase58(),
+                userLabel = connection.accountLabel,
             ).updateViewState()
 
             viewModelScope.launch {
-                val balance = solanaRpcUseCase.getBalance(connection.publickKey)
+                val balance = solanaRpcUseCase.getBalance(connection.publicKey)
 
                 _state.value.copy(
                     isLoading = false,
@@ -79,39 +81,53 @@ class SampleViewModel @Inject constructor(
                 when (conn) {
                    is NotConnected -> {
                        val authed = authorize(solanaUri, iconUri, identityName, RpcCluster.Devnet)
-                       Connected(PublicKey(authed.publicKey), authed.authToken)
+                       Connected(
+                           PublicKey(authed.publicKey),
+                           authed.accountLabel ?: "",
+                           authed.authToken
+                       )
                    }
                    is Connected -> {
                        val reauthed = reauthorize(solanaUri, iconUri, identityName, conn.authToken)
-                       Connected(PublicKey(reauthed.publicKey), reauthed.authToken)
+                       Connected(
+                           PublicKey(reauthed.publicKey),
+                           reauthed.accountLabel ?: "",
+                           reauthed.authToken
+                       )
                    }
                 }
             }
 
-            persistanceUseCase.persistConnection(currentConn.publickKey, currentConn.authToken)
+            persistanceUseCase.persistConnection(
+                currentConn.publicKey,
+                currentConn.accountLabel,
+                currentConn.authToken
+            )
 
             _state.value.copy(
                 isLoading = true
             ).updateViewState()
 
-            val tx = solanaRpcUseCase.requestAirdrop(currentConn.publickKey)
+            val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
             val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
 
             if (confirmed) {
-                val balance = solanaRpcUseCase.getBalance(currentConn.publickKey)
+                val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
 
                 _state.value.copy(
                     isLoading = false,
                     canTransact = true,
                     solBalance = balance,
-                    userAddress = currentConn.publickKey.toBase58()
+                    userAddress = currentConn.publicKey.toBase58(),
+                    userLabel = currentConn.accountLabel,
                 ).updateViewState()
             } else {
                 _state.value.copy(
                     isLoading = false,
                     canTransact = true,
                     solBalance = 0.0,
-                    userAddress = "Error airdropping"
+                    userAddress = "Error airdropping",
+                    userLabel = "",
                 ).updateViewState()
             }
         }
@@ -129,9 +145,9 @@ class SampleViewModel @Inject constructor(
                 val blockHash = solanaRpcUseCase.getLatestBlockHash()
 
                 val tx = Transaction()
-                tx.add(MemoProgram.writeUtf8(conn.publickKey, memoText))
+                tx.add(MemoProgram.writeUtf8(conn.publicKey, memoText))
                 tx.setRecentBlockHash(blockHash!!)
-                tx.feePayer = conn.publickKey
+                tx.feePayer = conn.publicKey
 
                 val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
 

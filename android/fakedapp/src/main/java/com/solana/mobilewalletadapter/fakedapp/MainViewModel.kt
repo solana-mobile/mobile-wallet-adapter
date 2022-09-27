@@ -243,6 +243,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     authToken = result.authToken,
                     publicKey = result.publicKey,
+                    accountLabel = result.accountLabel,
                     walletUriBase = result.walletUriBase
                 )
             }
@@ -568,6 +569,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     data class UiState(
         val authToken: String? = null,
         val publicKey: ByteArray? = null, // TODO(#44): support multiple addresses
+        val accountLabel: String? = null,
         val walletUriBase: Uri? = null,
         val messages: List<String> = emptyList()
     ) {
