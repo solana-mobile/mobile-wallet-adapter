@@ -19,6 +19,7 @@ import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSession
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
+import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepositoryImpl;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
@@ -66,7 +67,7 @@ public abstract class Scenario {
         mIoLooper = t.getLooper(); // blocks until Looper is available
         mIoHandler = new Handler(mIoLooper);
 
-        mAuthRepository = new AuthRepository(context, authIssuerConfig);
+        mAuthRepository = new AuthRepositoryImpl(context, authIssuerConfig);
     }
 
     @Override
