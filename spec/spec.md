@@ -503,6 +503,7 @@ get_capabilities
     "supports_sign_and_send_transactions": <supports_sign_and_send_transactions>,
     "max_transactions_per_request": <max_transactions_per_request>,
     "max_messages_per_request": <max_messages_per_request>,
+    "supported_transaction_versions": [<supported_transaction_versions>, ...]
 }
 ```
 
@@ -512,6 +513,7 @@ where:
 - `supports_sign_and_send_transactions`: `true` if the [`sign_and_send_transactions`](#sign_and_send_transactions) method is supported, otherwise `false`
 - `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transactions`](#sign_transactions) or [`sign_and_send_transactions`](#sign_and_send_transactions) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 - `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_messages`](#sign_messages) request. If absent, the implementation doesn't publish a specific limit for this parameter.
+- `supported_transaction_versions`: the Solana network transaction formats supported by this wallet endpoint. Allowed values are those defined for [`TransactionVersion`](https://solana-labs.github.io/solana-web3.js/modules.html#TransactionVersion) (for e.g., `"legacy"`, `0`, etc).
 
 ###### Errors
 {: .no_toc }
