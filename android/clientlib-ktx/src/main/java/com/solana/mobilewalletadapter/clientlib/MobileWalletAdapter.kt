@@ -64,6 +64,14 @@ class MobileWalletAdapter(
                     Log.e(TAG, "Timed out while waiting for result", cause)
                     throw e
                 }
+                is MobileWalletAdapterClient.InvalidPayloadsException -> {
+                    Log.e(TAG, "Transaction payloads invalid", cause)
+                    throw e
+                }
+                is MobileWalletAdapterClient.NotSubmittedException -> {
+                    Log.e(TAG, "Not all transactions were submitted", cause)
+                    throw e
+                }
                 is JsonRpc20Client.JsonRpc20RemoteException -> {
                     when (cause.code) {
                         ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
@@ -79,14 +87,6 @@ class MobileWalletAdapter(
                 }
                 is JsonRpc20Client.JsonRpc20Exception -> {
                     Log.e(TAG, "JSON-RPC client exception", cause)
-                    throw e
-                }
-                is MobileWalletAdapterClient.InvalidPayloadsException -> {
-                    Log.e(TAG, "Transaction payloads invalid", cause)
-                    throw e
-                }
-                is MobileWalletAdapterClient.NotSubmittedException -> {
-                    Log.e(TAG, "Not all transactions were submitted", cause)
                     throw e
                 }
                 else -> throw e

@@ -45,7 +45,7 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
     val verificationInProgress = VerificationInProgress(associationType.scopeTag)
     val verificationTimedOut = VerificationFailed(associationType.scopeTag)
 
-    fun verifyAuthorizationSource(clientIdentityUri: Uri?): Deferred<VerificationState> {
+    fun verifyAuthorizationSourceAsync(clientIdentityUri: Uri?): Deferred<VerificationState> {
         return when (associationType) {
             AssociationType.LocalFromBrowser -> {
                 if (clientIdentityUri != null) {
@@ -102,7 +102,7 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
         }
     }
 
-    fun verifyReauthorizationSource(
+    fun verifyReauthorizationSourceAsync(
         authorizationScope: String,
         clientIdentityUri: Uri?
     ): Deferred<VerificationState> {
@@ -113,7 +113,7 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
             Log.d(TAG, "Unqualified authorization scopes are not verifiable")
             CompletableDeferred(NotVerifiable(associationType.scopeTag))
         } else {
-            verifyAuthorizationSource(clientIdentityUri)
+            verifyAuthorizationSourceAsync(clientIdentityUri)
         }
     }
 
