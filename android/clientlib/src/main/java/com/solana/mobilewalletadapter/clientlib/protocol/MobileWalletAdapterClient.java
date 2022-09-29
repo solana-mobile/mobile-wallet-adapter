@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -340,14 +341,20 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @IntRange(from = 0)
         public final int maxMessagesPerSigningRequest;
 
+        @NonNull
+        @Size(min = 1)
+        public final Object[] supportedTransactionVersions;
+
         private GetCapabilitiesResult(boolean supportsCloneAuthorization,
                                       boolean supportsSignAndSendTransactions,
                                       @IntRange(from = 0) int maxTransactionsPerSigningRequest,
-                                      @IntRange(from = 0) int maxMessagesPerSigningRequest) {
+                                      @IntRange(from = 0) int maxMessagesPerSigningRequest,
+                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions) {
             this.supportsCloneAuthorization = supportsCloneAuthorization;
             this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
             this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
             this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
+            this.supportedTransactionVersions = supportedTransactionVersions;
         }
 
         @NonNull
@@ -358,6 +365,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     ", supportsSignAndSendTransactions=" + supportsSignAndSendTransactions +
                     ", maxTransactionsPerSigningRequest=" + maxTransactionsPerSigningRequest +
                     ", maxMessagesPerSigningRequest=" + maxMessagesPerSigningRequest +
+                    ", supportedTransactionVersions=" + Arrays.toString(supportedTransactionVersions) +
                     '}';
         }
     }
@@ -383,11 +391,31 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final boolean supportsSignAndSendTransactions;
             final int maxTransactionsPerSigningRequest;
             final int maxMessagesPerSigningRequest;
+            final Object[] supportedTransactionVersions;
             try {
                 supportsCloneAuthorization = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION);
                 supportsSignAndSendTransactions = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS);
                 maxTransactionsPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, 0);
                 maxMessagesPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, 0);
+
+                final JSONArray supportedTransactionVersionsArr = jo.optJSONArray(ProtocolContract.RESULT_SUPPORTED_TRANSACTION_VERSIONS);
+                if (supportedTransactionVersionsArr != null) {
+                    final int length = supportedTransactionVersionsArr.length();
+                    supportedTransactionVersions = new Object[length];
+                    for (int i = 0; i < length; i++) {
+                        final Object stv = supportedTransactionVersionsArr.get(i);
+                        if (stv == JSONObject.NULL || stv instanceof JSONObject || stv instanceof JSONArray) {
+                            throw new JSONException("supported_transaction_versions expected to contain only non-null primitive datatypes");
+                        }
+                        supportedTransactionVersions[i] = stv;
+                    }
+                } else {
+                    // A pre-release version of the Mobile Wallet Adapter protocol spec did not mandate
+                    // the supported_transaction_versions field. As such, there may be wallet apps in
+                    // production that do not send this field. If not present, assume only legacy
+                    // transactions are supported.
+                    supportedTransactionVersions = new Object[] { TransactionVersion.LEGACY };
+                }
             } catch (JSONException e) {
                 throw new JsonRpc20InvalidResponseException("result does not conform to expected format");
             }
@@ -395,7 +423,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             return new GetCapabilitiesResult(supportsCloneAuthorization,
                     supportsSignAndSendTransactions,
                     maxTransactionsPerSigningRequest,
-                    maxMessagesPerSigningRequest);
+                    maxMessagesPerSigningRequest,
+                    supportedTransactionVersions);
         }
 
         @Override

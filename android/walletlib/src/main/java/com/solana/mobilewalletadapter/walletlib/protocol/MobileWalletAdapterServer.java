@@ -496,6 +496,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             if (mConfig.maxMessagesPerSigningRequest != 0) {
                 result.put(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, mConfig.maxMessagesPerSigningRequest);
             }
+            result.put(ProtocolContract.RESULT_SUPPORTED_TRANSACTION_VERSIONS, new JSONArray(mConfig.supportedTransactionVersions));
         } catch (JSONException e) {
             throw new RuntimeException("Failed preparing get_capabilities response", e);
         }

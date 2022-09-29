@@ -30,6 +30,7 @@ public class ProtocolContract {
     public static final String RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS = "supports_sign_and_send_transactions"; // type: Boolean
     public static final String RESULT_MAX_TRANSACTIONS_PER_REQUEST = "max_transactions_per_request"; // type: Number
     public static final String RESULT_MAX_MESSAGES_PER_REQUEST = "max_messages_per_request"; // type: Number
+    public static final String RESULT_SUPPORTED_TRANSACTION_VERSIONS = "supported_transaction_versions"; // type: JSON array of any primitive datatype
 
     public static final String METHOD_SIGN_TRANSACTIONS = "sign_transactions";
     // METHOD_SIGN_TRANSACTIONS takes a PARAMETER_PAYLOADS
