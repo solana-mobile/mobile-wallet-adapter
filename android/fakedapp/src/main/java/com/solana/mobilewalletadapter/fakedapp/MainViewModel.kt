@@ -17,6 +17,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
+import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.fakedapp.usecase.GetLatestBlockhashUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionUseCase
@@ -366,6 +367,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val result = client.getCapabilities().get()
             Log.d(TAG, "Capabilities: $result")
+            Log.d(TAG, "Supports legacy transactions: ${TransactionVersion.supportsLegacy(result.supportedTransactionVersions)}")
+            Log.d(TAG, "Supports v0 transactions: ${TransactionVersion.supportsVersion(result.supportedTransactionVersions, 0)}")
             capabilities = result
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {

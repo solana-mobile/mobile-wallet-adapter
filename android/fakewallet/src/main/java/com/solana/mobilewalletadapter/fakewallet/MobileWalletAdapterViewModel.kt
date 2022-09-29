@@ -62,7 +62,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         scenario = associationUri.createScenario(
             getApplication<FakeWalletApplication>().applicationContext,
-            MobileWalletAdapterConfig(true, 10, 10),
+            MobileWalletAdapterConfig(
+                true,
+                10,
+                10,
+                arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0)
+            ),
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
         ).also { it.start() }
