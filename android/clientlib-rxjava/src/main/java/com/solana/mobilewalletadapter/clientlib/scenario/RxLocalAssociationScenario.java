@@ -3,7 +3,6 @@ package com.solana.mobilewalletadapter.clientlib.scenario;
 import androidx.annotation.CheckResult;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.protocol.RxMobileWalletAdapterClient;

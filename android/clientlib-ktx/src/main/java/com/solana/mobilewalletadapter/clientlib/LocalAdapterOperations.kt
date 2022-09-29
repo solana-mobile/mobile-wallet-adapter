@@ -33,7 +33,7 @@ class LocalAdapterOperations(
     }
 
     override suspend fun deauthorize(authToken: String) {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.deauthorize(authToken)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")

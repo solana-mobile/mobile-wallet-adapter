@@ -48,8 +48,7 @@ public class JsonPack {
     }
 
     @NonNull
-    public static byte[] unpackBase64PayloadToByteArray(@NonNull String b64Payload)
-            throws JSONException {
+    public static byte[] unpackBase64PayloadToByteArray(@NonNull String b64Payload) {
         return Base64.decode(b64Payload, Base64.DEFAULT);
     }
 

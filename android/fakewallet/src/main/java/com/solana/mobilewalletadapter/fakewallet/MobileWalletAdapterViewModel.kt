@@ -390,7 +390,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             )
             cancelAndReplaceRequest(authorizeDappRequest)
 
-            val verify = clientTrustUseCase.verifyAuthorizationSource(request.identityUri)
+            val verify = clientTrustUseCase.verifyAuthorizationSourceAsync(request.identityUri)
             viewModelScope.launch {
                 val verificationState = withTimeoutOrNull(SOURCE_VERIFICATION_TIMEOUT_MS) {
                     verify.await()
@@ -407,7 +407,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
 
         override fun onReauthorizeRequest(request: ReauthorizeRequest) {
-            val reverify = clientTrustUseCase!!.verifyReauthorizationSource(
+            val reverify = clientTrustUseCase!!.verifyReauthorizationSourceAsync(
                 String(request.authorizationScope, StandardCharsets.UTF_8),
                 request.identityUri
             )
