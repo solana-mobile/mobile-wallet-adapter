@@ -1,3 +1,4 @@
 com.solana.mobilewalletadapter.clientlib.protocol
 com.solana.mobilewalletadapter.clientlib.scenario
+com.solana.mobilewalletadapter.clientlib.transaction
 com.solana.mobilewalletadapter.clientlib.transport.websockets
