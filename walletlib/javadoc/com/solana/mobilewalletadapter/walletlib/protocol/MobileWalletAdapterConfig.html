@@ -147,13 +147,23 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code>int</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#maxMessagesPerSigningRequest">maxMessagesPerSigningRequest</a></span></code></th>
+<td class="colFirst"><code>static <a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#LEGACY_TRANSACTION_VERSION">LEGACY_TRANSACTION_VERSION</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>int</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#maxMessagesPerSigningRequest">maxMessagesPerSigningRequest</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>int</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#maxTransactionsPerSigningRequest">maxTransactionsPerSigningRequest</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#supportedTransactionVersions">supportedTransactionVersions</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
@@ -179,9 +189,10 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(boolean,int,int)">MobileWalletAdapterConfig</a></span>&#8203;(boolean&nbsp;supportsSignAndSendTransactions,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(boolean,int,int,java.lang.Object%5B%5D)">MobileWalletAdapterConfig</a></span>&#8203;(boolean&nbsp;supportsSignAndSendTransactions,
                          int&nbsp;maxTransactionsPerSigningRequest,
-                         int&nbsp;maxMessagesPerSigningRequest)</code></th>
+                         int&nbsp;maxMessagesPerSigningRequest,
+                         <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]&nbsp;supportedTransactionVersions)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -218,6 +229,19 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <!--   -->
 </a>
 <h3>Field Detail</h3>
+<a id="LEGACY_TRANSACTION_VERSION">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>LEGACY_TRANSACTION_VERSION</h4>
+<pre>public static final&nbsp;<a href="https://d.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> LEGACY_TRANSACTION_VERSION</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="../../../../../constant-values.html#com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION">Constant Field Values</a></dd>
+</dl>
+</li>
+</ul>
 <a id="supportsSignAndSendTransactions">
 <!--   -->
 </a>
@@ -240,11 +264,22 @@ public final&nbsp;int maxTransactionsPerSigningRequest</pre>
 <a id="maxMessagesPerSigningRequest">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>maxMessagesPerSigningRequest</h4>
 <pre>@IntRange(from=0L)
 public final&nbsp;int maxMessagesPerSigningRequest</pre>
+</li>
+</ul>
+<a id="supportedTransactionVersions">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>supportedTransactionVersions</h4>
+<pre>@NonNull
+@Size(min=1L)
+public final&nbsp;<a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[] supportedTransactionVersions</pre>
 </li>
 </ul>
 </li>
@@ -257,7 +292,7 @@ public final&nbsp;int maxMessagesPerSigningRequest</pre>
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(boolean,int,int)">
+<a id="&lt;init&gt;(boolean,int,int,java.lang.Object[])">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -267,7 +302,9 @@ public final&nbsp;int maxMessagesPerSigningRequest</pre>
                                  @IntRange(from=0L)
                                  int&nbsp;maxTransactionsPerSigningRequest,
                                  @IntRange(from=0L)
-                                 int&nbsp;maxMessagesPerSigningRequest)</pre>
+                                 int&nbsp;maxMessagesPerSigningRequest,
+                                 @NonNull @Size(min=1L)
+                                 <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]&nbsp;supportedTransactionVersions)</pre>
 </li>
 </ul>
 </li>
