@@ -88,7 +88,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                     // Having a prior authorization result is, right now, the best
                     // indication that a mobile wallet is installed. There is no API
                     // we can use to test for whether the association URI is supported.
-                    this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
+                    this.declareWalletAsInstalled();
                 }
             });
         }
@@ -117,6 +117,12 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         return this._readyState;
     }
 
+    private declareWalletAsInstalled(): void {
+        if (this._readyState !== WalletReadyState.Installed) {
+            this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
+        }
+    }
+
     private async runWithGuard<TReturn>(callback: () => Promise<TReturn>) {
         try {
             return await callback();
@@ -136,9 +142,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             if (cachedAuthorizationResult) {
                 this._authorizationResult = cachedAuthorizationResult;
                 this._connecting = false;
-                if (this._readyState !== WalletReadyState.Installed) {
-                    this.emit('readyStateChange', (this._readyState = WalletReadyState.Installed));
-                }
+                this.declareWalletAsInstalled();
                 this._selectedAddress = await this._addressSelector.select(
                     cachedAuthorizationResult.accounts.map(({ address }) => address),
                 );
@@ -177,6 +181,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 (account, ii) => account.address !== authorizationResult.accounts[ii].address,
             );
         this._authorizationResult = authorizationResult;
+        this.declareWalletAsInstalled();
         if (didPublicKeysChange) {
             const nextSelectedAddress = await this._addressSelector.select(
                 authorizationResult.accounts.map(({ address }) => address),
