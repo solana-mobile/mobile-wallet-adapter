@@ -140,18 +140,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             this._connecting = true;
             const cachedAuthorizationResult = await this._authorizationResultCache.get();
             if (cachedAuthorizationResult) {
-                this._authorizationResult = cachedAuthorizationResult;
                 this._connecting = false;
-                this.declareWalletAsInstalled();
-                this._selectedAddress = await this._addressSelector.select(
-                    cachedAuthorizationResult.accounts.map(({ address }) => address),
-                );
-                this.emit(
-                    'connect',
-                    // Having just set `this._selectedAddress`, `this.publicKey` is definitely non-null
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    this.publicKey!,
-                );
+                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                this.handleAuthorizationResult(cachedAuthorizationResult);
                 return;
             }
             try {
@@ -160,7 +151,11 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                         cluster: this._cluster,
                         identity: this._appIdentity,
                     });
-                    this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    Promise.all([
+                        this._authorizationResultCache.set(authorizationResult),
+                        this.handleAuthorizationResult(authorizationResult),
+                    ]);
                 });
             } catch (e) {
                 throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
@@ -197,7 +192,6 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 );
             }
         }
-        await this._authorizationResultCache.set(authorizationResult);
     }
 
     private async performReauthorization(wallet: Web3MobileWallet, authToken: AuthToken): Promise<void> {
@@ -205,7 +199,11 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             const authorizationResult = await wallet.reauthorize({
                 auth_token: authToken,
             });
-            this.handleAuthorizationResult(authorizationResult); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+            // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+            Promise.all([
+                this._authorizationResultCache.set(authorizationResult),
+                this.handleAuthorizationResult(authorizationResult),
+            ]);
         } catch (e) {
             this.disconnect();
             throw new WalletDisconnectedError((e instanceof Error && e?.message) || 'Unknown error', e);
