@@ -133,6 +133,9 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     }
 
     async connect(): Promise<void> {
+        if (this.connecting || this.connected) {
+            return;
+        }
         return await this.runWithGuard(async () => {
             if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
                 throw new WalletNotReadyError();
