@@ -56,7 +56,7 @@ dependencies {
     implementation 'com.solanamobile:digital-asset-links-android:1.0.0'
     implementation 'io.coil-kt:coil:2.2.1'
     implementation 'io.coil-kt:coil-svg:2.2.1'
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.71.1'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.72'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation project(path: ':walletlib')
     kapt 'androidx.room:room-compiler:2.4.3'
