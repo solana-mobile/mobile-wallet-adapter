@@ -132,6 +132,24 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
     }
 
+    async autoConnect_DO_NOT_USE_OR_YOU_WILL_BE_FIRED(): Promise<void> {
+        if (this.connecting || this.connected) {
+            return;
+        }
+        return await this.runWithGuard(async () => {
+            if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
+                throw new WalletNotReadyError();
+            }
+            this._connecting = true;
+            const cachedAuthorizationResult = await this._authorizationResultCache.get();
+            if (cachedAuthorizationResult) {
+                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                this.handleAuthorizationResult(cachedAuthorizationResult);
+            }
+            this._connecting = false;
+        });
+    }
+
     async connect(): Promise<void> {
         if (this.connecting || this.connected) {
             return;
