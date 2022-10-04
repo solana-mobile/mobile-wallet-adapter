@@ -132,6 +132,29 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
     }
 
+    async autoConnect_DO_NOT_USE_OR_YOU_WILL_BE_FIRED(): Promise<void> {
+        if (this.connecting || this.connected) {
+            return;
+        }
+        return await this.runWithGuard(async () => {
+            if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
+                throw new WalletNotReadyError();
+            }
+            this._connecting = true;
+            try {
+                const cachedAuthorizationResult = await this._authorizationResultCache.get();
+                if (cachedAuthorizationResult) {
+                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    this.handleAuthorizationResult(cachedAuthorizationResult);
+                }
+            } catch (e) {
+                throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
+            } finally {
+                this._connecting = false;
+            }
+        });
+    }
+
     async connect(): Promise<void> {
         if (this.connecting || this.connected) {
             return;
@@ -141,14 +164,13 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 throw new WalletNotReadyError();
             }
             this._connecting = true;
-            const cachedAuthorizationResult = await this._authorizationResultCache.get();
-            if (cachedAuthorizationResult) {
-                this._connecting = false;
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                this.handleAuthorizationResult(cachedAuthorizationResult);
-                return;
-            }
             try {
+                const cachedAuthorizationResult = await this._authorizationResultCache.get();
+                if (cachedAuthorizationResult) {
+                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    this.handleAuthorizationResult(cachedAuthorizationResult);
+                    return;
+                }
                 await this.transact(async (wallet) => {
                     const authorizationResult = await wallet.authorize({
                         cluster: this._cluster,
