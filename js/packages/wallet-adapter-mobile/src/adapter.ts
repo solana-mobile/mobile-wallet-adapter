@@ -141,12 +141,17 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 throw new WalletNotReadyError();
             }
             this._connecting = true;
-            const cachedAuthorizationResult = await this._authorizationResultCache.get();
-            if (cachedAuthorizationResult) {
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                this.handleAuthorizationResult(cachedAuthorizationResult);
+            try {
+                const cachedAuthorizationResult = await this._authorizationResultCache.get();
+                if (cachedAuthorizationResult) {
+                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    this.handleAuthorizationResult(cachedAuthorizationResult);
+                }
+            } catch (e) {
+                throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
+            } finally {
+                this._connecting = false;
             }
-            this._connecting = false;
         });
     }
 
@@ -159,14 +164,13 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 throw new WalletNotReadyError();
             }
             this._connecting = true;
-            const cachedAuthorizationResult = await this._authorizationResultCache.get();
-            if (cachedAuthorizationResult) {
-                this._connecting = false;
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                this.handleAuthorizationResult(cachedAuthorizationResult);
-                return;
-            }
             try {
+                const cachedAuthorizationResult = await this._authorizationResultCache.get();
+                if (cachedAuthorizationResult) {
+                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                    this.handleAuthorizationResult(cachedAuthorizationResult);
+                    return;
+                }
                 await this.transact(async (wallet) => {
                     const authorizationResult = await wallet.authorize({
                         cluster: this._cluster,
