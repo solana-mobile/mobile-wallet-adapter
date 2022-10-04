@@ -20,13 +20,6 @@ export default function createDefaultAuthorizationResultCache(): AuthorizationRe
                 // eslint-disable-next-line no-empty
             } catch {}
         },
-        async hasResult() {
-            try {
-                return (await AsyncStorage.getItem(CACHE_KEY)) != null;
-            } catch {
-                return false;
-            }
-        },
         async set(authorizationResult: AuthorizationResult) {
             try {
                 await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(authorizationResult));

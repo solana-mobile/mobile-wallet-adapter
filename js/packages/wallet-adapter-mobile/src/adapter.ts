@@ -35,7 +35,6 @@ import { Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
     get(): Promise<AuthorizationResult | undefined>;
-    hasResult(): Promise<boolean>;
     set(authorizationResult: AuthorizationResult): Promise<void>;
 }
 
@@ -84,8 +83,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         this._appIdentity = config.appIdentity;
         this._cluster = config.cluster;
         if (this._readyState !== WalletReadyState.Unsupported) {
-            this._authorizationResultCache.hasResult().then((hasResult) => {
-                if (hasResult) {
+            this._authorizationResultCache.get().then((authorizationResult) => {
+                if (authorizationResult) {
                     // Having a prior authorization result is, right now, the best
                     // indication that a mobile wallet is installed. There is no API
                     // we can use to test for whether the association URI is supported.
@@ -131,10 +130,6 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             this.emit('error', e);
             throw e;
         }
-    }
-
-    async hasCachedAuthorizationResult(): Promise<boolean> {
-        return await this._authorizationResultCache.hasResult();
     }
 
     async connect(): Promise<void> {

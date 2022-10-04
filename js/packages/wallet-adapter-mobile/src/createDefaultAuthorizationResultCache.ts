@@ -28,16 +28,6 @@ export default function createDefaultAuthorizationResultCache(): AuthorizationRe
                 // eslint-disable-next-line no-empty
             } catch {}
         },
-        async hasResult() {
-            if (!storage) {
-                return false;
-            }
-            try {
-                return storage.getItem(CACHE_KEY) != null;
-            } catch {
-                return false;
-            }
-        },
         async set(authorizationResult: AuthorizationResult) {
             if (!storage) {
                 return;
