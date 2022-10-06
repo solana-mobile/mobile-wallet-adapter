@@ -1,7 +1,6 @@
 import { Button } from '@mui/material';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { ComponentProps } from 'react';
-
+import { ComponentProps, useCallback } from 'react';
 import useGuardedCallback from '../utils/useGuardedCallback';
 
 type Props = Readonly<ComponentProps<typeof Button>>;

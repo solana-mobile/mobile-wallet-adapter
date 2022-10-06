@@ -1,55 +1,61 @@
+import '@solana/wallet-adapter-react-ui/styles.css';
 import '../styles/globals.css';
 
-import { ThemeProvider } from '@emotion/react';
-import { createTheme } from '@mui/material';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { ConnectionConfig, clusterApiUrl } from '@solana/web3.js';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { clusterApiUrl } from '@solana/web3.js';
-import {
-    createDefaultAddressSelector,
-    createDefaultAuthorizationResultCache,
-    createDefaultWalletNotFoundHandler,
-    SolanaMobileWalletAdapter,
-} from '@solana-mobile/wallet-adapter-mobile';
+
 import type { AppProps } from 'next/app';
-import { SnackbarProvider } from 'notistack';
-import { useMemo } from 'react';
+import { SnackbarProvider, useSnackbar } from 'notistack';
+import { ThemeProvider } from '@emotion/react';
+import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { createTheme } from '@mui/material';
+import { ReactNode, useCallback, useMemo } from 'react';
 
 const CLUSTER = WalletAdapterNetwork.Devnet;
+const CONNECTION_CONFIG: ConnectionConfig = { commitment: 'processed' };
 const ENDPOINT = /*#__PURE__*/ clusterApiUrl(CLUSTER);
 
 const theme = /*#__PURE__*/ createTheme();
 
-function ExampleMobileDApp({ Component, pageProps }: AppProps) {
-    const wallets = useMemo(
+function App({ children }: { children: ReactNode }) {
+    const { enqueueSnackbar } = useSnackbar();
+    const handleWalletError = useCallback(
+        (e: WalletError) => {
+            enqueueSnackbar(`${e.name}: ${e.message}`, { variant: 'error' });
+        },
+        [enqueueSnackbar],
+    );
+    const adapters = useMemo(
         () =>
             typeof window === 'undefined'
                 ? [] // No wallet adapters when server-side rendering.
                 : [
-                      new SolanaMobileWalletAdapter({
-                          addressSelector: createDefaultAddressSelector(),
-                          appIdentity: {
-                              icon: 'images/app_icon.png',
-                              name: 'Mobile Web dApp',
-                              uri: window.location.href,
-                          },
-                          authorizationResultCache: createDefaultAuthorizationResultCache(),
-                          cluster: CLUSTER,
-                          onWalletNotFound: createDefaultWalletNotFoundHandler(),
-                      }),
+                      /**
+                       * Note that you don't have to include the SolanaMobileWalletAdapter here;
+                       * It will be added automatically when this app is running in a compatible mobile context.
+                       */
                   ],
         [],
     );
     return (
         <ThemeProvider theme={theme}>
-            <SnackbarProvider autoHideDuration={10000}>
-                <ConnectionProvider config={{ commitment: 'processed' }} endpoint={ENDPOINT}>
-                    <WalletProvider wallets={wallets}>
-                        <Component {...pageProps} />
-                    </WalletProvider>
-                </ConnectionProvider>
-            </SnackbarProvider>
+            <ConnectionProvider config={CONNECTION_CONFIG} endpoint={ENDPOINT}>
+                <WalletProvider autoConnect={true} onError={handleWalletError} wallets={adapters}>
+                    <WalletModalProvider>{children}</WalletModalProvider>
+                </WalletProvider>
+            </ConnectionProvider>
         </ThemeProvider>
+    );
+}
+
+function ExampleMobileDApp({ Component, pageProps }: AppProps) {
+    return (
+        <SnackbarProvider autoHideDuration={10000}>
+            <App>
+                <Component {...pageProps} />
+            </App>
+        </SnackbarProvider>
     );
 }
 
