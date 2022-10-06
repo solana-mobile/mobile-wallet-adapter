@@ -24,11 +24,12 @@ export default function AccountBalance({ publicKey }: Props) {
     const { wallet } = useWallet();
     useEffect(() => {
         if (wallet) {
-            wallet.adapter.on('disconnect', () => {
+            function handleDisconnect() {
                 mutate('accountBalance', 0, { revalidate: false });
-            });
+            }
+            wallet.adapter.on('disconnect', handleDisconnect);
             return () => {
-                wallet.adapter.off('disconnect');
+                wallet.adapter.off('disconnect', handleDisconnect);
             };
         }
     }, [wallet]);
