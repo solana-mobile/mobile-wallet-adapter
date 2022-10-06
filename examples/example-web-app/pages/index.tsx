@@ -1,33 +1,26 @@
 import { AppBar, Stack, TextField, Toolbar, Typography } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { SolanaMobileWalletAdapterWalletName } from '@solana-mobile/wallet-adapter-mobile';
-import type { NextPage } from 'next';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import AccountInfo from '../components/AccountInfo';
-import ConnectButton from '../components/ConnectButton';
 import DisconnectButton from '../components/DisconnectButton';
 import FundAccountButton from '../components/FundAccountButton';
+import type { NextPage } from 'next';
 import RecordMessageButton from '../components/RecordMessageButton';
 import SignMessageButton from '../components/SignMessageButton';
+import { styled } from '@mui/material/styles';
+import { useWallet } from '@solana/wallet-adapter-react';
+import dynamic from 'next/dynamic';
 
 const Offset = styled('div')(
     // @ts-ignore
     ({ theme }) => theme.mixins.toolbar,
 );
 
+const ConnectButtonDynamic = dynamic(() => import('../components/ConnectButton'), { ssr: false });
+
 const Home: NextPage = () => {
-    const { publicKey, select, wallet } = useWallet();
+    const { publicKey } = useWallet();
     const [memoText, setMemoText] = useState('');
-    useEffect(() => {
-        if (wallet?.adapter.name !== SolanaMobileWalletAdapterWalletName) {
-            select(SolanaMobileWalletAdapterWalletName);
-        }
-    }, [select, wallet]);
-    if (wallet == null) {
-        return null;
-    }
     return (
         <>
             <AppBar position="fixed">
@@ -38,9 +31,9 @@ const Home: NextPage = () => {
                     {publicKey ? (
                         <AccountInfo publicKey={publicKey} />
                     ) : (
-                        <ConnectButton color="inherit" variant="outlined">
+                        <ConnectButtonDynamic color="inherit" variant="outlined">
                             Connect
-                        </ConnectButton>
+                        </ConnectButtonDynamic>
                     )}
                 </Toolbar>
             </AppBar>
