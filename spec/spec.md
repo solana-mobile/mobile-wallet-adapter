@@ -16,9 +16,17 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-**Version: 0.9.1**
+**Version: 1.0.0**
 
-## Changelog
+## Changelog (oldest to newest)
+
+| Version | Description                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | Initial release version of the Mobile Wallet Adapter specification (identical to pre-release version 0.9.1)                         |
+
+### Pre-v1.0.0 changelog
+
+_This is retained for historical reference only. None of these versions were official releases, and there are no guarantees of backward compatibility._
 
 | Version | Description                                                                                                                         |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
