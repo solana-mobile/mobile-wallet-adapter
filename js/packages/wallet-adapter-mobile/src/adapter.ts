@@ -42,7 +42,7 @@ export interface AddressSelector {
     select(addresses: Base64EncodedAddress[]): Promise<Base64EncodedAddress>;
 }
 
-export const SolanaMobileWalletAdapterWalletName = 'Default wallet app' as WalletName;
+export const SolanaMobileWalletAdapterWalletName = 'Mobile Wallet Adapter' as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 
