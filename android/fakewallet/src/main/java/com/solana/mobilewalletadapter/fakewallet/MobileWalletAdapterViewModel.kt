@@ -473,6 +473,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 request.identityUri
             )
         }
+
+        override fun onDeauthorizedEvent(event: DeauthorizedEvent) {
+            Log.d(TAG, "'${event.identityName}' deauthorized")
+            event.complete()
+        }
     }
 
     sealed interface MobileWalletAdapterServiceRequest {
