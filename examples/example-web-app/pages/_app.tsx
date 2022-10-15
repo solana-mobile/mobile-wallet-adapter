@@ -8,6 +8,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 import {
     createDefaultAddressSelector,
     createDefaultAuthorizationResultCache,
+    createDefaultWalletNotFoundHandler,
     SolanaMobileWalletAdapter,
 } from '@solana-mobile/wallet-adapter-mobile';
 import type { AppProps } from 'next/app';
@@ -34,6 +35,7 @@ function ExampleMobileDApp({ Component, pageProps }: AppProps) {
                           },
                           authorizationResultCache: createDefaultAuthorizationResultCache(),
                           cluster: CLUSTER,
+                          onWalletNotFound: createDefaultWalletNotFoundHandler(),
                       }),
                   ],
         [],

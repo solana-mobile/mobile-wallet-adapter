@@ -5,6 +5,8 @@ import {
     AuthToken,
     Base64EncodedAddress,
     Finality,
+    SolanaMobileWalletAdapterError,
+    SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
@@ -57,7 +59,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         ['legacy', 0],
     );
     name = SolanaMobileWalletAdapterWalletName;
-    url = 'https://solanamobile.com';
+    url = 'https://solanamobile.com/wallets';
     icon =
         'data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjI4IiB3aWR0aD0iMjgiIHZpZXdCb3g9Ii0zIDAgMjggMjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI0RDQjhGRiI+PHBhdGggZD0iTTE3LjQgMTcuNEgxNXYyLjRoMi40di0yLjRabTEuMi05LjZoLTIuNHYyLjRoMi40VjcuOFoiLz48cGF0aCBkPSJNMjEuNiAzVjBoLTIuNHYzaC0zLjZWMGgtMi40djNoLTIuNHY2LjZINC41YTIuMSAyLjEgMCAxIDEgMC00LjJoMi43VjNINC41QTQuNSA0LjUgMCAwIDAgMCA3LjVWMjRoMjEuNnYtNi42aC0yLjR2NC4ySDIuNFYxMS41Yy41LjMgMS4yLjQgMS44LjVoNy41QTYuNiA2LjYgMCAwIDAgMjQgOVYzaC0yLjRabTAgNS43YTQuMiA0LjIgMCAxIDEtOC40IDBWNS40aDguNHYzLjNaIi8+PC9nPjwvc3ZnPg==';
 
@@ -67,6 +69,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _authorizationResultCache: AuthorizationResultCache;
     private _connecting = false;
     private _cluster: Cluster;
+    private _onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
     private _selectedAddress: Base64EncodedAddress | undefined;
@@ -76,12 +79,14 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         appIdentity: AppIdentity;
         authorizationResultCache: AuthorizationResultCache;
         cluster: Cluster;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._addressSelector = config.addressSelector;
         this._appIdentity = config.appIdentity;
         this._cluster = config.cluster;
+        this._onWalletNotFound = config.onWalletNotFound;
         if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
                 if (authorizationResult) {
@@ -246,7 +251,22 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private async transact<TReturn>(callback: (wallet: Web3MobileWallet) => TReturn): Promise<TReturn> {
         const walletUriBase = this._authorizationResult?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
-        return await transact(callback, config);
+        try {
+            return await transact(callback, config);
+        } catch (e) {
+            if (
+                e instanceof Error &&
+                e.name === 'SolanaMobileWalletAdapterError' &&
+                (
+                    e as SolanaMobileWalletAdapterError<
+                        typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode]
+                    >
+                ).code === 'ERROR_WALLET_NOT_FOUND'
+            ) {
+                await this._onWalletNotFound(this);
+            }
+            throw e;
+        }
     }
 
     private assertIsAuthorized() {
