@@ -18,6 +18,7 @@ new SolanaMobileWalletAdapter({
     },
     authorizationResultCache: createDefaultAuthorizationResultCache(),
     cluster: WalletAdapterNetwork.Devnet,
+    onWalletNotFound: createDefaultWalletNotFoundHandler(),
 });
 ```
 
@@ -34,6 +35,7 @@ const wallets = useMemo(() => [
        },
         authorizationResultCache: createDefaultAuthorizationResultCache(),
         cluster: WalletAdapterNetwork.Devnet,
+        onWalletNotFound: createDefaultWalletNotFoundHandler(),
     });
     new PhantomWalletAdapter(),
     /* ... other wallets ... */
@@ -89,3 +91,9 @@ Alternatively, you can use the included `createDefaultAuthorizationResultCache()
 ### Cluster
 
 Each authorization a dApp makes with a wallet is tied to a particular Solana cluster. If a dApp wants to change the cluster on which to transact, it must seek an authorization for that cluster.
+
+### Wallet-not-found handler
+
+When you call `connect()` but no wallet responds within a reasonable amount of time, it is presumed that no compatible wallet is installed. You must supply an `onWalletNotFound` function to handle this case.
+
+Alternatively, you can use the included `createDefaultWalletNotFoundHandler()` method to create a function that opens the Solana Mobile ecosystem wallets webpage.
