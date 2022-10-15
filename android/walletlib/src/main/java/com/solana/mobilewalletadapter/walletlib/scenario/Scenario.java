@@ -255,7 +255,17 @@ public abstract class Scenario {
                     mActiveAuthorization = null;
                 }
             }
-            mIoHandler.post(() -> request.complete(null));
+
+            if (authRecord != null) {
+                mIoHandler.post(() -> mCallbacks.onDeauthorizedEvent(new DeauthorizedEvent(
+                        request, authRecord.identity.getName(), authRecord.identity.getUri(),
+                        authRecord.identity.getRelativeIconUri(), authRecord.cluster,
+                        authRecord.scope)));
+            } else {
+                // No auth token was found. Just complete successfully, to avoid disclosing whether
+                // the auth token was valid.
+                mIoHandler.post(() -> request.complete(null));
+            }
         }
 
         @Override
@@ -335,5 +345,8 @@ public abstract class Scenario {
         void onSignTransactionsRequest(@NonNull SignTransactionsRequest request);
         void onSignMessagesRequest(@NonNull SignMessagesRequest request);
         void onSignAndSendTransactionsRequest(@NonNull SignAndSendTransactionsRequest request);
+
+        // Event callbacks
+        void onDeauthorizedEvent(@NonNull DeauthorizedEvent event);
     }
 }
