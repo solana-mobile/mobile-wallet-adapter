@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6};
+var data = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6,"i5":6,"i6":6,"i7":6,"i8":6,"i9":6,"i10":6,"i11":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -154,50 +154,55 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onReauthorizeRequest(com.solana.mobilewalletadapter.walletlib.scenario.ReauthorizeRequest)">onReauthorizeRequest</a></span>&#8203;(<a href="ReauthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">ReauthorizeRequest</a>&nbsp;request)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onDeauthorizedEvent(com.solana.mobilewalletadapter.walletlib.scenario.DeauthorizedEvent)">onDeauthorizedEvent</a></span>&#8203;(<a href="DeauthorizedEvent.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">DeauthorizedEvent</a>&nbsp;event)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioComplete()">onScenarioComplete</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onReauthorizeRequest(com.solana.mobilewalletadapter.walletlib.scenario.ReauthorizeRequest)">onReauthorizeRequest</a></span>&#8203;(<a href="ReauthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">ReauthorizeRequest</a>&nbsp;request)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioError()">onScenarioError</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioComplete()">onScenarioComplete</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioReady()">onScenarioReady</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioError()">onScenarioError</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioServingClients()">onScenarioServingClients</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioReady()">onScenarioReady</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioServingComplete()">onScenarioServingComplete</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioServingClients()">onScenarioServingClients</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioTeardownComplete()">onScenarioTeardownComplete</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioServingComplete()">onScenarioServingComplete</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignAndSendTransactionsRequest(com.solana.mobilewalletadapter.walletlib.scenario.SignAndSendTransactionsRequest)">onSignAndSendTransactionsRequest</a></span>&#8203;(<a href="SignAndSendTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignAndSendTransactionsRequest</a>&nbsp;request)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onScenarioTeardownComplete()">onScenarioTeardownComplete</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignMessagesRequest(com.solana.mobilewalletadapter.walletlib.scenario.SignMessagesRequest)">onSignMessagesRequest</a></span>&#8203;(<a href="SignMessagesRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignMessagesRequest</a>&nbsp;request)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignAndSendTransactionsRequest(com.solana.mobilewalletadapter.walletlib.scenario.SignAndSendTransactionsRequest)">onSignAndSendTransactionsRequest</a></span>&#8203;(<a href="SignAndSendTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignAndSendTransactionsRequest</a>&nbsp;request)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignMessagesRequest(com.solana.mobilewalletadapter.walletlib.scenario.SignMessagesRequest)">onSignMessagesRequest</a></span>&#8203;(<a href="SignMessagesRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignMessagesRequest</a>&nbsp;request)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onSignTransactionsRequest(com.solana.mobilewalletadapter.walletlib.scenario.SignTransactionsRequest)">onSignTransactionsRequest</a></span>&#8203;(<a href="SignTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignTransactionsRequest</a>&nbsp;request)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -316,11 +321,21 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <a id="onSignAndSendTransactionsRequest(com.solana.mobilewalletadapter.walletlib.scenario.SignAndSendTransactionsRequest)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>onSignAndSendTransactionsRequest</h4>
 <pre class="methodSignature">void&nbsp;onSignAndSendTransactionsRequest&#8203;(@NonNull
                                       <a href="SignAndSendTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignAndSendTransactionsRequest</a>&nbsp;request)</pre>
+</li>
+</ul>
+<a id="onDeauthorizedEvent(com.solana.mobilewalletadapter.walletlib.scenario.DeauthorizedEvent)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>onDeauthorizedEvent</h4>
+<pre class="methodSignature">void&nbsp;onDeauthorizedEvent&#8203;(@NonNull
+                         <a href="DeauthorizedEvent.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">DeauthorizedEvent</a>&nbsp;event)</pre>
 </li>
 </ul>
 </li>
