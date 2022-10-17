@@ -27,33 +27,35 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: gradle
+      - name: Deploy APK signing keystore and related secrets (test signing)
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.APK_SIGNING_TEST_KEYSTORE }}
+          KEYSTORE_PATH: ${{ runner.temp }}/apk_signing_keystore.jks
+        run: echo $KEYSTORE_BASE64 | base64 --decode > $KEYSTORE_PATH
 
       # Build
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle and run tests
+        env:
+          ORG_GRADLE_PROJECT_apkSigningKeystorePath: ${{ runner.temp }}/apk_signing_keystore.jks
+          ORG_GRADLE_PROJECT_apkSigningKeyAlias: signing
+          ORG_GRADLE_PROJECT_apkSigningKeystorePassword: ${{ secrets.APK_SIGNING_TEST_PASSWORD }}
+          ORG_GRADLE_PROJECT_apkSigningKeyPassword: ${{ secrets.APK_SIGNING_TEST_PASSWORD }}
         run: ./gradlew build
 
-      # Upload libraries to workflow artifacts
+      # Upload binaries to workflow artifacts
       - uses: actions/upload-artifact@v3
         if: ${{ github.event_name != 'pull_request' }}
         with:
-          name: libraries
-          path: android/clientlib/build/outputs/aar/*.aar
-          if-no-files-found: error
-          retention-days: 5
-      - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          name: libraries
-          path: android/common/build/outputs/aar/*.aar
-          if-no-files-found: error
-          retention-days: 5
-      - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          name: libraries
-          path: android/walletlib/build/outputs/aar/*.aar
+          name: binaries
+          path: |
+            android/clientlib/build/outputs/aar/*.aar
+            android/common/build/outputs/aar/*.aar
+            android/fakedapp/build/outputs/apk/**/*.apk
+            android/fakewallet/build/outputs/apk/**/*.apk
+            android/walletlib/build/outputs/aar/*.aar
           if-no-files-found: error
           retention-days: 5
 
@@ -141,8 +143,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: libraries
-          path: libraries
+          name: binaries
+          path: binaries
       - uses: actions/download-artifact@v3
         with:
           name: clientlib-javadoc
@@ -167,7 +169,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.release.tag_name }}
           FILES: |
-            libraries/*.aar
+            binaries/*
             clientlib-javadoc/clientlib-javadoc.tgz
             common-javadoc/common-javadoc.tgz
             walletlib-javadoc/walletlib-javadoc.tgz
