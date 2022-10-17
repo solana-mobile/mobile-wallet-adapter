@@ -2,11 +2,17 @@
 
 This is a plugin for use with [`@solana/wallet-adapter`](https://github.com/solana-labs/wallet-adapter). It enables apps to use a native wallet app on a mobile device to sign messages and transactions, and to send transactions if the wallet offers support for sending transactions.
 
-![A screenshot showing the Solana Mobile wallet adapter in use with the wallet adapter dialog](https://user-images.githubusercontent.com/13243/174880433-92486385-6f9a-4221-bb55-c05bab057be6.png)
-
 ## Usage
 
-Create an instance of the mobile wallet adapter like this.
+Users of these libraries do not need to take any extra steps:
+
+* `@solana/wallet-adapter-react@">=0.15.21"`
+
+Those libraries automatically bundle the Mobile Wallet Adapter plugin, and enable it when running in a compatible mobile environment.
+
+## Advanced usage
+
+Developers might wish to customize the behavior of this plugin for their app. Specifying the app's name and icon, deciding which address to select in the event the wallet authorizes the app to use more than one, specifying which network cluster to communicate with, and more are made possible by creating an instance of the mobile wallet adapter like this.
 
 ```typescript
 new SolanaMobileWalletAdapter({
@@ -22,7 +28,7 @@ new SolanaMobileWalletAdapter({
 });
 ```
 
-Use that adapter instance alongside the other adapters used by your app.
+Developers who use `@solana/wallet-adapter-react@">=0.15.21"` can supply this custom instance to `WalletProvider` which will use it to override the default one. 
 
 ```typescript
 const wallets = useMemo(() => [
@@ -37,8 +43,6 @@ const wallets = useMemo(() => [
         cluster: WalletAdapterNetwork.Devnet,
         onWalletNotFound: createDefaultWalletNotFoundHandler(),
     });
-    new PhantomWalletAdapter(),
-    /* ... other wallets ... */
 ]);
 
 return (
