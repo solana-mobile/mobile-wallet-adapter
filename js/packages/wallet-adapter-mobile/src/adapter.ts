@@ -68,6 +68,12 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _authorizationResult: AuthorizationResult | undefined;
     private _authorizationResultCache: AuthorizationResultCache;
     private _connecting = false;
+    /**
+     * Every time the connection is recycled in some way (eg. `disconnect()` is called)
+     * increment this and use it to make sure that `transact` calls from the previous
+     * 'generation' don't continue to do work and throw exceptions.
+     */
+    private _connectionGeneration: number = 0;
     private _cluster: Cluster;
     private _onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     private _publicKey: PublicKey | undefined;
@@ -242,6 +248,8 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     async disconnect(): Promise<void> {
         this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+        this._connecting = false;
+        this._connectionGeneration++;
         delete this._authorizationResult;
         delete this._publicKey;
         delete this._selectedAddress;
@@ -251,9 +259,13 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private async transact<TReturn>(callback: (wallet: Web3MobileWallet) => TReturn): Promise<TReturn> {
         const walletUriBase = this._authorizationResult?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
+        const currentConnectionGeneration = this._connectionGeneration;
         try {
             return await transact(callback, config);
         } catch (e) {
+            if (this._connectionGeneration !== currentConnectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
             if (
                 e instanceof Error &&
                 e.name === 'SolanaMobileWalletAdapterError' &&
