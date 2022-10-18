@@ -187,7 +187,7 @@ export async function transact<TReturn>(
                                                 id,
                                                 jsonrpc: '2.0',
                                                 method,
-                                                params,
+                                                params: params ?? {},
                                             },
                                             sharedSecret,
                                         ),
