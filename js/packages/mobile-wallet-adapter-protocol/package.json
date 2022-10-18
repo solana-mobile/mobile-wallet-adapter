@@ -39,6 +39,7 @@
         "prepublishOnly": "agadoo"
     },
     "devDependencies": {
+        "@solana/web3.js": "^1.58.0",
         "@types/react-native": "^0.69.3",
         "agadoo": "^2.0.0",
         "cross-env": "^7.0.3"
