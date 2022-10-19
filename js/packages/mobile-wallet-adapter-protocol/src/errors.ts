@@ -4,6 +4,7 @@ export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_FORBIDDEN_WALLET_BASE_URL: 'ERROR_FORBIDDEN_WALLET_BASE_URL',
     ERROR_SECURE_CONTEXT_REQUIRED: 'ERROR_SECURE_CONTEXT_REQUIRED',
     ERROR_SESSION_CLOSED: 'ERROR_SESSION_CLOSED',
+    ERROR_SESSION_TIMEOUT: 'ERROR_SESSION_TIMEOUT',
     ERROR_WALLET_NOT_FOUND: 'ERROR_WALLET_NOT_FOUND',
 } as const;
 type SolanaMobileWalletAdapterErrorCodeEnum =
@@ -18,6 +19,7 @@ type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED]: {
         closeEvent: CloseEvent;
     };
+    [SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND]: undefined;
 };
 
