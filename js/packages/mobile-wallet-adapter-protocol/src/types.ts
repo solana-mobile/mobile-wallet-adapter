@@ -1,3 +1,5 @@
+import type { TransactionVersion } from '@solana/web3.js';
+
 export type Account = Readonly<{
     address: Base64EncodedAddress;
     label?: string;
@@ -63,6 +65,18 @@ export interface CloneAuthorizationAPI {
 export interface DeauthorizeAPI {
     deauthorize(params: { auth_token: AuthToken }): Promise<Readonly<Record<string, never>>>;
 }
+
+export interface GetCapabilitiesAPI {
+    getCapabilities(): Promise<
+        Readonly<{
+            supports_clone_authorization: boolean;
+            supports_sign_and_send_transactions: boolean;
+            max_transactions_per_request: boolean;
+            max_messages_per_request: boolean;
+            supported_transaction_versions: ReadonlyArray<TransactionVersion>;
+        }>
+    >;
+}
 export interface ReauthorizeAPI {
     reauthorize(params: { auth_token: AuthToken }): Promise<AuthorizationResult>;
 }
@@ -90,6 +104,7 @@ export interface MobileWallet
     extends AuthorizeAPI,
         CloneAuthorizationAPI,
         DeauthorizeAPI,
+        GetCapabilitiesAPI,
         ReauthorizeAPI,
         SignMessagesAPI,
         SignTransactionsAPI,
