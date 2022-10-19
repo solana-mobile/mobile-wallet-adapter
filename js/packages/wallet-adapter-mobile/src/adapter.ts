@@ -53,6 +53,12 @@ function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
     return new PublicKey(publicKeyByteArray);
 }
 
+function isVersionedTransaction(
+    transaction: LegacyTransaction | VersionedTransaction,
+): transaction is VersionedTransaction {
+    return 'version' in transaction;
+}
+
 export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     readonly supportedTransactionVersions: Set<TransactionVersion> = new Set(
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
@@ -304,9 +310,45 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             const minContextSlot = options?.minContextSlot;
             try {
                 return await this.transact(async (wallet) => {
-                    await Promise.all([
+                    function getTargetCommitment() {
+                        let targetCommitment: Finality;
+                        switch (connection.commitment) {
+                            case 'confirmed':
+                            case 'finalized':
+                            case 'processed':
+                                targetCommitment = connection.commitment;
+                                break;
+                            default:
+                                targetCommitment = 'finalized';
+                        }
+                        let targetPreflightCommitment: Finality;
+                        switch (options?.preflightCommitment) {
+                            case 'confirmed':
+                            case 'finalized':
+                            case 'processed':
+                                targetPreflightCommitment = options.preflightCommitment;
+                                break;
+                            case undefined:
+                                targetPreflightCommitment = targetCommitment;
+                            default:
+                                targetPreflightCommitment = 'finalized';
+                        }
+                        const preflightCommitmentScore =
+                            targetPreflightCommitment === 'finalized'
+                                ? 2
+                                : targetPreflightCommitment === 'confirmed'
+                                ? 1
+                                : 0;
+                        const targetCommitmentScore =
+                            targetCommitment === 'finalized' ? 2 : targetCommitment === 'confirmed' ? 1 : 0;
+                        return preflightCommitmentScore < targetCommitmentScore
+                            ? targetPreflightCommitment
+                            : targetCommitment;
+                    }
+                    const [capabilities, _1, _2] = await Promise.all([
+                        wallet.getCapabilities(),
                         this.performReauthorization(wallet, authToken),
-                        'version' in transaction
+                        isVersionedTransaction(transaction)
                             ? null
                             : /**
                                * Unlike versioned transactions, legacy `Transaction` objects
@@ -316,55 +358,33 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                               (async () => {
                                   transaction.feePayer ||= this.publicKey ?? undefined;
                                   if (transaction.recentBlockhash == null) {
-                                      let targetCommitment: Finality;
-                                      switch (connection.commitment) {
-                                          case 'confirmed':
-                                          case 'finalized':
-                                          case 'processed':
-                                              targetCommitment = connection.commitment;
-                                              break;
-                                          default:
-                                              targetCommitment = 'finalized';
-                                      }
-                                      let targetPreflightCommitment: Finality;
-                                      switch (options?.preflightCommitment) {
-                                          case 'confirmed':
-                                          case 'finalized':
-                                          case 'processed':
-                                              targetPreflightCommitment = options.preflightCommitment;
-                                              break;
-                                          case undefined:
-                                              targetPreflightCommitment = targetCommitment;
-                                          default:
-                                              targetPreflightCommitment = 'finalized';
-                                      }
-                                      const preflightCommitmentScore =
-                                          targetPreflightCommitment === 'finalized'
-                                              ? 2
-                                              : targetPreflightCommitment === 'confirmed'
-                                              ? 1
-                                              : 0;
-                                      const targetCommitmentScore =
-                                          targetCommitment === 'finalized'
-                                              ? 2
-                                              : targetCommitment === 'confirmed'
-                                              ? 1
-                                              : 0;
                                       const { blockhash } = await connection.getLatestBlockhash({
-                                          commitment:
-                                              preflightCommitmentScore < targetCommitmentScore
-                                                  ? targetPreflightCommitment
-                                                  : targetCommitment,
+                                          commitment: getTargetCommitment(),
                                       });
                                       transaction.recentBlockhash = blockhash;
                                   }
                               })(),
                     ]);
-                    const signatures = await wallet.signAndSendTransactions({
-                        minContextSlot,
-                        transactions: [transaction],
-                    });
-                    return signatures[0];
+                    if (capabilities.supports_sign_and_send_transactions) {
+                        const signatures = await wallet.signAndSendTransactions({
+                            minContextSlot,
+                            transactions: [transaction],
+                        });
+                        return signatures[0];
+                    } else {
+                        const [signedTransaction] = await wallet.signTransactions({
+                            transactions: [transaction],
+                        });
+                        if (isVersionedTransaction(signedTransaction)) {
+                            return await connection.sendTransaction(signedTransaction);
+                        } else {
+                            const serializedTransaction = signedTransaction.serialize();
+                            return await connection.sendRawTransaction(serializedTransaction, {
+                                ...options,
+                                preflightCommitment: getTargetCommitment(),
+                            });
+                        }
+                    }
                 });
             } catch (error: any) {
                 throw new WalletSendTransactionError(error?.message, error);
