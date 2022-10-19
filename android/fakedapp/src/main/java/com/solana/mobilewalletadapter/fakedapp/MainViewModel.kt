@@ -183,7 +183,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val messages = Array(numMessages) {
-                Random.nextBytes(16384)
+                Random.nextBytes(1232)
             }
             doSignMessages(client, messages, arrayOf(_uiState.value.publicKey!!))
         }
