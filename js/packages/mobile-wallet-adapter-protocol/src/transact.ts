@@ -128,7 +128,7 @@ export async function transact<TReturn>(
             if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                 reject(
                     new SolanaMobileWalletAdapterError(
-                        SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT,
                         `Failed to connect to the wallet websocket on port ${sessionPort}.`,
                     ),
                 );
