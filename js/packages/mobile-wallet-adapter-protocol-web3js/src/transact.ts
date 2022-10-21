@@ -19,7 +19,7 @@ import {
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import bs58 from 'bs58';
 
-import { fromUint8Array, toUint8Array } from './base64Utils';
+import { fromUint8Array, toUint8Array } from './base64Utils.js';
 
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions<T extends LegacyTransaction | VersionedTransaction>(params: {

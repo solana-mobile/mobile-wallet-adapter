@@ -1,13 +1,3 @@
-import { Web3MobileWallet, transact } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import {
-    AppIdentity,
-    AuthorizationResult,
-    AuthToken,
-    Base64EncodedAddress,
-    Finality,
-    SolanaMobileWalletAdapterError,
-    SolanaMobileWalletAdapterErrorCode,
-} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import {
     BaseMessageSignerWalletAdapter,
     WalletConnectionError,
@@ -30,9 +20,20 @@ import {
     TransactionVersion,
     VersionedTransaction,
 } from '@solana/web3.js';
-import { toUint8Array } from './base64Utils';
-import getIsSupported from './getIsSupported';
+import {
+    AppIdentity,
+    AuthorizationResult,
+    AuthToken,
+    Base64EncodedAddress,
+    Finality,
+    SolanaMobileWalletAdapterError,
+    SolanaMobileWalletAdapterErrorCode,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { transact,Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+
+import { toUint8Array } from './base64Utils.js';
+import getIsSupported from './getIsSupported.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -79,7 +80,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
      * increment this and use it to make sure that `transact` calls from the previous
      * 'generation' don't continue to do work and throw exceptions.
      */
-    private _connectionGeneration: number = 0;
+    private _connectionGeneration = 0;
     private _cluster: Cluster;
     private _onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     private _publicKey: PublicKey | undefined;

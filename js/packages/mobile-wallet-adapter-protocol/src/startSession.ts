@@ -1,6 +1,6 @@
-import { AssociationPort, getRandomAssociationPort } from './associationPort';
-import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors';
-import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL';
+import { AssociationPort, getRandomAssociationPort } from './associationPort.js';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
+import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL.js';
 
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
 const Browser = {

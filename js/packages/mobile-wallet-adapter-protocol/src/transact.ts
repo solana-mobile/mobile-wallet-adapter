@@ -1,16 +1,16 @@
-import createHelloReq from './createHelloReq';
-import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector';
+import createHelloReq from './createHelloReq.js';
+import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
 import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
     SolanaMobileWalletAdapterProtocolError,
-} from './errors';
-import generateAssociationKeypair from './generateAssociationKeypair';
-import generateECDHKeypair from './generateECDHKeypair';
-import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage';
-import parseHelloRsp, { SharedSecret } from './parseHelloRsp';
-import { startSession } from './startSession';
-import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types';
+} from './errors.js';
+import generateAssociationKeypair from './generateAssociationKeypair.js';
+import generateECDHKeypair from './generateECDHKeypair.js';
+import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.js';
+import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
+import { startSession } from './startSession.js';
+import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**

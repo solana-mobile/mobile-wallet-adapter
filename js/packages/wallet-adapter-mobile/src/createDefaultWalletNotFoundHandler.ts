@@ -1,4 +1,4 @@
-import { SolanaMobileWalletAdapter } from './adapter';
+import { SolanaMobileWalletAdapter } from './adapter.js';
 
 async function defaultWalletNotFoundHandler(mobileWalletAdapter: SolanaMobileWalletAdapter) {
     if (typeof window !== 'undefined') {

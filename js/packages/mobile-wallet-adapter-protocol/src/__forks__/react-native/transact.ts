@@ -1,7 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 
-import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors';
-import { MobileWallet, WalletAssociationConfig } from '../../types';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
+import { MobileWallet, WalletAssociationConfig } from '../../types.js';
 
 type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };
 
