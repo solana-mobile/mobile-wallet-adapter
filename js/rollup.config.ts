@@ -82,9 +82,9 @@ const config: RollupOptions[] = [
         format: 'cjs',
         runtime: 'browser',
     }),
-    createConfig({ bundleName: 'index.mjs', format: 'esm', runtime: 'node' }),
+    createConfig({ bundleName: 'index.js', format: 'esm', runtime: 'node' }),
     createConfig({
-        bundleName: 'index.browser.mjs',
+        bundleName: 'index.browser.js',
         format: 'esm',
         runtime: 'browser',
     }),
