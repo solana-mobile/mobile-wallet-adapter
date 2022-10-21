@@ -1,8 +1,8 @@
 {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint", "simple-import-sort"],
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+    "plugins": ["@typescript-eslint", "require-extensions", "simple-import-sort"],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:require-extensions/recommended"],
     "rules": {
         "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
         "simple-import-sort/imports": "error"
