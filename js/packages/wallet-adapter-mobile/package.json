@@ -8,17 +8,17 @@
     "type": "module",
     "sideEffects": false,
     "main": "lib/cjs/index.js",
-    "module": "lib/esm/index.mjs",
+    "module": "lib/esm/index.js",
     "react-native": "lib/cjs/index.native.js",
     "types": "lib/types/index.d.ts",
     "browser": {
         "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
-        "./lib/esm/index.mjs": "./lib/esm/index.browser.mjs"
+        "./lib/esm/index.js": "./lib/esm/index.browser.js"
     },
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "import": "./lib/esm/index.mjs",
+            "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
         }
     },
