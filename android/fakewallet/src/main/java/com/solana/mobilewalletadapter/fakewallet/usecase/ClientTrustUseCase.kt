@@ -118,7 +118,9 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
     }
 
     // Note: the authorizationScope and clientIdentityUri parameters should be retrieved from a
-    // trusted source (e.g. a local database), as they are used as part of request verification
+    // trusted source (e.g. a local database), as they are used as part of request verification.
+    // When used with requests originating from walletlib, these parameters will originate in
+    // AuthRepository, which is backed by a local database.
     fun verifyPrivilegedMethodSource(
         authorizationScope: String,
         clientIdentityUri: Uri?
