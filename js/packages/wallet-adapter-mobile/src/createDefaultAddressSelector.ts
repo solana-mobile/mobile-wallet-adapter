@@ -1,4 +1,4 @@
-import { AddressSelector } from './adapter';
+import { AddressSelector } from './adapter.js';
 
 export default function createDefaultAddressSelector(): AddressSelector {
     return {

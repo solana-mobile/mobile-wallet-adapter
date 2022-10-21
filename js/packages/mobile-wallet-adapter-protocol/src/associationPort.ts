@@ -1,4 +1,4 @@
-import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
 
 declare const tag: unique symbol;
 export type AssociationPort = number & { readonly [tag]: 'AssociationPort' };

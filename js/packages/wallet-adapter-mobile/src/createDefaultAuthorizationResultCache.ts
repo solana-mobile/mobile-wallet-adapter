@@ -1,5 +1,6 @@
 import { AuthorizationResult } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { AuthorizationResultCache } from './adapter';
+
+import { AuthorizationResultCache } from './adapter.js';
 
 const CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 

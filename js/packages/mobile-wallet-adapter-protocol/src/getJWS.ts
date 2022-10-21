@@ -1,4 +1,4 @@
-import arrayBufferToBase64String from './arrayBufferToBase64String';
+import arrayBufferToBase64String from './arrayBufferToBase64String.js';
 
 export default async function getJWS(payload: string, privateKey: CryptoKey) {
     const header = { alg: 'ES256' };

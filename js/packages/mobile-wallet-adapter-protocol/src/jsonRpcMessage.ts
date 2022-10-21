@@ -1,6 +1,6 @@
-import createSequenceNumberVector, { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector';
-import { SolanaMobileWalletAdapterProtocolError } from './errors';
-import { SharedSecret } from './parseHelloRsp';
+import createSequenceNumberVector, { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
+import { SolanaMobileWalletAdapterProtocolError } from './errors.js';
+import { SharedSecret } from './parseHelloRsp.js';
 
 const INITIALIZATION_VECTOR_BYTES = 12;
 
