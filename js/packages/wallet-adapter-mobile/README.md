@@ -31,19 +31,22 @@ new SolanaMobileWalletAdapter({
 Developers who use `@solana/wallet-adapter-react@">=0.15.21"` can supply this custom instance to `WalletProvider` which will use it to override the default one. 
 
 ```typescript
-const wallets = useMemo(() => [
-    new SolanaMobileWalletAdapter({
-        addressSelector: createDefaultAddressSelector(),
-        appIdentity: {
-            name: 'My app',
-            uri: 'https://myapp.io',
-            icon: 'relative/path/to/icon.png',
-       },
-        authorizationResultCache: createDefaultAuthorizationResultCache(),
-        cluster: WalletAdapterNetwork.Devnet,
-        onWalletNotFound: createDefaultWalletNotFoundHandler(),
-    });
-]);
+const wallets = useMemo(
+    () => [
+        new SolanaMobileWalletAdapter({
+            addressSelector: createDefaultAddressSelector(),
+            appIdentity: {
+                name: 'My app',
+                uri: 'https://myapp.io',
+                icon: 'relative/path/to/icon.png',
+            },
+            authorizationResultCache: createDefaultAuthorizationResultCache(),
+            cluster: WalletAdapterNetwork.Devnet,
+            onWalletNotFound: createDefaultWalletNotFoundHandler(),
+        }),
+    ],
+    [],
+);
 
 return (
     <ConnectionProvider endpoint={clusterApiUrl(WalletAdapterNetwork.Devnet)}>
