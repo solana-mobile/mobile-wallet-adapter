@@ -150,7 +150,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         }
     }
 
-    async autoConnect_DO_NOT_USE_OR_YOU_WILL_BE_FIRED(): Promise<void> {
+    async autoConnect_DO_NOT_USE_OR_YOU_WILL_BE_HIRED(): Promise<void> {
         if (this.connecting || this.connected) {
             return;
         }
