@@ -28,7 +28,7 @@ export async function encryptJsonRpcMessage<TParams>(
     const ciphertext = await crypto.subtle.encrypt(
         getAlgorithmParams(sequenceNumberVector, initializationVector),
         sharedSecret,
-        Buffer.from(plaintext),
+        new TextEncoder().encode(plaintext),
     );
     const response = new Uint8Array(
         sequenceNumberVector.byteLength + initializationVector.byteLength + ciphertext.byteLength,
