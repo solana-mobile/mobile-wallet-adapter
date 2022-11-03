@@ -270,13 +270,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         final Uri iconUri;
         final String identityName;
         if (ident != null) {
-            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
+            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) && !ident.isNull(ProtocolContract.PARAMETER_IDENTITY_URI) ?
                     Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
             if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
                 return;
             }
-            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
+            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) && !ident.isNull(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
                     Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
             if (iconUri != null && !iconUri.isRelative()) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
@@ -349,13 +349,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         final Uri iconUri;
         final String identityName;
         if (ident != null) {
-            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
+            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) && !ident.isNull(ProtocolContract.PARAMETER_IDENTITY_URI) ?
                     Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
             if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
                 return;
             }
-            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
+            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) && !ident.isNull(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
                     Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
             if (iconUri != null && !iconUri.isRelative()) {
                 handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
