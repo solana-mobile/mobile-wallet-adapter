@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
@@ -52,6 +53,14 @@ public class LocalWebSocketServerScenario extends Scenario {
             mWebSocketServer.close(); // this will close all MobileWalletAdapterSessions
             mCallbacks.onScenarioTeardownComplete();
         });
+    }
+
+    @Nullable
+    public String getOrigin() throws IllegalStateException {
+        if (mState != State.RUNNING) {
+            throw new IllegalStateException("Not running");
+        }
+        return mWebSocketServer.getOrigin();
     }
 
     @NonNull

@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.transport.websockets.server;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
@@ -20,6 +21,7 @@ import org.java_websocket.WebSocketServerFactory;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.handshake.ServerHandshakeBuilder;
 import org.java_websocket.protocols.Protocol;
 import org.java_websocket.server.WebSocketServer;
 
@@ -43,6 +45,8 @@ public class LocalWebSocketServer extends WebSocketServer {
     private final Callbacks mCallbacks;
     @NonNull
     private State mState = State.NOT_INITIALIZED;
+    @Nullable
+    private String mOrigin;
 
     public LocalWebSocketServer(@NonNull LocalWebSocketServerScenario scenario,
                                 @NonNull Callbacks callbacks) {
@@ -77,9 +81,23 @@ public class LocalWebSocketServer extends WebSocketServer {
         mState = State.STOPPED;
     }
 
+    @Nullable
+    public String getOrigin() {
+        return mOrigin;
+    }
+
     @Override
     public void onStart() {
         mCallbacks.onStarted();
+    }
+
+    @Override
+    public ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request)  {
+        ServerHandshakeBuilder builder = super.onWebsocketHandshakeReceivedAsServer(conn, draft, request);
+        if (request.hasFieldValue("Origin")) {
+            mOrigin = request.getFieldValue("Origin");
+        }
+        return builder;
     }
 
     @Override
