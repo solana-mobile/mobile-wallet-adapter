@@ -9,9 +9,13 @@ import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
 import kotlin.random.Random
 
+enum class MemoTransactionVersion {
+    Legacy, V0
+}
+
 // NOTE: this is just a minimal implementation of this Solana transaction, for testing purposes. It
 // is NOT suitable for production use.
-abstract class MemoTransactionUseCase {
+sealed class MemoTransactionUseCase {
     private val TAG = MemoTransactionUseCase::class.simpleName
 
     fun create(publicKey: ByteArray, latestBlockhash: ByteArray): ByteArray {

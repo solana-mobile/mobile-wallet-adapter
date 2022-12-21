@@ -20,6 +20,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
+import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionVersion
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -121,8 +122,8 @@ class MainActivity : AppCompatActivity() {
                 // mapping from view model txn version to localized UI string
                 viewModel.supportedTxnVersions.map { txnVersion ->
                     getString(when (txnVersion) {
-                        "v0" -> R.string.label_txn_version_v0
-                        else -> R.string.label_txn_version_legacy
+                        MemoTransactionVersion.Legacy -> R.string.string_txn_version_legacy
+                        MemoTransactionVersion.V0 -> R.string.string_txn_version_v0
                     })
                 }
             )

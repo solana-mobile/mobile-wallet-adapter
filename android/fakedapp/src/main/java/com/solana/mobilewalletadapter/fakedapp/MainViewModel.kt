@@ -37,11 +37,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
-    // should probably make an enum or similar abstraction but this is fine for now
-    val supportedTxnVersions = listOf("legacy", "v0")
+    val supportedTxnVersions = listOf(MemoTransactionVersion.Legacy, MemoTransactionVersion.V0)
     val transactionUseCase get() = when(_uiState.value.txnVersion) {
-        "v0" -> MemoTransactionV0UseCase
-        else -> MemoTransactionLegacyUseCase
+        MemoTransactionVersion.Legacy -> MemoTransactionLegacyUseCase
+        MemoTransactionVersion.V0 -> MemoTransactionV0UseCase
     }
 
     private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
@@ -101,7 +100,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setTransactionVersion(txnVersion: String) {
+    fun setTransactionVersion(txnVersion: MemoTransactionVersion) {
         _uiState.update { it.copy(txnVersion = txnVersion) }
     }
 
@@ -584,7 +583,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val accountLabel: String? = null,
         val walletUriBase: Uri? = null,
         val messages: List<String> = emptyList(),
-        val txnVersion: String = "legacy"
+        val txnVersion: MemoTransactionVersion = MemoTransactionVersion.Legacy
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
 
