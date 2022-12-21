@@ -6,6 +6,9 @@ package com.solana.mobilewalletadapter.fakedapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -49,6 +52,10 @@ class MainActivity : AppCompatActivity() {
                         viewBinding.btnSignAndSendTxnX3.isEnabled = isAuthorized
                         viewBinding.btnSignAndSendTxnX20.isEnabled = isAuthorized
                         viewBinding.cbHasAuthToken.isChecked = isAuthorized
+                    }
+
+                    viewModel.supportedTxnVersions.indexOf(uiState.txnVersion).let { spinnerPos ->
+                        if (spinnerPos > 0) viewBinding.spinnerTxnVer.setSelection(spinnerPos)
                     }
 
                     viewBinding.tvAccountName.text =
@@ -108,6 +115,29 @@ class MainActivity : AppCompatActivity() {
         viewBinding.btnAuthorizeSign.setOnClickListener {
             viewModel.authorizeAndSignTransactions(intentSender)
         }
+
+        viewBinding.spinnerTxnVer.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_item,
+                // mapping from view model txn version to localized UI string
+                viewModel.supportedTxnVersions.map { txnVersion ->
+                    getString(when (txnVersion) {
+                        "v0" -> R.string.label_txn_version_v0
+                        else -> R.string.label_txn_version_legacy
+                    })
+                }
+            )
+
+        viewBinding.spinnerTxnVer.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, selected: View?,
+                                            index: Int, id: Long) {
+                    viewModel.setTransactionVersion(viewModel.supportedTxnVersions[index])
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    // nothing to do
+                }
+            }
 
         viewBinding.btnSignMsgX1.setOnClickListener {
             viewModel.signMessages(intentSender, 1)

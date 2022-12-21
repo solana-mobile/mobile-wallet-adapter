@@ -11,7 +11,9 @@ import kotlin.random.Random
 
 // NOTE: this is just a minimal implementation of this Solana transaction, for testing purposes. It
 // is NOT suitable for production use.
-object MemoTransactionUseCase {
+abstract class MemoTransactionUseCase {
+    private val TAG = MemoTransactionUseCase::class.simpleName
+
     fun create(publicKey: ByteArray, latestBlockhash: ByteArray): ByteArray {
         assert(publicKey.size == ACCOUNT_PUBLIC_KEY_LEN) { "Invalid public key length for a Solana transaction" }
         assert(latestBlockhash.size == BLOCKHASH_LEN) { "Invalid blockhash length for a Solana transaction" }
@@ -50,9 +52,25 @@ object MemoTransactionUseCase {
         Log.d(TAG, "Verified memo transaction signature for publicKey(base58)=${Base58EncodeUseCase(publicKey)}")
     }
 
+    // to be implemented below, not an ideal hierarchy but wanted to share the above code
+    abstract val MEMO_TRANSACTION_TEMPLATE: ByteArray
+
+    abstract val SIGNATURE_OFFSET: Int
+    abstract val SIGNATURE_LEN: Int
+    abstract val HEADER_OFFSET: Int
+    abstract val ACCOUNT_PUBLIC_KEY_OFFSET: Int
+    abstract val ACCOUNT_PUBLIC_KEY_LEN: Int
+    abstract val BLOCKHASH_OFFSET: Int
+    abstract val BLOCKHASH_LEN: Int
+    abstract val SUFFIX_DIGITS_OFFSET: Int
+    abstract val SUFFIX_DIGITS_LEN: Int
+}
+
+// Memo Transaction using Legacy Transaction format
+object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
     // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It
     // is for test purposes only.
-    private val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
+    override val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
         0x01.toByte(), // 1 signature required (fee payer)
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // First signature (fee payer account)
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
@@ -87,14 +105,74 @@ object MemoTransactionUseCase {
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // 8-digit random suffix
     )
 
-    private val TAG = MemoTransactionUseCase::class.simpleName
-    private const val SIGNATURE_OFFSET = 1
-    private const val SIGNATURE_LEN = 64
-    private const val HEADER_OFFSET = 65
-    private const val ACCOUNT_PUBLIC_KEY_OFFSET = 69
-    private const val ACCOUNT_PUBLIC_KEY_LEN = 32
-    private const val BLOCKHASH_OFFSET = 133
-    private const val BLOCKHASH_LEN = 32
-    private const val SUFFIX_DIGITS_OFFSET = 181
-    private const val SUFFIX_DIGITS_LEN = 8
+    override val SIGNATURE_OFFSET = 1
+    override val SIGNATURE_LEN = 64
+    override val HEADER_OFFSET = 65
+    override val ACCOUNT_PUBLIC_KEY_OFFSET = 69
+    override val ACCOUNT_PUBLIC_KEY_LEN = 32
+    override val BLOCKHASH_OFFSET = 133
+    override val BLOCKHASH_LEN = 32
+    override val SUFFIX_DIGITS_OFFSET = 181
+    override val SUFFIX_DIGITS_LEN = 8
+}
+
+// Memo Transaction using V0 Transaction format
+object MemoTransactionV0UseCase : MemoTransactionUseCase() {
+    // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It
+    // is for test purposes only.
+    override val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
+        //region signature
+        0x01.toByte(), // 1 signature required (fee payer)
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // First signature (fee payer account)
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        //endregion
+        0x80.toByte(), // prefix 0b10000000
+        //region sign data
+        0x01.toByte(), // 1 signature required (fee payer)
+        0x00.toByte(), // 0 read-only account signatures
+        0x01.toByte(), // 1 read-only account not requiring a signature
+        0x02.toByte(), // 2 accounts
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // Fee payer account public key
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x05.toByte(), 0x4a.toByte(), 0x53.toByte(), 0x5a.toByte(), 0x99.toByte(), 0x29.toByte(), 0x21.toByte(), 0x06.toByte(), // Memo program v2 account address
+        0x4d.toByte(), 0x24.toByte(), 0xe8.toByte(), 0x71.toByte(), 0x60.toByte(), 0xda.toByte(), 0x38.toByte(), 0x7c.toByte(),
+        0x7c.toByte(), 0x35.toByte(), 0xb5.toByte(), 0xdd.toByte(), 0xbc.toByte(), 0x92.toByte(), 0xbb.toByte(), 0x81.toByte(),
+        0xe4.toByte(), 0x1f.toByte(), 0xa8.toByte(), 0x40.toByte(), 0x41.toByte(), 0x05.toByte(), 0x44.toByte(), 0x8d.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // Recent blockhash (placeholder)
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        //endregion
+        //region instructions
+        0x01.toByte(), // 1 instruction (memo)
+        0x01.toByte(), // program ID (index into list of accounts)
+        0x01.toByte(), // 1 account
+        0x00.toByte(), // account index 0
+        0x14.toByte(), // 20 byte payload
+        0x68.toByte(), 0x65.toByte(), 0x6c.toByte(), 0x6c.toByte(), 0x6f.toByte(), 0x20.toByte(), 0x77.toByte(), 0x6f.toByte(), // "hello world "
+        0x72.toByte(), 0x6c.toByte(), 0x64.toByte(), 0x20.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // 8-digit random suffix
+        //endregion
+        //region address table lookups
+        0x00.toByte(), // 0 address table lookups
+        //endregion
+    )
+
+    override val SIGNATURE_OFFSET = 1
+    override val SIGNATURE_LEN = 64
+    override val HEADER_OFFSET = 65
+    override val ACCOUNT_PUBLIC_KEY_OFFSET = 70
+    override val ACCOUNT_PUBLIC_KEY_LEN = 32
+    override val BLOCKHASH_OFFSET = 134
+    override val BLOCKHASH_LEN = 32
+    override val SUFFIX_DIGITS_OFFSET = 183
+    override val SUFFIX_DIGITS_LEN = 8
 }
