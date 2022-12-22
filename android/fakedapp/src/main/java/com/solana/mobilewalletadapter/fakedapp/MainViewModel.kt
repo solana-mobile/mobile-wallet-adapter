@@ -19,9 +19,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenari
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.fakedapp.usecase.GetLatestBlockhashUseCase
-import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionUseCase
-import com.solana.mobilewalletadapter.fakedapp.usecase.RequestAirdropUseCase
+import com.solana.mobilewalletadapter.fakedapp.usecase.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +36,12 @@ import kotlin.random.Random
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
+
+    val supportedTxnVersions = listOf(MemoTransactionVersion.Legacy, MemoTransactionVersion.V0)
+    val transactionUseCase get() = when(_uiState.value.txnVersion) {
+        MemoTransactionVersion.Legacy -> MemoTransactionLegacyUseCase
+        MemoTransactionVersion.V0 -> MemoTransactionV0UseCase
+    }
 
     private val mobileWalletAdapterClientSem = Semaphore(1) // allow only a single MWA connection at a time
 
@@ -96,6 +100,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setTransactionVersion(txnVersion: MemoTransactionVersion) {
+        _uiState.update { it.copy(txnVersion = txnVersion) }
+    }
+
     fun signTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(TESTNET_RPC_URI)
@@ -113,7 +121,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(numTransactions) {
-                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
+                transactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
             doSignTransactions(client, transactions)
         }
@@ -121,7 +129,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (signedTransactions != null) {
             val verified = signedTransactions.map { txn ->
                 try {
-                    MemoTransactionUseCase.verify(uiState.value.publicKey!!, txn)
+                    transactionUseCase.verify(uiState.value.publicKey!!, txn)
                     true
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -153,7 +161,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(1) {
-                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
+                transactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
             doSignTransactions(client, transactions)
         }
@@ -161,7 +169,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (signedTransactions != null) {
             val verified = signedTransactions.map { txn ->
                 try {
-                    MemoTransactionUseCase.verify(uiState.value.publicKey!!, txn)
+                    transactionUseCase.verify(uiState.value.publicKey!!, txn)
                     true
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -208,7 +216,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@localAssociateAndExecute null
             }
             val transactions = Array(numTransactions) {
-                MemoTransactionUseCase.create(uiState.value.publicKey!!, blockhash)
+                transactionUseCase.create(uiState.value.publicKey!!, blockhash)
             }
             doSignAndSendTransactions(client, transactions, slot)
         }
@@ -574,7 +582,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val publicKey: ByteArray? = null, // TODO(#44): support multiple addresses
         val accountLabel: String? = null,
         val walletUriBase: Uri? = null,
-        val messages: List<String> = emptyList()
+        val messages: List<String> = emptyList(),
+        val txnVersion: MemoTransactionVersion = MemoTransactionVersion.Legacy
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
 
@@ -591,6 +600,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else if (other.publicKey != null) return false
             if (walletUriBase != other.walletUriBase) return false
             if (messages != other.messages) return false
+            if (txnVersion != other.txnVersion) return false
 
             return true
         }
@@ -600,6 +610,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result = 31 * result + (publicKey?.contentHashCode() ?: 0)
             result = 31 * result + (walletUriBase?.hashCode() ?: 0)
             result = 31 * result + messages.hashCode()
+            result = 31 * result + txnVersion.hashCode()
             return result
         }
     }

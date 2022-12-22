@@ -24,6 +24,9 @@
     <string name="label_sign_msg_x1">Sign msg x1</string>
     <string name="label_sign_msg_x3">x3</string>
     <string name="label_sign_msg_x20">x20</string>
+    <string name="label_txn_version">Transaction Version:</string>
+    <string name="string_txn_version_legacy">Legacy</string>
+    <string name="string_txn_version_v0">V0</string>
     <string name="label_sign_and_send_txn_x1">Sign and send txn x1</string>
     <string name="label_sign_and_send_txn_x3">x3</string>
     <string name="label_sign_and_send_txn_x20">x20</string>

@@ -21,7 +21,12 @@ object SolanaSigningUseCase {
 
         // Validate the transaction only up through the account addresses array
         val (numSignatures, numSignaturesOffset) = readCompactArrayLen(transaction, 0)
-        val headerOffset = numSignaturesOffset + (SIGNATURE_LEN * numSignatures)
+        val prefixOffset = numSignaturesOffset + (SIGNATURE_LEN * numSignatures)
+        val prefix = transaction[prefixOffset].toInt()
+
+        // if the highest bit of the prefix is not set, the message is not versioned
+        val txnVersionOffset = if (prefix and 0x7f == prefix) 0 else 1
+        val headerOffset = prefixOffset + txnVersionOffset
 
         val accountsArrayOffset = headerOffset + 3
         require(accountsArrayOffset <= transaction.size) { "transaction header extends beyond buffer bounds" }
@@ -45,7 +50,7 @@ object SolanaSigningUseCase {
 
         val signer = Ed25519Signer()
         signer.init(true, privateKey)
-        signer.update(transaction, headerOffset, transaction.size - headerOffset)
+        signer.update(transaction, prefixOffset, transaction.size - prefixOffset)
         val sig = signer.generateSignature()
         assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
 
