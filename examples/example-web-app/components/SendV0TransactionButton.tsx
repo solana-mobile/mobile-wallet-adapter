@@ -34,13 +34,6 @@ export default function SendV0TransactionButton({ children, message }: Props) {
     const [sendV0TransactionTutorialOpen, setSendV0TransactionTutorialOpen] = useState(false);
     const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
     const [previewSignature, setPreviewSignature] = useState<TransactionSignature | undefined>(undefined);
-    // const sendTransactionGuarded = useGuardedCallback(
-    //     async (transaction, connection) => {
-    //         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    //         return await sendTransaction!(transaction, connection);
-    //     },
-    //     [sendTransaction],
-    // );
     return (
         <>
             <ButtonGroup fullWidth={true} variant="outlined">
