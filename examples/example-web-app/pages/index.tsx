@@ -10,6 +10,7 @@ import SignMessageButton from '../components/SignMessageButton';
 import { styled } from '@mui/material/styles';
 import { useWallet } from '@solana/wallet-adapter-react';
 import dynamic from 'next/dynamic';
+import SendV0TransactionButton from '../components/SendV0TransactionButton';
 
 const Offset = styled('div')(
     // @ts-ignore
@@ -50,6 +51,7 @@ const Home: NextPage = () => {
                 />
                 <RecordMessageButton message={memoText}>Record Message</RecordMessageButton>
                 <SignMessageButton message={memoText}>Sign Message</SignMessageButton>
+                <SendV0TransactionButton message={memoText}>Send V0 Transaction (devnet)</SendV0TransactionButton>
                 <FundAccountButton>Fund Account (devnet)</FundAccountButton>
                 <DisconnectButton color="error" variant="outlined">
                     Disconnect
