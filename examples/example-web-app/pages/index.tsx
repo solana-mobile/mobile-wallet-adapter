@@ -48,8 +48,7 @@ const Home: NextPage = () => {
                     }}
                     value={memoText}
                 />
-                <RecordMessageButton message={memoText} transactionVersion={'legacy'}>Record Message (Legacy)</RecordMessageButton>
-                <RecordMessageButton message={memoText} transactionVersion={0}>Record Message (V0)</RecordMessageButton>
+                <RecordMessageButton message={memoText}>Record Message</RecordMessageButton>
                 <SignMessageButton message={memoText}>Sign Message</SignMessageButton>
                 <FundAccountButton>Fund Account (devnet)</FundAccountButton>
                 <DisconnectButton color="error" variant="outlined">

@@ -20,18 +20,16 @@ import useGuardedCallback from '../utils/useGuardedCallback';
 type Props = Readonly<{
     children?: React.ReactNode;
     message: string;
-    transactionVersion?: 'legacy' | 0
 }>;
 
-export default function RecordMessageButton({ children, message, transactionVersion = 0 }: Props) {
+export default function RecordMessageButton({ children, message }: Props) {
     const { enqueueSnackbar } = useSnackbar();
     const { connection } = useConnection();
     const { publicKey, sendTransaction, wallet } = useWallet();
     const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] = useState(false);
     const [recordingInProgress, setRecordingInProgress] = useState(false);
-    const transactionVersionLabel = transactionVersion === 'legacy'? transactionVersion : `V${transactionVersion}`;
     const supportedTxnVersions = wallet?.adapter.supportedTransactionVersions;
-    const transactionSupported = transactionVersion === 'legacy' || supportedTxnVersions?.has(transactionVersion);
+    const transactionVersion = supportedTxnVersions?.has(0) ? 0 : 'legacy';
     const recordMessageGuarded = useGuardedCallback(
         async (messageBuffer: Buffer): Promise<[string | null, RpcResponseAndContext<SignatureResult>]> => {
             
@@ -48,6 +46,7 @@ export default function RecordMessageButton({ children, message, transactionVers
 
             let memoProgramTransaction: Transaction | VersionedTransaction;
 
+            // if the wallet only supports legacy transactions, use the web3.js legacy transaction 
             if (transactionVersion === 'legacy') {
                 memoProgramTransaction = new Transaction({
                     blockhash: blockhash,
@@ -55,6 +54,7 @@ export default function RecordMessageButton({ children, message, transactionVers
                     feePayer: publicKey,
                 }).add(memoInstruction)
             } else {
+                // otherwise, if versioned transactions are supported, use a V0 versioned transaction
                 let memoProgramMessage = new TransactionMessage({
                     payerKey: publicKey!,
                     recentBlockhash: blockhash,
@@ -72,7 +72,7 @@ export default function RecordMessageButton({ children, message, transactionVers
         <>
             <ButtonGroup fullWidth={true} variant="contained">
                 <LoadingButton
-                    disabled={publicKey == null || !message || !transactionSupported}
+                    disabled={publicKey == null || !message }
                     loading={recordingInProgress}
                     onClick={async () => {
                         if (publicKey == null || sendTransaction == null) {
@@ -80,7 +80,7 @@ export default function RecordMessageButton({ children, message, transactionVers
                         }
                         setRecordingInProgress(true);
                         try {
-                            const result = await recordMessageGuarded(Buffer.from(message))
+                            const result = await recordMessageGuarded(Buffer.from(message));
                             if (result) {
                                 const [signature, response] = result;
                                 const {
@@ -135,14 +135,9 @@ export default function RecordMessageButton({ children, message, transactionVers
             >
                 <DialogContent>
                     <DialogContentText>
-                        Clicking &ldquo;Record&rdquo; will send a {transactionVersionLabel} transaction that 
-                        records the text you&apos;ve written on the Solana blockchain using the Memo program. 
+                        Clicking &ldquo;Record&rdquo; will send a transaction that records the text you&apos;ve written
+                        on the Solana blockchain using the Memo program.
                     </DialogContentText>
-                    {!transactionSupported && (
-                        <Typography>
-                            Note: this operation is not supported by the currently connected wallet
-                        </Typography>
-                    )}
                     <DialogActions>
                         <Button
                             autoFocus
