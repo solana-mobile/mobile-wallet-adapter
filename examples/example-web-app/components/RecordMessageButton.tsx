@@ -1,6 +1,6 @@
 import InfoIcon from '@mui/icons-material/Info';
 import { LoadingButton } from '@mui/lab';
-import { Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogContentText, Typography } from '@mui/material';
+import { Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import {
