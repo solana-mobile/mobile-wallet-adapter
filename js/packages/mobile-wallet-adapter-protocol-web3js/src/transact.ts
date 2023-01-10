@@ -1,4 +1,5 @@
 import {
+    SIGNATURE_LENGTH_IN_BYTES,
     Transaction as LegacyTransaction,
     Transaction,
     TransactionSignature,
@@ -59,7 +60,9 @@ function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTra
 }
 
 function getTransactionFromWireMessage(byteArray: Uint8Array): Transaction | VersionedTransaction {
-    const version = VersionedMessage.deserializeMessageVersion(byteArray);
+    const numSignatures = byteArray[0]
+    const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1
+    const version = VersionedMessage.deserializeMessageVersion(byteArray.slice(messageOffset, byteArray.length));
     if (version === 'legacy') {
         return Transaction.from(byteArray);
     } else {

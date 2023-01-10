@@ -9,6 +9,8 @@ import {
     SignatureResult,
     Transaction,
     TransactionInstruction,
+    TransactionMessage,
+    VersionedTransaction,
 } from '@solana/web3.js';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
@@ -23,23 +25,46 @@ type Props = Readonly<{
 export default function RecordMessageButton({ children, message }: Props) {
     const { enqueueSnackbar } = useSnackbar();
     const { connection } = useConnection();
-    const { publicKey, sendTransaction } = useWallet();
+    const { publicKey, sendTransaction, wallet } = useWallet();
     const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] = useState(false);
     const [recordingInProgress, setRecordingInProgress] = useState(false);
+    const supportedTxnVersions = wallet?.adapter.supportedTransactionVersions;
+    const transactionVersion = supportedTxnVersions?.has(0) ? 0 : 'legacy';
     const recordMessageGuarded = useGuardedCallback(
-        async (messageBuffer: Buffer): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
-            const memoProgramTransaction = new Transaction({
-                ...(await connection.getLatestBlockhash()),
-                feePayer: publicKey,
-            }).add(
-                new TransactionInstruction({
-                    data: messageBuffer,
-                    keys: [],
-                    programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
-                }),
-            );
-            const signature = await sendTransaction(memoProgramTransaction, connection);
-            return [signature, await connection.confirmTransaction(signature)];
+        async (messageBuffer: Buffer): Promise<[string | null, RpcResponseAndContext<SignatureResult>]> => {
+            
+            const {
+                context,
+                value: { blockhash, lastValidBlockHeight },
+            } = await connection.getLatestBlockhashAndContext();
+
+            const memoInstruction = new TransactionInstruction({
+                data: messageBuffer,
+                keys: [],
+                programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+            });
+
+            let memoProgramTransaction: Transaction | VersionedTransaction;
+
+            // if the wallet only supports legacy transactions, use the web3.js legacy transaction 
+            if (transactionVersion === 'legacy') {
+                memoProgramTransaction = new Transaction({
+                    blockhash: blockhash,
+                    lastValidBlockHeight: lastValidBlockHeight,
+                    feePayer: publicKey,
+                }).add(memoInstruction)
+            } else {
+                // otherwise, if versioned transactions are supported, use a V0 versioned transaction
+                let memoProgramMessage = new TransactionMessage({
+                    payerKey: publicKey!,
+                    recentBlockhash: blockhash,
+                    instructions: [ memoInstruction ],
+                })
+                memoProgramTransaction = new VersionedTransaction(memoProgramMessage.compileToV0Message())
+            }
+
+            const signature = await sendTransaction(memoProgramTransaction, connection, { minContextSlot: context.slot});
+            return [signature, await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature })];
         },
         [connection, publicKey, sendTransaction],
     );
@@ -47,7 +72,7 @@ export default function RecordMessageButton({ children, message }: Props) {
         <>
             <ButtonGroup fullWidth={true} variant="contained">
                 <LoadingButton
-                    disabled={publicKey == null || !message}
+                    disabled={publicKey == null || !message }
                     loading={recordingInProgress}
                     onClick={async () => {
                         if (publicKey == null || sendTransaction == null) {
