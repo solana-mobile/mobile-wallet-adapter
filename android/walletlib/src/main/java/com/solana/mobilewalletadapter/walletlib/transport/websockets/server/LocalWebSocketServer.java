@@ -51,6 +51,7 @@ public class LocalWebSocketServer extends WebSocketServer {
         super(new InetSocketAddress(WebSocketsTransportContract.WEBSOCKETS_LOCAL_HOST, scenario.port), 1,
                 Collections.singletonList(new Draft_6455(Collections.emptyList(), Collections.singletonList(
                         new Protocol(WebSocketsTransportContract.WEBSOCKETS_PROTOCOL)))));
+        setReuseAddress(true);
         setConnectionLostTimeout(PING_TIME_SEC);
         setWebSocketFactory(new MobileWalletAdapterWebSocketServerFactory());
         mScenario = scenario;
