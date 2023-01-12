@@ -52,6 +52,7 @@ jobs:
           name: binaries
           path: |
             android/clientlib/build/outputs/aar/*.aar
+            android/clientlib-ktx/build/outputs/aar/*.aar
             android/common/build/outputs/aar/*.aar
             android/fakedapp/build/outputs/apk/**/*.apk
             android/fakewallet/build/outputs/apk/**/*.apk
@@ -67,6 +68,15 @@ jobs:
           path: |
             android/clientlib/build/docs/*
             !android/clientlib/build/docs/**/*.zip
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          name: clientlib-ktx-javadoc
+          path: |
+            android/clientlib-ktx/build/docs/*
+            !android/clientlib-ktx/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
       - uses: actions/upload-artifact@v3
@@ -115,6 +125,14 @@ jobs:
           artifact-name: clientlib-javadoc
           dest: clientlib
           commit-message: 'Update clientlib javadoc'
+      - name: Update clientlib-ktx javadoc
+        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        with:
+          token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
+          branch: gh-pages
+          artifact-name: clientlib-ktx-javadoc
+          dest: clientlib-ktx
+          commit-message: 'Update clientlib-ktx javadoc'
       - name: Update common javadoc
         uses: solana-mobile/gha-commit-artifact-to-branch@v1
         with:
@@ -151,6 +169,10 @@ jobs:
           path: clientlib-javadoc
       - uses: actions/download-artifact@v3
         with:
+          name: clientlib-ktx-javadoc
+          path: clientlib-ktx-javadoc
+      - uses: actions/download-artifact@v3
+        with:
           name: common-javadoc
           path: common-javadoc
       - uses: actions/download-artifact@v3
@@ -159,6 +181,8 @@ jobs:
           path: walletlib-javadoc
       - name: Compress clientlib javadoc
         run: tar -cvzf clientlib-javadoc/clientlib-javadoc.tgz -C clientlib-javadoc javadoc
+      - name: Compress clientlib-ktx javadoc
+        run: tar -cvzf clientlib-ktx-javadoc/clientlib-ktx-javadoc.tgz -C clientlib-ktx-javadoc javadoc
       - name: Compress common javadoc
         run: tar -cvzf common-javadoc/common-javadoc.tgz -C common-javadoc javadoc
       - name: Compress walletlib javadoc
@@ -171,5 +195,6 @@ jobs:
           FILES: |
             binaries/
             clientlib-javadoc/clientlib-javadoc.tgz
+            clientlib-ktx-javadoc/clientlib-ktx-javadoc.tgz
             common-javadoc/common-javadoc.tgz
             walletlib-javadoc/walletlib-javadoc.tgz
