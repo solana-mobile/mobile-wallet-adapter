@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
+    id 'signing'
 }
 
 android {
@@ -32,6 +34,84 @@ android {
 
     buildFeatures {
         buildConfig = false
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = group
+            artifactId = 'mobile-wallet-adapter-clientlib-ktx'
+            pom {
+                name = 'Mobile Wallet Adapter - Android Native library'
+                description = 'Native android library for Mobile Wallet Adapter.'
+                url = 'https://github.com/solana-mobile/mobile-wallet-adapter'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Solana Mobile Engineering'
+                        email = 'eng@solanamobile.com'
+                        organization = 'Solana Mobile Inc.'
+                        organizationUrl = 'https://solanamobile.com'
+                    }
+                }
+                organization {
+                    name = 'Solana Mobile Inc.'
+                    url = 'https://solanamobile.com'
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/solana-mobile/mobile-wallet-adapter.git'
+                    developerConnection = 'scm:git:ssh://github.com/solana-mobile/mobile-wallet-adapter.git'
+                    url = 'https://github.com/solana-mobile/mobile-wallet-adapter/tree/main'
+                }
+            }
+
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+}
+
+signing {
+    // Signing private key and password provided by ORG_GRADLE_PROJECT_signingKey and
+    // ORG_GRADLE_PROJECT_signingPassword, respectively
+    def signingKey = findProperty('signingKey')
+    def signingPassword = findProperty('signingPassword')
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.release
+}
+
+// Define JavaDoc build task for all variants
+android.libraryVariants.all { variant ->
+    task("generate${variant.name.capitalize()}Javadoc", type: Javadoc) {
+        description "Generates Javadoc for $variant.name."
+        source = variant.javaCompileProvider.get().source
+        classpath = project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += files(variant.javaCompileProvider.get().classpath)
+        options.links("https://docs.oracle.com/javase/8/docs/api/")
+        options.links("https://d.android.com/reference/")
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+    }
+}
+
+// Build JavaDoc when making a release build
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease') {
+        task.dependsOn("generateReleaseJavadoc")
     }
 }
 
