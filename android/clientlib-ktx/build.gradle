@@ -50,8 +50,8 @@ publishing {
             groupId = group
             artifactId = 'mobile-wallet-adapter-clientlib-ktx'
             pom {
-                name = 'Mobile Wallet Adapter - Client library'
-                description = 'Client library for Mobile Wallet Adapter. It implements the client endpoint role of the Mobile Wallet Adapter protocol specification.'
+                name = 'Mobile Wallet Adapter - Android Native library'
+                description = 'Native android library for Mobile Wallet Adapter.'
                 url = 'https://github.com/solana-mobile/mobile-wallet-adapter'
                 licenses {
                     license {
