@@ -7,9 +7,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
@@ -30,7 +28,12 @@ class MobileWalletAdapter(
                 val details = scenario.associationDetails()
 
                 val intent = LocalAssociationIntentCreator.createAssociationIntent(details.uriPrefix, details.port, details.session)
-                sender.launch(intent)
+                sender.startActivityForResult(intent) {
+                    launch {
+                        delay(5000)
+                        this@withContext.cancel()
+                    }
+                }
 
                 val client = try {
                     @Suppress("BlockingMethodInNonBlockingContext")
