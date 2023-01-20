@@ -21,23 +21,28 @@ class MobileWalletAdapter(
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T): T {
-        return try {
-            withContext(ioDispatcher) {
-                val scenario = LocalAssociationScenario(timeout)
-                val details = scenario.associationDetails()
+    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T): T = coroutineScope {
+        return@coroutineScope try {
+            val scenario = LocalAssociationScenario(timeout)
+            val details = scenario.associationDetails()
 
-                val intent = LocalAssociationIntentCreator.createAssociationIntent(details.uriPrefix, details.port, details.session)
-                sender.startActivityForResult(intent) {
-                    launch {
-                        delay(5000)
-                        this@withContext.cancel()
-                    }
+            val intent = LocalAssociationIntentCreator.createAssociationIntent(details.uriPrefix, details.port, details.session)
+            sender.startActivityForResult(intent) {
+                launch {
+                    delay(5000L)
+
+                    Log.v("Andrew", "Cancelling")
+                    this@coroutineScope.cancel()
                 }
+            }
 
-                val client = try {
+            withContext(Dispatchers.IO) {
+                val result = try {
                     @Suppress("BlockingMethodInNonBlockingContext")
-                    scenario.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    val client = scenario.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+
+                    adapterOperations.client = client
+                    block(adapterOperations)
                 } catch (e: InterruptedException) {
                     Log.w(TAG, "Interrupted while waiting for local association to be ready")
                     throw e
@@ -47,13 +52,13 @@ class MobileWalletAdapter(
                 } catch (e: ExecutionException) {
                     Log.e(TAG, "Failed establishing local association with wallet", e.cause)
                     throw e
+                } catch (e: CancellationException) {
+                    Log.e(TAG, "Local association was cancelled before connected", e)
+                    throw e
+                } finally {
+                    @Suppress("BlockingMethodInNonBlockingContext")
+                    scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 }
-
-                adapterOperations.client = client
-                val result = block(adapterOperations)
-
-                @Suppress("BlockingMethodInNonBlockingContext")
-                scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
 
                 result
             }
