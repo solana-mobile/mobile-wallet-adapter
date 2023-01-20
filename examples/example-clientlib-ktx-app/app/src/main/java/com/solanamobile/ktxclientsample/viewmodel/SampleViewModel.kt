@@ -10,6 +10,7 @@ import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.RpcCluster
+import com.solana.mobilewalletadapter.clientlib.successPayload
 import com.solanamobile.ktxclientsample.usecase.Connected
 import com.solanamobile.ktxclientsample.usecase.NotConnected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
@@ -77,7 +78,7 @@ class SampleViewModel @Inject constructor(
         viewModelScope.launch {
             val conn = persistanceUseCase.getWalletConnection()
 
-            val currentConn = walletAdapter.transact(sender) {
+            val result = walletAdapter.transact(sender) {
                 when (conn) {
                    is NotConnected -> {
                        val authed = authorize(solanaUri, iconUri, identityName, RpcCluster.Devnet)
@@ -98,37 +99,39 @@ class SampleViewModel @Inject constructor(
                 }
             }
 
-            persistanceUseCase.persistConnection(
-                currentConn.publicKey,
-                currentConn.accountLabel,
-                currentConn.authToken
-            )
-
-            _state.value.copy(
-                isLoading = true
-            ).updateViewState()
-
-            val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
-            val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
-
-            if (confirmed) {
-                val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
+            result.successPayload?.let { currentConn ->
+                persistanceUseCase.persistConnection(
+                    currentConn.publicKey,
+                    currentConn.accountLabel,
+                    currentConn.authToken
+                )
 
                 _state.value.copy(
-                    isLoading = false,
-                    canTransact = true,
-                    solBalance = balance,
-                    userAddress = currentConn.publicKey.toBase58(),
-                    userLabel = currentConn.accountLabel,
+                    isLoading = true
                 ).updateViewState()
-            } else {
-                _state.value.copy(
-                    isLoading = false,
-                    canTransact = true,
-                    solBalance = 0.0,
-                    userAddress = "Error airdropping",
-                    userLabel = "",
-                ).updateViewState()
+
+                val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
+                val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
+
+                if (confirmed) {
+                    val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
+
+                    _state.value.copy(
+                        isLoading = false,
+                        canTransact = true,
+                        solBalance = balance,
+                        userAddress = currentConn.publicKey.toBase58(),
+                        userLabel = currentConn.accountLabel,
+                    ).updateViewState()
+                } else {
+                    _state.value.copy(
+                        isLoading = false,
+                        canTransact = true,
+                        solBalance = 0.0,
+                        userAddress = "Error airdropping",
+                        userLabel = "",
+                    ).updateViewState()
+                }
             }
         }
     }
@@ -156,7 +159,7 @@ class SampleViewModel @Inject constructor(
                     signAndSendTransactions(arrayOf(bytes))
                 }
 
-                result.signatures.firstOrNull()?.let { sig ->
+                result.successPayload?.signatures?.firstOrNull()?.let { sig ->
                     val readableSig = Base58.encode(sig)
 
                     _state.value.copy(
