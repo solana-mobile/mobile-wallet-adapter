@@ -1,6 +1,5 @@
 package com.solana.mobilewalletadapter.clientlib
 
-import android.util.Log
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
@@ -47,9 +46,7 @@ class MobileWalletAdapter(
             sender.startActivityForResult(intent) {
                 launch {
                     delay(5000L)
-
-                    Log.v("Andrew", "Cancelling")
-                    this@coroutineScope.cancel()
+                    scenario.close()
                 }
             }
 
