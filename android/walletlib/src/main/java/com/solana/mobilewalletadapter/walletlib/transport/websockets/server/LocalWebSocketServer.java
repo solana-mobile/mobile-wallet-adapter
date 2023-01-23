@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.transport.websockets.server;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
@@ -19,6 +20,8 @@ import org.java_websocket.WebSocketImpl;
 import org.java_websocket.WebSocketServerFactory;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
+import org.java_websocket.exceptions.InvalidDataException;
+import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.protocols.Protocol;
 import org.java_websocket.server.WebSocketServer;
@@ -31,6 +34,12 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class LocalWebSocketServer extends WebSocketServer {
     private static final String TAG = LocalWebSocketServer.class.getSimpleName();
@@ -43,6 +52,11 @@ public class LocalWebSocketServer extends WebSocketServer {
     private final Callbacks mCallbacks;
     @NonNull
     private State mState = State.NOT_INITIALIZED;
+
+    @Nullable
+    private ScheduledFuture<?> mNoConnectionTimeoutFuture;
+    private final ScheduledExecutorService mTimeoutExecutorService =
+            Executors.newSingleThreadScheduledExecutor();
 
     public LocalWebSocketServer(@NonNull LocalWebSocketServerScenario scenario,
                                 @NonNull Callbacks callbacks) {
@@ -62,6 +76,16 @@ public class LocalWebSocketServer extends WebSocketServer {
             Log.i(TAG, "Starting local mobile-wallet-adapter WebSocket server on port " + mScenario.port);
             mState = State.STARTED;
             start();
+
+            // we cant actually check if a connection is still alive, so instead we start a timer
+            // that assumes we do not have connection if the timeout is reached. Therefore, we
+            // MUST cancel this timer if we receive any connections or messages before it ends
+            Long noConnectionTimeout = mScenario.getNoConnectionTimeout();
+            if (noConnectionTimeout > 0)
+                mNoConnectionTimeoutFuture = mTimeoutExecutorService.schedule(() -> {
+                    Log.i(TAG, "No connection timeout reached");
+                    mCallbacks.onNoConnectionTimeoutReached();
+                }, noConnectionTimeout, TimeUnit.MILLISECONDS);
         } else {
             Log.w(TAG, "Cannot start local mobile-wallet-adapter WebSocket server in " + mState);
         }
@@ -85,15 +109,35 @@ public class LocalWebSocketServer extends WebSocketServer {
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         Log.d(TAG, "mobile-wallet-adapter WebSocket opened");
+        if (mNoConnectionTimeoutFuture != null) mNoConnectionTimeoutFuture.cancel(true);
         final MobileWalletAdapterWebSocket ws = (MobileWalletAdapterWebSocket) conn;
         final MessageReceiver mr = mScenario.createMessageReceiver();
         ws.messageReceiver = mr;
         mr.receiverConnected(ws);
+
+        // at this point we have a connection, but we need to recheck the connection
+        // periodically, in case the connection has been paused/dropped a the other end
+        // I don't love this approach, but it does work. leaving it for now
+        Long noConnectionTimeout = mScenario.getNoConnectionTimeout();
+        if (noConnectionTimeout > 0) {
+            ws.sendCallback =
+                    () -> mNoConnectionTimeoutFuture = mTimeoutExecutorService.schedule(() -> {
+                        Log.i(TAG, "No connection timeout reached");
+                        mCallbacks.onNoConnectionTimeoutReached();
+                    }, noConnectionTimeout, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @Override
+    public void onWebsocketHandshakeSentAsClient(WebSocket conn, ClientHandshake request) throws InvalidDataException {
+        Log.d(TAG, "mobile-wallet-adapter WebSocket handshake sent");
+        super.onWebsocketHandshakeSentAsClient(conn, request);
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         Log.d(TAG, "mobile-wallet-adapter WebSocket closed");
+        if (mNoConnectionTimeoutFuture != null) mNoConnectionTimeoutFuture.cancel(true);
         final MobileWalletAdapterWebSocket ws = (MobileWalletAdapterWebSocket) conn;
         ws.messageReceiver.receiverDisconnected();
         ws.messageReceiver = null;
@@ -102,6 +146,7 @@ public class LocalWebSocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         Log.d(TAG, "mobile-wallet-adapter WebSocket recv (text)");
+        if (mNoConnectionTimeoutFuture != null) mNoConnectionTimeoutFuture.cancel(true);
         final MobileWalletAdapterWebSocket ws = (MobileWalletAdapterWebSocket) conn;
         ws.messageReceiver.receiverMessageReceived(message.getBytes(StandardCharsets.UTF_8));
     }
@@ -109,6 +154,7 @@ public class LocalWebSocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, ByteBuffer message) {
         Log.d(TAG, "mobile-wallet-adapter WebSocket recv (binary)");
+        if (mNoConnectionTimeoutFuture != null) mNoConnectionTimeoutFuture.cancel(true);
         final byte[] bytes = new byte[message.remaining()];
         message.get(bytes);
         final MobileWalletAdapterWebSocket ws = (MobileWalletAdapterWebSocket) conn;
@@ -149,6 +195,9 @@ public class LocalWebSocketServer extends WebSocketServer {
     private static class MobileWalletAdapterWebSocket extends WebSocketImpl implements MessageSender {
         private MessageReceiver messageReceiver; // valid only after opened
 
+        @Nullable
+        public SendCallback sendCallback = null;
+
         public MobileWalletAdapterWebSocket(WebSocketAdapter a, Draft d) {
             super(a, d);
         }
@@ -162,6 +211,11 @@ public class LocalWebSocketServer extends WebSocketServer {
         public synchronized void send(@NonNull byte[] bytes) {
             Log.d(TAG, "mobile-wallet-adapter WebSocket send");
             super.send(bytes);
+            if (sendCallback != null) sendCallback.onSend();
+        }
+
+        public interface SendCallback {
+            void onSend();
         }
     }
 
@@ -171,6 +225,7 @@ public class LocalWebSocketServer extends WebSocketServer {
 
     public interface Callbacks {
         void onStarted();
+        void onNoConnectionTimeoutReached();
         void onFatalError();
     }
 }

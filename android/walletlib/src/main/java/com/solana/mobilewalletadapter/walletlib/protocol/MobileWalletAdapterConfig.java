@@ -14,6 +14,9 @@ public class MobileWalletAdapterConfig {
     public final boolean supportsSignAndSendTransactions;
 
     @IntRange(from = 0)
+    public final long noConnectionWarningTimeoutMillis;
+
+    @IntRange(from = 0)
     public final int maxTransactionsPerSigningRequest;
 
     @IntRange(from = 0)
@@ -25,10 +28,12 @@ public class MobileWalletAdapterConfig {
     public final Object[] supportedTransactionVersions;
 
     public MobileWalletAdapterConfig(boolean supportsSignAndSendTransactions,
+                                     @IntRange(from = 0) long noConnectionWarningTimeoutMillis,
                                      @IntRange(from = 0) int maxTransactionsPerSigningRequest,
                                      @IntRange(from = 0) int maxMessagesPerSigningRequest,
                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions) {
         this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
+        this.noConnectionWarningTimeoutMillis = noConnectionWarningTimeoutMillis;
         this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
         this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
 

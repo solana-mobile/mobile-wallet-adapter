@@ -39,4 +39,14 @@
     <string name="str_verification_succeeded">Verification successful</string>
     <string name="str_verification_failed">Verification failed</string>
     <string name="str_verification_not_verifiable">Client not verifiable</string>
+
+    <!-- No connection due to low power warning strings-->
+    <string name="low_power_mode_warning_title">Low Power Mode</string>
+    <string name="str_low_power_mode_warning_dsc">
+        Your device is currently in power saving mode. Incoming wallet connections from your
+        web browser will not work properly when the device battery save mode is active.
+        Please turn off battery saver or plug in your phone and try again.
+    </string>
+    <string name="label_return_to_dapp">Go back</string>
+    <string name="label_close_dialog">Close</string>
 </resources>

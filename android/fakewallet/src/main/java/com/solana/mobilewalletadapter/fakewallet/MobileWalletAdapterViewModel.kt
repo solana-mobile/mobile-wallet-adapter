@@ -11,18 +11,14 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.fakewallet.usecase.ClientTrustUseCase
-import com.solana.mobilewalletadapter.fakewallet.usecase.SendTransactionsUseCase
-import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
+import com.solana.mobilewalletadapter.fakewallet.usecase.*
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.*
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import java.nio.charset.StandardCharsets
 
@@ -31,6 +27,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         MutableStateFlow<MobileWalletAdapterServiceRequest>(MobileWalletAdapterServiceRequest.None)
     val mobileWalletAdapterServiceEvents =
         _mobileWalletAdapterServiceEvents.asSharedFlow() // expose as event stream, rather than a stateful object
+
+    private val _lowPower = MutableSharedFlow<Boolean>(1)
+    val lowPower: SharedFlow<Boolean> = _lowPower
 
     private var clientTrustUseCase: ClientTrustUseCase? = null
     private var scenario: Scenario? = null
@@ -64,6 +63,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             getApplication<FakeWalletApplication>().applicationContext,
             MobileWalletAdapterConfig(
                 true,
+                getApplication<Application>().resources
+                    .getInteger(R.integer.no_connection_timeout_millis).toLong(),
                 10,
                 10,
                 arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0)
@@ -367,7 +368,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    private inner class MobileWalletAdapterScenarioCallbacks : Scenario.Callbacks {
+    private inner class MobileWalletAdapterScenarioCallbacks : LocalWebSocketServerScenario.Callbacks {
         override fun onScenarioReady() = Unit
         override fun onScenarioServingClients() = Unit
         override fun onScenarioServingComplete() {
@@ -477,6 +478,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         override fun onDeauthorizedEvent(event: DeauthorizedEvent) {
             Log.d(TAG, "'${event.identityName}' deauthorized")
             event.complete()
+        }
+
+        override fun onLowPowerAndNoConnectionTimeoutReached() {
+            viewModelScope.launch {
+                _lowPower.emit(true)
+            }
         }
     }
 

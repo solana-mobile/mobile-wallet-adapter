@@ -18,6 +18,7 @@ android {
         targetSdk 33
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -63,6 +64,16 @@ android {
 }
 
 dependencies {
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation 'androidx.test:core-ktx:1.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.5'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation project(path: ':clientlib')
+
     annotationProcessor 'androidx.room:room-compiler:2.4.3'
     implementation 'androidx.activity:activity-ktx:1.6.1'
     implementation 'androidx.appcompat:appcompat:1.5.1'

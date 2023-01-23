@@ -111,6 +111,11 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:2.19.0'
+    testImplementation 'androidx.arch.core:core-testing:2.1.0'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.8'
+
     compileOnly 'androidx.annotation:annotation:1.5.0'
     implementation 'org.java-websocket:Java-WebSocket:1.5.3'
     implementation 'org.slf4j:slf4j-android:1.7.36' // SLF4J logging facility for Java-WebSocket
