@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib
 
+import android.content.ActivityNotFoundException
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
@@ -21,6 +22,10 @@ sealed class TransactionResult<T> {
     class Failure<T>(
         val message: String,
         val e: Exception
+    ): TransactionResult<T>()
+
+    class NoWalletFound<T>(
+        val message: String
     ): TransactionResult<T>()
 }
 
@@ -107,6 +112,8 @@ class MobileWalletAdapter(
             return@coroutineScope TransactionResult.Failure("Request was cancelled", e)
         } catch (e: InterruptedException) {
             return@coroutineScope TransactionResult.Failure("Request was interrupted", e)
+        } catch (e: ActivityNotFoundException) {
+            return@coroutineScope TransactionResult.NoWalletFound("No compatible wallet found.")
         }
     }
 

@@ -1,16 +1,14 @@
 package com.solanamobile.ktxclientsample.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.portto.solana.web3.PublicKey
 import com.portto.solana.web3.SerializeConfig
 import com.portto.solana.web3.Transaction
 import com.portto.solana.web3.programs.MemoProgram
-import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
-import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
-import com.solana.mobilewalletadapter.clientlib.RpcCluster
-import com.solana.mobilewalletadapter.clientlib.successPayload
+import com.solana.mobilewalletadapter.clientlib.*
 import com.solanamobile.ktxclientsample.usecase.Connected
 import com.solanamobile.ktxclientsample.usecase.NotConnected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
@@ -131,6 +129,10 @@ class SampleViewModel @Inject constructor(
                         userAddress = "Error airdropping",
                         userLabel = "",
                     ).updateViewState()
+                }
+            } ?: kotlin.run {
+                if (result is TransactionResult.Failure) {
+                    Log.v("KTX Sample", result.message)
                 }
             }
         }
