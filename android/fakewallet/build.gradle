@@ -21,6 +21,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+    }
+
     signingConfigs {
         create("release") {
             // APK signing keystore configuration provided by environment variables:
@@ -64,6 +68,9 @@ android {
 }
 
 dependencies {
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestUtil 'androidx.test:orchestrator:1.4.2'
+
     androidTestImplementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.0'
     androidTestImplementation 'androidx.test:core:1.5.0'
     androidTestImplementation 'androidx.test:core-ktx:1.5.0'
