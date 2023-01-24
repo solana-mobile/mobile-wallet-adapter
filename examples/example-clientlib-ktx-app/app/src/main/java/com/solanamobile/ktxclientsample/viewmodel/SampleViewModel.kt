@@ -28,7 +28,8 @@ data class SampleViewState(
     val solBalance: Double = 0.0,
     val userAddress: String = "",
     val userLabel: String = "",
-    val memoTx: String = ""
+    val memoTx: String = "",
+    val walletFound: Boolean = true
 )
 
 val solanaUri = Uri.parse("https://solana.com")
@@ -135,7 +136,10 @@ class SampleViewModel @Inject constructor(
                     }
                 }
                 is TransactionResult.NoWalletFound -> {
-                    Log.v("KTX Sample", result.message)
+                    _state.value.copy(
+                        walletFound = false
+                    ).updateViewState()
+
                 }
                 is TransactionResult.Failure -> {
                     Log.v("KTX Sample", result.message)
