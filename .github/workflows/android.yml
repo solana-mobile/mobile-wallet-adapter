@@ -38,6 +38,7 @@ jobs:
         uses: actions/cache@v3
         id: avd-cache
         with:
+          working-directory: android
           path: |
             ~/.android/avd/*
             ~/.android/adb*
@@ -47,7 +48,9 @@ jobs:
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 30
+          target: google_apis
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
