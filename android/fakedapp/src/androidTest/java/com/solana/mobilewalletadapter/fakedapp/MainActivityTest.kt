@@ -55,7 +55,7 @@ class MainActivityTest {
 
         uiDevice.findObject(By.text("AUTHORIZE")).click()
 
-        uiDevice.waitForWindowUpdate(null, 500)
+        uiDevice.waitForWindowUpdate("com.solana.mobilewalletadapter.fakewallet", 3000)
 
         uiDevice.findObject(By.text("AUTHORIZE")).click()
 
@@ -129,7 +129,7 @@ class MainActivityTest {
 
         uiDevice.findObject(By.text("AUTHORIZE")).click()
 
-        uiDevice.waitForWindowUpdate(null, 500)
+        uiDevice.waitForWindowUpdate("com.solana.mobilewalletadapter.fakewallet", 3000)
 
         // send transaction to cluster is flaky and relies on a successful airdrop, which is
         // difficult with the public devnet/testnet RPCs. Will revisit this with a local validator!
@@ -208,6 +208,6 @@ class MainActivityTest {
             }
         }
 
-        uiDevice.waitForWindowUpdate(null, 500)
+        uiDevice.waitForWindowUpdate("com.solana.mobilewalletadapter.fakewallet", 3000)
     }
 }
