@@ -11,6 +11,22 @@ on:
     types: [ published ]
 
 jobs:
+  test:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-level: [30, 33]
+    steps:
+      # Setup
+      - uses: actions/checkout@v3
+
+      # Test
+      - name: Integration Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          disable-animations: true
+          script: ./gradlew connectedCheck
   build:
     runs-on: ubuntu-latest
 
