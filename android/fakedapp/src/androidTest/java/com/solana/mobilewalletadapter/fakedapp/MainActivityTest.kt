@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until.newWindow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -199,15 +200,13 @@ class MainActivityTest {
     private fun handleWalletDisambiguationIfNecessary(uiDevice: UiDevice) {
         uiDevice.findObjects(By.textContains("Fake Wallet")).forEach {
             if (it.text.startsWith("Open with")) {
-                uiDevice.findObject(By.text("Just once")).click()
+                uiDevice.findObject(By.text("Just once")).clickAndWait(newWindow(), 3000)
             } else {
                 var parent = it.parent
                 while (parent?.isClickable == false)
                     parent = parent.parent
-                parent?.click()
+                parent?.clickAndWait(newWindow(), 3000)
             }
         }
-
-        uiDevice.waitForWindowUpdate("com.solana.mobilewalletadapter.fakewallet", 3000)
     }
 }
