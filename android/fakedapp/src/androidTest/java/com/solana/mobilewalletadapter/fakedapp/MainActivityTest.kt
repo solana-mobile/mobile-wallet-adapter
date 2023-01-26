@@ -200,8 +200,11 @@ class MainActivityTest {
         uiDevice.findObjects(By.textContains("Fake Wallet")).forEach {
             if (it.text.startsWith("Open with")) {
                 uiDevice.findObject(By.text("Just once")).click()
-            } else if (it.isClickable) {
-                it.click()
+            } else {
+                var parent = it.parent
+                while (!parent.isClickable)
+                    parent = parent.parent
+                parent.click()
             }
         }
 
