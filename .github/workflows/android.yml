@@ -16,9 +16,9 @@ jobs:
     # strategy:
     #   matrix:
     #     api-level: [30, 33]
-    defaults:
-      run:
-        working-directory: android
+    # defaults:
+    #   run:
+    #     working-directory: android
 
     steps:
       # Setup
@@ -28,6 +28,7 @@ jobs:
       - name: Integration Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 30
           target: google_apis
           disable-animations: true
