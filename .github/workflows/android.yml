@@ -16,6 +16,10 @@ jobs:
     strategy:
       matrix:
         api-level: [30, 33]
+    defaults:
+      run:
+        working-directory: android
+
     steps:
       # Setup
       - uses: actions/checkout@v3
