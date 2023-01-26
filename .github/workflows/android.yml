@@ -13,9 +13,9 @@ on:
 jobs:
   test:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        api-level: [30, 33]
+    # strategy:
+    #   matrix:
+    #     api-level: [30, 33]
     defaults:
       run:
         working-directory: android
@@ -29,7 +29,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          profile: Pixel 3a
+          target: google_apis
           disable-animations: true
           script: ./gradlew connectedCheck
 
