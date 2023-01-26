@@ -202,9 +202,9 @@ class MainActivityTest {
                 uiDevice.findObject(By.text("Just once")).click()
             } else {
                 var parent = it.parent
-                while (parent != null && !parent.isClickable)
+                while (parent?.isClickable == false)
                     parent = parent.parent
-                parent.click()
+                parent?.click()
             }
         }
 
