@@ -80,7 +80,9 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedCheck
+          script: |
+            ./gradlew fakewallet:installDebug
+            ./gradlew connectedCheck
 
       - name: run tests (attempt 3)
         if: steps.testPass2.outcome == 'failure'
@@ -92,7 +94,9 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedCheck
+          script: |
+            ./gradlew fakewallet:installDebug
+            ./gradlew connectedCheck
 
   build:
     runs-on: ubuntu-latest
