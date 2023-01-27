@@ -233,5 +233,5 @@ class MainActivityTest {
     }
 
     private fun waitForWalletButton(uiDevice: UiDevice, buttonResName: String) =
-        uiDevice.wait(findObject(By.res(FAKEWALLET_PACKAGE, buttonResName)), 100)
+        uiDevice.wait(findObject(By.res(FAKEWALLET_PACKAGE, buttonResName)), WINDOW_CHANGE_TIMEOUT)
 }
