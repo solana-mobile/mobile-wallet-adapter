@@ -17,7 +17,7 @@ jobs:
     #   matrix:
     #     api-level: [30, 33]
     # defaults:
-    #   run:
+    #   with:
     #     working-directory: android
 
     steps:
@@ -64,7 +64,7 @@ jobs:
           api-level: 30
           target: google_apis
           force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             ./gradlew fakewallet:installDebug
