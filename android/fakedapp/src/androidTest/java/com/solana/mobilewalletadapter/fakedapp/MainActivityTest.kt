@@ -13,14 +13,21 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until.newWindow
+import androidx.test.uiautomator.Until.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
+    val WINDOW_CHANGE_TIMEOUT = 5000L
+    val FAKEWALLET_PACKAGE = "com.solana.mobilewalletadapter.fakewallet"
+
     @get:Rule var activityScenarioRule = activityScenarioRule<MainActivity>()
+
+    val walletAuthorizeButton = "btn_authorize"
+    val walletSendTransactionButton = "btn_send_transaction_to_cluster"
+    val walletSimulateSendButton = "btn_simulate_transactions_submitted"
 
     @Test
     fun getCapabilities_isSuccessful() {
@@ -37,7 +44,8 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withId(R.id.btn_deauthorize)).check(matches(isClickable()))
@@ -54,11 +62,12 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton).click()
 
-        uiDevice.waitForWindowUpdate("com.solana.mobilewalletadapter.fakewallet", 3000)
+        uiDevice.waitForWindowUpdate(FAKEWALLET_PACKAGE, WINDOW_CHANGE_TIMEOUT)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -74,14 +83,16 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // back in dApp, click sign
         onView(withId(R.id.btn_sign_txn_x1)).perform(click())
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -97,14 +108,16 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // back in dApp, click sign
         onView(withId(R.id.btn_sign_txn_x3)).perform(click())
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -120,7 +133,8 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // back in dApp, click sign
 //        onView(withId(R.id.btn_request_airdrop)).perform(click())
@@ -128,14 +142,13 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
-
-        uiDevice.waitForWindowUpdate("com.solana.mobilewalletadapter.fakewallet", 3000)
+        waitForWalletButton(uiDevice, walletAuthorizeButton).click()
 
         // send transaction to cluster is flaky and relies on a successful airdrop, which is
         // difficult with the public devnet/testnet RPCs. Will revisit this with a local validator!
-//        uiDevice.findObject(By.textStartsWith("SEND TRANSACTION")).click()
-        uiDevice.findObject(By.textStartsWith("SIMULATE SUBMITTED")).click()
+//        waitForAndClickWalletButton(uiDevice, walletSendTransactionButton)
+        waitForWalletButton(uiDevice, walletSimulateSendButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -153,14 +166,16 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // back in dApp, click sign
         onView(withId(R.id.btn_sign_txn_x1)).perform(click())
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -178,7 +193,8 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // back in dApp, click sign
 //        onView(withId(R.id.btn_request_airdrop)).perform(click())
@@ -186,27 +202,34 @@ class MainActivityTest {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        uiDevice.findObject(By.text("AUTHORIZE")).click()
+        waitForWalletButton(uiDevice, walletAuthorizeButton).click()
 
         // send transaction to cluster is flaky and relies on a successful airdrop, which is
         // difficult with the public devnet/testnet RPCs. Will revisit this with a local validator!
-//        uiDevice.findObject(By.textStartsWith("SEND TRANSACTION")).click()
-        uiDevice.findObject(By.textStartsWith("SIMULATE SUBMITTED")).click()
+//        waitForAndClickWalletButton(uiDevice, walletSendTransactionButton)
+        waitForWalletButton(uiDevice, walletSimulateSendButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
     }
 
     private fun handleWalletDisambiguationIfNecessary(uiDevice: UiDevice) {
-        uiDevice.findObjects(By.textContains("Fake Wallet")).forEach {
-            if (it.text.startsWith("Open with")) {
-                uiDevice.findObject(By.text("Just once")).clickAndWait(newWindow(), 3000)
+        uiDevice.findObject(By.res("android", "title"))?.run {
+            if (childCount > 1 && text.contains("Fake Wallet")) {
+                uiDevice.findObject(By.res("android", "button_once"))
+            } else if (text.contains("Fake Wallet")) {
+                uiDevice.findObject(By.textContains("Fake Wallet")).click()
+                uiDevice.findObject(By.res("android", "button_once"))
             } else {
-                var parent = it.parent
+                var parent = parent
                 while (parent?.isClickable == false)
                     parent = parent.parent
-                parent?.clickAndWait(newWindow(), 3000)
+                parent
             }
-        }
+        }?.clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
     }
+
+    private fun waitForWalletButton(uiDevice: UiDevice, buttonResName: String) =
+        uiDevice.wait(findObject(By.res(FAKEWALLET_PACKAGE, buttonResName)), 100)
 }
