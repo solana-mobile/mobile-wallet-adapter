@@ -13,12 +13,9 @@ on:
 jobs:
   test:
     runs-on: macos-latest
-    # strategy:
-    #   matrix:
-    #     api-level: [30, 33]
-    # defaults:
-    #   with:
-    #     working-directory: android
+    strategy:
+      matrix:
+        api-level: [30]
 
     steps:
       # Setup
@@ -38,18 +35,17 @@ jobs:
         uses: actions/cache@v3
         id: avd-cache
         with:
-          working-directory: android
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-30
+          key: avd-${{ matrix.api-level }}
 
       - name: create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           working-directory: android
-          api-level: 30
+          api-level: ${{ matrix.api-level }}
           target: google_apis
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
@@ -61,7 +57,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           working-directory: android
-          api-level: 30
+          api-level: ${{ matrix.api-level }}
           target: google_apis
           force-avd-creation: false
           emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
