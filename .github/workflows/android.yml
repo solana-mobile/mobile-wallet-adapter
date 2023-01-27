@@ -53,41 +53,7 @@ jobs:
           script: echo "Generated AVD snapshot for caching."
 
       # Test
-      - name: run tests (attempt 1)
-        id: testPass1
-        continue-on-error: true
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          working-directory: android
-          api-level: ${{ matrix.api-level }}
-          target: google_apis
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: |
-            adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-            ./gradlew fakewallet:installDebug
-            ./gradlew connectedCheck
-
-      - name: run tests (attempt 2)
-        if: steps.testPass1.outcome == 'failure'
-        id: testPass2
-        continue-on-error: true
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          working-directory: android
-          api-level: ${{ matrix.api-level }}
-          target: google_apis
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: |
-            adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-            ./gradlew fakewallet:installDebug
-            ./gradlew connectedCheck
-
-      - name: run tests (attempt 3)
-        if: steps.testPass2.outcome == 'failure'
+      - name: run tests 
         uses: reactivecircus/android-emulator-runner@v2
         with:
           working-directory: android
