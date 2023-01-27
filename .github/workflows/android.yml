@@ -16,9 +16,9 @@ jobs:
     # strategy:
     #   matrix:
     #     api-level: [30, 33]
-    defaults:
-      with:
-        working-directory: android
+    # defaults:
+    #   with:
+    #     working-directory: android
 
     steps:
       # Setup
@@ -38,6 +38,7 @@ jobs:
         uses: actions/cache@v3
         id: avd-cache
         with:
+          working-directory: android
           path: |
             ~/.android/avd/*
             ~/.android/adb*
@@ -47,6 +48,7 @@ jobs:
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 30
           target: google_apis
           force-avd-creation: false
@@ -58,6 +60,7 @@ jobs:
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          working-directory: android
           api-level: 30
           target: google_apis
           force-avd-creation: false
