@@ -217,17 +217,19 @@ class MainActivityTest {
     private fun handleWalletDisambiguationIfNecessary(uiDevice: UiDevice) {
         uiDevice.findObject(By.res("android", "title"))?.run {
             if (childCount > 1 && text.contains("Fake Wallet")) {
+                // case 1: "Open with Fake Wallet" > click "Just once"
                 uiDevice.findObject(By.res("android", "button_once"))
             } else if (text.contains("Fake Wallet")) {
+                // case 2: "Open with:" > choose app from list > click "Just once"
                 uiDevice.findObject(By.textContains("Fake Wallet")).click()
                 uiDevice.findObject(By.res("android", "button_once"))
             } else {
-                var parent = parent
-                while (parent?.isClickable == false)
-                    parent = parent.parent
-                parent
+                // case 2: "Open with Solflare/Phantom" > choose Fake Wallet app from list
+                uiDevice.findObject(By.textContains("Fake Wallet"))
             }
         }?.clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        // case 4: only 1 wallet, no disambiguation dialog
     }
 
     private fun waitForWalletButton(uiDevice: UiDevice, buttonResName: String) =
