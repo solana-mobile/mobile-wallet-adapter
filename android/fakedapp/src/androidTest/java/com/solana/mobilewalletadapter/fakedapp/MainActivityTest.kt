@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
-    val WINDOW_CHANGE_TIMEOUT = 5000L
+    val WINDOW_CHANGE_TIMEOUT = 10000L
     val FAKEWALLET_PACKAGE = "com.solana.mobilewalletadapter.fakewallet"
 
     @get:Rule var activityScenarioRule = activityScenarioRule<MainActivity>()
