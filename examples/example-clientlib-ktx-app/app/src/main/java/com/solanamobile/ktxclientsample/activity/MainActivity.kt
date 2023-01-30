@@ -1,6 +1,5 @@
 package com.solanamobile.ktxclientsample.activity
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,9 +13,11 @@ import com.solanamobile.ktxclientsample.ui.theme.KtxClientSampleTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity(), ActivityResultSender {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val sender = ActivityResultSender(this)
 
         setContent {
             KtxClientSampleTheme {
@@ -24,13 +25,9 @@ class MainActivity : ComponentActivity(), ActivityResultSender {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    SampleScreen(this)
+                    SampleScreen(sender)
                 }
             }
         }
-    }
-
-    override fun launch(intent: Intent) {
-        startActivityForResult(intent, 0)
     }
 }

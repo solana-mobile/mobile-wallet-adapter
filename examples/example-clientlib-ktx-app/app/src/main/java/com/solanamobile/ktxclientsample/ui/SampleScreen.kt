@@ -155,6 +155,7 @@ fun SampleScreen(
                 }
 
                 Button(
+                    enabled = viewState.walletFound,
                     elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.secondaryVariant
@@ -195,6 +196,12 @@ fun SampleScreen(
                 )
             }
 
+            val buttonText = when {
+                viewState.canTransact && viewState.walletFound -> "Disconnect"
+                !viewState.walletFound -> "Please install a compatible wallet"
+                else -> "Add funds to get started"
+            }
+
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = viewState.canTransact,
@@ -207,7 +214,7 @@ fun SampleScreen(
             ) {
                 Text(
                     color = MaterialTheme.colors.onPrimary,
-                    text = if (viewState.canTransact) "Disconnect" else "Add funds to get started"
+                    text = buttonText
                 )
             }
 

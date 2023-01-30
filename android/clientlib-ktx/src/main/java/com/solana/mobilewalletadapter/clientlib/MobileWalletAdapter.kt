@@ -1,20 +1,39 @@
 package com.solana.mobilewalletadapter.clientlib
 
-import android.util.Log
+import android.content.ActivityNotFoundException
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.IOException
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+
+sealed class TransactionResult<T> {
+    data class Success<T>(
+        val payload: T
+    ): TransactionResult<T>()
+
+    class Failure<T>(
+        val message: String,
+        val e: Exception
+    ): TransactionResult<T>()
+
+    class NoWalletFound<T>(
+        val message: String
+    ): TransactionResult<T>()
+}
+
+/**
+ * Convenience property to access success payload. Will be null if not successful.
+ */
+val <T> TransactionResult<T>.successPayload: T?
+    get() = (this as? TransactionResult.Success)?.payload
 
 class MobileWalletAdapter(
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
@@ -23,80 +42,78 @@ class MobileWalletAdapter(
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T): T {
-        return try {
-            withContext(ioDispatcher) {
-                val scenario = LocalAssociationScenario(timeout)
-                val details = scenario.associationDetails()
+    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T): TransactionResult<T> = coroutineScope {
+        return@coroutineScope try {
+            val scenario = LocalAssociationScenario(timeout)
+            val details = scenario.associationDetails()
 
-                val intent = LocalAssociationIntentCreator.createAssociationIntent(details.uriPrefix, details.port, details.session)
-                sender.launch(intent)
-
-                val client = try {
-                    @Suppress("BlockingMethodInNonBlockingContext")
-                    scenario.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                } catch (e: InterruptedException) {
-                    Log.w(TAG, "Interrupted while waiting for local association to be ready")
-                    throw e
-                } catch (e: TimeoutException) {
-                    Log.e(TAG, "Timed out waiting for local association to be ready")
-                    throw e
-                } catch (e: ExecutionException) {
-                    Log.e(TAG, "Failed establishing local association with wallet", e.cause)
-                    throw e
+            val intent = LocalAssociationIntentCreator.createAssociationIntent(details.uriPrefix, details.port, details.session)
+            sender.startActivityForResult(intent) {
+                launch {
+                    delay(5000L)
+                    scenario.close()
                 }
+            }
 
-                adapterOperations.client = client
-                val result = block(adapterOperations)
+            withContext(ioDispatcher) {
+                try {
+                    @Suppress("BlockingMethodInNonBlockingContext")
+                    val client = scenario.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
 
-                @Suppress("BlockingMethodInNonBlockingContext")
-                scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    adapterOperations.client = client
+                    val result = block(adapterOperations)
 
-                result
+                    TransactionResult.Success(result)
+                } catch (e: InterruptedException) {
+                    TransactionResult.Failure("Interrupted while waiting for local association to be ready", e)
+                } catch (e: TimeoutException) {
+                    TransactionResult.Failure("Timed out waiting for local association to be ready", e)
+                } catch (e: ExecutionException) {
+                    TransactionResult.Failure("Failed establishing local association with wallet", e)
+                } catch (e: CancellationException) {
+                    TransactionResult.Failure("Local association was cancelled before connected", e)
+                } finally {
+                    @Suppress("BlockingMethodInNonBlockingContext")
+                    scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                }
             }
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
                 is IOException -> {
-                    Log.e(TAG, "IO error while sending operation", cause)
-                    throw e
+                    return@coroutineScope TransactionResult.Failure("IO error while sending operation", cause)
                 }
                 is TimeoutException -> {
-                    Log.e(TAG, "Timed out while waiting for result", cause)
-                    throw e
+                    return@coroutineScope TransactionResult.Failure("Timed out while waiting for result", cause)
                 }
                 is MobileWalletAdapterClient.InvalidPayloadsException -> {
-                    Log.e(TAG, "Transaction payloads invalid", cause)
-                    throw e
+                    return@coroutineScope TransactionResult.Failure("Transaction payloads invalid", cause)
                 }
                 is MobileWalletAdapterClient.NotSubmittedException -> {
-                    Log.e(TAG, "Not all transactions were submitted", cause)
-                    throw e
+                    return@coroutineScope TransactionResult.Failure("Not all transactions were submitted", cause)
                 }
                 is JsonRpc20Client.JsonRpc20RemoteException -> {
-                    when (cause.code) {
-                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> Log.e(TAG, "Auth token invalid", cause)
-                        ProtocolContract.ERROR_NOT_SIGNED -> Log.e(TAG, "User did not authorize signing", cause)
-                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> Log.e(TAG, "Too many payloads to sign", cause)
-                        else -> Log.e(TAG, "Remote exception", cause)
+                    val msg = when (cause.code) {
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> "Auth token invalid"
+                        ProtocolContract.ERROR_NOT_SIGNED -> "User did not authorize signing"
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> "Too many payloads to sign"
+                        else -> "Remote exception"
                     }
-                    throw e
+                    return@coroutineScope TransactionResult.Failure(msg, cause)
                 }
                 is MobileWalletAdapterClient.InsecureWalletEndpointUriException -> {
-                    Log.e(TAG, "Authorization result contained a non-HTTPS wallet base URI", cause)
-                    throw e
+                    return@coroutineScope TransactionResult.Failure("Authorization result contained a non-HTTPS wallet base URI", cause)
                 }
                 is JsonRpc20Client.JsonRpc20Exception -> {
-                    Log.e(TAG, "JSON-RPC client exception", cause)
-                    throw e
+                    return@coroutineScope TransactionResult.Failure("JSON-RPC client exception", cause)
                 }
-                else -> throw e
+                else -> return@coroutineScope TransactionResult.Failure("Execution exception", e)
             }
         } catch (e: CancellationException) {
-            Log.e(TAG, "Request was cancelled", e)
-            throw e
+            return@coroutineScope TransactionResult.Failure("Request was cancelled", e)
         } catch (e: InterruptedException) {
-            Log.e(TAG, "Request was interrupted", e)
-            throw e
+            return@coroutineScope TransactionResult.Failure("Request was interrupted", e)
+        } catch (e: ActivityNotFoundException) {
+            return@coroutineScope TransactionResult.NoWalletFound("No compatible wallet found.")
         }
     }
 
