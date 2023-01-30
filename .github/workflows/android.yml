@@ -143,6 +143,8 @@ jobs:
           script: echo "Generated AVD snapshot for caching."
 
       # Test
+      # Note: the fakedapp tests rely on fakewallet, so we always run the fakewallet 
+      # tests first to ensure fakewallet is installed before the fakedapp tests 
       - name: run tests 
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -154,8 +156,8 @@ jobs:
           disable-animations: true
           script: |
             adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-            ./gradlew fakewallet:installDebug
-            ./gradlew connectedCheck
+            ./gradlew :fakewallet:connectedDebugAndroidTest
+            ./gradlew :fakedapp:connectedDebugAndroidTest
 
   # Note: only runs on 'push' events
   publish-to-gh-pages:
