@@ -36,21 +36,27 @@ All Android projects within this repository can be built using [Android Studio](
 
 ### How to reference these libraries in your project
 
-#### Gradle
+#### For dApps:
 
-For dApps,
-
+Java
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:1.0.3'
+    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:1.0.4'
 }
 ```
 
-For wallets,
+Kotlin
+```
+dependencies {
+    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib-ktx:1.0.4'
+}
+```
+
+#### For wallets:
 
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:1.0.3'
+    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:1.0.4'
 }
 ```
 
