@@ -63,7 +63,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 10,
                 10,
                 arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                NO_CONNECTION_TIMEOUT_MS,
+                LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
             ),
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
@@ -477,6 +477,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
 
         override fun onLowPowerAndNoConnection() {
+            Log.w(TAG, "Device is in power save mode and no connection was made. The connection was likely suppressed by power save mode.")
             viewModelScope.launch {
                 _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.LowPowerNoConnection)
             }
@@ -507,6 +508,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     companion object {
         private val TAG = MobileWalletAdapterViewModel::class.simpleName
         private const val SOURCE_VERIFICATION_TIMEOUT_MS = 3000L
-        private const val NO_CONNECTION_TIMEOUT_MS = 3000L
+        private const val LOW_POWER_NO_CONNECTION_TIMEOUT_MS = 3000L
     }
 }

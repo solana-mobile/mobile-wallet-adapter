@@ -5,7 +5,7 @@ import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
 
-class DevicePowerConfigProvider implements PowerConfigProvider {
+/*package*/ class DevicePowerConfigProvider implements PowerConfigProvider {
 
     @Nullable
     private PowerManager powerManager;

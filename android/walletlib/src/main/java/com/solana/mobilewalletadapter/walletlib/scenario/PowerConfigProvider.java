@@ -1,5 +1,5 @@
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
-interface PowerConfigProvider {
+/*package*/ interface PowerConfigProvider {
     boolean isLowPowerMode();
 }

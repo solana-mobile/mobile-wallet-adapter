@@ -37,11 +37,10 @@ class MainActivityTest {
     @get:Rule
     var activityScenarioRule: ActivityScenarioRule<MainActivity> = activityScenarioRule()
 
-    // tests got flaky on CI with this change so removing for now until I can dig in and understand wtf
-//    @Before
-//    fun setup() {
-//        TestScopeLowPowerMode = false
-//    }
+    @Before
+    fun setup() {
+        TestScopeLowPowerMode = false
+    }
 
     @Test
     fun associationIntent_LaunchesAssociationFragment() {
