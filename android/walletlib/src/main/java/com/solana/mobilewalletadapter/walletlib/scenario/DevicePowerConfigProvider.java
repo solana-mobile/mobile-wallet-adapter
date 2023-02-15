@@ -1,11 +1,11 @@
-package com.solana.mobilewalletadapter.walletlib.provider;
+package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import android.content.Context;
 import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
 
-public class DevicePowerConfigProvider implements PowerConfigProvider {
+class DevicePowerConfigProvider implements PowerConfigProvider {
 
     @Nullable
     private PowerManager powerManager;

@@ -20,16 +20,13 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.walletlib.provider.TestScopeLowPowerMode
-import org.junit.After
+import com.solana.mobilewalletadapter.walletlib.scenario.TestScopeLowPowerMode
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -39,6 +36,11 @@ class MainActivityTest {
 
     @get:Rule
     var activityScenarioRule: ActivityScenarioRule<MainActivity> = activityScenarioRule()
+
+    @Before
+    fun setup() {
+        TestScopeLowPowerMode = false
+    }
 
     @Test
     fun associationIntent_LaunchesAssociationFragment() {

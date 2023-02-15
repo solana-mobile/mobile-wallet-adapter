@@ -35,7 +35,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
                                       @Nullable StateCallbacks stateCallbacks) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mScenario = scenario;
-        mAssociationPublicKey = ECDSAKeys.decodeP256PublicKey(scenario.associationPublicKey);
+        mAssociationPublicKey = ECDSAKeys.decodeP256PublicKey(scenario.getAssociationPublicKey());
     }
 
     @NonNull

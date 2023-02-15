@@ -8,19 +8,18 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
-import com.solana.mobilewalletadapter.walletlib.provider.PowerConfigProvider;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class LocalWebSocketServerScenarioTest {
 
     @Rule
@@ -39,17 +38,17 @@ public class LocalWebSocketServerScenarioTest {
 
         MobileWalletAdapterConfig config = new MobileWalletAdapterConfig(
                 false,
-                noConnectionTimeout,
                 1,
                 1,
-                new Object[] { "legacy" }
+                new Object[] { "legacy" },
+                noConnectionTimeout
         );
 
         CountDownLatch latch = new CountDownLatch(1);
 
         TestCallbacks lowPowerNoConnectionCallback = new TestCallbacks() {
             @Override
-            public void onLowPowerAndNoConnectionTimeoutReached() {
+            public void onLowPowerAndNoConnection() {
                 latch.countDown();
             }
         };
@@ -58,7 +57,7 @@ public class LocalWebSocketServerScenarioTest {
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port,powerConfig).start();
+                lowPowerNoConnectionCallback, publicKey, port, powerConfig).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
@@ -78,17 +77,17 @@ public class LocalWebSocketServerScenarioTest {
 
         MobileWalletAdapterConfig config = new MobileWalletAdapterConfig(
                 false,
-                noConnectionTimeout,
                 1,
                 1,
-                new Object[] { "legacy" }
+                new Object[] { "legacy" },
+                noConnectionTimeout
         );
 
         CountDownLatch latch = new CountDownLatch(1);
 
         TestCallbacks lowPowerNoConnectionCallback = new TestCallbacks() {
             @Override
-            public void onLowPowerAndNoConnectionTimeoutReached() {
+            public void onLowPowerAndNoConnection() {
                 latch.countDown();
             }
         };
@@ -104,7 +103,7 @@ public class LocalWebSocketServerScenarioTest {
         assertTrue(lowPowerNoConnectionCallbackFired);
     }
 
-    protected class TestCallbacks implements LocalWebSocketServerScenario.Callbacks {
+    protected class TestCallbacks implements LocalScenario.Callbacks {
         @Override
         public void onScenarioReady() {}
         @Override
@@ -129,7 +128,7 @@ public class LocalWebSocketServerScenarioTest {
         public void onSignAndSendTransactionsRequest(SignAndSendTransactionsRequest request) {}
         @Override
         public void onDeauthorizedEvent(DeauthorizedEvent event) {}
-        @Override
-        public void onLowPowerAndNoConnectionTimeoutReached() {}
+//        @Override
+        public void onLowPowerAndNoConnection() {}
     }
 }

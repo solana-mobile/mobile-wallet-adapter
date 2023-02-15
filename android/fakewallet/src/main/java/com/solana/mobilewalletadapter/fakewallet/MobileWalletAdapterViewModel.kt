@@ -28,11 +28,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     val mobileWalletAdapterServiceEvents =
         _mobileWalletAdapterServiceEvents.asSharedFlow() // expose as event stream, rather than a stateful object
 
-    private val _lowPower = MutableSharedFlow<Boolean>(1)
-    val lowPower: SharedFlow<Boolean> = _lowPower
-
     private var clientTrustUseCase: ClientTrustUseCase? = null
-    private var scenario: Scenario? = null
+    private var scenario: LocalScenario? = null
 
     fun processLaunch(intent: Intent?, callingPackage: String?): Boolean {
         if (intent == null) {
@@ -63,11 +60,10 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             getApplication<FakeWalletApplication>().applicationContext,
             MobileWalletAdapterConfig(
                 true,
-                getApplication<Application>().resources
-                    .getInteger(R.integer.no_connection_timeout_millis).toLong(),
                 10,
                 10,
-                arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0)
+                arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                NO_CONNECTION_TIMEOUT_MS,
             ),
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
@@ -368,7 +364,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    private inner class MobileWalletAdapterScenarioCallbacks : LocalWebSocketServerScenario.Callbacks {
+    private inner class MobileWalletAdapterScenarioCallbacks : LocalScenario.Callbacks {
         override fun onScenarioReady() = Unit
         override fun onScenarioServingClients() = Unit
         override fun onScenarioServingComplete() {
@@ -480,9 +476,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             event.complete()
         }
 
-        override fun onLowPowerAndNoConnectionTimeoutReached() {
+        override fun onLowPowerAndNoConnection() {
             viewModelScope.launch {
-                _lowPower.emit(true)
+                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.LowPowerNoConnection)
             }
         }
     }
@@ -490,6 +486,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     sealed interface MobileWalletAdapterServiceRequest {
         object None : MobileWalletAdapterServiceRequest
         object SessionTerminated : MobileWalletAdapterServiceRequest
+        object LowPowerNoConnection : MobileWalletAdapterServiceRequest
 
         sealed class MobileWalletAdapterRemoteRequest(open val request: ScenarioRequest) : MobileWalletAdapterServiceRequest
         data class AuthorizeDapp(
@@ -510,5 +507,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     companion object {
         private val TAG = MobileWalletAdapterViewModel::class.simpleName
         private const val SOURCE_VERIFICATION_TIMEOUT_MS = 3000L
+        private const val NO_CONNECTION_TIMEOUT_MS = 3000L
     }
 }
