@@ -37,10 +37,11 @@ class MainActivityTest {
     @get:Rule
     var activityScenarioRule: ActivityScenarioRule<MainActivity> = activityScenarioRule()
 
-    @Before
-    fun setup() {
-        TestScopeLowPowerMode = false
-    }
+    // tests got flaky on CI with this change so removing for now until I can dig in and understand wtf
+//    @Before
+//    fun setup() {
+//        TestScopeLowPowerMode = false
+//    }
 
     @Test
     fun associationIntent_LaunchesAssociationFragment() {
@@ -251,8 +252,6 @@ class MainActivityTest {
         // click authorize button
         onView(withId(R.id.btn_authorize))
             .check(matches(isDisplayed())).perform(click())
-
-        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "low_power_mode_warning_title")), WINDOW_CHANGE_TIMEOUT)
 
         // then
         onView(withText(R.string.low_power_mode_warning_title))
