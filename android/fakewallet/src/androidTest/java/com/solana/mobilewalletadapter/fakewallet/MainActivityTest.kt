@@ -252,6 +252,8 @@ class MainActivityTest {
         onView(withId(R.id.btn_authorize))
             .check(matches(isDisplayed())).perform(click())
 
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "low_power_mode_warning_title")), WINDOW_CHANGE_TIMEOUT)
+
         // then
         onView(withText(R.string.low_power_mode_warning_title))
             .inRoot(isDialog())
