@@ -146,8 +146,8 @@ public abstract class LocalScenario implements Scenario {
         @Override
         public void onSessionEstablished() {
             Log.d(TAG, "MobileWalletAdapter session established");
-            stopNoConnectionTimer();
             if (mClientCount.incrementAndGet() == 1) {
+                stopNoConnectionTimer();
                 mIoHandler.post(mAuthRepository::start);
                 mIoHandler.post(mCallbacks::onScenarioServingClients);
             }
@@ -157,6 +157,7 @@ public abstract class LocalScenario implements Scenario {
         public void onSessionClosed() {
             Log.d(TAG, "MobileWalletAdapter session terminated");
             if (mClientCount.decrementAndGet() == 0) {
+                stopNoConnectionTimer();
                 synchronized (mLock) {
                     mActiveAuthorization = null;
                 }
@@ -168,6 +169,7 @@ public abstract class LocalScenario implements Scenario {
         @Override
         public void onSessionError() {
             Log.w(TAG, "MobileWalletAdapter session error");
+            stopNoConnectionTimer();
             if (mClientCount.decrementAndGet() == 0) {
                 synchronized (mLock) {
                     mActiveAuthorization = null;
@@ -214,6 +216,8 @@ public abstract class LocalScenario implements Scenario {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
                                 "authorize request declined"));
                     }
+
+                    startNoConnectionTimer();
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
                     assert(cause instanceof Exception); // expected to always be an Exception
@@ -283,6 +287,8 @@ public abstract class LocalScenario implements Scenario {
                             new MobileWalletAdapterServer.AuthorizationResult(
                                     authToken, authRecord.publicKey, authRecord.accountLabel,
                                     authRecord.walletUriBase)));
+
+                    startNoConnectionTimer();
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
                     assert(cause instanceof Exception); // expected to always be an Exception
@@ -339,6 +345,8 @@ public abstract class LocalScenario implements Scenario {
                     request, authRecord.identity.getName(), authRecord.identity.getUri(),
                     authRecord.identity.getRelativeIconUri(), authRecord.scope,
                     authRecord.publicKey, authRecord.cluster)));
+
+            startNoConnectionTimer();
         }
 
         @Override
@@ -363,6 +371,8 @@ public abstract class LocalScenario implements Scenario {
                 mIoHandler.post(() -> request.completeExceptionally(
                         new MobileWalletAdapterServer.RequestDeclinedException("Unexpected address; not signing message"))); // TODO(#44): support multiple addresses
             }
+
+            startNoConnectionTimer();
         }
 
         @Override
@@ -382,6 +392,8 @@ public abstract class LocalScenario implements Scenario {
                     new SignAndSendTransactionsRequest(request, authRecord.identity.getName(),
                             authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
                             authRecord.scope, authRecord.publicKey, authRecord.cluster)));
+
+            startNoConnectionTimer();
         }
     };
 
