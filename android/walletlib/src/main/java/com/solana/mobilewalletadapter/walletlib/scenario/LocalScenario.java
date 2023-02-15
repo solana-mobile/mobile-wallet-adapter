@@ -38,7 +38,7 @@ public abstract class LocalScenario implements Scenario {
     private static final String TAG = LocalScenario.class.getSimpleName();
 
     @NonNull
-    public byte[] associationPublicKey;
+    final public byte[] associationPublicKey;
 
     @NonNull
     protected final MobileWalletAdapterConfig mMobileWalletAdapterConfig;
@@ -111,13 +111,13 @@ public abstract class LocalScenario implements Scenario {
 
     @Override
     public void start() {
-        startNoConnectionTimer();
+        mIoHandler.post(this::startNoConnectionTimer);
     }
 
     @Override
     public abstract void close();
 
-    public Long getNoConnectionTimeout() {
+    private Long getNoConnectionTimeout() {
         return mPowerManager.isLowPowerMode() ? mMobileWalletAdapterConfig.noConnectionWarningTimeoutMs : 0L;
     }
 
@@ -130,13 +130,16 @@ public abstract class LocalScenario implements Scenario {
             mNoConnectionTimeoutHandler = mTimeoutExecutorService.schedule(() -> {
                 Log.i(TAG, "No connection timeout reached");
                 if (mCallbacks instanceof Callbacks) {
-                    ((Callbacks) mCallbacks).onLowPowerAndNoConnection();
+                    mIoHandler.post(((Callbacks) mCallbacks)::onLowPowerAndNoConnection);
                 }
             }, noConnectionTimeout, TimeUnit.MILLISECONDS);
     }
 
     private void stopNoConnectionTimer() {
-        if (mNoConnectionTimeoutHandler != null) mNoConnectionTimeoutHandler.cancel(true);
+        if (mNoConnectionTimeoutHandler != null) {
+            mNoConnectionTimeoutHandler.cancel(true);
+            mNoConnectionTimeoutHandler = null;
+        }
     }
 
     private final MobileWalletAdapterSessionCommon.StateCallbacks mSessionStateCallbacks =
@@ -147,7 +150,7 @@ public abstract class LocalScenario implements Scenario {
         public void onSessionEstablished() {
             Log.d(TAG, "MobileWalletAdapter session established");
             if (mClientCount.incrementAndGet() == 1) {
-                stopNoConnectionTimer();
+                mIoHandler.post(LocalScenario.this::stopNoConnectionTimer);
                 mIoHandler.post(mAuthRepository::start);
                 mIoHandler.post(mCallbacks::onScenarioServingClients);
             }
@@ -157,7 +160,7 @@ public abstract class LocalScenario implements Scenario {
         public void onSessionClosed() {
             Log.d(TAG, "MobileWalletAdapter session terminated");
             if (mClientCount.decrementAndGet() == 0) {
-                stopNoConnectionTimer();
+                mIoHandler.post(LocalScenario.this::stopNoConnectionTimer);
                 synchronized (mLock) {
                     mActiveAuthorization = null;
                 }
@@ -169,7 +172,7 @@ public abstract class LocalScenario implements Scenario {
         @Override
         public void onSessionError() {
             Log.w(TAG, "MobileWalletAdapter session error");
-            stopNoConnectionTimer();
+            mIoHandler.post(LocalScenario.this::stopNoConnectionTimer);
             if (mClientCount.decrementAndGet() == 0) {
                 synchronized (mLock) {
                     mActiveAuthorization = null;
@@ -346,7 +349,7 @@ public abstract class LocalScenario implements Scenario {
                     authRecord.identity.getRelativeIconUri(), authRecord.scope,
                     authRecord.publicKey, authRecord.cluster)));
 
-            startNoConnectionTimer();
+            mIoHandler.post(LocalScenario.this::startNoConnectionTimer);
         }
 
         @Override
@@ -372,7 +375,7 @@ public abstract class LocalScenario implements Scenario {
                         new MobileWalletAdapterServer.RequestDeclinedException("Unexpected address; not signing message"))); // TODO(#44): support multiple addresses
             }
 
-            startNoConnectionTimer();
+            mIoHandler.post(LocalScenario.this::startNoConnectionTimer);
         }
 
         @Override
@@ -393,7 +396,7 @@ public abstract class LocalScenario implements Scenario {
                             authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
                             authRecord.scope, authRecord.publicKey, authRecord.cluster)));
 
-            startNoConnectionTimer();
+            mIoHandler.post(LocalScenario.this::startNoConnectionTimer);
         }
     };
 
