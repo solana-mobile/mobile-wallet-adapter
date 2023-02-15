@@ -47,7 +47,7 @@ public abstract class LocalScenario implements Scenario {
     @NonNull
     protected final Handler mIoHandler;
     @NonNull
-    protected final Scenario.Callbacks mCallbacks;
+    protected final Callbacks mCallbacks;
     @NonNull
     protected final AuthRepository mAuthRepository;
 
@@ -66,7 +66,7 @@ public abstract class LocalScenario implements Scenario {
     protected LocalScenario(@NonNull Context context,
                             @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                             @NonNull AuthIssuerConfig authIssuerConfig,
-                            @NonNull Scenario.Callbacks callbacks,
+                            @NonNull Callbacks callbacks,
                             @NonNull byte[] associationPublicKey) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
                 associationPublicKey, new DevicePowerConfigProvider(context));
@@ -75,7 +75,7 @@ public abstract class LocalScenario implements Scenario {
     /*package*/ LocalScenario(@NonNull Context context,
                               @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                               @NonNull AuthIssuerConfig authIssuerConfig,
-                              @NonNull Scenario.Callbacks callbacks,
+                              @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider) {
         mCallbacks = callbacks;
@@ -117,7 +117,7 @@ public abstract class LocalScenario implements Scenario {
     @Override
     public abstract void close();
 
-    private Long getNoConnectionTimeout() {
+    private long getNoConnectionTimeout() {
         return mPowerManager.isLowPowerMode() ? mMobileWalletAdapterConfig.noConnectionWarningTimeoutMs : 0L;
     }
 
@@ -125,13 +125,11 @@ public abstract class LocalScenario implements Scenario {
         // we cant actually check if a connection is still alive, so instead we start a timer
         // that assumes we do not have connection if the timeout is reached. Therefore, we
         // MUST cancel this timer if we receive any connections or messages before it ends
-        Long noConnectionTimeout = getNoConnectionTimeout();
+        long noConnectionTimeout = getNoConnectionTimeout();
         if (noConnectionTimeout > 0)
             mNoConnectionTimeoutHandler = mTimeoutExecutorService.schedule(() -> {
                 Log.i(TAG, "No connection timeout reached");
-                if (mCallbacks instanceof Callbacks) {
-                    mIoHandler.post(((Callbacks) mCallbacks)::onLowPowerAndNoConnection);
-                }
+                mIoHandler.post(mCallbacks::onLowPowerAndNoConnection);
             }, noConnectionTimeout, TimeUnit.MILLISECONDS);
     }
 
@@ -219,8 +217,6 @@ public abstract class LocalScenario implements Scenario {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
                                 "authorize request declined"));
                     }
-
-                    startNoConnectionTimer();
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
                     assert(cause instanceof Exception); // expected to always be an Exception
@@ -290,8 +286,6 @@ public abstract class LocalScenario implements Scenario {
                             new MobileWalletAdapterServer.AuthorizationResult(
                                     authToken, authRecord.publicKey, authRecord.accountLabel,
                                     authRecord.walletUriBase)));
-
-                    startNoConnectionTimer();
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
                     assert(cause instanceof Exception); // expected to always be an Exception
@@ -348,8 +342,6 @@ public abstract class LocalScenario implements Scenario {
                     request, authRecord.identity.getName(), authRecord.identity.getUri(),
                     authRecord.identity.getRelativeIconUri(), authRecord.scope,
                     authRecord.publicKey, authRecord.cluster)));
-
-            mIoHandler.post(LocalScenario.this::startNoConnectionTimer);
         }
 
         @Override
@@ -374,8 +366,6 @@ public abstract class LocalScenario implements Scenario {
                 mIoHandler.post(() -> request.completeExceptionally(
                         new MobileWalletAdapterServer.RequestDeclinedException("Unexpected address; not signing message"))); // TODO(#44): support multiple addresses
             }
-
-            mIoHandler.post(LocalScenario.this::startNoConnectionTimer);
         }
 
         @Override
@@ -395,8 +385,6 @@ public abstract class LocalScenario implements Scenario {
                     new SignAndSendTransactionsRequest(request, authRecord.identity.getName(),
                             authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
                             authRecord.scope, authRecord.publicKey, authRecord.cluster)));
-
-            mIoHandler.post(LocalScenario.this::startNoConnectionTimer);
         }
     };
 

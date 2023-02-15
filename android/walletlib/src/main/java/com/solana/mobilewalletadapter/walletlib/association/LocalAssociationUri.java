@@ -13,6 +13,7 @@ import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
+import com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario;
 import com.solana.mobilewalletadapter.walletlib.scenario.LocalWebSocketServerScenario;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
@@ -39,8 +40,12 @@ public class LocalAssociationUri extends AssociationUri {
                                                        @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                                        @NonNull AuthIssuerConfig authIssuerConfig,
                                                        @NonNull Scenario.Callbacks callbacks) {
-        return new LocalWebSocketServerScenario(context, mobileWalletAdapterConfig,
-                authIssuerConfig, callbacks, associationPublicKey, port);
+        if (callbacks instanceof LocalScenario.Callbacks) {
+            return new LocalWebSocketServerScenario(context, mobileWalletAdapterConfig,
+                    authIssuerConfig, (LocalScenario.Callbacks) callbacks, associationPublicKey, port);
+        } else {
+            throw new IllegalArgumentException("callbacks must implement " + LocalScenario.Callbacks.class.getName());
+        }
     }
 
     @WebSocketsTransportContract.LocalPortRange

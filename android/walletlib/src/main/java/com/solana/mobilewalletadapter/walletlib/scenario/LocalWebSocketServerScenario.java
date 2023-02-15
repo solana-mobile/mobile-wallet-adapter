@@ -26,7 +26,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
     public LocalWebSocketServerScenario(@NonNull Context context,
                                         @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                         @NonNull AuthIssuerConfig authIssuerConfig,
-                                        @NonNull Scenario.Callbacks callbacks,
+                                        @NonNull LocalScenario.Callbacks callbacks,
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
@@ -36,7 +36,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
     /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
                                              @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                              @NonNull AuthIssuerConfig authIssuerConfig,
-                                             @NonNull Scenario.Callbacks callbacks,
+                                             @NonNull LocalScenario.Callbacks callbacks,
                                              @NonNull byte[] associationPublicKey,
                                              @WebSocketsTransportContract.LocalPortRange int port,
                                              PowerConfigProvider powerConfigProvider) {
