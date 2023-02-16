@@ -21,8 +21,6 @@ public class LocalWebSocketServerScenario extends LocalScenario {
     private final LocalWebSocketServer mWebSocketServer;
     private State mState = State.NOT_STARTED;
 
-    private PowerConfigProvider mPowerManager;
-
     public LocalWebSocketServerScenario(@NonNull Context context,
                                         @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                         @NonNull AuthIssuerConfig authIssuerConfig,
@@ -43,8 +41,6 @@ public class LocalWebSocketServerScenario extends LocalScenario {
         super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
-
-        this.mPowerManager = powerConfigProvider;
     }
 
     @Override
