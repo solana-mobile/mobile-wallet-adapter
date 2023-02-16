@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -26,6 +27,16 @@ class MobileWalletAdapterActivity : AppCompatActivity() {
                 viewModel.mobileWalletAdapterServiceEvents.collect { request ->
                     if (request is MobileWalletAdapterServiceRequest.SessionTerminated) {
                         finish()
+                    } else if (request is MobileWalletAdapterServiceRequest.LowPowerNoConnection) {
+                        // should use dialog fragment, etc. but this is a quick demo
+                        AlertDialog.Builder(this@MobileWalletAdapterActivity)
+                            .setTitle(R.string.low_power_mode_warning_title)
+                            .setMessage(R.string.str_low_power_mode_warning_dsc)
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                Log.w(TAG, "Connection failed due to device low power mode, returning to dapp.")
+                                finish()
+                            }
+                            .show()
                     }
                 }
             }

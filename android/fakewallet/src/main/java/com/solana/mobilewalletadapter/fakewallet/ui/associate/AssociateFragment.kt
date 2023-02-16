@@ -56,6 +56,8 @@ class AssociateFragment : Fragment() {
                             navController.navigate(AssociateFragmentDirections.actionSignPayload())
                         is MobileWalletAdapterServiceRequest.SessionTerminated ->
                             Unit
+                        is MobileWalletAdapterServiceRequest.LowPowerNoConnection ->
+                            Unit
                     }
                 }
             }

@@ -13,7 +13,7 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
 
-public class LocalWebSocketServerScenario extends Scenario {
+public class LocalWebSocketServerScenario extends LocalScenario {
     @WebSocketsTransportContract.LocalPortRange
     public final int port;
 
@@ -24,10 +24,21 @@ public class LocalWebSocketServerScenario extends Scenario {
     public LocalWebSocketServerScenario(@NonNull Context context,
                                         @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                         @NonNull AuthIssuerConfig authIssuerConfig,
-                                        @NonNull Callbacks callbacks,
+                                        @NonNull LocalScenario.Callbacks callbacks,
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
-        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey);
+        this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
+                associationPublicKey, port, new DevicePowerConfigProvider(context));
+    }
+
+    /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
+                                             @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                             @NonNull AuthIssuerConfig authIssuerConfig,
+                                             @NonNull LocalScenario.Callbacks callbacks,
+                                             @NonNull byte[] associationPublicKey,
+                                             @WebSocketsTransportContract.LocalPortRange int port,
+                                             PowerConfigProvider powerConfigProvider) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }
@@ -39,6 +50,7 @@ public class LocalWebSocketServerScenario extends Scenario {
         }
         mState = State.RUNNING;
         mWebSocketServer.init();
+        super.start();
     }
 
     @Override

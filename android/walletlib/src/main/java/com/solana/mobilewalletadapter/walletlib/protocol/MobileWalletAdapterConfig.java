@@ -14,6 +14,9 @@ public class MobileWalletAdapterConfig {
     public final boolean supportsSignAndSendTransactions;
 
     @IntRange(from = 0)
+    public final long noConnectionWarningTimeoutMs;
+
+    @IntRange(from = 0)
     public final int maxTransactionsPerSigningRequest;
 
     @IntRange(from = 0)
@@ -27,10 +30,12 @@ public class MobileWalletAdapterConfig {
     public MobileWalletAdapterConfig(boolean supportsSignAndSendTransactions,
                                      @IntRange(from = 0) int maxTransactionsPerSigningRequest,
                                      @IntRange(from = 0) int maxMessagesPerSigningRequest,
-                                     @NonNull @Size(min = 1) Object[] supportedTransactionVersions) {
+                                     @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
+                                     @IntRange(from = 0) long noConnectionWarningTimeoutMs) {
         this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
         this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
         this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
+        this.noConnectionWarningTimeoutMs = noConnectionWarningTimeoutMs;
 
         for (Object o : supportedTransactionVersions) {
             if (!((o instanceof String) && LEGACY_TRANSACTION_VERSION.equals((String)o)) &&
