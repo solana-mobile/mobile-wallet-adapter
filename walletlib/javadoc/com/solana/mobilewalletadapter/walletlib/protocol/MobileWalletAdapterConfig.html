@@ -163,11 +163,16 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
+<td class="colFirst"><code>long</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#noConnectionWarningTimeoutMs">noConnectionWarningTimeoutMs</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
 <td class="colFirst"><code><a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#supportedTransactionVersions">supportedTransactionVersions</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#supportsSignAndSendTransactions">supportsSignAndSendTransactions</a></span></code></th>
 <td class="colLast">&nbsp;</td>
@@ -190,10 +195,11 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(boolean,int,int,java.lang.Object%5B%5D)">MobileWalletAdapterConfig</a></span>&#8203;(boolean&nbsp;supportsSignAndSendTransactions,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(boolean,int,int,java.lang.Object%5B%5D,long)">MobileWalletAdapterConfig</a></span>&#8203;(boolean&nbsp;supportsSignAndSendTransactions,
                          int&nbsp;maxTransactionsPerSigningRequest,
                          int&nbsp;maxMessagesPerSigningRequest,
-                         <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]&nbsp;supportedTransactionVersions)</code></th>
+                         <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]&nbsp;supportedTransactionVersions,
+                         long&nbsp;noConnectionWarningTimeoutMs)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -252,6 +258,16 @@ extends <a href="https://d.android.com/reference/java/lang/Object.html?is-extern
 <pre>public final&nbsp;boolean supportsSignAndSendTransactions</pre>
 </li>
 </ul>
+<a id="noConnectionWarningTimeoutMs">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>noConnectionWarningTimeoutMs</h4>
+<pre>@IntRange(from=0L)
+public final&nbsp;long noConnectionWarningTimeoutMs</pre>
+</li>
+</ul>
 <a id="maxTransactionsPerSigningRequest">
 <!--   -->
 </a>
@@ -293,7 +309,7 @@ public final&nbsp;<a href="https://d.android.com/reference/java/lang/Object.html
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(boolean,int,int,java.lang.Object[])">
+<a id="&lt;init&gt;(boolean,int,int,java.lang.Object[],long)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -305,7 +321,9 @@ public final&nbsp;<a href="https://d.android.com/reference/java/lang/Object.html
                                  @IntRange(from=0L)
                                  int&nbsp;maxMessagesPerSigningRequest,
                                  @NonNull @Size(min=1L)
-                                 <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]&nbsp;supportedTransactionVersions)</pre>
+                                 <a href="https://d.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>[]&nbsp;supportedTransactionVersions,
+                                 @IntRange(from=0L)
+                                 long&nbsp;noConnectionWarningTimeoutMs)</pre>
 </li>
 </ul>
 </li>
