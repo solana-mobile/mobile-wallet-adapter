@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -23,7 +24,12 @@ class ActivityResultSender(
             callback = onActivityCompleteCallback
         }
 
-        activityResultLauncher.launch(intent)
+        try {
+            activityResultLauncher.launch(intent)
+        } catch (exception: ActivityNotFoundException) {
+            callback = null
+            throw exception
+        }
     }
 
     private fun onActivityComplete() {
