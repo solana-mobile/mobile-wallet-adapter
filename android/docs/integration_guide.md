@@ -81,7 +81,11 @@ The wallet is required to implement the [`Scenario.Callbacks`](../walletlib/src/
 
 ### Handle interference from power saving mode
 
-The wallet may want to implement an additional check for whether the device is in power saving mode [(e.g `isPowerSaveMode()`)](https://developer.android.com/reference/android/os/PowerManager#isPowerSaveMode()) because this may cause apps (e.g Chrome) to pause execution while in the background, rendering them unable to communicate with the wallet. The wallet may warn the user to disable the power saving mode or charge their device.
+When an Android device is in [power/battery saving mode](https://developer.android.com/about/versions/pie/power#battery-saver) app background execution may be blocked or suspended, rendering dApps unable to communicate locally with a wallet via Mobile Wallet Adapter.
+
+`LocalScenario` extends the base `Scenario.Callbacks` to include [`onLowPowerAndNoConnection`](../walletlib/src/main/java/com/solana/mobilewalletadapter/walletlib/scenario/LocalScenario.java#L391). This callback will be triggered if the MWA instance running in the wallet detects that no connection has been made, and the device is currently in low power mode. Wallets utilizing a local connection scenario are required to implement this callback, and should take appropriate steps to notify the user if and when it is called. 
+
+The wallet may want to manually implement an additional check for whether the device is in power saving mode [(e.g `isPowerSaveMode()`)](https://developer.android.com/reference/android/os/PowerManager#isPowerSaveMode()). The wallet may warn the user to disable the power saving mode or charge their device.
 
 ## Dapp integration
 
