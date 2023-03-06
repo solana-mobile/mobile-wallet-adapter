@@ -79,6 +79,10 @@ When the dapp disconnects from the wallet, it is recommended that the wallet ent
 
 The wallet is required to implement the [`Scenario.Callbacks`](../walletlib/src/main/java/com/solana/mobilewalletadapter/walletlib/scenario/Scenario.java) interface. This interface will receive Mobile Wallet Adapter requests from the dapp (such as requests to sign transactions). Many of the `Scenario.Callback` methods provide a [`ScenarioRequest`](../walletlib/src/main/java/com/solana/mobilewalletadapter/walletlib/scenario/ScenarioRequest.java) object. `ScenarioRequest` subclasses provide methods to complete each request successfully, or with a failure, and will ensure that an appropriate response is sent back to the dapp client.
 
+### Handle interference from power saving mode
+
+The wallet may want to implement an additional check for whether the device is in power saving mode [(e.g `isPowerSaveMode()`)](https://developer.android.com/reference/android/os/PowerManager#isPowerSaveMode()) because this may cause apps (e.g Chrome) to pause execution while in the background, rendering them unable to communicate with the wallet. The wallet may warn the user to disable the power saving mode or charge their device.
+
 ## Dapp integration
 
 To request signing services with the Mobile Wallet Adapter protocol, dapps must:
