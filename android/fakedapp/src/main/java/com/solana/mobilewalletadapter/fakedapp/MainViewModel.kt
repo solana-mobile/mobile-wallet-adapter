@@ -529,17 +529,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 localAssociation.session
             )
             try {
-                sender.startActivityForResult(associationIntent) {
-                    viewModelScope.launch {
-                        // Ensure this coroutine will wrap up in a timely fashion when the launched
-                        // activity completes
-                        delay(LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS)
-                        this@coroutineScope.cancel()
+                withTimeout(LOCAL_ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
+                    sender.startActivityForResult(associationIntent) {
+                        viewModelScope.launch {
+                            // Ensure this coroutine will wrap up in a timely fashion when the
+                            // launched activity completes
+                            delay(LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS)
+                            this@coroutineScope.cancel()
+                        }
                     }
                 }
             } catch (e: ActivityNotFoundException) {
                 Log.e(TAG, "Failed to start intent=$associationIntent", e)
                 showMessage(R.string.msg_no_wallet_found)
+                return@withPermit null
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "Timed out waiting to send intent=$associationIntent", e)
                 return@withPermit null
             }
 
@@ -574,7 +579,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     interface StartActivityForResultSender {
-        fun startActivityForResult(intent: Intent, onActivityCompleteCallback: () -> Unit) // throws ActivityNotFoundException
+        suspend fun startActivityForResult(intent: Intent, onActivityCompleteCallback: () -> Unit) // throws ActivityNotFoundException
     }
 
     data class UiState(
@@ -617,6 +622,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private val TAG = MainViewModel::class.simpleName
+        private const val LOCAL_ASSOCIATION_SEND_INTENT_TIMEOUT_MS = 20000L
         private const val LOCAL_ASSOCIATION_START_TIMEOUT_MS = 60000L // LocalAssociationScenario.start() has a shorter timeout; this is just a backup safety measure
         private const val LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS = 5000L
         private const val LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS = 5000L

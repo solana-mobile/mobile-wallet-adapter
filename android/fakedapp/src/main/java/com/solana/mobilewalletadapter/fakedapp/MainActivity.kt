@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.fakedapp
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -12,11 +13,11 @@ import android.widget.ArrayAdapter
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.GuardedBy
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.whenResumed
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
@@ -171,25 +172,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val intentSender = object : MainViewModel.StartActivityForResultSender {
-        @GuardedBy("this")
         private var callback: (() -> Unit)? = null
 
-        override fun startActivityForResult(
+        override suspend fun startActivityForResult(
             intent: Intent,
             onActivityCompleteCallback: () -> Unit
         ) {
-            synchronized(this) {
+            // A previous Intent may still be pending resolution (via the onActivityComplete method).
+            // Wait for the Activity lifecycle to reach the RESUMED state, which guarantees that any
+            // previous Activity results will have been received and their callback cleared. Blocking
+            // here will lead to either (a) the Activity eventually reaching the RESUMED state, or
+            // (b) the Activity terminating, destroying it's lifecycle-linked scope and cancelling this
+            // Job.
+            lifecycle.whenResumed { // NOTE: runs in Dispatchers.MAIN context
                 check(callback == null) { "Received an activity start request while another is pending" }
                 callback = onActivityCompleteCallback
+
+                try {
+                    activityResultLauncher.launch(intent)
+                } catch (e: ActivityNotFoundException) {
+                    callback = null
+                    throw e
+                }
             }
-            activityResultLauncher.launch(intent)
         }
 
         fun onActivityComplete() {
-            synchronized(this) {
-                callback?.let { it() }
-                callback = null
-            }
+            callback?.let { it() }
+            callback = null
         }
     }
 }
