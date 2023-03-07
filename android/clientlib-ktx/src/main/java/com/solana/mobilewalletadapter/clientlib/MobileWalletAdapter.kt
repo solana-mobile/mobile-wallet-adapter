@@ -47,18 +47,28 @@ class MobileWalletAdapter(
             val scenario = LocalAssociationScenario(timeout)
             val details = scenario.associationDetails()
 
-            val intent = LocalAssociationIntentCreator.createAssociationIntent(details.uriPrefix, details.port, details.session)
-            sender.startActivityForResult(intent) {
-                launch {
-                    delay(5000L)
-                    scenario.close()
+            val intent = LocalAssociationIntentCreator.createAssociationIntent(
+                details.uriPrefix,
+                details.port,
+                details.session
+            )
+            try {
+                withTimeout(ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
+                    sender.startActivityForResult(intent) {
+                        launch {
+                            delay(5000L)
+                            scenario.close()
+                        }
+                    }
                 }
+            } catch (e: TimeoutCancellationException) {
+                return@coroutineScope TransactionResult.Failure("Timed out waiting to send association intent", e)
             }
 
             withContext(ioDispatcher) {
                 try {
                     @Suppress("BlockingMethodInNonBlockingContext")
-                    val client = scenario.start().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
 
                     adapterOperations.client = client
                     val result = block(adapterOperations)
@@ -74,7 +84,7 @@ class MobileWalletAdapter(
                     TransactionResult.Failure("Local association was cancelled before connected", e)
                 } finally {
                     @Suppress("BlockingMethodInNonBlockingContext")
-                    scenario.close().get(ASSOCIATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    scenario.close().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 }
             }
         } catch (e: ExecutionException) {
@@ -119,6 +129,7 @@ class MobileWalletAdapter(
 
     companion object {
         const val TAG = "MobileWalletAdapter"
-        const val ASSOCIATION_TIMEOUT_MS = 10000L
+        const val ASSOCIATION_SEND_INTENT_TIMEOUT_MS = 20000L
+        const val ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS = 10000L
     }
 }
