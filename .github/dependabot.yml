@@ -7,7 +7,26 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "gradle"
-    # Files stored in the default project in the android/ directory of this repo
+    # Mobile Wallet Adapter Android SDK
     directory: "/android"
     schedule:
       interval: "weekly"
+
+  - package-ecosystem: "gradle"
+    # Mobile Wallet Adapter support for React Native
+    directory: "/js/packages/mobile-wallet-adapter-protocol/android"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "gradle"
+    # Mobile Wallet Adapter sample for React Native (Android)
+    directory: "/examples/example-react-native-app/android"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "gradle"
+    # Mobile Wallet Adapter sample for Kotlin
+    directory: "/examples/example-clientlib-ktx-app"
+    schedule:
+      interval: "weekly"
+
