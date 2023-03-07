@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.content.Context;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
@@ -13,7 +14,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.concurrent.CountDownLatch;
@@ -32,7 +32,7 @@ public class LocalWebSocketServerScenarioTest {
         byte[] publicKey = new byte[0];
         long noConnectionTimeout = 100L;
 
-        Context context = Mockito.mock(Context.class);
+        Context context = ApplicationProvider.getApplicationContext();
 
         AuthIssuerConfig authConfig = new AuthIssuerConfig("Test");
 
@@ -71,7 +71,7 @@ public class LocalWebSocketServerScenarioTest {
         byte[] publicKey = new byte[0];
         long noConnectionTimeout = 100L;
 
-        Context context = Mockito.mock(Context.class);
+        Context context = ApplicationProvider.getApplicationContext();
 
         AuthIssuerConfig authConfig = new AuthIssuerConfig("Test");
 
