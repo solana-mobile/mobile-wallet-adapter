@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib
 
+import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
@@ -42,7 +43,10 @@ class MobileWalletAdapter(
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    suspend fun <T> transact(sender: ActivityResultSender, block: suspend AdapterOperations.() -> T): TransactionResult<T> = coroutineScope {
+    suspend fun <T> transact(
+        sender: ActivityResultSender,
+        block: suspend AdapterOperations.() -> T,
+    ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
             val scenario = LocalAssociationScenario(timeout)
             val details = scenario.associationDetails()
@@ -55,6 +59,11 @@ class MobileWalletAdapter(
             try {
                 withTimeout(ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
                     sender.startActivityForResult(intent) {
+                        if (it == RESULT_CANCELED) {
+                            this.launch {
+                                throw InterruptedException()
+                            }
+                        }
                         launch {
                             delay(5000L)
                             scenario.close()
@@ -63,6 +72,8 @@ class MobileWalletAdapter(
                 }
             } catch (e: TimeoutCancellationException) {
                 return@coroutineScope TransactionResult.Failure("Timed out waiting to send association intent", e)
+            } catch (e: InterruptedException) {
+                return@coroutineScope TransactionResult.Failure("Request was interrupted", e)
             }
 
             withContext(ioDispatcher) {
