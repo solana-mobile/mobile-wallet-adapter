@@ -75,6 +75,8 @@ The `Scenario` should be valid for as long as the wallet is capable of providing
 
 When the dapp disconnects from the wallet, it is recommended that the wallet entrypoint `Activity` [`finish()`](https://developer.android.com/reference/android/app/Activity#finish()) itself, allowing the dapp to return to the foreground.
 
+It’s recommended that wallets call Scenario.close() when they are done with a session (for e.g., when `onScenarioServingComplete` is called or if the containing activity is finish()ed).
+
 ### `Callback`s
 
 The wallet is required to implement the [`Scenario.Callbacks`](../walletlib/src/main/java/com/solana/mobilewalletadapter/walletlib/scenario/Scenario.java) interface. This interface will receive Mobile Wallet Adapter requests from the dapp (such as requests to sign transactions). Many of the `Scenario.Callback` methods provide a [`ScenarioRequest`](../walletlib/src/main/java/com/solana/mobilewalletadapter/walletlib/scenario/ScenarioRequest.java) object. `ScenarioRequest` subclasses provide methods to complete each request successfully, or with a failure, and will ensure that an appropriate response is sent back to the dapp client.
