@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.fakedapp.usecase
 
+import android.util.Base64
 import android.util.Log
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
@@ -18,6 +19,8 @@ object OffChainMessageSigningUseCase {
         signer.update(signedMessage, 0, signedMessage.size)
         val verified = signer.verifySignature(signature)
         require(verified) { "Message signature is invalid" }
-        Log.d(TAG, "Verified message signature with publicKey(base58)=${Base58EncodeUseCase(publicKey)}")
+        Log.d(TAG, "Verified message signature with publicKey(base58)=${Base58EncodeUseCase(publicKey)}, "+
+                "sig(base58)=${Base58EncodeUseCase(signature)}, " +
+                "message(base64)=${Base64.encodeToString(signedMessage, Base64.NO_WRAP)}")
     }
 }

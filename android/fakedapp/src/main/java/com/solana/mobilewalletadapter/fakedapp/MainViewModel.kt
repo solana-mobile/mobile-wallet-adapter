@@ -32,7 +32,6 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import kotlin.random.Random
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(UiState())
@@ -186,8 +185,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signMessages(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
-        val messages = Array(numMessages) {
-            Random.nextBytes(1232)
+        val messages = Array(numMessages) { i ->
+            when (i) {
+                1 -> ByteArray(1232) { j -> ('a' + (j % 10)).code.toByte() }
+                2 -> ByteArray(32768) { j -> j.toByte() }
+                else -> "A simple test message $i".encodeToByteArray()
+            }
         }
         val signedMessages = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             val authorized = doReauthorize(client)
