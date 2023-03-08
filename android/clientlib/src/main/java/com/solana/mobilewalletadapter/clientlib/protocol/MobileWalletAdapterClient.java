@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.clientlib.protocol;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 
 import androidx.annotation.IntRange;
@@ -29,6 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class MobileWalletAdapterClient extends JsonRpc20Client {
+    // TODO: this assumes Solana-length signatures. Revisit this assumption when adding support for
+    // alternative chains.
+    private static final int OFFCHAIN_MESSAGE_SIGNATURE_LENGTH = 64;
+
     @IntRange(from = 0)
     private final int mClientTimeoutMs;
 
@@ -622,7 +627,13 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // sign_messages
     // =============================================================================================
 
+    /**
+     * @deprecated Consumers of {@link #signMessages(byte[][], byte[][])} should migrate to
+     *             {@link #signMessagesDetached(byte[][], byte[][])}, which offers an improved
+     *             return type, separating the message from the signatures
+     */
     @NonNull
+    @Deprecated
     public SignPayloadsFuture signMessages(@NonNull @Size(min = 1) byte[][] messages,
                                            @NonNull @Size(min = 1) byte[][] addresses)
             throws IOException {
@@ -645,6 +656,157 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         return new SignPayloadsFuture(
                 methodCall(ProtocolContract.METHOD_SIGN_MESSAGES, signPayloads, mClientTimeoutMs),
                 messages.length);
+    }
+
+    @NonNull
+    public SignMessagesFuture signMessagesDetached(@NonNull @Size(min = 1) byte[][] messages,
+                                                   @NonNull @Size(min = 1) byte[][] addresses)
+            throws IOException {
+        for (byte[] m : messages) {
+            if (m == null || m.length == 0) {
+                throw new IllegalArgumentException("messages must not be null or empty");
+            }
+        }
+
+        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(messages);
+        final JSONArray addressesArr = JsonPack.packByteArraysToBase64PayloadsArray(addresses);
+        final JSONObject signPayloads = new JSONObject();
+        try {
+            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
+            signPayloads.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr);
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
+        }
+
+        return new SignMessagesFuture(
+                methodCall(ProtocolContract.METHOD_SIGN_MESSAGES, signPayloads, mClientTimeoutMs),
+                messages, addresses);
+    }
+
+    public static class SignMessagesResult {
+        public static class SignedMessage {
+            @NonNull
+            public final byte[] message;
+
+            @NonNull
+            @Size(min = 1)
+            public final byte[][] signatures;
+
+            @NonNull
+            @Size(min = 1)
+            public final byte[][] addresses;
+
+            public SignedMessage(@NonNull byte[] message,
+                                 @NonNull byte[][] signatures,
+                                 @NonNull byte[][] addresses) {
+                this.message = message;
+                this.signatures = signatures;
+                this.addresses = addresses;
+            }
+
+            @NonNull
+            @Override
+            public String toString() {
+                return "SignedMessage{message=" + Arrays.toString(message) +
+                        ", signatures=" + Arrays.toString(signatures) + '}';
+            }
+        }
+
+        @NonNull
+        @Size(min = 1)
+        public final SignedMessage[] messages;
+
+        public SignMessagesResult(@NonNull @Size(min = 1) SignedMessage[] messages) {
+            this.messages = messages;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "SignMessagesResult{messages=" + Arrays.toString(messages) + '}';
+        }
+    }
+
+    public static class SignMessagesFuture
+            extends JsonRpc20MethodResultFuture<SignMessagesResult>
+            implements NotifyOnCompleteFuture<SignMessagesResult> {
+        @Size(min = 1)
+        private final byte[][] mMessages;
+
+        @Size(min = 1)
+        private final byte[][] mAddresses;
+
+        private SignMessagesFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture,
+                                   @Size(min = 1) byte[][] messages,
+                                   @Size(min = 1) byte[][] addresses) {
+            super(methodCallFuture);
+            mMessages = messages;
+            mAddresses = addresses;
+        }
+
+        @NonNull
+        @Override
+        protected SignMessagesResult processResult(@Nullable Object o)
+                throws JsonRpc20InvalidResponseException {
+            if (!(o instanceof JSONObject)) {
+                throw new JsonRpc20InvalidResponseException("expected result to be a JSON object");
+            }
+            final JSONObject jo = (JSONObject) o;
+            final byte[][] signedPayloads = unpackResponsePayloadArray(jo,
+                    ProtocolContract.RESULT_SIGNED_PAYLOADS, mMessages.length, false);
+
+            final SignMessagesResult.SignedMessage[] signedMessages =
+                    new SignMessagesResult.SignedMessage[signedPayloads.length];
+            final int signaturesLength = OFFCHAIN_MESSAGE_SIGNATURE_LENGTH * mAddresses.length;
+            for (int i = 0; i < signedPayloads.length; i++) {
+                // Extract signatures from response
+                if (signedPayloads[i].length < signaturesLength) {
+                    throw new JsonRpc20InvalidResponseException("Payload length too small for all requested signatures");
+                }
+                final int payloadLength = signedPayloads[i].length - signaturesLength;
+                final byte[][] signatures = new byte[mAddresses.length][];
+                for (int j = 0; j < signatures.length; j++) {
+                    signatures[j] = Arrays.copyOfRange(signedPayloads[i],
+                            payloadLength + OFFCHAIN_MESSAGE_SIGNATURE_LENGTH * j,
+                            payloadLength + OFFCHAIN_MESSAGE_SIGNATURE_LENGTH * (j + 1));
+                }
+
+                // Workaround: some wallets have been observed to only reply with the message signature.
+                // This is non-compliant with the spec, but in the interest of maximizing compatibility,
+                // detect this case and reuse the original message.
+                final byte[] message;
+                if (payloadLength == 0) {
+                    message = mMessages[i];
+                } else {
+                    message = Arrays.copyOf(signedPayloads[i], payloadLength);
+                }
+                signedMessages[i] = new SignMessagesResult.SignedMessage(message, signatures, mAddresses);
+            }
+
+
+            @SuppressLint("Range")
+            final SignMessagesResult result = new SignMessagesResult(signedMessages);
+            return result;
+        }
+
+        @Nullable
+        @Override
+        protected JsonRpc20Exception processRemoteException(@NonNull JsonRpc20RemoteException remoteException) {
+            if (remoteException.code != ProtocolContract.ERROR_INVALID_PAYLOADS) {
+                return null;
+            }
+            try {
+                return new InvalidPayloadsException(remoteException.getMessage(),
+                        remoteException.data, mMessages.length);
+            } catch (JsonRpc20InvalidResponseException e) {
+                return e;
+            }
+        }
+
+        @Override
+        public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignMessagesResult>> cb) {
+            mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
+        }
     }
 
     // =============================================================================================

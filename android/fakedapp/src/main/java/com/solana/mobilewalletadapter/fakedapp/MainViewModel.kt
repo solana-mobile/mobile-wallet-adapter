@@ -14,6 +14,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignMessagesResult
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
@@ -185,18 +186,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signMessages(sender: StartActivityForResultSender, numMessages: Int) = viewModelScope.launch {
+        val messages = Array(numMessages) {
+            Random.nextBytes(1232)
+        }
         val signedMessages = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
             val authorized = doReauthorize(client)
             if (!authorized) {
                 return@localAssociateAndExecute null
             }
-            val messages = Array(numMessages) {
-                Random.nextBytes(1232)
-            }
             doSignMessages(client, messages, arrayOf(_uiState.value.publicKey!!))
         }
 
-        showMessage(if (signedMessages != null) R.string.msg_request_succeeded else R.string.msg_request_failed)
+        if (signedMessages != null) {
+            try {
+                for (sm in signedMessages.zip(messages)) {
+                    Log.d(TAG, "Verifying signature of $sm")
+                    OffChainMessageSigningUseCase.verify(
+                        sm.first.message,
+                        sm.first.signatures[0],
+                        _uiState.value.publicKey!!,
+                        sm.second
+                    )
+                }
+                showMessage(R.string.msg_request_succeeded)
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Failed verifying signature on message", e)
+                showMessage(R.string.msg_request_failed)
+            }
+        } else {
+            showMessage(R.string.msg_request_failed)
+        }
     }
 
     fun signAndSendTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
@@ -440,12 +459,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         client: MobileWalletAdapterClient,
         messages: Array<ByteArray>,
         addresses: Array<ByteArray>
-    ): Array<ByteArray>? {
-        var signedMessages: Array<ByteArray>? = null
+    ): Array<SignMessagesResult.SignedMessage>? {
+        var signedMessages: Array<SignMessagesResult.SignedMessage>? = null
         try {
-            val result = client.signMessages(messages, addresses).get()
+            val result = client.signMessagesDetached(messages, addresses).get()
             Log.d(TAG, "Signed message(s): $result")
-            signedMessages = result.signedPayloads
+            signedMessages = result.messages
         } catch (e: ExecutionException) {
             when (val cause = e.cause) {
                 is IOException -> Log.e(TAG, "IO error while sending sign_messages", cause)
