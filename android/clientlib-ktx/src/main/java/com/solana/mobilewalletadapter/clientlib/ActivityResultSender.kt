@@ -3,24 +3,25 @@ package com.solana.mobilewalletadapter.clientlib
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.whenResumed
-import kotlinx.coroutines.*
+import kotlinx.coroutines.coroutineScope
 
 class ActivityResultSender(
     private val rootActivity: ComponentActivity
 ) {
-    private var callback: (() -> Unit)? = null
+    private var callback: ((Int) -> Unit)? = null
 
     private val activityResultLauncher: ActivityResultLauncher<Intent> =
         rootActivity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            onActivityComplete()
+            onActivityComplete(it)
         }
 
     internal suspend fun startActivityForResult(
         intent: Intent,
-        onActivityCompleteCallback: () -> Unit
+        onActivityCompleteCallback: (Int) -> Unit,
     ) = coroutineScope {
         // A previous Intent may still be pending resolution (via the onActivityComplete method).
         // Wait for the Activity lifecycle to reach the RESUMED state, which guarantees that any
@@ -41,8 +42,8 @@ class ActivityResultSender(
         }
     }
 
-    private fun onActivityComplete() {
-        callback?.let { it() }
+    private fun onActivityComplete(activityResult: ActivityResult) {
+        callback?.let { it(activityResult.resultCode) }
         callback = null
     }
 }
