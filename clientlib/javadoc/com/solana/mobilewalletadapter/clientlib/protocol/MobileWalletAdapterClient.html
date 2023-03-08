@@ -27,8 +27,8 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":42,"i6":10,"i7":10};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -214,6 +214,16 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static class&nbsp;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="MobileWalletAdapterClient.SignMessagesResult.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesResult</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static class&nbsp;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -262,7 +272,7 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t6" class="tableTab"><span><a href="javascript:show(32);">Deprecated Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colSecond" scope="col">Method</th>
@@ -304,9 +314,21 @@ extends <a href="JsonRpc20Client.html" title="class in com.solana.mobilewalletad
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)">signMessages</a></span>&#8203;(byte[][]&nbsp;messages,
             byte[][]&nbsp;addresses)</code></th>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Consumers of <a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessages(byte[][], byte[][])</code></a> should migrate to
+             <a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessagesDetached(byte[][], byte[][])</code></a>, which offers an improved
+             return type, separating the message from the signatures</div>
+</div>
+</td>
 </tr>
 <tr id="i6" class="altColor">
+<td class="colFirst"><code><a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)">signMessagesDetached</a></span>&#8203;(byte[][]&nbsp;messages,
+                    byte[][]&nbsp;addresses)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#signTransactions(byte%5B%5D%5B%5D)">signTransactions</a></span>&#8203;(byte[][]&nbsp;transactions)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -460,11 +482,35 @@ public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="c
 <li class="blockList">
 <h4>signMessages</h4>
 <pre class="methodSignature">@NonNull
+<a href="https://d.android.com/reference/java/lang/Deprecated.html?is-external=true" title="class or interface in java.lang" class="externalLink">@Deprecated</a>
 public&nbsp;<a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a>&nbsp;signMessages&#8203;(@NonNull @Size(min=1L)
                                                                  byte[][]&nbsp;messages,
                                                                  @NonNull @Size(min=1L)
                                                                  byte[][]&nbsp;addresses)
                                                           throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span>
+<div class="deprecationComment">Consumers of <a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessages(byte[][], byte[][])</code></a> should migrate to
+             <a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessagesDetached(byte[][], byte[][])</code></a>, which offers an improved
+             return type, separating the message from the signatures</div>
+</div>
+<dl>
+<dt><span class="throwsLabel">Throws:</span></dt>
+<dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
+</dl>
+</li>
+</ul>
+<a id="signMessagesDetached(byte[][],byte[][])">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>signMessagesDetached</h4>
+<pre class="methodSignature">@NonNull
+public&nbsp;<a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a>&nbsp;signMessagesDetached&#8203;(@NonNull @Size(min=1L)
+                                                                         byte[][]&nbsp;messages,
+                                                                         @NonNull @Size(min=1L)
+                                                                         byte[][]&nbsp;addresses)
+                                                                  throws <a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></pre>
 <dl>
 <dt><span class="throwsLabel">Throws:</span></dt>
 <dd><code><a href="https://d.android.com/reference/java/io/IOException.html?is-external=true" title="class or interface in java.io" class="externalLink">IOException</a></code></dd>
