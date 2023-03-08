@@ -13,6 +13,8 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.DeauthorizeFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignAndSendTransactionsResult;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignMessagesFuture;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignMessagesResult;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsFuture;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignPayloadsResult;
 
@@ -83,6 +85,12 @@ public class RxMobileWalletAdapterClient {
         }
     }
 
+    /**
+     * @deprecated Consumers of {@link #signMessages(byte[][], byte[][])} should migrate to
+     *             {@link #signMessagesDetached(byte[][], byte[][])}, which offers an improved
+     *             return type, separating the message from the signatures
+     */
+    @Deprecated
     @CheckResult
     @NonNull
     public Single<SignPayloadsResult> signMessages(@NonNull @Size(min = 1) byte[][] messages,
@@ -90,6 +98,18 @@ public class RxMobileWalletAdapterClient {
         try {
             SignPayloadsFuture signPayloadsFuture = mMobileWalletAdapterClient.signMessages(messages, addresses);
             return Single.fromFuture(signPayloadsFuture);
+        } catch (Exception e) {
+            return Single.error(e);
+        }
+    }
+
+    @CheckResult
+    @NonNull
+    public Single<SignMessagesResult> signMessagesDetached(@NonNull @Size(min = 1) byte[][] messages,
+                                                           @NonNull @Size(min = 1) byte[][] addresses) {
+        try {
+            SignMessagesFuture signMessagesFuture = mMobileWalletAdapterClient.signMessagesDetached(messages, addresses);
+            return Single.fromFuture(signMessagesFuture);
         } catch (Exception e) {
             return Single.error(e);
         }
