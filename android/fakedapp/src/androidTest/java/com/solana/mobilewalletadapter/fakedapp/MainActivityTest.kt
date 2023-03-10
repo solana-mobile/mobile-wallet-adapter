@@ -17,6 +17,7 @@ import androidx.test.uiautomator.Until.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -47,6 +48,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // then
         onView(withId(R.id.btn_deauthorize)).check(matches(isClickable()))
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -68,6 +71,8 @@ class MainActivityTest {
 
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -101,6 +106,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletSimulateSendButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
     }
@@ -118,6 +125,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // back in dApp, click sign
         onView(withId(R.id.btn_sign_txn_x1)).perform(click())
 
@@ -125,6 +134,8 @@ class MainActivityTest {
 
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -143,6 +154,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // back in dApp, click sign
         onView(withId(R.id.btn_sign_txn_x3)).perform(click())
 
@@ -150,6 +163,8 @@ class MainActivityTest {
 
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -168,6 +183,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // back in dApp, click sign
 //        onView(withId(R.id.btn_request_airdrop)).perform(click())
         onView(withId(R.id.btn_sign_and_send_txn_x1)).perform(click())
@@ -181,6 +198,8 @@ class MainActivityTest {
 //        waitForAndClickWalletButton(uiDevice, walletSendTransactionButton)
         waitForWalletButton(uiDevice, walletSimulateSendButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -201,6 +220,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // back in dApp, click sign
         onView(withId(R.id.btn_sign_txn_x1)).perform(click())
 
@@ -208,6 +229,8 @@ class MainActivityTest {
 
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
 
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
@@ -228,6 +251,8 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletAuthorizeButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // back in dApp, click sign
 //        onView(withId(R.id.btn_request_airdrop)).perform(click())
         onView(withId(R.id.btn_sign_and_send_txn_x1)).perform(click())
@@ -242,12 +267,25 @@ class MainActivityTest {
         waitForWalletButton(uiDevice, walletSimulateSendButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
+        waitForWalletComplete(uiDevice)
+
         // then
         onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
     }
 
     private fun handleWalletDisambiguationIfNecessary(uiDevice: UiDevice) {
-        uiDevice.findObject(By.res("android", "title"))?.run {
+        // Wait for either the wallet window, or the disambiguation window
+        val o = uiDevice.wait(
+            findObject(
+                By.pkg(Pattern.compile("android|${Pattern.quote(FAKEWALLET_PACKAGE)}"))
+            ), WINDOW_CHANGE_TIMEOUT
+        )
+        if (o.applicationPackage == FAKEWALLET_PACKAGE) {
+            return
+        }
+
+        // Disambigation window is showing; select FakeWallet to continue testing
+        uiDevice.findObject(By.res("android", "title"))!!.run {
             if (childCount > 1 && text.contains("Fake Wallet")) {
                 // case 1: "Open with Fake Wallet" > click "Just once"
                 uiDevice.findObject(By.res("android", "button_once"))
@@ -259,11 +297,17 @@ class MainActivityTest {
                 // case 2: "Open with Solflare/Phantom" > choose Fake Wallet app from list
                 uiDevice.findObject(By.textContains("Fake Wallet"))
             }
-        }?.clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
-
-        // case 4: only 1 wallet, no disambiguation dialog
+        }!!.clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)!!.also {
+            // Wait for the wallet window to be available
+            uiDevice.wait(findObject(By.pkg(FAKEWALLET_PACKAGE)), WINDOW_CHANGE_TIMEOUT)!!
+        }
     }
 
     private fun waitForWalletButton(uiDevice: UiDevice, buttonResName: String) =
-        uiDevice.wait(findObject(By.res(FAKEWALLET_PACKAGE, buttonResName)), WINDOW_CHANGE_TIMEOUT)
+        uiDevice.wait(findObject(By.res(FAKEWALLET_PACKAGE, buttonResName)), WINDOW_CHANGE_TIMEOUT)!!
+
+    private fun waitForWalletComplete(uiDevice: UiDevice) =
+        activityScenarioRule.scenario.onActivity {
+            uiDevice.wait(findObject(By.pkg(it.packageName)), WINDOW_CHANGE_TIMEOUT)!!
+        }
 }
