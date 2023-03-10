@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets
 // NOT suitable for production use.
 object GetLatestBlockhashUseCase {
     @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO
-    suspend operator fun invoke(rpcUri: Uri): Pair<ByteArray, Int?> {
+    suspend operator fun invoke(rpcUri: Uri): Pair<ByteArray, Int> {
         return withContext(Dispatchers.IO) {
             val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
             conn.requestMethod = "POST"

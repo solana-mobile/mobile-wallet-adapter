@@ -118,6 +118,10 @@ class MainActivity : AppCompatActivity() {
             viewModel.authorizeAndSignTransactions(intentSender)
         }
 
+        viewBinding.btnAuthorizeSignMsgTxn.setOnClickListener {
+            viewModel.authorizeAndSignMessageAndSignTransaction(intentSender)
+        }
+
         viewBinding.spinnerTxnVer.adapter =
             ArrayAdapter(this, android.R.layout.simple_spinner_item,
                 // mapping from view model txn version to localized UI string

@@ -74,6 +74,38 @@ class MainActivityTest {
     }
 
     @Test
+    fun combinedAuthorizeAndSignMsgAndSignTx1_isSuccessful() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        // when
+        onView(withId(R.id.btn_authorize_sign_msg_txn)).perform(click())
+
+        handleWalletDisambiguationIfNecessary(uiDevice)
+
+        waitForWalletButton(uiDevice, walletAuthorizeButton).click()
+
+        uiDevice.waitForWindowUpdate(FAKEWALLET_PACKAGE, WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletButton(uiDevice, walletAuthorizeButton).click()
+
+        uiDevice.waitForWindowUpdate(FAKEWALLET_PACKAGE, WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletButton(uiDevice, walletAuthorizeButton).click()
+
+        uiDevice.waitForWindowUpdate(FAKEWALLET_PACKAGE, WINDOW_CHANGE_TIMEOUT)
+
+        // send transaction to cluster is flaky and relies on a successful airdrop, which is
+        // difficult with the public devnet/testnet RPCs. Will revisit this with a local validator!
+//        waitForAndClickWalletButton(uiDevice, walletSendTransactionButton)
+        waitForWalletButton(uiDevice, walletSimulateSendButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
+    }
+
+    @Test
     fun authorizeAndSignTx1_isSuccessful() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())

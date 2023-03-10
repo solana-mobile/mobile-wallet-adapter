@@ -20,7 +20,8 @@
     <string name="label_sign_txn_x1">Sign txn x1</string>
     <string name="label_sign_txn_x3">x3</string>
     <string name="label_sign_txn_x20">x20</string>
-    <string name="label_authorize_sign_txn">Combined authorize and sign txn x1</string>
+    <string name="label_authorize_sign_txn">Authorize + Txn</string>
+    <string name="label_authorize_sign_msg_txn">Authorize + Msg + Send Txn</string>
     <string name="label_sign_msg_x1">Sign msg x1</string>
     <string name="label_sign_msg_x3">x3</string>
     <string name="label_sign_msg_x20">x20</string>

@@ -38,7 +38,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiState = _uiState.asStateFlow()
 
     val supportedTxnVersions = listOf(MemoTransactionVersion.Legacy, MemoTransactionVersion.V0)
-    val transactionUseCase get() = when(_uiState.value.txnVersion) {
+    private val transactionUseCase get() = when(_uiState.value.txnVersion) {
         MemoTransactionVersion.Legacy -> MemoTransactionLegacyUseCase
         MemoTransactionVersion.V0 -> MemoTransactionV0UseCase
     }
@@ -91,7 +91,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun requestAirdrop() = viewModelScope.launch {
         try {
-            RequestAirdropUseCase(TESTNET_RPC_URI, _uiState.value.publicKey!!)
+            RequestAirdropUseCase(CLUSTER_RPC_URI, _uiState.value.publicKey!!)
             Log.d(TAG, "Airdrop request sent")
             showMessage(R.string.msg_airdrop_request_sent)
         } catch (e: RequestAirdropUseCase.AirdropFailedException) {
@@ -106,7 +106,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun signTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
-            GetLatestBlockhashUseCase(TESTNET_RPC_URI)
+            GetLatestBlockhashUseCase(CLUSTER_RPC_URI)
         }
 
         val signedTransactions = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
@@ -146,7 +146,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun authorizeAndSignTransactions(sender: StartActivityForResultSender) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
-            GetLatestBlockhashUseCase(TESTNET_RPC_URI)
+            GetLatestBlockhashUseCase(CLUSTER_RPC_URI)
         }
 
         val signedTransactions = localAssociateAndExecute(sender) { client ->
@@ -181,6 +181,68 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             Log.w(TAG, "No signed transactions returned; skipping verification")
             showMessage(R.string.msg_request_failed)
+        }
+    }
+
+    fun authorizeAndSignMessageAndSignTransaction(sender: StartActivityForResultSender) = viewModelScope.launch {
+        val latestBlockhash = viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
+            GetLatestBlockhashUseCase(CLUSTER_RPC_URI)
+        }
+
+        lateinit var message: ByteArray
+        var signedMessage: SignMessagesResult.SignedMessage? = null
+        var transactionSignature: ByteArray? = null
+        localAssociateAndExecute(sender) { client ->
+            val authorized = doAuthorize(client)
+            if (!authorized) {
+                return@localAssociateAndExecute null
+            }
+
+            message =
+                "Sign this message to prove you own account ${Base58EncodeUseCase(uiState.value.publicKey!!)}".encodeToByteArray()
+            signedMessage = doSignMessages(client, arrayOf(message), arrayOf(uiState.value.publicKey!!))?.get(0)
+
+            Log.d(TAG, "Simulating a short delay while we do something with the message the user just signed...")
+            latestBlockhash.start() // Kick off fetching the blockhash before we delay, to reduce latency
+            delay(1500) // Simulate a 1.5-second wait while we do something with the signed message
+
+            val (blockhash, slot) = try {
+                latestBlockhash.await()
+            } catch (e: GetLatestBlockhashUseCase.GetLatestBlockhashFailedException) {
+                Log.e(TAG, "Failed retrieving latest blockhash", e)
+                return@localAssociateAndExecute null
+            }
+
+            val transaction =
+                arrayOf(transactionUseCase.create(uiState.value.publicKey!!, blockhash))
+            transactionSignature = doSignAndSendTransactions(client, transaction, slot)?.get(0)
+        }
+
+        if (signedMessage == null || transactionSignature == null) {
+            showMessage(R.string.msg_request_failed)
+        } else {
+            val messageSignatureVerified = try {
+                OffChainMessageSigningUseCase.verify(
+                    signedMessage!!.message,
+                    signedMessage!!.signatures[0],
+                    uiState.value.publicKey!!,
+                    message
+                )
+                true
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Failed verifying signature on message", e)
+                false
+            }
+
+            Log.d(
+                TAG,
+                "Transaction signature(base58)= ${Base58EncodeUseCase(transactionSignature!!)}"
+            )
+
+            showMessage(
+                if (messageSignatureVerified) R.string.msg_request_succeeded
+                else R.string.msg_signature_verification_failed
+            )
         }
     }
 
@@ -223,7 +285,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun signAndSendTransactions(sender: StartActivityForResultSender, numTransactions: Int) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
-            GetLatestBlockhashUseCase(TESTNET_RPC_URI)
+            GetLatestBlockhashUseCase(CLUSTER_RPC_URI)
         }
 
         val signatures = localAssociateAndExecute(sender, _uiState.value.walletUriBase) { client ->
@@ -267,7 +329,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Uri.parse("https://solana.com"),
                 Uri.parse("favicon.ico"),
                 "Solana",
-                ProtocolContract.CLUSTER_TESTNET
+                CLUSTER
             ).get()
             Log.d(TAG, "Authorized: $result")
             _uiState.update {
@@ -648,6 +710,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         private const val LOCAL_ASSOCIATION_START_TIMEOUT_MS = 60000L // LocalAssociationScenario.start() has a shorter timeout; this is just a backup safety measure
         private const val LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS = 5000L
         private const val LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS = 5000L
-        private val TESTNET_RPC_URI = Uri.parse("https://api.testnet.solana.com")
+        private val CLUSTER_RPC_URI = Uri.parse("https://api.testnet.solana.com")
+        private val CLUSTER = ProtocolContract.CLUSTER_TESTNET
     }
 }

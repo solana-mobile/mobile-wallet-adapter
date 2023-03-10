@@ -94,10 +94,22 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_authorize_sign"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_sign_txn_x1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_authorize_sign_msg_txn"
         android:text="@string/label_authorize_sign_txn" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_authorize_sign_msg_txn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/btn_authorize_sign"
+        app:layout_constraintBottom_toBottomOf="@id/btn_authorize_sign"
+        app:layout_constraintStart_toEndOf="@id/btn_authorize_sign"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/label_authorize_sign_msg_txn" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_sign_msg_x1"
