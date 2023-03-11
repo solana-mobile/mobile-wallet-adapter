@@ -17,13 +17,14 @@ import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionVersion
+import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var viewBinding: ActivityMainBinding
     private val mwaLauncher =
-        registerForActivityResult(MainViewModel.StartMobileWalletAdapterActivity(lifecycle)) {}
+        registerForActivityResult(MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity(lifecycle)) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
