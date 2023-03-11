@@ -158,6 +158,20 @@ jobs:
             adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
             ./gradlew :fakewallet:connectedDebugAndroidTest
             ./gradlew :fakedapp:connectedDebugAndroidTest
+      - name: Archive fakewallet test results
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: fakewallet-connected-test-results-${{ matrix.api-level }}
+          path: android/fakewallet/build/reports/androidTests/connected/
+          retention-days: 7
+      - name: Archive fakedapp test results
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: fakedapp-connected-test-results-${{ matrix.api-level }}
+          path: android/fakedapp/build/reports/androidTests/connected/
+          retention-days: 7
 
   # Note: only runs on 'push' events
   publish-to-gh-pages:
