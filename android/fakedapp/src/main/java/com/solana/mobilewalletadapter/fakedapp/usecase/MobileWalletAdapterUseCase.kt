@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023 Solana Mobile Inc.
+ */
+
 package com.solana.mobilewalletadapter.fakedapp.usecase
 
 import android.content.ActivityNotFoundException
