@@ -430,18 +430,12 @@ reauthorize
 
 ```
 {
-    “identity”: {
-        “uri”: “<dapp_uri>”,
-        “icon”: “<dapp_icon_relative_path>”,
-        “name”: “<dapp_name>”,
-    },
     “auth_token”: “<auth_token>”,
 }
 ```
 
 where:
 
-- `identity`: as defined for [`authorize`](#authorize)
 - `auth_token`: an opaque string previously returned by a call to [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization)
 
 ###### Result
