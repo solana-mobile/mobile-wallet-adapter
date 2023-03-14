@@ -78,7 +78,7 @@ export interface GetCapabilitiesAPI {
     >;
 }
 export interface ReauthorizeAPI {
-    reauthorize(params: { auth_token: AuthToken }): Promise<AuthorizationResult>;
+    reauthorize(params: { auth_token: AuthToken; identity: AppIdentity }): Promise<AuthorizationResult>;
 }
 export interface SignMessagesAPI {
     signMessages(params: {
