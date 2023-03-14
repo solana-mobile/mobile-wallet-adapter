@@ -1342,14 +1342,14 @@
     "@sinonjs/commons" "^1.7.0"
 
 "@solana-mobile/mobile-wallet-adapter-protocol-web3js@file:../../js/packages/mobile-wallet-adapter-protocol-web3js":
-  version "0.9.1"
+  version "1.0.0"
   dependencies:
-    "@solana-mobile/mobile-wallet-adapter-protocol" "^0.9.1"
+    "@solana-mobile/mobile-wallet-adapter-protocol" "^1.0.0"
     bs58 "^5.0.0"
     js-base64 "^3.7.2"
 
-"@solana-mobile/mobile-wallet-adapter-protocol@^0.9.1", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
-  version "0.9.1"
+"@solana-mobile/mobile-wallet-adapter-protocol@^1.0.0", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
+  version "1.0.0"
 
 "@solana/buffer-layout@^4.0.0":
   version "4.0.0"
