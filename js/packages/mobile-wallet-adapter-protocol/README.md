@@ -45,7 +45,7 @@ try {
                 e.code === SolanaMobileWalletAdapterProtocolErrorCode.ERROR_REAUTHORIZE
             ) {
                 console.error('The auth token has gone stale');
-                await wallet.reauthorize({auth_token});
+                await wallet.reauthorize({auth_token, identity});
                 // Retry...
             }
             throw e;
