@@ -246,6 +246,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         try {
             const authorizationResult = await wallet.reauthorize({
                 auth_token: authToken,
+                identity: this._appIdentity,
             });
             // TODO: Evaluate whether there's any threat to not `awaiting` this expression
             Promise.all([

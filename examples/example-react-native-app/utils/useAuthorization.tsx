@@ -87,6 +87,7 @@ export default function useAuthorization() {
       const authorizationResult = await (authorization
         ? wallet.reauthorize({
             auth_token: authorization.authToken,
+            identity: APP_IDENTITY,
           })
         : wallet.authorize({
             cluster: 'devnet',
