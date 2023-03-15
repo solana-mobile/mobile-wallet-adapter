@@ -4,33 +4,27 @@
 
 package com.solana.mobilewalletadapter.fakedapp
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.whenResumed
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionVersion
+import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var viewBinding: ActivityMainBinding
-    private val activityResultLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            intentSender.onActivityComplete()
-        }
+    private val mwaLauncher =
+        registerForActivityResult(StartMobileWalletAdapterActivity(lifecycle)) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,19 +77,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.btnGetCapabilities.setOnClickListener {
-            viewModel.getCapabilities(intentSender)
+            viewModel.getCapabilities(mwaLauncher)
         }
 
         viewBinding.btnAuthorize.setOnClickListener {
-            viewModel.authorize(intentSender)
+            viewModel.authorize(mwaLauncher)
         }
 
         viewBinding.btnReauthorize.setOnClickListener {
-            viewModel.reauthorize(intentSender)
+            viewModel.reauthorize(mwaLauncher)
         }
 
         viewBinding.btnDeauthorize.setOnClickListener {
-            viewModel.deauthorize(intentSender)
+            viewModel.deauthorize(mwaLauncher)
         }
 
         viewBinding.btnRequestAirdrop.setOnClickListener {
@@ -103,23 +97,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {
-            viewModel.signTransactions(intentSender, 1)
+            viewModel.signTransactions(mwaLauncher, 1)
         }
 
         viewBinding.btnSignTxnX3.setOnClickListener {
-            viewModel.signTransactions(intentSender, 3)
+            viewModel.signTransactions(mwaLauncher, 3)
         }
 
         viewBinding.btnSignTxnX20.setOnClickListener {
-            viewModel.signTransactions(intentSender, 20)
+            viewModel.signTransactions(mwaLauncher, 20)
         }
 
         viewBinding.btnAuthorizeSign.setOnClickListener {
-            viewModel.authorizeAndSignTransactions(intentSender)
+            viewModel.authorizeAndSignTransactions(mwaLauncher)
         }
 
         viewBinding.btnAuthorizeSignMsgTxn.setOnClickListener {
-            viewModel.authorizeAndSignMessageAndSignTransaction(intentSender)
+            viewModel.authorizeAndSignMessageAndSignTransaction(mwaLauncher)
         }
 
         viewBinding.spinnerTxnVer.adapter =
@@ -146,64 +140,32 @@ class MainActivity : AppCompatActivity() {
             }
 
         viewBinding.btnSignMsgX1.setOnClickListener {
-            viewModel.signMessages(intentSender, 1)
+            viewModel.signMessages(mwaLauncher, 1)
         }
 
         viewBinding.btnSignMsgX3.setOnClickListener {
-            viewModel.signMessages(intentSender, 3)
+            viewModel.signMessages(mwaLauncher, 3)
         }
 
         viewBinding.btnSignMsgX20.setOnClickListener {
-            viewModel.signMessages(intentSender, 20)
+            viewModel.signMessages(mwaLauncher, 20)
         }
 
         viewBinding.btnSignAndSendTxnX1.setOnClickListener {
-            viewModel.signAndSendTransactions(intentSender, 1)
+            viewModel.signAndSendTransactions(mwaLauncher, 1)
         }
 
         viewBinding.btnSignAndSendTxnX3.setOnClickListener {
-            viewModel.signAndSendTransactions(intentSender, 3)
+            viewModel.signAndSendTransactions(mwaLauncher, 3)
         }
 
         viewBinding.btnSignAndSendTxnX20.setOnClickListener {
-            viewModel.signAndSendTransactions(intentSender, 20)
+            viewModel.signAndSendTransactions(mwaLauncher, 20)
         }
     }
 
     override fun onResume() {
         super.onResume()
         viewModel.checkIsWalletEndpointAvailable()
-    }
-
-    private val intentSender = object : MainViewModel.StartActivityForResultSender {
-        private var callback: (() -> Unit)? = null
-
-        override suspend fun startActivityForResult(
-            intent: Intent,
-            onActivityCompleteCallback: () -> Unit
-        ) {
-            // A previous Intent may still be pending resolution (via the onActivityComplete method).
-            // Wait for the Activity lifecycle to reach the RESUMED state, which guarantees that any
-            // previous Activity results will have been received and their callback cleared. Blocking
-            // here will lead to either (a) the Activity eventually reaching the RESUMED state, or
-            // (b) the Activity terminating, destroying it's lifecycle-linked scope and cancelling this
-            // Job.
-            lifecycle.whenResumed { // NOTE: runs in Dispatchers.MAIN context
-                check(callback == null) { "Received an activity start request while another is pending" }
-                callback = onActivityCompleteCallback
-
-                try {
-                    activityResultLauncher.launch(intent)
-                } catch (e: ActivityNotFoundException) {
-                    callback = null
-                    throw e
-                }
-            }
-        }
-
-        fun onActivityComplete() {
-            callback?.let { it() }
-            callback = null
-        }
     }
 }

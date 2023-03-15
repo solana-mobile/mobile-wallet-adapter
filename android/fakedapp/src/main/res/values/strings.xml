@@ -5,6 +5,7 @@
 <resources>
     <string name="app_name">Fake dApp</string>
 
+    <string name="msg_association_failed">Error connecting to wallet; check logcat for details</string>
     <string name="msg_request_succeeded">Wallet request successful</string>
     <string name="msg_request_failed">Wallet request failed; check logcat for details</string>
     <string name="msg_airdrop_request_sent">Airdrop request sent; check block explorer for result</string>
