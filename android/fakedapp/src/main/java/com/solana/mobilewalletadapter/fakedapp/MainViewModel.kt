@@ -16,6 +16,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.fakedapp.usecase.*
+import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +45,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun authorize(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         try {
             doLocalAssociateAndExecute(intentLauncher) { client ->
@@ -63,7 +64,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun reauthorize(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         try {
             doLocalAssociateAndExecute(intentLauncher, _uiState.value.walletUriBase) { client ->
@@ -82,7 +83,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deauthorize(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         try {
             doLocalAssociateAndExecute(intentLauncher, _uiState.value.walletUriBase) { client ->
@@ -101,7 +102,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getCapabilities(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         try {
             doLocalAssociateAndExecute(intentLauncher, _uiState.value.walletUriBase) { client ->
@@ -137,7 +138,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signTransactions(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>,
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         numTransactions: Int
     ) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
@@ -184,7 +185,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun authorizeAndSignTransactions(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
             GetLatestBlockhashUseCase(CLUSTER_RPC_URI)
@@ -196,9 +197,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     Log.d(TAG, "Authorized: $it")
                 }
                 val (blockhash, _) = latestBlockhash.await()
-                val transactions = Array(1) {
+                val transactions = arrayOf(
                     transactionUseCase.create(uiState.value.publicKey!!, blockhash)
-                }
+                )
                 client.signTransactions(transactions).also {
                     Log.d(TAG, "Signed transaction(s): $it")
                 }
@@ -231,7 +232,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun authorizeAndSignMessageAndSignTransaction(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO, CoroutineStart.LAZY) {
             GetLatestBlockhashUseCase(CLUSTER_RPC_URI)
@@ -299,7 +300,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signMessages(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>,
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         numMessages: Int
     ) = viewModelScope.launch {
         val messages = Array(numMessages) { i ->
@@ -346,7 +347,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signAndSendTransactions(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>,
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         numTransactions: Int
     ) = viewModelScope.launch {
         val latestBlockhash = viewModelScope.async(Dispatchers.IO) {
@@ -475,7 +476,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun <T> doLocalAssociateAndExecute(
-        intentLauncher: ActivityResultLauncher<MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity.CreateParams>,
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         uriPrefix: Uri? = null,
         action: suspend (MobileWalletAdapterUseCase.Client) -> T
     ): T {
