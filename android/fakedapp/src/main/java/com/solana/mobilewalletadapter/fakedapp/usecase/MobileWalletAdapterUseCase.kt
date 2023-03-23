@@ -423,7 +423,7 @@ object MobileWalletAdapterUseCase {
                     // will immediately move to the CANCELED state itself.
                     it.launch {
                         delay(LOCAL_ASSOCIATION_CANCEL_AFTER_WALLET_CLOSED_TIMEOUT_MS)
-                        cancel()
+                        it.cancel()
                     }
                 } else {
                     it.cancel() // No-op if the scope is already cancelled
