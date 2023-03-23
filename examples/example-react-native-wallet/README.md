@@ -1,20 +1,13 @@
-# Example React Native dApp
+# Example React Native Wallet
 
-This demonstrates how you can use the mobile wallet adapter protocol in a React Native app.
+This demonstrates how you can use the mobile wallet adapter wallet lib in a React Native Wallet app.
 
 https://user-images.githubusercontent.com/13243/180274812-9cff2bdf-01d2-44fe-b094-52d3f9b22c4e.mp4
-
-## Features
-
--   Authorize the web app for use with a native mobile wallet app.
--   Record a message of your choosing on-chain, using the Memo program.
--   Sign a message of your choosing.
--   Request an airdrop of SOL on devnet.
 
 ## Prerequisites
 
 1. Set up the Android development environment by following the [environment setup instructions](https://reactnative.dev/docs/environment-setup) for your OS.
-2. Install at least one mobile wallet adapter compliant wallet app on your device/simulator. You can build and install [`fakewallet`](../../android/fakewallet/) for testing purposes.
+2. Install at least one mobile wallet adapter compliant dapp app on your device/simulator. You can build and install [`fakedapp`](../../android/fakedapp/) for testing purposes.
 
 ## Quick Start
 

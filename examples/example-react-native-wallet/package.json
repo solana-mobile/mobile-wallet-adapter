@@ -1,5 +1,5 @@
 {
-  "name": "@solana-mobile/example-react-native-app",
+  "name": "@solana-mobile/example-react-native-wallet",
   "private": true,
   "scripts": {
     "android": "react-native run-android",

@@ -101,7 +101,7 @@ export default function App() {
         return <SignPayloadsScreen publicKey={wallet.publicKey} />;
       case "AUTHORIZE_DAPP":
         return <AuthenticationScreen publicKey={wallet.publicKey} />;
-      defualt:
+      default:
         return <LoadingScreen />;
     }
 
