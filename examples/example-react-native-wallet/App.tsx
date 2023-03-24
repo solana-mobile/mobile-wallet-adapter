@@ -1,5 +1,5 @@
 import {Keypair} from '@solana/web3.js';
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   BackHandler,
   Linking,
@@ -19,9 +19,9 @@ function initMWA(url: string) {
 }
 
 const useLaunchURL = () => {
-  const [url, setUrl] = React.useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const getUrlAsync = async () => {
       // Get the intent link used to open the app
       const initialUrl = await Linking.getInitialURL();
@@ -40,9 +40,9 @@ const useLaunchURL = () => {
 };
 
 const useWallet = () => {
-  const [keypair, setKeypair] = React.useState<Keypair | null>(null);
+  const [keypair, setKeypair] = useState<Keypair | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const generateKeypair = async () => {
       const keypair = await Keypair.generate();
       setKeypair(keypair);
@@ -55,9 +55,9 @@ const useWallet = () => {
 };
 
 const useMWAEvent = () => {
-  const [event, setEvent] = React.useState<any | null>(null);
+  const [event, setEvent] = useState<any | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const eventEmitter = new NativeEventEmitter(NativeModules.MwaWalletLibModule);
     eventEmitter.addListener("MobileWalletAdapterServiceEvent", (event) => {
       NativeModules.WalletLib.log("MWA Event: " + event.type);
@@ -68,13 +68,22 @@ const useMWAEvent = () => {
   return {event};
 };
 
+export enum MobileWalletAdapterServiceEventType {
+  SignTransactions = 'SIGN_TRANSACTIONS',
+  SignMessages = 'SIGN_MESSAGES',
+  SessionTerminated = 'SESSION_TERMINATED',
+  LowPowerNoConnection = 'LOW_POWER_NO_CONNECTION',
+  AuthorizeDapp = 'AUTHORIZE_DAPP',
+  ReauthorizeDapp = 'REAUTHORIZE_DAPP'
+};
+
 export default function App() {
   const {wallet} = useWallet();
   const {url: intentUrl} = useLaunchURL();
   // const {event: walletAdapterEvent} = useMWAEvent();
-  const [event, setEvent] = React.useState<any | null>(null);
+  const [event, setEvent] = useState<any | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const eventEmitter = new NativeEventEmitter(NativeModules.MwaWalletLibModule);
     eventEmitter.removeAllListeners("MobileWalletAdapterServiceEvent");
     eventEmitter.addListener("MobileWalletAdapterServiceEvent", (newEvent) => {
@@ -85,7 +94,7 @@ export default function App() {
     });
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // exit when MWA session ends
     // it would be better if the app went to the background rather than fully exiting, but seems 
     // this will need to be done in android. We can expose a method in the mwa module to navigate up
@@ -97,11 +106,13 @@ export default function App() {
 
   function getComponent(event) {
     switch(event?.type) {
-      case "SIGN_PAYLOADS":
-        return <SignPayloadsScreen publicKey={wallet.publicKey} />;
+      case MobileWalletAdapterServiceEventType.SignTransactions:
+      case MobileWalletAdapterServiceEventType.SignMessages:
+        return <SignPayloadsScreen wallet={wallet} event={event} />;
       case "AUTHORIZE_DAPP":
         return <AuthenticationScreen publicKey={wallet.publicKey} />;
       default:
+        console.log("loading screen")
         return <LoadingScreen />;
     }
 

@@ -111,12 +111,20 @@ class SolanaMobileWalletAdapterModule(val reactContext: ReactApplicationContext)
     }
 
     @ReactMethod
-    fun completeSignPayloadsRequest() { //(signedPayloads: ReadableArray) {
+    fun completeSignPayloadsRequest(signedPayloads: ReadableArray) {
         Log.d(TAG, "completeSignPaylaodsRequest: signedPayloads = ")
         (request as? MobileWalletAdapterServiceRequest.SignPayloads)?.request?.let { signRequest ->
             // temp
             val signedPayloads = signRequest.payloads
             signRequest.completeWithSignedPayloads(signedPayloads)
+        }
+    }
+
+    @ReactMethod
+    fun completeWithInvalidPayloads(validArray: BooleanArray) { //(signedPayloads: ReadableArray) {
+        Log.d(TAG, "completeSignPaylaodsRequest: signedPayloads = ")
+        (request as? MobileWalletAdapterServiceRequest.SignPayloads)?.request?.let { signRequest ->
+            signRequest.completeWithInvalidPayloads(validArray)
         }
     }
 
@@ -137,8 +145,16 @@ class SolanaMobileWalletAdapterModule(val reactContext: ReactApplicationContext)
             is MobileWalletAdapterServiceRequest.ReauthorizeDapp -> Arguments.createMap().apply {
                 putString("type", "REAUTHORIZE_DAPP")
             }
-            is MobileWalletAdapterServiceRequest.SignPayloads -> Arguments.createMap().apply {
-                putString("type", "SIGN_PAYLOADS")
+            is MobileWalletAdapterServiceRequest.SignMessages -> Arguments.createMap().apply {
+                putString("type", "SIGN_MESSAGES")
+                putArray("payloads", Arguments.createArray().apply {
+                    request.request.payloads.map {
+                      Arguments.fromArray(it.map { it.toInt() }.toIntArray())
+                    }.forEach { pushArray(it) }
+                  })
+            }
+            is MobileWalletAdapterServiceRequest.SignTransactions -> Arguments.createMap().apply {
+                putString("type", "SIGN_TRANSACTIONS")
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                       Arguments.fromArray(it.map { it.toInt() }.toIntArray())

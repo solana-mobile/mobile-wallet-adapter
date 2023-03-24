@@ -1,7 +1,9 @@
-import { PublicKey } from '@solana/web3.js';
-import React from 'react';
+import { PublicKey, Keypair } from '@solana/web3.js';
+import React, {useState, useEffect} from 'react';
 import {BackHandler, NativeModules, Platform, StyleSheet, View} from 'react-native';
 import {Button, Divider, Text} from 'react-native-paper';
+import { MobileWalletAdapterServiceEventType } from '../App';
+import { SolanaSigningUseCase } from '../utils/SolanaSigningUseCase';
 
 import FadeInView from './../components/FadeInView';
 
@@ -21,20 +23,31 @@ const SolanaMobileWalletAdapter =
               },
           );
 
+type SignPayloadEvent = {
+  type: MobileWalletAdapterServiceEventType.SignMessages | MobileWalletAdapterServiceEventType.SignTransactions;
+  payloads: number[][];
+}
+
 type Props = Readonly<{
-  publicKey: PublicKey;
+  wallet: Keypair | null;
+  event: SignPayloadEvent;
 }>;
 
 // this view is basically the same as AuthenticationScreen. 
 // Should either combine them or pull common code to base abstraction
-export default function SignPayloadsScreen({publicKey}: Props) {
-  const [visible, setIsVisible] = React.useState(true);
+export default function SignPayloadsScreen({wallet, event}: Props) {
+  if (wallet === null) {
+    return null
+  }
+
+  const [visible, setIsVisible] = useState(true);
 
   // there has got to be a better way to reset the state, 
   // so it alwyas shows on render. I am react n00b 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsVisible(true);
   });
+
 
   return (
       <FadeInView style={styles.container} shown={visible}>
@@ -46,8 +59,38 @@ export default function SignPayloadsScreen({publicKey}: Props) {
           <Button
             style={styles.actionButton}
             onPress = {() => {
-              // TODO: need to actually get the paylaod(s), sign, and return them here
-              SolanaMobileWalletAdapter.completeSignPayloadsRequest();
+              
+              // TODO: move this code into a separate method
+              const valid: boolean[] = event.payloads.map((numArray) => {
+                return true
+              })
+              
+              let signedPayloads;
+              switch (event.type) {
+                case MobileWalletAdapterServiceEventType.SignTransactions:
+                  signedPayloads = event.payloads.map((numArray, index) => {
+                    try {
+                      return Array.from(SolanaSigningUseCase.signTransaction(new Uint8Array(numArray), wallet).signedPayload)
+                    } catch (e) {
+                      NativeModules.WalletLib.log(`Transaction ${index} is not a valid Solana transaction`);
+                      valid[index] = false
+                      return new Uint8Array([])
+                    }
+                  });
+                  break;
+                case MobileWalletAdapterServiceEventType.SignMessages:
+                  signedPayloads = event.payloads.map((numArray) => {
+                    return Array.from(SolanaSigningUseCase.signMessage(new Uint8Array(numArray), wallet).signedPayload)
+                  });
+              }
+
+              // If all valid, then call complete request
+              if (!valid.includes(false)) {
+                SolanaMobileWalletAdapter.completeSignPayloadsRequest(Array.from(signedPayloads));
+              } else {
+                SolanaMobileWalletAdapter.completeWithInvalidPayloads(valid);
+              }
+              
               setIsVisible(false);
             }}
             mode="contained">
