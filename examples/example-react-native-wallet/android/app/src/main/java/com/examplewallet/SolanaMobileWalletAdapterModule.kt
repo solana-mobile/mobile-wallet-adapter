@@ -139,13 +139,11 @@ class SolanaMobileWalletAdapterModule(val reactContext: ReactApplicationContext)
             }
             is MobileWalletAdapterServiceRequest.SignPayloads -> Arguments.createMap().apply {
                 putString("type", "SIGN_PAYLOADS")
-                putMap("payloads", Arguments.createMap().apply {
-                    request.request.payloads.forEachIndexed { index, payload ->
-                        putArray("payload$index", Arguments.fromArray(payload.map{
-                            it.toInt()
-                        }.toIntArray()))
-                    }
-                })
+                putArray("payloads", Arguments.createArray().apply {
+                    request.request.payloads.map {
+                      Arguments.fromArray(it.map { it.toInt() }.toIntArray())
+                    }.forEach { pushArray(it) }
+                  })
             }
         }
 
