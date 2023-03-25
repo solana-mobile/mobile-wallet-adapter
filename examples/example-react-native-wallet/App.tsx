@@ -1,4 +1,4 @@
-import {Keypair} from '@solana/web3.js';
+import {Keypair, Signer} from '@solana/web3.js';
 import React, {useState, useEffect} from 'react';
 import {
   BackHandler,
@@ -13,6 +13,7 @@ import MainScreen from './screens/MainScreen';
 import LoadingScreen from './screens/LoadingScreen';
 import AuthenticationScreen from './screens/AuthenticationScreen';
 import SignPayloadsScreen from './screens/SignPayloadsScreen';
+import WalletProvider from './utils/WalletContext';
 
 function initMWA(url: string) {
   NativeModules.WalletLib.createScenario("ExampleWallet", url, (result, message) => {});
@@ -39,35 +40,6 @@ const useLaunchURL = () => {
   return {url};
 };
 
-const useWallet = () => {
-  const [keypair, setKeypair] = useState<Keypair | null>(null);
-
-  useEffect(() => {
-    const generateKeypair = async () => {
-      const keypair = await Keypair.generate();
-      setKeypair(keypair);
-    };
-
-    generateKeypair();
-  }, []);
-
-  return {wallet: keypair};
-};
-
-const useMWAEvent = () => {
-  const [event, setEvent] = useState<any | null>(null);
-
-  useEffect(() => {
-    const eventEmitter = new NativeEventEmitter(NativeModules.MwaWalletLibModule);
-    eventEmitter.addListener("MobileWalletAdapterServiceEvent", (event) => {
-      NativeModules.WalletLib.log("MWA Event: " + event.type);
-      setEvent(event);
-    });
-  }, []);
-
-  return {event};
-};
-
 export enum MobileWalletAdapterServiceEventType {
   SignTransactions = 'SIGN_TRANSACTIONS',
   SignMessages = 'SIGN_MESSAGES',
@@ -78,11 +50,9 @@ export enum MobileWalletAdapterServiceEventType {
 };
 
 export default function App() {
-  const {wallet} = useWallet();
   const {url: intentUrl} = useLaunchURL();
   // const {event: walletAdapterEvent} = useMWAEvent();
   const [event, setEvent] = useState<any | null>(null);
-
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter(NativeModules.MwaWalletLibModule);
     eventEmitter.removeAllListeners("MobileWalletAdapterServiceEvent");
@@ -108,11 +78,10 @@ export default function App() {
     switch(event?.type) {
       case MobileWalletAdapterServiceEventType.SignTransactions:
       case MobileWalletAdapterServiceEventType.SignMessages:
-        return <SignPayloadsScreen wallet={wallet} event={event} />;
-      case "AUTHORIZE_DAPP":
-        return <AuthenticationScreen publicKey={wallet.publicKey} />;
+        return <SignPayloadsScreen event={event} />;
+      case MobileWalletAdapterServiceEventType.AuthorizeDapp:
+        return <AuthenticationScreen />;
       default:
-        console.log("loading screen")
         return <LoadingScreen />;
     }
 
@@ -120,13 +89,15 @@ export default function App() {
   }
 
   return (
-    <View>
-      {/* TODO: should put the intent url somewhere else */
-        intentUrl && intentUrl.startsWith("solana-wallet:/v1/associate/local") ?
-          getComponent(event) : <MainScreen />
-      }
-    </View>
-  );
+    <WalletProvider>
+      <View>
+        {/* TODO: should put the intent url somewhere else */
+          intentUrl && intentUrl.startsWith("solana-wallet:/v1/associate/local") ?
+            getComponent(event) : <MainScreen />
+        }
+      </View>
+    </WalletProvider>
+    );
 }
 
 

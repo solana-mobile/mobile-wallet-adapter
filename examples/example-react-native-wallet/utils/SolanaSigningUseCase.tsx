@@ -1,27 +1,29 @@
-import {Keypair, Ed25519SecretKey} from '@solana/web3.js';
-
-type Result = {
-    signedPayload: Uint8Array,
-    signature: Uint8Array
-};
+import { Keypair, VersionedTransaction, Signer, VersionedMessage } from '@solana/web3.js';
+import {sign} from '@solana/web3.js/src/utils/ed25519'
 
 export class SolanaSigningUseCase {
   static readonly SIGNATURE_LEN = 64;
   static readonly PUBLIC_KEY_LEN = 32;
 
   static signTransaction(
-    transaction: Uint8Array,
+    transactionByteArray: Uint8Array,
     keypair: Keypair
-  ): Result {
-    console.log("In sign transaction use case")
-    return {signedPayload: new Uint8Array([0]), signature: new Uint8Array([0])}
+  ): Uint8Array {
+    const transaction: VersionedTransaction = VersionedTransaction.deserialize(transactionByteArray)
+    const signer: Signer = {
+        publicKey: keypair.publicKey,
+        secretKey: keypair.secretKey,
+      };
+
+    transaction.sign([signer])
+    return transaction.serialize()
   }
 
   static signMessage(
-    transaction: Uint8Array,
+    messageByteArray: Uint8Array,
     keypair: Keypair
-  ): Result {
-
-    return {signedPayload: new Uint8Array([0]), signature: new Uint8Array([0])}
+  ): Uint8Array {
+    const message: VersionedMessage = VersionedMessage.deserialize(messageByteArray)
+    return sign(messageByteArray, keypair.secretKey.slice(0, 32))
   }
 }

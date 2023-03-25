@@ -2,6 +2,7 @@ import { PublicKey } from '@solana/web3.js';
 import React from 'react';
 import {NativeModules, Platform, StyleSheet, View} from 'react-native';
 import {Button, Divider, Text} from 'react-native-paper';
+import { useWallet } from '../utils/WalletContext';
 
 import FadeInView from './../components/FadeInView';
 
@@ -21,12 +22,17 @@ const SolanaMobileWalletAdapter =
               },
           );
 
-type Props = Readonly<{
-  publicKey: PublicKey;
-}>;
-
-export default function AuthenticationScreen({publicKey}: Props) {
+export default function AuthenticationScreen() {
   const [visible, setIsVisible] = React.useState(true);
+  const {wallet} = useWallet()
+  if (wallet === null) {
+    return <FadeInView style={styles.container} shown={true}>
+      <Text variant="bodyLarge">
+        Wallet not found
+      </Text>
+    </FadeInView>
+  }
+
 
   // there has got to be a better way to reset the state, 
   // so it alwyas shows on render. I am react n00b 
@@ -44,7 +50,7 @@ export default function AuthenticationScreen({publicKey}: Props) {
           <Button
             style={styles.actionButton}
             onPress = {() => {
-              SolanaMobileWalletAdapter.authorizeDapp(Array.from(publicKey.toBytes()));
+              SolanaMobileWalletAdapter.authorizeDapp(Array.from(wallet.publicKey.toBytes()));
               setIsVisible(false);
             }}
             mode="contained">

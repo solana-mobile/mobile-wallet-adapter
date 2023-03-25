@@ -121,10 +121,11 @@ class SolanaMobileWalletAdapterModule(val reactContext: ReactApplicationContext)
     }
 
     @ReactMethod
-    fun completeWithInvalidPayloads(validArray: BooleanArray) { //(signedPayloads: ReadableArray) {
+    fun completeWithInvalidPayloads(validArray: ReadableArray) {
         Log.d(TAG, "completeSignPaylaodsRequest: signedPayloads = ")
+        val validBoolArray = BooleanArray(validArray.size()) { index -> validArray.getBoolean(index) }
         (request as? MobileWalletAdapterServiceRequest.SignPayloads)?.request?.let { signRequest ->
-            signRequest.completeWithInvalidPayloads(validArray)
+            signRequest.completeWithInvalidPayloads(validBoolArray)
         }
     }
 
