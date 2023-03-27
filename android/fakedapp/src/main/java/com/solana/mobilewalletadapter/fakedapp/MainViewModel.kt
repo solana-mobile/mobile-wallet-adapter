@@ -305,8 +305,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) = viewModelScope.launch {
         val messages = Array(numMessages) { i ->
             when (i) {
-                1 -> ByteArray(1232) { j -> ('a' + (j % 10)).code.toByte() }
-                2 -> ByteArray(32768) { j -> j.toByte() }
+                1 -> ByteArray(MAX_MESSAGE_SIZE) { j -> ('a' + (j % 10)).code.toByte() }
+                2 -> ByteArray(MAX_MESSAGE_SIZE) { j -> j.toByte() }
                 else -> "A simple test message $i".encodeToByteArray()
             }
         }
@@ -535,5 +535,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             iconRelativeUri = Uri.parse("favicon.ico"),
             name = "FakeDApp"
         )
+        private const val MAX_MESSAGE_SIZE = 1232 // max size of a type 0 or 1 off-chain message + header (https://docs.solana.com/cli/sign-offchain-message)
     }
 }
