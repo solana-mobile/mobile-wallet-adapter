@@ -128,14 +128,10 @@ jobs:
           email: ${{ secrets.GMSAAS_EMAIL }}
           password: ${{ secrets.GMSAAS_PASSWORD }}
           recipe_uuid: ea5fda48-fa8b-48c1-8acc-07d910856141 # Google Pixel XL 8.1
-          script: |
-            adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-            ./gradlew :fakewallet:connectedDebugAndroidTest
-            ./gradlew :fakedapp:connectedDebugAndroidTest
-      # - run: |
-      #     adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-      #     ./gradlew :fakewallet:connectedDebugAndroidTest
-      #     ./gradlew :fakedapp:connectedDebugAndroidTest
+      - run: |
+          adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
+          ./gradlew :fakewallet:connectedDebugAndroidTest
+          ./gradlew :fakedapp:connectedDebugAndroidTest
 
   # Note: only runs on 'push' events
   publish-to-gh-pages:
