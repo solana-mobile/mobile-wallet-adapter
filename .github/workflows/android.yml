@@ -99,79 +99,38 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
           TAG: ${{ github.event.release.tag_name }}
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
-  
-  test:
-    runs-on: macos-latest
-    needs: build
-    strategy:
-      matrix:
-        api-level: [28]
-
-    steps:
-      # Setup
-      - uses: actions/checkout@v3
-      - name: set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-          cache: gradle
-
-      # Caching
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@v2
         
-      - name: AVD cache
-        uses: actions/cache@v3
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ matrix.api-level }}
+  test:
+    name: Start Genymotion Cloud SaaS instance with ADB serial port
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: create AVD and generate snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          working-directory: android
-          api-level: ${{ matrix.api-level }}
-          target: google_apis
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching."
+          python-version: "3.9.1"
+          architecture: "x64"
 
-      # Test
-      # Note: the fakedapp tests rely on fakewallet, so we always run the fakewallet 
-      # tests first to ensure fakewallet is installed before the fakedapp tests 
-      - name: run tests 
-        uses: reactivecircus/android-emulator-runner@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
         with:
-          working-directory: android
-          api-level: ${{ matrix.api-level }}
-          target: google_apis
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
+          java-version: 1.8
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Start Genymotion Cloud SaaS instance
+        uses:  genymobile/genymotion-saas-github-action@v0.3
+        with:
+          email: ${{ secrets.GMSAAS_EMAIL }}
+          password: ${{ secrets.GMSAAS_PASSWORD }}
+          recipe_uuid: ea5fda48-fa8b-48c1-8acc-07d910856141 # Google Pixel XL 8.1
           script: |
             adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
             ./gradlew :fakewallet:connectedDebugAndroidTest
             ./gradlew :fakedapp:connectedDebugAndroidTest
-      - name: Archive fakewallet test results
-        if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: fakewallet-connected-test-results-${{ matrix.api-level }}
-          path: android/fakewallet/build/reports/androidTests/connected/
-          retention-days: 7
-      - name: Archive fakedapp test results
-        if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: fakedapp-connected-test-results-${{ matrix.api-level }}
-          path: android/fakedapp/build/reports/androidTests/connected/
-          retention-days: 7
 
   # Note: only runs on 'push' events
   publish-to-gh-pages:
