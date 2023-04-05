@@ -129,6 +129,7 @@ jobs:
           password: ${{ secrets.GMSAAS_PASSWORD }}
           recipe_uuid: ea5fda48-fa8b-48c1-8acc-07d910856141 # Google Pixel XL 8.1
       - run: |
+          cd android
           adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
           ./gradlew :fakewallet:connectedDebugAndroidTest
           ./gradlew :fakedapp:connectedDebugAndroidTest
