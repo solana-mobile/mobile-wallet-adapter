@@ -99,7 +99,7 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
           TAG: ${{ github.event.release.tag_name }}
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -P version=${TAG:1}
-        
+
   test:
     name: Start Genymotion Cloud SaaS instance with ADB serial port
     runs-on: ubuntu-latest
@@ -110,7 +110,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.9.1"
+          python-version: "3.9.16"
           architecture: "x64"
 
       - name: Set up JDK 1.8
