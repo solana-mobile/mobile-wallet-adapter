@@ -17,4 +17,56 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <!-- Option 1: Use included AppCompat Dialog theme  -->
+    <style name="Theme.FakeWalletApp.BottomSheetDialog" parent="Theme.AppCompat.DayNight.Dialog">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="dialogCornerRadius">@dimen/m3_alert_dialog_corner_size</item>
+        <item name="android:windowBackground">@drawable/background_bottom_sheet_dialog_daynight</item>
+
+        <!-- optionally add custom enter/exit animations, these don't seem to work tho,  -->
+        <!-- only overriding the pending transition in the activity is working for me -->
+<!--        <item name="android:windowEnterAnimation">@anim/slide_in_from_bottom</item>-->
+<!--        <item name="android:windowExitAnimation">@anim/slide_out_to_bottom</item>-->
+<!--        <item name="android:windowAnimationStyle">@style/DialogWindowAnimations</item>-->
+    </style>
+
+    <style name="DialogWindowAnimations" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/slide_in_from_bottom</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_to_bottom</item>
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_from_bottom</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_to_bottom</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_from_bottom</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_to_bottom</item>
+    </style>
+
+    <!-- Option 2: Use Material BottomSheetDialog theme, and set windowIsFloating=true -->
+    <!-- this gives us the default material window animation and bottom sheet style -->
+    <style name="Theme.FakeWalletApp.BottomSheetDialog2" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="dialogCornerRadius">@dimen/m3_alert_dialog_corner_size</item>
+        <item name="android:windowBackground">@drawable/background_bottom_sheet_dialog_material_daynight</item>
+    </style>
+
+    <!-- Option 3: Use Material Dialog theme -->
+    <!--  -->
+    <style name="Theme.FakeWalletApp.BottomSheetDialog3" parent="Theme.Material3.DayNight.Dialog">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="dialogCornerRadius">@dimen/m3_alert_dialog_corner_size</item>
+        <item name="android:windowBackground">@drawable/background_bottom_sheet_dialog_material_daynight</item>
+
+        <!-- add bottom sheet window animation -->
+<!--        <item name="android:windowAnimationStyle">@style/Animation.MaterialComponents.BottomSheetDialog</item>-->
+<!--        <item name="bottomSheetStyle">@style/Widget.Material3.BottomSheet.Modal</item>-->
+    </style>
 </resources>

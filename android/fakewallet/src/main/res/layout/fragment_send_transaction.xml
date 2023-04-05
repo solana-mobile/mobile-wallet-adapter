@@ -7,6 +7,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="18dp"
+    android:layout_marginHorizontal="12dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.sendtransaction.SendTransactionFragment">
 
