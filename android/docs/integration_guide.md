@@ -1,5 +1,11 @@
 # Mobile Wallet Adapter protocol - integration guide
 
+## Documentation Site
+
+If you're a mobile dApp developer, see our new dApp integration guides hosted on our documentation site!
+- [React Native Integration Guide](https://docs.solanamobile.com/react-native/mwa_integration_rn)
+- [Android Native Integration Guide](https://docs.solanamobile.com/android-native/mwa_integration)
+
 ## Summary
 
 This guide covers integration of the wallet and client libraries into Android apps, to provide support for the Mobile Wallet Adapter protocol.
@@ -90,6 +96,12 @@ When an Android device is in [power/battery saving mode](https://developer.andro
 The wallet may want to manually implement an additional check for whether the device is in power saving mode [(e.g `isPowerSaveMode()`)](https://developer.android.com/reference/android/os/PowerManager#isPowerSaveMode()). The wallet may warn the user to disable the power saving mode or charge their device.
 
 ## Dapp integration
+
+### Documentation Site
+
+If you're a mobile dApp developer, see our new dApp integration guides hosted on our documentation site!
+- [React Native Integration Guide](https://docs.solanamobile.com/react-native/mwa_integration_rn)
+- [Android Native Integration Guide](https://docs.solanamobile.com/android-native/mwa_integration)
 
 To request signing services with the Mobile Wallet Adapter protocol, dapps must:
 
