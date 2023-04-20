@@ -7,6 +7,8 @@
 
 _Part of the [Solana Mobile Stack](https://github.com/solana-mobile/solana-mobile-stack-sdk)_
 
+See our [documentation website](https://docs.solanamobile.com/)
+
 Join us on [Discord](https://discord.gg/solanamobile)
 
 ## Summary
