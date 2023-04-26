@@ -19,6 +19,7 @@ export default function AuthenticationScreen({
   if (!wallet) {
     throw new Error('Wallet is null or undefined');
   }
+
   return (
     <View>
       <BottomsheetHeader

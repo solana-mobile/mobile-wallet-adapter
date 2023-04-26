@@ -1,7 +1,7 @@
 import {Keypair} from '@solana/web3.js';
 import React from 'react';
 import {NativeModules, StyleSheet, View} from 'react-native';
-import {Button, Divider, Text} from 'react-native-paper';
+import {Button, Divider} from 'react-native-paper';
 import {SignAndSendTransactionsRequest} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {SolanaSigningUseCase} from '../utils/SolanaSigningUseCase';

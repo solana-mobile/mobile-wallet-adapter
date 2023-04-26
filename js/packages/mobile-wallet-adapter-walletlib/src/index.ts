@@ -1,9 +1,28 @@
 import { TransactionVersion } from '@solana/web3.js';
-import { useEffect,useState } from 'react'
+import { useEffect, useState } from 'react';
 import { Linking, NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
-import { AuthorizeDappRequest, LowPowerNoConnectionRequest, NoneRequest, ReauthorizeDappRequest, SessionTerminatedRequest, SignAndSendTransactionsRequest, SignMessagesRequest, SignTransactionsRequest } from './requests.js';
-import { MobileWalletAdapterServiceEventType, MobileWalletAdapterServiceRequest } from './requests.js';
+import {
+    AuthorizeDappRequest,
+    ReauthorizeDappRequest,
+    SignAndSendTransactionsRequest,
+    SignMessagesRequest,
+    SignTransactionsRequest,
+} from './requests.js';
+import { MobileWalletAdapterServiceRequest, MobileWalletAdapterServiceRequestEventType } from './requests.js';
+import {
+    LowPowerNoConnectionEvent,
+    MobileWalletAdapterSessionEvent,
+    MobileWalletAdapterSessionEventType,
+    NoneEvent,
+    SessionCompleteEvent,
+    SessionErrorEvent,
+    SessionReadyEvent,
+    SessionServingClientsEvent,
+    SessionServingCompleteEvent,
+    SessionTeardownCompleteEvent,
+    SessionTerminatedEvent,
+} from './sessionEvents.js';
 
 const LINKING_ERROR =
     `The package 'solana-mobile-wallet-adapter-walletlib' doesn't seem to be linked. Make sure: \n\n` +
@@ -14,8 +33,8 @@ const LINKING_ERROR =
     '- You are not using Expo managed workflow\n';
 
 const SolanaMobileWalletAdapterWalletLib =
-    Platform.OS === 'android' && NativeModules.SolanaMobileWalletAdapterWalletLib 
-        ? NativeModules.SolanaMobileWalletAdapterWalletLib 
+    Platform.OS === 'android' && NativeModules.SolanaMobileWalletAdapterWalletLib
+        ? NativeModules.SolanaMobileWalletAdapterWalletLib
         : new Proxy(
               {},
               {
@@ -29,25 +48,33 @@ const SolanaMobileWalletAdapterWalletLib =
               },
           );
 
-const MOBILE_WALLET_ADAPTER_EVENT_NAME = 'MobileWalletAdapterServiceEvent';
+const MOBILE_WALLET_ADAPTER_SERVICE_REQUEST_BRIDGE_NAME = 'MobileWalletAdapterServiceRequestBridge';
+const MOBILE_WALLET_ADAPTER_SESSION_EVENT_BRIDGE_NAME = 'MobileWalletAdapterSessionEventBridge';
 
 export interface MobileWalletAdapterConfig {
     supportsSignAndSendTransactions: boolean;
-    maxTransactionsPerSigningRequest:  number;
+    maxTransactionsPerSigningRequest: number;
     maxMessagesPerSigningRequest: number;
     supportedTransactionVersions: Array<TransactionVersion>;
     noConnectionWarningTimeoutMs: number;
 }
 
-// Approach 1: Expose two methods, subscribeToEvents and initializeScenario. Let user handle granular function calls
-export function subscribeToEvents(handleEvent: (event: MobileWalletAdapterServiceRequest) => void) {
+export function subscribeToNativeEvents(
+    handleServiceRequest: (event: MobileWalletAdapterServiceRequest | null) => void,
+    handleSessionEvent: (event: MobileWalletAdapterSessionEvent | null) => void,
+) {
     const eventEmitter = new NativeEventEmitter();
-    eventEmitter.addListener(MOBILE_WALLET_ADAPTER_EVENT_NAME, newEvent => {
-        if (newEvent.type === null || Object.values(MobileWalletAdapterServiceEventType).indexOf(newEvent.type) === -1) {
-            console.warn("Unsupported MWA event type: " + newEvent)
-            return;
-        }
-        handleEvent(newEvent)
+
+    // Listens for service requests
+    eventEmitter.addListener(MOBILE_WALLET_ADAPTER_SERVICE_REQUEST_BRIDGE_NAME, (newRequest) => {
+        const typedRequest: MobileWalletAdapterServiceRequest | null = bridgeEventToMWARequest(newRequest);
+        handleServiceRequest(typedRequest);
+    });
+
+    // Listens for session events
+    eventEmitter.addListener(MOBILE_WALLET_ADAPTER_SESSION_EVENT_BRIDGE_NAME, (newEvent) => {
+        const typedSessionEvent: MobileWalletAdapterSessionEvent | null = bridgeEventToMWASessionEvent(newEvent);
+        handleSessionEvent(typedSessionEvent);
     });
     return eventEmitter;
 }
@@ -56,94 +83,92 @@ export async function initializeScenario(walletName: string, walletConfig: Mobil
     // Get initial URL
     const initialUrl = await Linking.getInitialURL();
 
-    console.log("Initializing scenario for " + initialUrl)
+    console.log('Initializing scenario for ' + initialUrl);
     // Create Scenario and establish session with dapp
     SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, walletConfig);
 }
 
-// Approach 2: Expose a singular event that encapsulates subbing to events and initalizing scenario.
-export function useMobileWalletAdapterEvent(walletName: string, walletConfig: MobileWalletAdapterConfig) {
-    const [event, setEvent] = useState<MobileWalletAdapterServiceRequest | null>();
-  
-    useEffect(() => {
-      console.log("Listening to Mobile Wallet Adapter events")
-      // Subscribe to events
-      const eventEmitter = subscribeToEvents((event: MobileWalletAdapterServiceRequest) => {
-        setEvent(event);
-      });
-  
-      // Create scenario (now native starts receiving events)
-      initializeScenario(walletName, walletConfig);
-  
-      // Cleanup function
-      return () => {
-        console.log("Stopping listening to Mobile Wallet Adapter events")
-        // Unsubscribe from events and any other necessary cleanup
-        eventEmitter.removeAllListeners(MOBILE_WALLET_ADAPTER_EVENT_NAME);
-      };
-    }, []);
-  
-    return { event, setEvent };
-}
-
-// Approach 3: Create and return request "classes" that come with their appropriate "complete" methods. e.g: request.completeWithDecline()
-export function useMobileWalletAdapterRequest(walletName: string, walletConfig: MobileWalletAdapterConfig) {
+export function useMobileWalletAdapterSession(walletName: string, walletConfig: MobileWalletAdapterConfig) {
     const [request, setRequest] = useState<MobileWalletAdapterServiceRequest | null>();
-  
-    useEffect(() => {
-      console.log("Listening to Mobile Wallet Adapter events")
-      // Subscribe to events
-      const eventEmitter = subscribeToRequests((newRequest: MobileWalletAdapterServiceRequest | null) => {
-        console.log("Request received: " + newRequest)
-        setRequest(newRequest);
-      });
-  
-      // Create scenario (now native starts receiving events)
-      initializeScenario(walletName, walletConfig);
-  
-      // Cleanup function
-      return () => {
-        console.log("Stopping listening to Mobile Wallet Adapter events")
-        // Unsubscribe from events and any other necessary cleanup
-        eventEmitter.removeAllListeners(MOBILE_WALLET_ADAPTER_EVENT_NAME);
-      };
-    }, []);
-  
-    return { request };
-}
+    const [sessionEvent, setSessionEvent] = useState<MobileWalletAdapterSessionEvent | null>();
 
-export function subscribeToRequests(handleRequest: (newRequest: MobileWalletAdapterServiceRequest | null) => void) {
-    const eventEmitter = new NativeEventEmitter();
-    eventEmitter.addListener(MOBILE_WALLET_ADAPTER_EVENT_NAME, newEvent => {
-        const newRequest = bridgeEventToMWARequest(newEvent);
-        handleRequest(newRequest)
-    });
-    return eventEmitter;
+    useEffect(() => {
+        console.log('Listening to Mobile Wallet Adapter native events');
+        // Subscribe to events
+        const nativeEventEmitter = subscribeToNativeEvents(
+            (newRequest: MobileWalletAdapterServiceRequest | null) => {
+                console.log('Request received: ' + newRequest?.type);
+                setRequest(newRequest);
+            },
+            (newSessionEvent: MobileWalletAdapterSessionEvent | null) => {
+                console.log('Session event received: ' + newSessionEvent?.type);
+                setSessionEvent(newSessionEvent);
+            },
+        );
+
+        // Create scenario (now native starts receiving events)
+        initializeScenario(walletName, walletConfig);
+
+        // Cleanup function
+        return () => {
+            console.log('Stopping listening to Mobile Wallet Adapter native events');
+            // Unsubscribe from events and any other necessary cleanup
+            nativeEventEmitter.removeAllListeners(MOBILE_WALLET_ADAPTER_SERVICE_REQUEST_BRIDGE_NAME);
+            nativeEventEmitter.removeAllListeners(MOBILE_WALLET_ADAPTER_SESSION_EVENT_BRIDGE_NAME);
+        };
+    }, []);
+
+    return { request, sessionEvent };
 }
 
 function bridgeEventToMWARequest(event: any): MobileWalletAdapterServiceRequest | null {
     switch (event.type) {
-        case MobileWalletAdapterServiceEventType.None:
-            return new NoneRequest();
-        case MobileWalletAdapterServiceEventType.SessionTerminated:
-            return new SessionTerminatedRequest();
-        case MobileWalletAdapterServiceEventType.LowPowerNoConnection:
-            return new LowPowerNoConnectionRequest();
-        case MobileWalletAdapterServiceEventType.AuthorizeDapp:
-            return new AuthorizeDappRequest(event.identityName, event.identityUri, event.iconRelativeUri, event.cluster);
-        case MobileWalletAdapterServiceEventType.ReauthorizeDapp:
+        case MobileWalletAdapterServiceRequestEventType.AuthorizeDapp:
+            return new AuthorizeDappRequest(
+                event.cluster,
+                event.identityName,
+                event.identityUri,
+                event.iconRelativeUri,
+            );
+        case MobileWalletAdapterServiceRequestEventType.ReauthorizeDapp:
             return new ReauthorizeDappRequest();
-        case MobileWalletAdapterServiceEventType.SignMessages:
+        case MobileWalletAdapterServiceRequestEventType.SignMessages:
             return new SignMessagesRequest(event.payloads.map((payload: number[]) => new Uint8Array(payload)));
-        case MobileWalletAdapterServiceEventType.SignTransactions:
+        case MobileWalletAdapterServiceRequestEventType.SignTransactions:
             return new SignTransactionsRequest(event.payloads.map((payload: number[]) => new Uint8Array(payload)));
-        case MobileWalletAdapterServiceEventType.SignAndSendTransactions:
+        case MobileWalletAdapterServiceRequestEventType.SignAndSendTransactions:
             return new SignAndSendTransactionsRequest(
                 event.payloads.map((payload: number[]) => new Uint8Array(payload)),
-                event.minContextSlot
+                event.minContextSlot,
             );
         default:
-            console.error("Unknown event type received:", event.type);
+            console.warn('Unknown event type received:', event.type);
+            return null;
+    }
+}
+
+function bridgeEventToMWASessionEvent(event: any): MobileWalletAdapterSessionEvent | null {
+    switch (event.type) {
+        case MobileWalletAdapterSessionEventType.None:
+            return new NoneEvent();
+        case MobileWalletAdapterSessionEventType.SessionTerminated:
+            return new SessionTerminatedEvent();
+        case MobileWalletAdapterSessionEventType.SessionReady:
+            return new SessionReadyEvent();
+        case MobileWalletAdapterSessionEventType.SessionServingClients:
+            return new SessionServingClientsEvent();
+        case MobileWalletAdapterSessionEventType.SessionServingComplete:
+            return new SessionServingCompleteEvent();
+        case MobileWalletAdapterSessionEventType.SessionComplete:
+            return new SessionCompleteEvent();
+        case MobileWalletAdapterSessionEventType.SessionError:
+            return new SessionErrorEvent();
+        case MobileWalletAdapterSessionEventType.SessionTeardownComplete:
+            return new SessionTeardownCompleteEvent();
+        case MobileWalletAdapterSessionEventType.LowPowerNoConnection:
+            return new LowPowerNoConnectionEvent();
+        default:
+            console.warn('Unknown event type received:', event.type);
             return null;
     }
 }
@@ -161,5 +186,4 @@ export function authorizeDapp(publicKey: Uint8Array, authorized: boolean) {
 }
 
 export * from './requests.js';
-
-
+export * from './sessionEvents.js';

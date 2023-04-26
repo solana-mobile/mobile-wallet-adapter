@@ -2,15 +2,14 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View, BackHandler, ActivityIndicator} from 'react-native';
 import Modal from 'react-native-modal';
 import {
-  MobileWalletAdapterServiceEventType,
+  MobileWalletAdapterServiceRequestEventType,
   MobileWalletAdapterConfig,
-  useMobileWalletAdapterRequest,
-  SessionTerminatedRequest,
   MobileWalletAdapterServiceRequest,
   AuthorizeDappRequest,
   SignPayloadsRequest,
-  MobileWalletAdapterServiceRemoteRequest,
   SignAndSendTransactionsRequest,
+  useMobileWalletAdapterSession,
+  SessionTerminatedEvent,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
@@ -23,16 +22,16 @@ function getRequestScreenComponent(
   request: MobileWalletAdapterServiceRequest | null | undefined,
 ) {
   switch (request?.type) {
-    case MobileWalletAdapterServiceEventType.SignAndSendTransactions:
+    case MobileWalletAdapterServiceRequestEventType.SignAndSendTransactions:
       return (
         <SignAndSendTransactionsScreen
           request={request as SignAndSendTransactionsRequest}
         />
       );
-    case MobileWalletAdapterServiceEventType.SignTransactions:
-    case MobileWalletAdapterServiceEventType.SignMessages:
+    case MobileWalletAdapterServiceRequestEventType.SignTransactions:
+    case MobileWalletAdapterServiceRequestEventType.SignMessages:
       return <SignPayloadsScreen request={request as SignPayloadsRequest} />;
-    case MobileWalletAdapterServiceEventType.AuthorizeDapp:
+    case MobileWalletAdapterServiceRequestEventType.AuthorizeDapp:
       return <AuthenticationScreen request={request as AuthorizeDappRequest} />;
     default:
       return <ActivityIndicator size="large" />;
@@ -50,7 +49,10 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       noConnectionWarningTimeoutMs: 3000,
     };
   }, []);
-  const {request} = useMobileWalletAdapterRequest('Example RN Wallet', config);
+  const {request, sessionEvent} = useMobileWalletAdapterSession(
+    'Example RN Wallet',
+    config,
+  );
 
   const endWalletSession = useCallback(() => {
     setTimeout(() => {
@@ -59,25 +61,25 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       if (
         request !== null &&
         request !== undefined &&
-        request instanceof MobileWalletAdapterServiceRemoteRequest
+        request instanceof MobileWalletAdapterServiceRequest
       ) {
-        (
-          request as MobileWalletAdapterServiceRemoteRequest
-        ).completeWithDecline();
+        // If we have a request, respond to the dApp with a decline and completes the request.
+        (request as MobileWalletAdapterServiceRequest).completeWithDecline();
       }
       BackHandler.exitApp();
     }, 200);
   }, [request]);
 
+  // Listen for session termination event to close our wallet app and navigate back to dapp.
   useEffect(() => {
-    if (!request) {
+    if (!sessionEvent) {
       return;
     }
 
-    if (request instanceof SessionTerminatedRequest) {
+    if (sessionEvent instanceof SessionTerminatedEvent) {
       endWalletSession();
     }
-  }, [request, endWalletSession]);
+  }, [sessionEvent, endWalletSession]);
 
   return (
     <Modal
