@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2022 Solana Mobile Inc.
+  -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- setting this to be transparent so that react can draw its own ui -->
+    <solid
+        android:color="#00FFFFFF" />
+</shape>
