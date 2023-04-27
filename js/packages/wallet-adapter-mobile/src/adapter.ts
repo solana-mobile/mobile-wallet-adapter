@@ -12,6 +12,7 @@ import {
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import {
+    Blockhash,
     Connection,
     PublicKey,
     SendOptions,
@@ -326,7 +327,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     ): Promise<TransactionSignature> {
         return await this.runWithGuard(async () => {
             const { authToken } = this.assertIsAuthorized();
-            const minContextSlot = options?.minContextSlot;
+            let minContextSlot = options?.minContextSlot;
             try {
                 return await this.transact(async (wallet) => {
                     function getTargetCommitment() {
@@ -377,9 +378,21 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                               (async () => {
                                   transaction.feePayer ||= this.publicKey ?? undefined;
                                   if (transaction.recentBlockhash == null) {
-                                      const { blockhash } = await connection.getLatestBlockhash({
-                                          commitment: getTargetCommitment(),
-                                      });
+                                      let blockhash: Blockhash;
+                                      if (minContextSlot != null) {
+                                          const latestBlockhash = await connection.getLatestBlockhash({
+                                              commitment: getTargetCommitment(),
+                                              minContextSlot,
+                                          });
+                                          blockhash = latestBlockhash.blockhash;
+                                      } else {
+                                          const { context, value: latestBlockhash } =
+                                              await connection.getLatestBlockhashAndContext({
+                                                  commitment: getTargetCommitment(),
+                                              });
+                                          blockhash = latestBlockhash.blockhash;
+                                          minContextSlot = context.slot;
+                                      }
                                       transaction.recentBlockhash = blockhash;
                                   }
                               })(),
