@@ -18,6 +18,9 @@ Join us on [Discord](https://discord.gg/solanamobile)
 - Android
     - [Quickstart Setup](https://docs.solanamobile.com/android-native/quickstart)
     - [dApp Integration Guide](https://docs.solanamobile.com/android-native/mwa_integration)
+- Unity
+    - [Quickstart Setup](https://docs.solanamobile.com/additional-sdks/unity_intro#solana-unity-sdk-setup)
+    - [dApp Integration Guide](https://docs.solanamobile.com/additional-sdks/unity_intro#mobile-wallet-adapter-integration-guide)
 - [Sample App Reference](https://docs.solanamobile.com/sample-apps/sample_app_overview)
 
 
