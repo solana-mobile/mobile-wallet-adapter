@@ -104,3 +104,16 @@ Each authorization a dApp makes with a wallet is tied to a particular Solana clu
 When you call `connect()` but no wallet responds within a reasonable amount of time, it is presumed that no compatible wallet is installed. You must supply an `onWalletNotFound` function to handle this case.
 
 Alternatively, you can use the included `createDefaultWalletNotFoundHandler()` method to create a function that opens the Solana Mobile ecosystem wallets webpage.
+
+## Android Chrome Browser Issues
+Chrome on Android has a policy of blocking all navigation that does not come from explicit user gestures (click, tap, swipe, keypress). As a result, MWA Intent navigation to a wallet app will be blocked if it does not come from a user gesture. 
+
+You will see an error like:
+
+```
+Navigation is blocked: solana-wallet:/v1/associate...
+```
+
+There isn't a way around this on the Android Chrome Browser, but you can write a mobile app if you need this behavior.
+
+
