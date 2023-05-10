@@ -1,7 +1,7 @@
 import {Keypair} from '@solana/web3.js';
 import React from 'react';
 import {NativeModules, StyleSheet, View} from 'react-native';
-import {Button, Divider} from 'react-native-paper';
+import {Button, Text} from 'react-native-paper';
 import {SignAndSendTransactionsRequest} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {SolanaSigningUseCase} from '../utils/SolanaSigningUseCase';
@@ -10,7 +10,7 @@ import {
   SendTransactionsError,
 } from '../utils/SendTransactionsUseCase';
 import {useWallet} from '../components/WalletProvider';
-import BottomsheetHeader from '../components/BottomsheetHeader';
+import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
 
 const signAndSendTransactions = async (
   wallet: Keypair,
@@ -70,8 +70,15 @@ export default function SignAndSendTransactionsScreen({
 
   return (
     <View>
-      <BottomsheetHeader title={'Sign and Send Transactions'} />
-      <Divider style={styles.spacer} />
+      <MWABottomsheetHeader
+        title={'Sign and Send Transactions'}
+        cluster={request.cluster}
+        appIdentity={request.appIdentity}>
+        <Text style={styles.content}>
+          This request has {request.payloads.length}{' '}
+          {request.payloads.length > 1 ? 'payloads' : 'payload'} to sign.
+        </Text>
+      </MWABottomsheetHeader>
       <View style={styles.buttonGroup}>
         <Button
           style={styles.actionButton}
@@ -110,7 +117,7 @@ const styles = StyleSheet.create({
   },
   content: {
     textAlign: 'left',
-    color: 'black',
+    color: 'green',
     fontSize: 18,
   },
   spacer: {

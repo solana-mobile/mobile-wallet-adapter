@@ -13,7 +13,6 @@ import {
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
-import LoadingScreen from '../bottomsheets/LoadingScreen';
 import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactionsScreen';
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
 import WalletProvider from '../components/WalletProvider';
@@ -80,6 +79,13 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       endWalletSession();
     }
   }, [sessionEvent, endWalletSession]);
+
+  useEffect(() => {
+    if (request instanceof SignPayloadsRequest) {
+      console.log(request.appIdentity);
+      console.log(request.authorizationScope);
+    }
+  }, [request]);
 
   return (
     <Modal

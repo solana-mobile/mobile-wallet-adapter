@@ -122,23 +122,36 @@ export function useMobileWalletAdapterSession(walletName: string, walletConfig: 
 }
 
 function bridgeEventToMWARequest(event: any): MobileWalletAdapterServiceRequest | null {
+    const appIdentity = {
+        identityUri: event.identityUri,
+        iconRelativeUri: event.iconRelativeUri,
+        identityName: event.identityName,
+    };
     switch (event.type) {
         case MobileWalletAdapterServiceRequestEventType.AuthorizeDapp:
-            return new AuthorizeDappRequest(
-                event.cluster,
-                event.identityName,
-                event.identityUri,
-                event.iconRelativeUri,
-            );
+            return new AuthorizeDappRequest(event.cluster, appIdentity);
         case MobileWalletAdapterServiceRequestEventType.ReauthorizeDapp:
-            return new ReauthorizeDappRequest();
+            return new ReauthorizeDappRequest(event.cluster, event.authorizationScope, appIdentity);
         case MobileWalletAdapterServiceRequestEventType.SignMessages:
-            return new SignMessagesRequest(event.payloads.map((payload: number[]) => new Uint8Array(payload)));
+            return new SignMessagesRequest(
+                event.payloads.map((payload: number[]) => new Uint8Array(payload)),
+                event.cluster,
+                event.authorizationScope,
+                appIdentity,
+            );
         case MobileWalletAdapterServiceRequestEventType.SignTransactions:
-            return new SignTransactionsRequest(event.payloads.map((payload: number[]) => new Uint8Array(payload)));
+            return new SignTransactionsRequest(
+                event.payloads.map((payload: number[]) => new Uint8Array(payload)),
+                event.cluster,
+                event.authorizationScope,
+                appIdentity,
+            );
         case MobileWalletAdapterServiceRequestEventType.SignAndSendTransactions:
             return new SignAndSendTransactionsRequest(
                 event.payloads.map((payload: number[]) => new Uint8Array(payload)),
+                event.cluster,
+                event.authorizationScope,
+                appIdentity,
                 event.minContextSlot,
             );
         default:

@@ -1,7 +1,7 @@
 import {Keypair} from '@solana/web3.js';
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Button, Divider, Text} from 'react-native-paper';
+import {Button, Text} from 'react-native-paper';
 
 import {
   SignMessagesRequest,
@@ -11,7 +11,7 @@ import {
 
 import {SolanaSigningUseCase} from '../utils/SolanaSigningUseCase';
 import {useWallet} from '../components/WalletProvider';
-import BottomsheetHeader from '../components/BottomsheetHeader';
+import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
 
 const signPayloads = (wallet: Keypair, request: SignPayloadsRequest) => {
   const valid: boolean[] = request.payloads.map(_ => {
@@ -57,6 +57,7 @@ interface SignPayloadsScreenProps {
 // Should either combine them or pull common code to base abstraction
 export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
   const {wallet} = useWallet();
+  const isSignTransactions = request instanceof SignTransactionsRequest;
 
   // We should always have an available keypair here.
   if (!wallet) {
@@ -65,13 +66,16 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
 
   return (
     <View>
-      <BottomsheetHeader title={'Sign payloads'} />
-      <Divider style={styles.spacer} />
-      <View style={styles.contentSection}>
+      <MWABottomsheetHeader
+        title={'Sign ' + (isSignTransactions ? 'transactions' : 'messages')}
+        cluster={request.cluster}
+        appIdentity={request.appIdentity}>
         <Text style={styles.content}>
-          numPayloads: {request.payloads.length}
+          This request has {request.payloads.length}{' '}
+          {request.payloads.length > 1 ? 'payloads' : 'payload'} to sign.
         </Text>
-      </View>
+      </MWABottomsheetHeader>
+
       <View style={styles.buttonGroup}>
         <Button
           style={styles.actionButton}
@@ -90,13 +94,6 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    height: '100%',
-  },
-  spacer: {
-    marginVertical: 16,
-    width: '100%',
-  },
   buttonGroup: {
     display: 'flex',
     flexDirection: 'row',
@@ -106,14 +103,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginEnd: 8,
   },
-  contentSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    paddingBottom: 16,
-  },
   content: {
     textAlign: 'left',
-    color: 'black',
+    color: 'green',
     fontSize: 18,
   },
 });

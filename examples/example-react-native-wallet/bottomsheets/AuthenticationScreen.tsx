@@ -4,7 +4,7 @@ import {Button, Divider, Text} from 'react-native-paper';
 import {AuthorizeDappRequest} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {useWallet} from '../components/WalletProvider';
-import BottomsheetHeader from '../components/BottomsheetHeader';
+import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
 
 interface AuthenticationScreenProps {
   request: AuthorizeDappRequest;
@@ -22,25 +22,11 @@ export default function AuthenticationScreen({
 
   return (
     <View>
-      <BottomsheetHeader
+      <MWABottomsheetHeader
         title={'Authorize Dapp'}
-        iconSource={
-          request.iconRelativeUri && request.identityUri
-            ? {
-                uri: new URL(
-                  request.iconRelativeUri,
-                  request.identityUri,
-                ).toString(),
-              }
-            : require('../img/unknownapp.jpg')
-        }
+        cluster={request.cluster}
+        appIdentity={request.appIdentity}
       />
-      <Divider style={styles.spacer} />
-      <View style={styles.contentSection}>
-        <Text style={styles.content}>Cluster: {request.cluster}</Text>
-        <Text style={styles.content}>identityName: {request.identityName}</Text>
-        <Text style={styles.content}>identityUri: {request.identityUri}</Text>
-      </View>
       <View style={styles.buttonGroup}>
         <Button
           style={styles.actionButton}
@@ -69,27 +55,6 @@ export default function AuthenticationScreen({
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    height: '100%',
-  },
-  icon: {
-    width: 75,
-    height: 75,
-  },
-  contentSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    paddingBottom: 16,
-  },
-  content: {
-    textAlign: 'left',
-    color: 'black',
-    fontSize: 18,
-  },
-  spacer: {
-    marginVertical: 16,
-    width: '100%',
-  },
   buttonGroup: {
     display: 'flex',
     flexDirection: 'row',

@@ -83,11 +83,45 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
     }
 
+    fun convertReadableMapToConfig(config: ReadableMap): MobileWalletAdapterConfig {
+        val supportsSignAndSendTransactions = config.getBoolean("supportsSignAndSendTransactions")
+        val maxTransactionsPerSigningRequest = config.getInt("maxTransactionsPerSigningRequest")
+        val maxMessagesPerSigningRequest = config.getInt("maxMessagesPerSigningRequest")
+        val readableArray = config.getArray("supportedTransactionVersions")
+        val supportedTransactionVersions = mutableListOf<Any>()
+        for (i in 0 until readableArray?.size()!!) {
+            when (readableArray?.getType(i)) {
+                ReadableType.Number -> supportedTransactionVersions.add(readableArray.getInt(i))
+                ReadableType.String -> supportedTransactionVersions.add(readableArray.getString(i))
+                else -> throw IllegalArgumentException("Unsupported type in supportedTransactionVersions array")
+            }
+        }
+
+        val noConnectionWarningTimeoutMs = config.getDouble("noConnectionWarningTimeoutMs").toLong()
+
+        return MobileWalletAdapterConfig(
+            supportsSignAndSendTransactions,
+            maxTransactionsPerSigningRequest,
+            maxMessagesPerSigningRequest,
+            supportedTransactionVersions.toTypedArray(),
+            noConnectionWarningTimeoutMs
+        )
+    }
+
     // Converts a React ReadableArray into a Kotlin ByteArray.
     // Expects ReadableArray to be an Array of ints, where each int represents a byte.
     private fun convertFromReactByteArray(reactByteArray: ReadableArray): ByteArray {
         return ByteArray(reactByteArray.size()) { index ->
             reactByteArray.getInt(index).toByte()
+        }
+    }
+
+    // Converts a Kotlin ByteArray into a React ReadableArray of ints.
+    private fun convertToReactByteArray(byteArray: ByteArray): ReadableArray {
+        return Arguments.createArray().apply {
+            byteArray.forEach {
+                this.pushInt(it.toInt())
+            }
         }
     }
 
@@ -108,18 +142,14 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             return
         }
 
+        val kotlinConfig = convertReadableMapToConfig(config)
+
         // created a scenario, told it to start (kicks off some threads in the background)
         // we've kept a reference to it in the global state of this module (scenario)
         // this won't be garbage collected and will just run, sit & wait for an incoming connection
         scenario = associationUri.createScenario(
             reactContext,
-            MobileWalletAdapterConfig(
-                true,
-                10,
-                10,
-                arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                3000L
-            ),
+            kotlinConfig,
             AuthIssuerConfig(walletName),
             MobileWalletAdapterScenarioCallbacks()
         ).also { it.start() }
@@ -273,25 +303,55 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     }
 
     private fun sendWalletServiceRequestToReact(request: MobileWalletAdapterRemoteRequest) {
+        fun putCommonIdentityFields(map: WritableMap, request: MobileWalletAdapterRemoteRequest) {
+            when(request.request) {
+                is AuthorizeRequest -> {
+                    val authRequest = request.request as AuthorizeRequest
+                    authRequest.identityName?.toString()?.let { identityName ->
+                        map.putString("identityName", identityName)
+                    }
+                    authRequest.identityUri?.toString()?.let { identityUri ->
+                        map.putString("identityUri", identityUri)
+                    }
+                    authRequest.iconRelativeUri?.toString()?.let { iconRelativeUri ->
+                        map.putString("iconRelativeUri", iconRelativeUri)
+                    }
+                }
+                is VerifiableIdentityRequest -> {
+                    val verifiableIdentityRequest = request.request as VerifiableIdentityRequest
+                    verifiableIdentityRequest.identityName?.toString()?.let { identityName ->
+                        map.putString("identityName", identityName)
+                    }
+                    verifiableIdentityRequest.identityUri?.toString()?.let { identityUri ->
+                        map.putString("identityUri", identityUri)
+                    }
+                    verifiableIdentityRequest.iconRelativeUri?.toString()?.let { iconRelativeUri ->
+                        map.putString("iconRelativeUri", iconRelativeUri)
+                    }
+                }
+                else -> {
+                    throw IllegalArgumentException("Request must be of type AuthorizeRequest or VerifiableIdentityRequest")
+                }
+            }
+        }
+
         val eventInfo = when(request) {
             is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> Arguments.createMap().apply {
                 putString("type", "AUTHORIZE_DAPP")
-                request.request.getIdentityName()?.toString()?.let { identityName ->
-                    putString("identityName", identityName)
-                }
-                request.request.getIdentityUri()?.toString()?.let { identityUri ->
-                    putString("identityUri", identityUri)
-                }
-                request.request.getIconRelativeUri()?.toString()?.let { iconRelativeUri ->
-                    putString("iconRelativeUri", iconRelativeUri)
-                }
-                putString("cluster", request.request.getCluster())
+                putCommonIdentityFields(this, request)
+                putString("cluster", request.request.cluster)
             }
             is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> Arguments.createMap().apply {
                 putString("type", "REAUTHORIZE_DAPP")
+                putCommonIdentityFields(this, request)
+                putString("cluster", request.request.cluster)
+                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
             }
             is MobileWalletAdapterRemoteRequest.SignMessages -> Arguments.createMap().apply {
                 putString("type", "SIGN_MESSAGES")
+                putCommonIdentityFields(this, request)
+                putString("cluster", request.request.cluster)
+                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                         Arguments.fromArray(it.map { it.toInt() }.toIntArray())
@@ -300,6 +360,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             }
             is MobileWalletAdapterRemoteRequest.SignTransactions -> Arguments.createMap().apply {
                 putString("type", "SIGN_TRANSACTIONS")
+                putCommonIdentityFields(this, request)
+                putString("cluster", request.request.cluster)
+                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                         Arguments.fromArray(it.map { it.toInt() }.toIntArray())
@@ -308,6 +371,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             }
             is MobileWalletAdapterRemoteRequest.SignAndSendTransactions -> Arguments.createMap().apply {
                 putString("type", "SIGN_AND_SEND_TRANSACTIONS")
+                putCommonIdentityFields(this, request)
+                putString("cluster", request.request.cluster)
+                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                         Arguments.fromArray(it.map { it.toInt() }.toIntArray())

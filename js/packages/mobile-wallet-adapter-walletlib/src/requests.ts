@@ -44,24 +44,34 @@ export abstract class MobileWalletAdapterServiceRequest {
     abstract completeWithDecline(): void;
 }
 
-export class AuthorizeDappRequest extends MobileWalletAdapterServiceRequest {
-    type: MobileWalletAdapterServiceRequestEventType = MobileWalletAdapterServiceRequestEventType.AuthorizeDapp;
-    identityName: string | null;
-    identityUri: string | null;
-    iconRelativeUri: string | null;
-    cluster: string;
+type AppIdentity = Readonly<{
+    identityUri?: string;
+    iconRelativeUri?: string;
+    identityName?: string;
+}>;
 
-    constructor(
-        cluster: string,
-        identityName: string | null,
-        identityUri: string | null,
-        iconRelativeUri: string | null,
-    ) {
+export abstract class VerifiableIdentityRequest extends MobileWalletAdapterServiceRequest {
+    cluster: string;
+    authorizationScope: Uint8Array;
+    appIdentity?: AppIdentity;
+
+    constructor(cluster: string, authorizationScope: Uint8Array, appIdentity?: AppIdentity) {
         super();
         this.cluster = cluster;
-        this.identityName = identityName;
-        this.identityUri = identityUri;
-        this.iconRelativeUri = iconRelativeUri;
+        this.authorizationScope = authorizationScope;
+        this.appIdentity = appIdentity;
+    }
+}
+
+export class AuthorizeDappRequest extends MobileWalletAdapterServiceRequest {
+    type: MobileWalletAdapterServiceRequestEventType = MobileWalletAdapterServiceRequestEventType.AuthorizeDapp;
+    cluster: string;
+    appIdentity?: AppIdentity;
+
+    constructor(cluster: string, appIdentity?: AppIdentity) {
+        super();
+        this.cluster = cluster;
+        this.appIdentity = appIdentity;
     }
 
     completeWithAuthorize(
@@ -86,7 +96,7 @@ export class AuthorizeDappRequest extends MobileWalletAdapterServiceRequest {
     }
 }
 
-export class ReauthorizeDappRequest extends MobileWalletAdapterServiceRequest {
+export class ReauthorizeDappRequest extends VerifiableIdentityRequest {
     type: MobileWalletAdapterServiceRequestEventType = MobileWalletAdapterServiceRequestEventType.ReauthorizeDapp;
 
     // TODO: implement ReauthorizeDappRequest
@@ -95,15 +105,12 @@ export class ReauthorizeDappRequest extends MobileWalletAdapterServiceRequest {
     }
 }
 
-export abstract class SignPayloadsRequest
-    extends MobileWalletAdapterServiceRequest
-    implements MobileWalletAdapterServiceRequest
-{
+export abstract class SignPayloadsRequest extends VerifiableIdentityRequest {
     abstract type: MobileWalletAdapterServiceRequestEventType;
     payloads: Uint8Array[];
 
-    constructor(payloads: Uint8Array[]) {
-        super();
+    constructor(payloads: Uint8Array[], cluster: string, authorizationScope: Uint8Array, appIdentity?: AppIdentity) {
+        super(cluster, authorizationScope, appIdentity);
         this.payloads = payloads;
     }
 
@@ -138,31 +145,26 @@ export abstract class SignPayloadsRequest
 
 export class SignMessagesRequest extends SignPayloadsRequest {
     type: MobileWalletAdapterServiceRequestEventType = MobileWalletAdapterServiceRequestEventType.SignMessages;
-
-    constructor(payloads: Uint8Array[]) {
-        super(payloads);
-    }
 }
 
 export class SignTransactionsRequest extends SignPayloadsRequest {
     type: MobileWalletAdapterServiceRequestEventType = MobileWalletAdapterServiceRequestEventType.SignTransactions;
-
-    constructor(payloads: Uint8Array[]) {
-        super(payloads);
-    }
 }
 
-export class SignAndSendTransactionsRequest
-    extends MobileWalletAdapterServiceRequest
-    implements MobileWalletAdapterServiceRequest
-{
+export class SignAndSendTransactionsRequest extends VerifiableIdentityRequest {
     type: MobileWalletAdapterServiceRequestEventType =
         MobileWalletAdapterServiceRequestEventType.SignAndSendTransactions;
     payloads: Uint8Array[];
     minContextSlot?: string;
 
-    constructor(payloads: Uint8Array[], minContextSlot?: string) {
-        super();
+    constructor(
+        payloads: Uint8Array[],
+        cluster: string,
+        authorizationScope: Uint8Array,
+        appIdentity?: AppIdentity,
+        minContextSlot?: string,
+    ) {
+        super(cluster, authorizationScope, appIdentity);
         this.payloads = payloads;
         this.minContextSlot = minContextSlot;
     }
