@@ -17,7 +17,7 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toTopOf="parent"
         android:text="@string/label_send_transactions"
-        android:textSize="12pt"
+        android:textSize="24sp"
         android:textAllCaps="true"/>
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toBottomOf="@id/label_send_transaction"
         app:layout_constraintStart_toStartOf="parent"
         android:text="@string/label_cluster"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/text_cluster"
@@ -38,7 +38,7 @@
         app:layout_constraintTop_toTopOf="@id/label_cluster"
         app:layout_constraintBottom_toBottomOf="@id/label_cluster"
         app:layout_constraintStart_toEndOf="@id/label_cluster"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_simulate_transactions_submitted"
@@ -49,7 +49,7 @@
         android:layout_marginHorizontal="8dp"
         app:layout_constraintTop_toBottomOf="@id/label_cluster"
         android:text="@string/label_simulate_transactions_submitted"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_simulate_transactions_not_submitted"
@@ -58,7 +58,7 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_simulate_transactions_submitted"
         android:text="@string/label_simulate_transactions_not_submitted"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_send_transaction_to_cluster"
@@ -67,6 +67,6 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_simulate_transactions_not_submitted"
         android:text="@string/label_send_transaction_to_cluster"
-        android:textSize="10pt" />
+        android:textSize="22sp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
