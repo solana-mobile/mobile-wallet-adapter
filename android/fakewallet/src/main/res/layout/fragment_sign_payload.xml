@@ -17,7 +17,7 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:textSize="14sp"
+        android:textSize="18sp"
         android:textAllCaps="true"/>
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toBottomOf="@id/text_sign_payloads"
         app:layout_constraintStart_toStartOf="parent"
         android:text="@string/label_num_txns"
-        android:textSize="12sp" />
+        android:textSize="16sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/text_num_transactions"
@@ -38,7 +38,7 @@
         app:layout_constraintTop_toTopOf="@id/label_num_transactions"
         app:layout_constraintBottom_toBottomOf="@id/label_num_transactions"
         app:layout_constraintStart_toEndOf="@id/label_num_transactions"
-        android:textSize="12sp" />
+        android:textSize="16sp" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_authorize"
@@ -48,7 +48,7 @@
         app:layout_constraintTop_toBottomOf="@id/label_num_transactions"
         app:layout_constraintStart_toStartOf="parent"
         android:text="@string/label_authorize"
-        android:textSize="12sp" />
+        android:textSize="16sp" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_decline"
@@ -58,7 +58,7 @@
         app:layout_constraintTop_toBottomOf="@id/label_num_transactions"
         app:layout_constraintEnd_toEndOf="parent"
         android:text="@string/label_decline"
-        android:textSize="12sp" />
+        android:textSize="16sp" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_simulate_authorization_failed"
@@ -69,7 +69,7 @@
         android:layout_marginBottom="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_authorize"
         android:text="@string/label_simulate_authorization_failed"
-        android:textSize="12sp"
+        android:textSize="16sp"
         android:minLines="2" />
 
     <androidx.appcompat.widget.AppCompatButton
@@ -79,7 +79,7 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_simulate_authorization_failed"
         android:text="@string/label_simulate_invalid_payloads"
-        android:textSize="12sp"
+        android:textSize="16sp"
         android:minLines="2" />
 
     <androidx.appcompat.widget.AppCompatButton
@@ -89,7 +89,7 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_simulate_invalid_payloads"
         android:text="@string/label_simulate_too_many_payloads"
-        android:textSize="12sp"
+        android:textSize="16sp"
         android:minLines="2" />
 
     <androidx.appcompat.widget.AppCompatButton
@@ -99,7 +99,7 @@
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/btn_simulate_too_many_payloads"
         android:text="@string/label_simulate_internal_error"
-        android:textSize="12sp"
+        android:textSize="16sp"
         android:minLines="2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
