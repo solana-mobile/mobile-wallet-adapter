@@ -134,7 +134,7 @@ dependencies {
   implementation "com.facebook.react:react-native:+"  // From node_modules
   implementation "com.solanamobile:mobile-wallet-adapter-clientlib:1.1.0"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1"
 }
 
 if (isNewArchitectureEnabled()) {
