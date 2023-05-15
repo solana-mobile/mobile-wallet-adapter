@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.ExampleWallet.BottomSheet" parent="Theme.AppCompat.Dialog">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="android:windowBackground">@drawable/background_bottom_sheet_dialog</item>
+    </style>
+</resources>

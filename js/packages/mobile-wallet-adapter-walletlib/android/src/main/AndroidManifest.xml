@@ -1,0 +1,23 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".MobileWalletAdapterBottomSheetActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.ExampleWallet.BottomSheet"
+            android:layout_gravity="bottom"
+            android:exported="true">
+            <!-- Default solana-wallet URI from a browser or native dapp -->
+            <intent-filter android:order="1">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="solana-wallet" />
+            </intent-filter>
+            <!-- Any other uncategorized solana-wallet URI not covered by above -->
+            <intent-filter android:order="0">
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="solana-wallet" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
