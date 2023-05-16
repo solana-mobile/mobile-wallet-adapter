@@ -41,7 +41,7 @@ export type MWARequest =
     | SignAndSendTransactionsRequest
     | AuthorizeDappRequest;
 
-export enum MWARequestType {
+enum MWARequestType {
     AuthorizeDappRequest,
     ReauthorizeDappRequest,
     DeauthorizeDappRequest,
@@ -159,26 +159,46 @@ export function resolve(request: AuthorizeDappRequest, response: AuthorizeDappRe
 export function resolve(request: SignMessagesRequest, response: SignMessagesResponse): void;
 export function resolve(request: SignTransactionsRequest, response: SignTransactionsResponse): void;
 export function resolve(request: SignAndSendTransactionsRequest, response: SignAndSendTransactionsResponse): void;
-export function resolve(request: MWARequest, response: MWAResponse): void {
+export function resolve(request: MWARequest, response: unknown): void {
     switch (request.__type) {
         case MWARequestType.AuthorizeDappRequest:
             // Optionally pre-process the response, which is now nicely typed.
-            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as AuthorizeDappResponse);
+            // Check for conformity?
+            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignMessagesResponse);
             break;
         case MWARequestType.SignMessagesRequest:
             // Optionally pre-process the response, which is now nicely typed.
-            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignMessagesResponse);
+            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignTransactionsResponse);
             break;
         case MWARequestType.SignTransactionsRequest:
             // Optionally pre-process the response, which is now nicely typed.
-            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignTransactionsResponse);
+            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignMessagesResponse);
             break;
         case MWARequestType.SignAndSendTransactionsRequest:
             // Optionally pre-process the response, which is now nicely typed.
-            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignAndSendTransactionsResponse);
+            SolanaMobileWalletAdapterWalletLib.onResolve(request, response as SignTransactionsResponse);
             break;
         default:
             console.warn('Unsupported request type');
             break;
     }
+}
+/**
+ * Mobile Wallet Adapter Session Events are notifications and events
+ * about the underlying session between the wallet and the dApp.
+ */
+export enum MWASessionEventType {
+    SessionStartEvent,
+    SessionReadyEvent,
+    SessionTerminatedEvent,
+    SessionServingClientsEvent,
+    SessionServingCompleteEvent,
+    SessionCompleteEvent,
+    SessionErrorEvent,
+    SessionTeardownCompleteEvent,
+    LowPowerNoConnectionEvent,
+}
+export interface IMWASessionEvent {
+    __type: MWASessionEventType;
+    sessionId: string;
 }
