@@ -48,7 +48,7 @@ export function useMobileWalletAdapterSession(
     // Start native event listeners
     useEffect(() => {
         const mwaEventEmitter = new NativeEventEmitter();
-        mwaEventEmitter.addListener(MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME, (nativeEvent) => {
+        const listener = mwaEventEmitter.addListener(MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME, (nativeEvent) => {
             if (isMWARequest(nativeEvent)) {
                 handleRequest(nativeEvent as MWARequest);
             } else if (isMWASessionEvent(nativeEvent)) {
@@ -59,7 +59,7 @@ export function useMobileWalletAdapterSession(
         });
 
         return () => {
-            mwaEventEmitter.removeAllListeners(MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME);
+            listener.remove();
         };
     }, []);
 
