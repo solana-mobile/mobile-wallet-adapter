@@ -129,11 +129,14 @@ function bridgeEventToMWARequest(event: any): MobileWalletAdapterServiceRequest 
     };
     switch (event.type) {
         case MobileWalletAdapterServiceRequestEventType.AuthorizeDapp:
-            return new AuthorizeDappRequest(event.cluster, appIdentity);
+            return new AuthorizeDappRequest(event.sessionId, event.requestId, 
+                event.cluster, appIdentity);
         case MobileWalletAdapterServiceRequestEventType.ReauthorizeDapp:
-            return new ReauthorizeDappRequest(event.cluster, event.authorizationScope, appIdentity);
+            return new ReauthorizeDappRequest(event.sessionId, event.requestId, 
+                event.cluster, event.authorizationScope, appIdentity);
         case MobileWalletAdapterServiceRequestEventType.SignMessages:
             return new SignMessagesRequest(
+                event.sessionId, event.requestId, 
                 event.payloads.map((payload: number[]) => new Uint8Array(payload)),
                 event.cluster,
                 event.authorizationScope,
@@ -141,6 +144,7 @@ function bridgeEventToMWARequest(event: any): MobileWalletAdapterServiceRequest 
             );
         case MobileWalletAdapterServiceRequestEventType.SignTransactions:
             return new SignTransactionsRequest(
+                event.sessionId, event.requestId, 
                 event.payloads.map((payload: number[]) => new Uint8Array(payload)),
                 event.cluster,
                 event.authorizationScope,
@@ -148,6 +152,7 @@ function bridgeEventToMWARequest(event: any): MobileWalletAdapterServiceRequest 
             );
         case MobileWalletAdapterServiceRequestEventType.SignAndSendTransactions:
             return new SignAndSendTransactionsRequest(
+                event.sessionId, event.requestId, 
                 event.payloads.map((payload: number[]) => new Uint8Array(payload)),
                 event.cluster,
                 event.authorizationScope,

@@ -85,7 +85,12 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
           mode="contained">
           Sign
         </Button>
-        <Button style={styles.actionButton} mode="outlined">
+        <Button 
+          style={styles.actionButton} 
+          onPress={() => {
+            request.completeWithDecline();
+          }}
+          mode="outlined">
           Reject
         </Button>
       </View>

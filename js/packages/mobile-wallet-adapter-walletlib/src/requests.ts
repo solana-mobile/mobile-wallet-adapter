@@ -36,6 +36,13 @@ export enum MobileWalletAdapterServiceRequestEventType {
 // Requests that come from the dApp for Authorization, Signing, Sending services.
 export abstract class MobileWalletAdapterServiceRequest {
     type: MobileWalletAdapterServiceRequestEventType = MobileWalletAdapterServiceRequestEventType.None;
+    sessionId!: string;
+    requestId!: string;
+
+    constructor(sessionId: string, requestId: string) {
+        this.sessionId = sessionId
+        this.requestId = requestId
+    }
 
     cancel() {
         SolanaMobileWalletAdapterWalletLib.cancelRequest();
@@ -55,8 +62,8 @@ export abstract class VerifiableIdentityRequest extends MobileWalletAdapterServi
     authorizationScope: Uint8Array;
     appIdentity?: AppIdentity;
 
-    constructor(cluster: string, authorizationScope: Uint8Array, appIdentity?: AppIdentity) {
-        super();
+    constructor(sessionId: string, requestId: string, cluster: string, authorizationScope: Uint8Array, appIdentity?: AppIdentity) {
+        super(sessionId, requestId);
         this.cluster = cluster;
         this.authorizationScope = authorizationScope;
         this.appIdentity = appIdentity;
@@ -68,8 +75,8 @@ export class AuthorizeDappRequest extends MobileWalletAdapterServiceRequest {
     cluster: string;
     appIdentity?: AppIdentity;
 
-    constructor(cluster: string, appIdentity?: AppIdentity) {
-        super();
+    constructor(sessionId: string, requestId: string, cluster: string, appIdentity?: AppIdentity) {
+        super(sessionId, requestId);
         this.cluster = cluster;
         this.appIdentity = appIdentity;
     }
@@ -83,6 +90,8 @@ export class AuthorizeDappRequest extends MobileWalletAdapterServiceRequest {
         console.log(this.type + ': completeWithAuthorize: authorized public key =', publicKey);
         const bridgedTypePublicKey: number[] = Array.from(publicKey);
         SolanaMobileWalletAdapterWalletLib.completeWithAuthorize(
+            this.sessionId,
+            this.requestId,
             bridgedTypePublicKey,
             accountLabel,
             walletUriBase,
@@ -92,7 +101,7 @@ export class AuthorizeDappRequest extends MobileWalletAdapterServiceRequest {
 
     completeWithDecline(): void {
         console.log(this.type + ': completeAuthorizeWithDecline');
-        SolanaMobileWalletAdapterWalletLib.completeAuthorizeWithDecline();
+        SolanaMobileWalletAdapterWalletLib.completeAuthorizeWithDecline(this.sessionId, this.requestId);
     }
 }
 
@@ -109,8 +118,8 @@ export abstract class SignPayloadsRequest extends VerifiableIdentityRequest {
     abstract type: MobileWalletAdapterServiceRequestEventType;
     payloads: Uint8Array[];
 
-    constructor(payloads: Uint8Array[], cluster: string, authorizationScope: Uint8Array, appIdentity?: AppIdentity) {
-        super(cluster, authorizationScope, appIdentity);
+    constructor(sessionId: string, requestId: string, payloads: Uint8Array[], cluster: string, authorizationScope: Uint8Array, appIdentity?: AppIdentity) {
+        super(sessionId, requestId, cluster, authorizationScope, appIdentity);
         this.payloads = payloads;
     }
 
@@ -119,27 +128,27 @@ export abstract class SignPayloadsRequest extends VerifiableIdentityRequest {
         const bridgeTypedPayloads: number[][] = signedPayloads.map((byteArray) => {
             return Array.from(byteArray);
         });
-        SolanaMobileWalletAdapterWalletLib.completeWithSignedPayloads(bridgeTypedPayloads);
+        SolanaMobileWalletAdapterWalletLib.completeWithSignedPayloads(this.sessionId, this.requestId, bridgeTypedPayloads);
     }
 
     completeWithInvalidPayloads(validArray: boolean[]): void {
         console.log(this.type + ': completeWithInvalidPayloads: validArray =', validArray);
-        SolanaMobileWalletAdapterWalletLib.completeWithInvalidPayloads(validArray);
+        SolanaMobileWalletAdapterWalletLib.completeWithInvalidPayloads(this.sessionId, this.requestId, validArray);
     }
 
     completeWithDecline(): void {
         console.log(this.type + ': completeSignPayloadsWithDecline');
-        SolanaMobileWalletAdapterWalletLib.completeSignPayloadsWithDecline();
+        SolanaMobileWalletAdapterWalletLib.completeSignPayloadsWithDecline(this.sessionId, this.requestId);
     }
 
     completeSignPayloadsWithTooManyPayloads(): void {
         console.log(this.type + ': completeWithTooManyPayloads');
-        SolanaMobileWalletAdapterWalletLib.completeSignPayloadsWithTooManyPayloads();
+        SolanaMobileWalletAdapterWalletLib.completeSignPayloadsWithTooManyPayloads(this.sessionId, this.requestId);
     }
 
     completeSignPayloadsWithAuthorizationNotValid(): void {
         console.log(this.type + ': completeSignPayloadsWithAuthorizationNotValid');
-        SolanaMobileWalletAdapterWalletLib.completeSignPayloadsWithAuthorizationNotValid();
+        SolanaMobileWalletAdapterWalletLib.completeSignPayloadsWithAuthorizationNotValid(this.sessionId, this.requestId);
     }
 }
 
@@ -158,13 +167,15 @@ export class SignAndSendTransactionsRequest extends VerifiableIdentityRequest {
     minContextSlot?: string;
 
     constructor(
+        sessionId: string, 
+        requestId: string, 
         payloads: Uint8Array[],
         cluster: string,
         authorizationScope: Uint8Array,
         appIdentity?: AppIdentity,
         minContextSlot?: string,
     ) {
-        super(cluster, authorizationScope, appIdentity);
+        super(sessionId, requestId, cluster, authorizationScope, appIdentity);
         this.payloads = payloads;
         this.minContextSlot = minContextSlot;
     }
@@ -174,26 +185,26 @@ export class SignAndSendTransactionsRequest extends VerifiableIdentityRequest {
         const bridgeTypedsignatures: number[][] = signatures.map((byteArray) => {
             return Array.from(byteArray);
         });
-        SolanaMobileWalletAdapterWalletLib.completeWithSignatures(bridgeTypedsignatures);
+        SolanaMobileWalletAdapterWalletLib.completeWithSignatures(this.sessionId, this.requestId, bridgeTypedsignatures);
     }
 
     completeWithInvalidSignatures(validArray: boolean[]): void {
         console.log(this.type + ': completeWithInvalidSignatures: validArray =', validArray);
-        SolanaMobileWalletAdapterWalletLib.completeWithInvalidSignatures(validArray);
+        SolanaMobileWalletAdapterWalletLib.completeWithInvalidSignatures(this.sessionId, this.requestId, validArray);
     }
 
     completeWithDecline(): void {
         console.log(this.type + ': completeSignAndSendWithDecline');
-        SolanaMobileWalletAdapterWalletLib.completeSignAndSendWithDecline();
+        SolanaMobileWalletAdapterWalletLib.completeSignAndSendWithDecline(this.sessionId, this.requestId);
     }
 
     completeSignAndSendWithTooManyPayloads(): void {
         console.log(this.type + ': completeSignAndSendWithTooManyPayloads');
-        SolanaMobileWalletAdapterWalletLib.completeSignAndSendWithTooManyPayloads();
+        SolanaMobileWalletAdapterWalletLib.completeSignAndSendWithTooManyPayloads(this.sessionId, this.requestId);
     }
 
     completeSignAndSendWithAuthorizationNotValid(): void {
         console.log(this.type + ': completeSignAndSendWithAuthorizationNotValid');
-        SolanaMobileWalletAdapterWalletLib.completeSignAndSendWithAuthorizationNotValid();
+        SolanaMobileWalletAdapterWalletLib.completeSignAndSendWithAuthorizationNotValid(this.sessionId, this.requestId);
     }
 }
