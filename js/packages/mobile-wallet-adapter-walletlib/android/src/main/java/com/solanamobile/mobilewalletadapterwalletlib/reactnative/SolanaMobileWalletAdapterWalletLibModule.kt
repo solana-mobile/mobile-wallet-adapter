@@ -10,12 +10,16 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import kotlinx.coroutines.*
 
 class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicationContext) :
-    ReactContextBaseJavaModule(reactContext) {
+    ReactContextBaseJavaModule(reactContext), CoroutineScope {
 
     // Sets the name of the module in React, accessible at ReactNative.NativeModules.SolanaMobileWalletAdapterWalletLib
     override fun getName() = "SolanaMobileWalletAdapterWalletLib"
+    
+    override val coroutineContext =
+        Dispatchers.IO + CoroutineName("SolanaMobileWalletAdapterWalletLibModuleScope") + SupervisorJob()
 
     // Session events that notify about the lifecycle of the Scenario session. We are choosing
     // to go with the naming convention Session rather than Scenario for readability.
@@ -83,66 +87,24 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
     }
 
-    fun convertReadableMapToConfig(config: ReadableMap): MobileWalletAdapterConfig {
-        val supportsSignAndSendTransactions = config.getBoolean("supportsSignAndSendTransactions")
-        val maxTransactionsPerSigningRequest = config.getInt("maxTransactionsPerSigningRequest")
-        val maxMessagesPerSigningRequest = config.getInt("maxMessagesPerSigningRequest")
-        val readableArray = config.getArray("supportedTransactionVersions")
-        val supportedTransactionVersions = mutableListOf<Any>()
-        for (i in 0 until readableArray?.size()!!) {
-            when (readableArray?.getType(i)) {
-                ReadableType.Number -> supportedTransactionVersions.add(readableArray.getInt(i))
-                ReadableType.String -> supportedTransactionVersions.add(readableArray.getString(i))
-                else -> throw IllegalArgumentException("Unsupported type in supportedTransactionVersions array")
-            }
-        }
-
-        val noConnectionWarningTimeoutMs = config.getDouble("noConnectionWarningTimeoutMs").toLong()
-
-        return MobileWalletAdapterConfig(
-            supportsSignAndSendTransactions,
-            maxTransactionsPerSigningRequest,
-            maxMessagesPerSigningRequest,
-            supportedTransactionVersions.toTypedArray(),
-            noConnectionWarningTimeoutMs
-        )
-    }
-
-    // Converts a React ReadableArray into a Kotlin ByteArray.
-    // Expects ReadableArray to be an Array of ints, where each int represents a byte.
-    private fun convertFromReactByteArray(reactByteArray: ReadableArray): ByteArray {
-        return ByteArray(reactByteArray.size()) { index ->
-            reactByteArray.getInt(index).toByte()
-        }
-    }
-
-    // Converts a Kotlin ByteArray into a React ReadableArray of ints.
-    private fun convertToReactByteArray(byteArray: ByteArray): ReadableArray {
-        return Arguments.createArray().apply {
-            byteArray.forEach {
-                this.pushInt(it.toInt())
-            }
-        }
-    }
-
     @ReactMethod
     fun createScenario(
         walletName: String,
         uriStr: String,
         config: ReadableMap
-    ) {
+    ) = launch {
         val uri = Uri.parse(uriStr)
 
         val associationUri = AssociationUri.parse(uri)
         if (associationUri == null) {
             Log.e(TAG, "Unsupported association URI: $uri")
-            return
+            return@launch
         } else if (associationUri !is LocalAssociationUri) {
             Log.e(TAG, "Current implementation of fakewallet does not support remote clients")
-            return
+            return@launch
         }
 
-        val kotlinConfig = convertReadableMapToConfig(config)
+        val kotlinConfig = config.toMobileWalletAdapterConfig()
 
         // created a scenario, told it to start (kicks off some threads in the background)
         // we've kept a reference to it in the global state of this module (scenario)
@@ -168,14 +130,14 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
     /* AuthorizeDapp Request */
     @ReactMethod
-    fun completeWithAuthorize(publicKey: ReadableArray, accountLabel: String?, walletUriBase: String?, authorizationScope: ReadableArray?) {
+    fun completeWithAuthorize(publicKey: ReadableArray, accountLabel: String?, walletUriBase: String?, authorizationScope: ReadableArray?) = launch {
         Log.d(TAG, "completeWithAuthorize: authorized public key = $publicKey")
         (request as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
             authRequest.completeWithAuthorize(
-                convertFromReactByteArray(publicKey),
+                publicKey.toByteArray(),
                 accountLabel,
                 null, // walletUriBase,
-                null, // convertFromReactByteArray(authorizationScope)
+                null, // authorizationScope.toByteArray()
             )
         }
     }
@@ -190,7 +152,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
     /* SignPayloads Request */
     @ReactMethod
-    fun completeWithSignedPayloads(signedPayloads: ReadableArray) {
+    fun completeWithSignedPayloads(signedPayloads: ReadableArray) = launch {
         // signedPayloads is an Array of Number Arrays, with each inner Array representing
         // the bytes of a signed payload.
         Log.d(TAG, "completeSignPayloadsRequest: signedPayloads = $signedPayloads")
@@ -345,13 +307,13 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 putString("type", "REAUTHORIZE_DAPP")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
-                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
+                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
             }
             is MobileWalletAdapterRemoteRequest.SignMessages -> Arguments.createMap().apply {
                 putString("type", "SIGN_MESSAGES")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
-                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
+                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                         Arguments.fromArray(it.map { it.toInt() }.toIntArray())
@@ -362,7 +324,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 putString("type", "SIGN_TRANSACTIONS")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
-                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
+                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                         Arguments.fromArray(it.map { it.toInt() }.toIntArray())
@@ -373,7 +335,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 putString("type", "SIGN_AND_SEND_TRANSACTIONS")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
-                putArray("authorizationScope", convertToReactByteArray(request.request.authorizationScope))
+                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
                 putArray("payloads", Arguments.createArray().apply {
                     request.request.payloads.map {
                         Arguments.fromArray(it.map { it.toInt() }.toIntArray())
@@ -406,8 +368,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
 
         override fun onScenarioServingComplete() {
-            scenario?.close()
-            sendSessionEventToReact(MobileWalletAdapterSessionEvent.ScenarioServingComplete)
+            launch(Dispatchers.Main) {
+                scenario?.close()
+                sendSessionEventToReact(MobileWalletAdapterSessionEvent.ScenarioServingComplete)
+            }
         }
 
         override fun onScenarioComplete() {
