@@ -307,6 +307,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     private fun sendSessionEventToReact(sessionEvent: MobileWalletAdapterSessionEvent) {
         val eventInfo = when(sessionEvent) {
             is MobileWalletAdapterSessionEvent.None -> null
+            is MobileWalletAdapterSessionEvent.ScenarioError ->Arguments.createMap().apply {
+                putString("type", sessionEvent.type)
+                putString("error", sessionEvent.message)
+            }
             else -> Arguments.createMap().apply {
                 putString("type", sessionEvent.type)
             }
