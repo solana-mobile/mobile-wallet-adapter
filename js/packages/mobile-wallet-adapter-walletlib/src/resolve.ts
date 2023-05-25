@@ -41,13 +41,13 @@ export type MWARequest =
     | SignAndSendTransactionsRequest
     | AuthorizeDappRequest;
 
-enum MWARequestType {
-    AuthorizeDappRequest,
-    ReauthorizeDappRequest,
-    DeauthorizeDappRequest,
-    SignMessagesRequest,
-    SignTransactionsRequest,
-    SignAndSendTransactionsRequest,
+export enum MWARequestType {
+    AuthorizeDappRequest = 'AUTHORIZE_DAPP',
+    ReauthorizeDappRequest = 'REAUTHORIZE_DAPP',
+    DeauthorizeDappRequest = 'DEAUTHORIZE_DAPP',
+    SignMessagesRequest = 'SIGN_MESSAGES',
+    SignTransactionsRequest = 'SIGN_TRANSACTIONS',
+    SignAndSendTransactionsRequest = 'SIGN_AND_SEND_TRANSACTIONS',
 }
 interface IMWARequest {
     __type: MWARequestType;
@@ -117,7 +117,7 @@ export type TooManyPayloadsResponse = Readonly<{
     failReason: MWARequestFailReason.TooManyPayloads;
 }>;
 
-export type AuthorizationNotValid = Readonly<{
+export type AuthorizationNotValidResponse = Readonly<{
     failReason: MWARequestFailReason.AuthorizationNotValid;
 }>;
 
@@ -140,7 +140,7 @@ export type SignPayloadsCompleteResponse = Readonly<{ signedPayloads: Uint8Array
 export type SignPayloadsFailResponse =
     | UserDeclinedResponse
     | TooManyPayloadsResponse
-    | AuthorizationNotValid
+    | AuthorizationNotValidResponse
     | InvalidSignaturesResponse;
 
 export type SignTransactionsResponse = SignPayloadsCompleteResponse | SignPayloadsFailResponse;
@@ -152,7 +152,7 @@ export type SignAndSendTransactionsResponse =
     | SignAndSendTransactionsCompleteResponse
     | UserDeclinedResponse
     | TooManyPayloadsResponse
-    | AuthorizationNotValid
+    | AuthorizationNotValidResponse
     | InvalidSignaturesResponse;
 
 export function resolve(request: AuthorizeDappRequest, response: AuthorizeDappResponse): void;
@@ -160,6 +160,8 @@ export function resolve(request: SignMessagesRequest, response: SignMessagesResp
 export function resolve(request: SignTransactionsRequest, response: SignTransactionsResponse): void;
 export function resolve(request: SignAndSendTransactionsRequest, response: SignAndSendTransactionsResponse): void;
 export function resolve(request: MWARequest, response: unknown): void {
+    console.log(request);
+    console.log(response);
     switch (request.__type) {
         case MWARequestType.AuthorizeDappRequest:
             // Optionally pre-process the response, which is now nicely typed.
@@ -182,23 +184,4 @@ export function resolve(request: MWARequest, response: unknown): void {
             console.warn('Unsupported request type');
             break;
     }
-}
-/**
- * Mobile Wallet Adapter Session Events are notifications and events
- * about the underlying session between the wallet and the dApp.
- */
-export enum MWASessionEventType {
-    SessionStartEvent,
-    SessionReadyEvent,
-    SessionTerminatedEvent,
-    SessionServingClientsEvent,
-    SessionServingCompleteEvent,
-    SessionCompleteEvent,
-    SessionErrorEvent,
-    SessionTeardownCompleteEvent,
-    LowPowerNoConnectionEvent,
-}
-export interface IMWASessionEvent {
-    __type: MWASessionEventType;
-    sessionId: string;
 }

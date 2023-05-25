@@ -9,16 +9,12 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 import {
-  MobileWalletAdapterConfig,
   AuthorizeDappRequest,
   SignMessagesRequest,
   SignTransactionsRequest,
   SignAndSendTransactionsRequest,
-  useMobileWalletAdapterSession,
   MWARequestType,
   MWARequest,
-  MWASessionEvent,
-  MWASessionEventType,
   resolve,
   MWAResponse,
   AuthorizeDappResponse,
@@ -27,7 +23,7 @@ import {
   SignTransactionsResponse,
   SignMessagesResponse,
   UserDeclinedResponse,
-  AuthorizationNotValid,
+  AuthorizationNotValidResponse,
   InvalidSignaturesResponse,
   TooManyPayloadsResponse,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
