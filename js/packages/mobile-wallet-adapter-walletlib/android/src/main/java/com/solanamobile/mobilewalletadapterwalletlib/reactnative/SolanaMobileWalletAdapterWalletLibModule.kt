@@ -10,6 +10,7 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solanamobile.mobilewalletadapterwalletlib.reactnative.BuildConfig
 import kotlinx.coroutines.*
 import java.util.UUID
 
