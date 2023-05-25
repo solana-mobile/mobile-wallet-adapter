@@ -1,7 +1,11 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Button, Divider, Text} from 'react-native-paper';
-import {AuthorizeDappRequest} from '@solana-mobile/mobile-wallet-adapter-walletlib';
+import {
+  AuthorizeDappRequest,
+  MWARequestFailReason,
+  resolve,
+} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {useWallet} from '../components/WalletProvider';
 import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
@@ -31,12 +35,10 @@ export default function AuthenticationScreen({
         <Button
           style={styles.actionButton}
           onPress={() => {
-            request.completeWithAuthorize(
-              wallet.publicKey.toBytes(),
-              'Backpack',
-              null,
-              null,
-            );
+            resolve(request, {
+              publicKey: wallet.publicKey.toBytes(),
+              accountLabel: 'Backpack',
+            });
           }}
           mode="contained">
           Authorize
@@ -44,7 +46,7 @@ export default function AuthenticationScreen({
         <Button
           style={styles.actionButton}
           onPress={() => {
-            request.completeWithDecline();
+            resolve(request, {failReason: MWARequestFailReason.UserDeclined});
           }}
           mode="outlined">
           Decline
