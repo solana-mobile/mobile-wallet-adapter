@@ -19,7 +19,7 @@ import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactio
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
 import WalletProvider from '../components/WalletProvider';
 
-type SignPayloadsRequest = SignMessagesRequest | SignMessagesRequest;
+type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
 function getRequestScreenComponent(request: MWARequest | null | undefined) {
   switch (request?.__type) {

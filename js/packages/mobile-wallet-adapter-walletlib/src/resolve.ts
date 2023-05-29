@@ -88,6 +88,7 @@ export type SignTransactionsRequest = Readonly<{
 export type SignAndSendTransactionsRequest = Readonly<{
     __type: MWARequestType.SignAndSendTransactionsRequest;
     payloads: Uint8Array[];
+    minContextSlot?: number;
 }> &
     IMWARequest;
 

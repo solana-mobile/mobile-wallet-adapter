@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Button, Divider, Text} from 'react-native-paper';
+import {Button} from 'react-native-paper';
 import {
   AuthorizeDappRequest,
   MWARequestFailReason,

@@ -2,7 +2,11 @@ import {Keypair} from '@solana/web3.js';
 import React from 'react';
 import {NativeModules, StyleSheet, View} from 'react-native';
 import {Button, Text} from 'react-native-paper';
-import {SignAndSendTransactionsRequest} from '@solana-mobile/mobile-wallet-adapter-walletlib';
+import {
+  MWARequestFailReason,
+  resolve,
+  SignAndSendTransactionsRequest,
+} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {SolanaSigningUseCase} from '../utils/SolanaSigningUseCase';
 import {
@@ -35,19 +39,27 @@ const signAndSendTransactions = async (
   });
   // If invalid, then fail the request
   if (valid.includes(false)) {
-    request.completeWithInvalidSignatures(valid);
+    resolve(request, {
+      failReason: MWARequestFailReason.InvalidSignatures,
+      valid: valid,
+    });
     return;
   }
   try {
     const signatures = await SendTransactionsUseCase.sendSignedTransactions(
       signedTransactions,
-      request.minContextSlot ? Number(request.minContextSlot) : undefined,
+      request.minContextSlot ? request.minContextSlot : undefined,
     );
-    request.completeWithSignatures(signatures);
+    resolve(request, {
+      signedTransactions: signatures,
+    });
   } catch (error) {
     console.log(`Error during signAndSendTransactions: ${error}`);
     if (error instanceof SendTransactionsError) {
-      request.completeWithInvalidSignatures(error.valid);
+      resolve(request, {
+        failReason: MWARequestFailReason.InvalidSignatures,
+        valid: error.valid,
+      });
     } else {
       throw error;
     }
@@ -91,7 +103,7 @@ export default function SignAndSendTransactionsScreen({
         <Button
           style={styles.actionButton}
           onPress={() => {
-            request.completeWithDecline();
+            resolve(request, {failReason: MWARequestFailReason.UserDeclined});
           }}
           mode="outlined">
           Decline
