@@ -3,15 +3,15 @@
  * about the underlying session between the wallet and the dApp.
  */
 export enum MWASessionEventType {
-    SessionStartEvent,
-    SessionReadyEvent,
-    SessionTerminatedEvent,
-    SessionServingClientsEvent,
-    SessionServingCompleteEvent,
-    SessionCompleteEvent,
-    SessionErrorEvent,
-    SessionTeardownCompleteEvent,
-    LowPowerNoConnectionEvent,
+    SessionStartEvent = 'SESSION_START',
+    SessionReadyEvent = 'SESSION_READY',
+    SessionTerminatedEvent = 'SESSION_TERMINATED',
+    SessionServingClientsEvent = 'SESSION_SERVING_CLIENTS',
+    SessionServingCompleteEvent = 'SESSION_SERVING_COMPLETE',
+    SessionCompleteEvent = 'SESSION_COMPLETE',
+    SessionErrorEvent = 'SESSION_ERROR',
+    SessionTeardownCompleteEvent = 'SESSION_TEARDOWN_COMPLETE',
+    LowPowerNoConnectionEvent = 'LOW_POWER_NO_CONNECTION',
 }
 export interface IMWASessionEvent {
     __type: MWASessionEventType;

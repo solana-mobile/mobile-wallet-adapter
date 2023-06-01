@@ -14,12 +14,12 @@ window.addEventListener = () => {};
 window.removeEventListener = () => {};
 
 AppRegistry.registerComponent(appName, () => App);
-AppRegistry.registerComponent(
-  'MobileWalletAdapterEntrypoint',
-  () => TestingEntrypointBottomSheet,
-);
-
 // AppRegistry.registerComponent(
 //   'MobileWalletAdapterEntrypoint',
-//   () => MobileWalletAdapterEntrypointBottomSheet,
+//   () => TestingEntrypointBottomSheet,
 // );
+
+AppRegistry.registerComponent(
+  'MobileWalletAdapterEntrypoint',
+  () => MobileWalletAdapterEntrypointBottomSheet,
+);

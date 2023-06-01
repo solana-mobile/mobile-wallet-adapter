@@ -73,6 +73,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
     // currently we only allow a single scenario to exist at a time
     private var scenarioId: String? = null
+    private var scenarioUri: Uri? = null
     private var scenario: Scenario? = null
         set(value) {
             value?.let { scenarioId = UUID.randomUUID().toString() } ?: run {
@@ -106,6 +107,13 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     ) = launch {
         val uri = Uri.parse(uriStr)
 
+        // TODO: this is dirty, need some stateful object/data to know what state we are in.
+        //  also, should we suport multiple simulatneous scenario?
+        if (uri == scenarioUri && scenario != null) {
+            Log.w(TAG, "Session already created for uri: $uri")
+            return@launch
+        }
+
         val associationUri = AssociationUri.parse(uri)
         if (associationUri == null) {
             Log.e(TAG, "Unsupported association URI: $uri")
@@ -114,6 +122,8 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             Log.e(TAG, "Current implementation of fakewallet does not support remote clients")
             return@launch
         }
+
+        scenarioUri = uri
 
         val kotlinConfig = config.toMobileWalletAdapterConfig()
 
@@ -308,19 +318,19 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     private fun sendSessionEventToReact(sessionEvent: MobileWalletAdapterSessionEvent) {
         val eventInfo = when(sessionEvent) {
             is MobileWalletAdapterSessionEvent.None -> null
-            is MobileWalletAdapterSessionEvent.ScenarioError ->Arguments.createMap().apply {
-                putString("type", sessionEvent.type)
+            is MobileWalletAdapterSessionEvent.ScenarioError -> Arguments.createMap().apply {
+                putString("__type", sessionEvent.type)
                 putString("error", sessionEvent.message)
             }
             else -> Arguments.createMap().apply {
-                putString("type", sessionEvent.type)
+                putString("__type", sessionEvent.type)
             }
         }
 
         eventInfo?.putString("sessionId", scenarioId)
 
         eventInfo?.let { sendEvent(reactContext,
-            Companion.MOBILE_WALLET_ADAPTER_SESSION_EVENT_BRIDGE_NAME, it) }
+            Companion.MOBILE_WALLET_ADAPTER_SERVICE_REQUEST_BRIDGE_NAME, it) }
     }
 
     private fun sendWalletServiceRequestToReact(request: MobileWalletAdapterRemoteRequest) {
@@ -358,18 +368,18 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
         val eventInfo = when(request) {
             is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> Arguments.createMap().apply {
-                putString("type", "AUTHORIZE_DAPP")
+                putString("__type", "AUTHORIZE_DAPP")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
             }
             is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> Arguments.createMap().apply {
-                putString("type", "REAUTHORIZE_DAPP")
+                putString("__type", "REAUTHORIZE_DAPP")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
                 putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
             }
             is MobileWalletAdapterRemoteRequest.SignMessages -> Arguments.createMap().apply {
-                putString("type", "SIGN_MESSAGES")
+                putString("__type", "SIGN_MESSAGES")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
                 putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
@@ -380,7 +390,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 })
             }
             is MobileWalletAdapterRemoteRequest.SignTransactions -> Arguments.createMap().apply {
-                putString("type", "SIGN_TRANSACTIONS")
+                putString("__type", "SIGN_TRANSACTIONS")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
                 putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
@@ -391,7 +401,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 })
             }
             is MobileWalletAdapterRemoteRequest.SignAndSendTransactions -> Arguments.createMap().apply {
-                putString("type", "SIGN_AND_SEND_TRANSACTIONS")
+                putString("__type", "SIGN_AND_SEND_TRANSACTIONS")
                 putCommonIdentityFields(this, request)
                 putString("cluster", request.request.cluster)
                 putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
