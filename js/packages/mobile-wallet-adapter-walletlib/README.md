@@ -7,7 +7,7 @@ This package is still in alpha and is not production ready. However, the API is 
 
 ## Quickstart
 
-### Entrypoint
+### 1. Define your MWA entrypoint
 
 To support bottom sheet signing flow, you need to define a React component to be the entrypoint for MWA. When the dApp sends out an intent for `solana-wallet://`, this entrypoint component will be rendered.
 
@@ -19,7 +19,7 @@ AppRegistry.registerComponent(
 );
 ```
 
-### Start a session
+### 1. Start listening and handling MWA requests
 
 Use this API to start a session and start handling requests:
 ```typescript
@@ -58,16 +58,15 @@ useMobileWalletAdapterSession(
 );
 ```
 
-### Handling requests
+### 3. Handling requests
 
 A `MWARequest` is handled by calling `resolve(request, response)` and each request have their appropriate response types.
 
 An example of handling an `AuthorizationRequest`:
 ```typescript
 import {
-AuthorizeDappResponse
+  AuthorizeDappResponse
 } from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
-/* ... */
 
 const response = {
   publicKey: Keypair.generate().publicKey.toBytes(),
@@ -82,7 +81,6 @@ There are a a selection of "fail" responses that you can return to the dApp. The
 import {
   UserDeclinedResponse
 } from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
-/* ... */
 
 const response = {
   failReason: MWARequestFailReason.UserDeclined,
