@@ -70,8 +70,6 @@ async function initializeScenario(walletName: string, walletConfig: MobileWallet
     // Get initial URL
     const initialUrl = await Linking.getInitialURL();
 
-    console.log('Initializing scenario for ' + initialUrl);
-
     // Create Scenario and establish session with dapp
     SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, walletConfig);
 }

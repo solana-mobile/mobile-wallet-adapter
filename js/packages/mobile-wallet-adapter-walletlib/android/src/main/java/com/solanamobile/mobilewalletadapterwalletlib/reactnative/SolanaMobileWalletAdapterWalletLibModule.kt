@@ -161,13 +161,14 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     ) = launch {
         checkSessionId(sessionId) {
             Log.d(TAG, "completeWithAuthorize: authorized public key = $publicKey")
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
+            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
                 authRequest.completeWithAuthorize(
                     publicKey.toByteArray(),
                     accountLabel,
                     null, // walletUriBase,
                     null, // authorizationScope.toByteArray()
                 )
+                pendingRequests.remove(requestId)
             }
         }
     }
@@ -176,8 +177,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     fun completeAuthorizeWithDecline(sessionId: String, requestId: String) {
         checkSessionId(sessionId) {
             Log.d(TAG, "completeAuthorizeWithDecline")
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
-                authRequest.completeWithDecline();
+            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
+                authRequest.completeWithDecline()
+                pendingRequests.remove(requestId)
             }
         }
     }
@@ -189,7 +191,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             // signedPayloads is an Array of Number Arrays, with each inner Array representing
             // the bytes of a signed payload.
             Log.d(TAG, "completeSignPayloadsRequest: signedPayloads = $signedPayloads")
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
+            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
                 // Convert ReadableArray to Array of Number Arrays
                 val payloadNumArrays = Arguments.toList(signedPayloads) as List<List<Number>>
 
@@ -200,6 +202,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
                 Log.d(TAG, "signedPayload ByteArrays = $payloadByteArrays")
                 signRequest.completeWithSignedPayloads(payloadByteArrays)
+                pendingRequests.remove(requestId)
             }
         }
     }
@@ -209,8 +212,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         checkSessionId(sessionId) {
             Log.d(TAG, "completeWithInvalidPayloads: validArray = $validArray")
             val validBoolArray = BooleanArray(validArray.size()) { index -> validArray.getBoolean(index) }
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
+            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
                 signRequest.completeWithInvalidPayloads(validBoolArray)
+                pendingRequests.remove(requestId)
             }
         }
     }
@@ -219,8 +223,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     fun completeSignPayloadsWithDecline(sessionId: String, requestId: String) {
         checkSessionId(sessionId) {
             Log.d(TAG, "completeSignPayloadsWithDecline")
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
+            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
                 signRequest.completeWithDecline()
+                pendingRequests.remove(requestId)
             }
         }
     }
@@ -229,8 +234,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     fun completeSignPayloadsWithTooManyPayloads(sessionId: String, requestId: String) {
         checkSessionId(sessionId) {
             Log.d(TAG, "completeWithTooManyPayloads")
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
+            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
                 signRequest.completeWithTooManyPayloads()
+                pendingRequests.remove(requestId)
             }
         }
     }
@@ -239,8 +245,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     fun completeSignPayloadsWithAuthorizationNotValid(sessionId: String, requestId: String) {
         checkSessionId(sessionId) {
             Log.d(TAG, "completeSignPayloadsWithAuthorizationNotValid")
-            (pendingRequests.remove(requestId) as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
+            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
                 signRequest.completeWithAuthorizationNotValid()
+                pendingRequests.remove(requestId)
             }
         }
     }
