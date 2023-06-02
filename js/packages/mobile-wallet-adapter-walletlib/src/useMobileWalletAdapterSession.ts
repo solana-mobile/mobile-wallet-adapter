@@ -1,6 +1,6 @@
 import { TransactionVersion } from '@solana/web3.js';
 import { useEffect } from 'react';
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import { Linking, NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
 import { MWASessionEvent, MWASessionEventType } from './mwaSessionEvents.js';
 import { MWARequest, MWARequestType } from './resolve.js';
@@ -63,14 +63,21 @@ export function useMobileWalletAdapterSession(
         };
     }, []);
 
-    // Initiate Scenario session with dapp
-    SolanaMobileWalletAdapterWalletLib.startScenario(walletName, config);
+    initializeScenario(walletName, config);
+}
+
+async function initializeScenario(walletName: string, walletConfig: MobileWalletAdapterConfig) {
+    // Get initial URL
+    const initialUrl = await Linking.getInitialURL();
+
+    // Create Scenario and establish session with dapp
+    SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, walletConfig);
 }
 
 function isMWARequest(nativeEvent: any): boolean {
-    return Object.values(MWARequestType).includes(nativeEvent.type);
+    return Object.values(MWARequestType).includes(nativeEvent.__type);
 }
 
 function isMWASessionEvent(nativeEvent: any) {
-    return Object.values(MWASessionEventType).includes(nativeEvent.type);
+    return Object.values(MWASessionEventType).includes(nativeEvent.__type);
 }

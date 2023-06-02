@@ -2,14 +2,16 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View, BackHandler, ActivityIndicator} from 'react-native';
 import Modal from 'react-native-modal';
 import {
-  MobileWalletAdapterServiceRequestEventType,
   MobileWalletAdapterConfig,
-  MobileWalletAdapterServiceRequest,
   AuthorizeDappRequest,
-  SignPayloadsRequest,
+  SignMessagesRequest,
+  SignTransactionsRequest,
   SignAndSendTransactionsRequest,
   useMobileWalletAdapterSession,
-  SessionTerminatedEvent,
+  MWARequestType,
+  MWARequest,
+  MWASessionEvent,
+  MWASessionEventType,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
@@ -17,20 +19,20 @@ import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactio
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
 import WalletProvider from '../components/WalletProvider';
 
-function getRequestScreenComponent(
-  request: MobileWalletAdapterServiceRequest | null | undefined,
-) {
-  switch (request?.type) {
-    case MobileWalletAdapterServiceRequestEventType.SignAndSendTransactions:
+type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
+
+function getRequestScreenComponent(request: MWARequest | null | undefined) {
+  switch (request?.__type) {
+    case MWARequestType.SignAndSendTransactionsRequest:
       return (
         <SignAndSendTransactionsScreen
           request={request as SignAndSendTransactionsRequest}
         />
       );
-    case MobileWalletAdapterServiceRequestEventType.SignTransactions:
-    case MobileWalletAdapterServiceRequestEventType.SignMessages:
+    case MWARequestType.SignTransactionsRequest:
+    case MWARequestType.SignMessagesRequest:
       return <SignPayloadsScreen request={request as SignPayloadsRequest} />;
-    case MobileWalletAdapterServiceRequestEventType.AuthorizeDapp:
+    case MWARequestType.AuthorizeDappRequest:
       return <AuthenticationScreen request={request as AuthorizeDappRequest} />;
     default:
       return <ActivityIndicator size="large" />;
@@ -39,6 +41,21 @@ function getRequestScreenComponent(
 
 export default function MobileWalletAdapterEntrypointBottomSheet() {
   const [isVisible, setIsVisible] = useState(true);
+  const [curRequest, setCurRequest] = useState<MWARequest | undefined>(
+    undefined,
+  );
+  const [curEvent, setCurEvent] = useState<MWASessionEvent | undefined>(
+    undefined,
+  );
+
+  const endWalletSession = useCallback(() => {
+    setTimeout(() => {
+      console.log('Exit App');
+      setIsVisible(false);
+      BackHandler.exitApp();
+    }, 200);
+  }, []);
+
   const config: MobileWalletAdapterConfig = useMemo(() => {
     return {
       supportsSignAndSendTransactions: true,
@@ -48,44 +65,32 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       noConnectionWarningTimeoutMs: 3000,
     };
   }, []);
-  const {request, sessionEvent} = useMobileWalletAdapterSession(
-    'Example RN Wallet',
-    config,
-  );
 
-  const endWalletSession = useCallback(() => {
-    setTimeout(() => {
-      console.log('Exit App');
-      setIsVisible(false);
-      if (
-        request !== null &&
-        request !== undefined &&
-        request instanceof MobileWalletAdapterServiceRequest
-      ) {
-        // If we have a request, respond to the dApp with a decline and completes the request.
-        (request as MobileWalletAdapterServiceRequest).completeWithDecline();
-      }
-      BackHandler.exitApp();
-    }, 200);
-  }, [request]);
+  // MWA Session Handlers
+  const handleRequest = useCallback((request: MWARequest) => {
+    setCurRequest(request);
+  }, []);
+  const handleSessionEvent = useCallback((sessionEvent: MWASessionEvent) => {
+    setCurEvent(sessionEvent);
+  }, []);
 
-  // Listen for session termination event to close our wallet app and navigate back to dapp.
   useEffect(() => {
-    if (!sessionEvent) {
+    if (!curEvent) {
       return;
     }
 
-    if (sessionEvent instanceof SessionTerminatedEvent) {
+    if (curEvent.__type === MWASessionEventType.SessionTerminatedEvent) {
       endWalletSession();
     }
-  }, [sessionEvent, endWalletSession]);
+  }, [curEvent, endWalletSession]);
 
-  useEffect(() => {
-    if (request instanceof SignPayloadsRequest) {
-      console.log(request.appIdentity);
-      console.log(request.authorizationScope);
-    }
-  }, [request]);
+  // Start an MWA session
+  useMobileWalletAdapterSession(
+    'Example RN Wallet',
+    config,
+    handleRequest,
+    handleSessionEvent,
+  );
 
   return (
     <Modal
@@ -96,7 +101,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       onBackdropPress={() => endWalletSession()}>
       <WalletProvider>
         <View style={styles.bottomSheet}>
-          {getRequestScreenComponent(request)}
+          {getRequestScreenComponent(curRequest)}
         </View>
       </WalletProvider>
     </Modal>

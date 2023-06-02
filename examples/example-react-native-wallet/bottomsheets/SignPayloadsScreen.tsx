@@ -4,48 +4,81 @@ import {StyleSheet, View} from 'react-native';
 import {Button, Text} from 'react-native-paper';
 
 import {
+  MWARequestFailReason,
+  MWARequestType,
+  resolve,
   SignMessagesRequest,
-  SignPayloadsRequest,
+  SignMessagesResponse,
   SignTransactionsRequest,
+  SignTransactionsResponse,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {SolanaSigningUseCase} from '../utils/SolanaSigningUseCase';
 import {useWallet} from '../components/WalletProvider';
 import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
 
-const signPayloads = (wallet: Keypair, request: SignPayloadsRequest) => {
-  const valid: boolean[] = request.payloads.map(_ => {
-    return true;
-  });
+type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
-  let signedPayloads: Uint8Array[];
-  if (request instanceof SignTransactionsRequest) {
-    signedPayloads = request.payloads.map((numArray, index) => {
-      try {
-        return SolanaSigningUseCase.signTransaction(
-          new Uint8Array(numArray),
-          wallet,
-        );
-      } catch (e) {
-        console.warn(`Transaction ${index} is not a valid Solana transaction`);
-        valid[index] = false;
-        return new Uint8Array();
-      }
-    });
-  } else if (request instanceof SignMessagesRequest) {
-    signedPayloads = request.payloads.map(numArray => {
-      return SolanaSigningUseCase.signMessage(new Uint8Array(numArray), wallet);
-    });
+const signPayloads = async (wallet: Keypair, request: SignPayloadsRequest) => {
+  if (request.__type === MWARequestType.SignTransactionsRequest) {
+    signTransanctions(wallet, request);
+  } else if (request.__type === MWARequestType.SignMessagesRequest) {
+    signMessages(wallet, request);
   } else {
     console.warn('Invalid payload screen request type');
     return;
   }
+};
+
+const signTransanctions = async (
+  wallet: Keypair,
+  request: SignTransactionsRequest,
+) => {
+  const valid: boolean[] = request.payloads.map(_ => {
+    return true;
+  });
+
+  let signedPayloads: Uint8Array[] = request.payloads.map((numArray, index) => {
+    try {
+      return SolanaSigningUseCase.signTransaction(
+        new Uint8Array(numArray),
+        wallet,
+      );
+    } catch (e) {
+      console.warn(`Transaction ${index} is not a valid Solana transaction`);
+      valid[index] = false;
+      return new Uint8Array();
+    }
+  });
 
   // If all valid, then call complete request
   if (!valid.includes(false)) {
-    request.completeWithSignedPayloads(signedPayloads);
+    resolve(request, {signedPayloads});
   } else {
-    request.completeWithInvalidPayloads(valid);
+    resolve(request, {
+      failReason: MWARequestFailReason.InvalidSignatures,
+      valid: valid,
+    });
+  }
+};
+
+const signMessages = async (wallet: Keypair, request: SignMessagesRequest) => {
+  const valid: boolean[] = request.payloads.map(_ => {
+    return true;
+  });
+
+  const signedPayloads = request.payloads.map(numArray => {
+    return SolanaSigningUseCase.signMessage(new Uint8Array(numArray), wallet);
+  });
+
+  // If all valid, then call complete request
+  if (!valid.includes(false)) {
+    resolve(request, {signedPayloads});
+  } else {
+    resolve(request, {
+      failReason: MWARequestFailReason.InvalidSignatures,
+      valid: valid,
+    });
   }
 };
 
@@ -57,7 +90,8 @@ interface SignPayloadsScreenProps {
 // Should either combine them or pull common code to base abstraction
 export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
   const {wallet} = useWallet();
-  const isSignTransactions = request instanceof SignTransactionsRequest;
+  const isSignTransactions =
+    request.__type === MWARequestType.SignTransactionsRequest;
 
   // We should always have an available keypair here.
   if (!wallet) {
@@ -85,7 +119,12 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
           mode="contained">
           Sign
         </Button>
-        <Button style={styles.actionButton} mode="outlined">
+        <Button 
+          style={styles.actionButton} 
+          onPress={() => {
+            request.completeWithDecline();
+          }}
+          mode="outlined">
           Reject
         </Button>
       </View>

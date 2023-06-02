@@ -9,11 +9,14 @@ interface MWABottomsheetHeaderProps {
   children?: React.ReactNode;
 }
 
-type AppIdentity = Readonly<{
-  identityUri?: string;
-  iconRelativeUri?: string;
-  identityName?: string;
-}>;
+type AppIdentity =
+  | Readonly<{
+      identityUri?: string;
+      iconRelativeUri?: string;
+      identityName?: string;
+    }>
+  | undefined
+  | null;
 
 export default function MWABottomsheetHeader({
   title,
@@ -50,7 +53,7 @@ export default function MWABottomsheetHeader({
           App URI: {appIdentity?.identityUri}
         </Text>
       </View>
-      <View style={styles.childrenContainer}>{children}</View>
+      <View>{children}</View>
       <Divider style={styles.spacer} />
     </>
   );
