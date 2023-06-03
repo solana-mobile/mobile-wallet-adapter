@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
@@ -11,11 +12,18 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConf
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.BuildConfig
+import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import java.util.UUID
 
 class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext), CoroutineScope {
+
+    private val json = Json { ignoreUnknownKeys = true }
 
     // Sets the name of the module in React, accessible at ReactNative.NativeModules.SolanaMobileWalletAdapterWalletLib
     override fun getName() = "SolanaMobileWalletAdapterWalletLib"
@@ -149,178 +157,96 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
     }
 
-    /* AuthorizeDapp Request */
+    // Apparently we cant have overlaod methods like this becuase React is completly idiotic
+    // @ReactMethod
+    // fun resolve(request: ReadableMap, response: ReadableMap) {
+    //     resolve(request.toJson().toString(), response.toJson().toString())
+    // }
+
     @ReactMethod
-    fun completeWithAuthorize(
-        sessionId: String, 
-        requestId: String, 
-        publicKey: ReadableArray, 
-        accountLabel: String?, 
-        walletUriBase: String?, 
-        authorizationScope: ReadableArray?
-    ) = launch {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeWithAuthorize: authorized public key = $publicKey")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
-                authRequest.completeWithAuthorize(
-                    publicKey.toByteArray(),
-                    accountLabel,
-                    null, // walletUriBase,
-                    null, // authorizationScope.toByteArray()
-                )
-                pendingRequests.remove(requestId)
+    fun resolve(requestJson: String, responseJson: String) = launch {
+        val completedRequest = json.decodeFromString(MobileWalletAdapterRequestSerializer, requestJson)
+        val response = json.decodeFromString(MobileWalletAdapterResponseSerializer, responseJson)
+        val pendingRequest = pendingRequests[completedRequest.requestId]
+
+        if (completedRequest.sessionId != scenarioId) {
+            sendSessionEventToReact(MobileWalletAdapterSessionEvent.ScenarioError(
+                "Invalid session (${completedRequest.sessionId}). This session does not exist/is no longer active."
+            ))
+            return@launch
+        }
+
+        fun completeWithInvalidResponse() {
+            pendingRequest?.request?.completeWithInternalError(Exception("Invalid Response For Request: response = $responseJson"))
+        }
+
+        when (completedRequest) {
+            is AuthorizeDapp -> when (response) {
+                is MobileWalletAdapterFailureResponse -> {
+                    when (response) {
+                        is UserDeclinedResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.completeWithDecline()
+                        else -> completeWithInvalidResponse()
+                    }
+                }
+                is AuthorizeDappResponse ->
+                    (pendingRequest as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)
+                        ?.request?.completeWithAuthorize(
+                            response.publicKey,
+                            response.accountLabel,
+                            null, //Uri.parse(response.walletUriBase),
+                            null //response.authorizationScope
+                        )
+                else -> completeWithInvalidResponse()
+            }
+            is ReauthorizeDapp -> when (response) {
+                is MobileWalletAdapterFailureResponse -> {
+                    when (response) {
+                        is UserDeclinedResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.ReauthorizeDapp)?.request?.completeWithDecline()
+                        else -> completeWithInvalidResponse()
+                    }
+                }
+                is AuthorizeDappResponse ->
+                    (pendingRequest as? MobileWalletAdapterRemoteRequest.ReauthorizeDapp)?.request?.completeWithReauthorize()
+                else -> completeWithInvalidResponse()
+            }
+            is SignAndSendTransactions -> when (response) {
+                is MobileWalletAdapterFailureResponse -> {
+                    when (response) {
+                        is UserDeclinedResponse  ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.completeWithDecline()
+                        is TooManyPayloadsResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.completeWithTooManyPayloads()
+                        is AuthorizationNotValidResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.completeWithAuthorizationNotValid()
+                        is InvalidSignaturesResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.completeWithInvalidSignatures(response.valid)
+                    }
+                }
+                is SignedAndSentTransactions ->
+                    (pendingRequest as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.completeWithSignatures(response.signedTransactions.toTypedArray())
+                else -> completeWithInvalidResponse()
+            }
+            is SignPayloads -> when (response) {
+                is MobileWalletAdapterFailureResponse -> {
+                    when (response) {
+                        is UserDeclinedResponse  ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.completeWithDecline()
+                        is TooManyPayloadsResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.completeWithTooManyPayloads()
+                        is AuthorizationNotValidResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.completeWithAuthorizationNotValid()
+                        is InvalidSignaturesResponse ->
+                            (pendingRequest as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.completeWithInvalidPayloads(response.valid)
+                    }
+                }
+                is SignedPayloads ->
+                    (pendingRequest as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.completeWithSignedPayloads(response.signedPayloads.toTypedArray())
+                else -> completeWithInvalidResponse()
             }
         }
     }
-
-    @ReactMethod
-    fun completeAuthorizeWithDecline(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeAuthorizeWithDecline")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)?.request?.let { authRequest ->
-                authRequest.completeWithDecline()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    /* SignPayloads Request */
-    @ReactMethod
-    fun completeWithSignedPayloads(sessionId: String, requestId: String, signedPayloads: ReadableArray) = launch {
-        checkSessionId(sessionId) {
-            // signedPayloads is an Array of Number Arrays, with each inner Array representing
-            // the bytes of a signed payload.
-            Log.d(TAG, "completeSignPayloadsRequest: signedPayloads = $signedPayloads")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
-                // Convert ReadableArray to Array of Number Arrays
-                val payloadNumArrays = Arguments.toList(signedPayloads) as List<List<Number>>
-
-                // Convert each Number Array into a ByteArray
-                val payloadByteArrays = payloadNumArrays.map { numArray ->
-                    ByteArray(numArray.size) { numArray[it].toByte() }
-                }.toTypedArray()
-
-                Log.d(TAG, "signedPayload ByteArrays = $payloadByteArrays")
-                signRequest.completeWithSignedPayloads(payloadByteArrays)
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeWithInvalidPayloads(sessionId: String, requestId: String, validArray: ReadableArray) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeWithInvalidPayloads: validArray = $validArray")
-            val validBoolArray = BooleanArray(validArray.size()) { index -> validArray.getBoolean(index) }
-            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
-                signRequest.completeWithInvalidPayloads(validBoolArray)
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeSignPayloadsWithDecline(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeSignPayloadsWithDecline")
-            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
-                signRequest.completeWithDecline()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeSignPayloadsWithTooManyPayloads(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeWithTooManyPayloads")
-            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
-                signRequest.completeWithTooManyPayloads()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeSignPayloadsWithAuthorizationNotValid(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeSignPayloadsWithAuthorizationNotValid")
-            (pendingRequests[requestId]  as? MobileWalletAdapterRemoteRequest.SignPayloads)?.request?.let { signRequest ->
-                signRequest.completeWithAuthorizationNotValid()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    /* SignAndSendTransactions Request */
-    @ReactMethod
-    fun completeWithSignatures(sessionId: String, requestId: String, signaturesArray: ReadableArray) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeWithSignatures: signatures = $signaturesArray")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.let { signAndSendRequest ->
-                val signaturesNumArray = Arguments.toList(signaturesArray) as List<List<Number>>
-
-                // Convert each Number Array into a ByteArray
-                val signaturesByteArrays = signaturesNumArray.map { numArray ->
-                    ByteArray(numArray.size) { numArray[it].toByte() }
-                }.toTypedArray()
-                Log.d(TAG, "send signatures")
-                signAndSendRequest.completeWithSignatures(signaturesByteArrays)
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeWithInvalidSignatures(sessionId: String, requestId: String, validArray: ReadableArray) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeWithInvalidSignatures: validArray = $validArray")
-            val validBoolArray = BooleanArray(validArray.size()) { index -> validArray.getBoolean(index) }
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.let { signAndSendRequest ->
-                signAndSendRequest.completeWithInvalidSignatures(validBoolArray)
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeSignAndSendWithDecline(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeSignAndSendWithDecline")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.let { signAndSendRequest ->
-                signAndSendRequest.completeWithDecline()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeSignAndSendWithTooManyPayloads(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeSignAndSendWithTooManyPayloads")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.let { signAndSendRequest ->
-                signAndSendRequest.completeWithTooManyPayloads()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun completeSignAndSendWithAuthorizationNotValid(sessionId: String, requestId: String) {
-        checkSessionId(sessionId) {
-            Log.d(TAG, "completeSignAndSendWithAuthorizationNotValid")
-            (pendingRequests[requestId] as? MobileWalletAdapterRemoteRequest.SignAndSendTransactions)?.request?.let { signAndSendRequest ->
-                signAndSendRequest.completeWithAuthorizationNotValid()
-                pendingRequests.remove(requestId)
-            }
-        }
-    }
-
-    private fun checkSessionId(sessionId: String, doIfValid: (() -> Unit)) = 
-        if (sessionId == scenarioId) doIfValid() 
-        else sendSessionEventToReact(MobileWalletAdapterSessionEvent.ScenarioError(
-            "Invalid session ($sessionId). This session does not exist/is no longer active."
-        ))
 
     private fun sendSessionEventToReact(sessionEvent: MobileWalletAdapterSessionEvent) {
         val eventInfo = when(sessionEvent) {
@@ -341,96 +267,45 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     }
 
     private fun sendWalletServiceRequestToReact(request: MobileWalletAdapterRemoteRequest) {
-        fun putCommonIdentityFields(map: WritableMap, request: MobileWalletAdapterRemoteRequest) {
-            when(request.request) {
-                is AuthorizeRequest -> {
-                    val authRequest = request.request as AuthorizeRequest
-                    authRequest.identityName?.toString()?.let { identityName ->
-                        map.putString("identityName", identityName)
-                    }
-                    authRequest.identityUri?.toString()?.let { identityUri ->
-                        map.putString("identityUri", identityUri)
-                    }
-                    authRequest.iconRelativeUri?.toString()?.let { iconRelativeUri ->
-                        map.putString("iconRelativeUri", iconRelativeUri)
-                    }
-                }
-                is VerifiableIdentityRequest -> {
-                    val verifiableIdentityRequest = request.request as VerifiableIdentityRequest
-                    verifiableIdentityRequest.identityName?.toString()?.let { identityName ->
-                        map.putString("identityName", identityName)
-                    }
-                    verifiableIdentityRequest.identityUri?.toString()?.let { identityUri ->
-                        map.putString("identityUri", identityUri)
-                    }
-                    verifiableIdentityRequest.iconRelativeUri?.toString()?.let { iconRelativeUri ->
-                        map.putString("iconRelativeUri", iconRelativeUri)
-                    }
-                }
-                else -> {
-                    throw IllegalArgumentException("Request must be of type AuthorizeRequest or VerifiableIdentityRequest")
-                }
-            }
+        val surrogate = when(request) {
+            is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> AuthorizeDapp(
+                scenarioId!!, request.request.cluster, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString()
+            )
+            is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> ReauthorizeDapp(
+                scenarioId!!, request.request.cluster, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.authorizationScope
+            )
+            is MobileWalletAdapterRemoteRequest.SignMessages -> SignMessages(
+                scenarioId!!, request.request.cluster, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.authorizationScope, request.request.payloads.toList()
+            )
+            is MobileWalletAdapterRemoteRequest.SignTransactions -> SignTransactions(
+                scenarioId!!, request.request.cluster, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.authorizationScope, request.request.payloads.toList()
+            )
+            is MobileWalletAdapterRemoteRequest.SignAndSendTransactions -> SignAndSendTransactions(
+                scenarioId!!, request.request.cluster, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.authorizationScope, request.request.payloads.toList()
+            )
         }
 
-        val eventInfo = when(request) {
-            is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> Arguments.createMap().apply {
-                putString("__type", "AUTHORIZE_DAPP")
-                putCommonIdentityFields(this, request)
-                putString("cluster", request.request.cluster)
-            }
-            is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> Arguments.createMap().apply {
-                putString("__type", "REAUTHORIZE_DAPP")
-                putCommonIdentityFields(this, request)
-                putString("cluster", request.request.cluster)
-                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
-            }
-            is MobileWalletAdapterRemoteRequest.SignMessages -> Arguments.createMap().apply {
-                putString("__type", "SIGN_MESSAGES")
-                putCommonIdentityFields(this, request)
-                putString("cluster", request.request.cluster)
-                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
-                putArray("payloads", Arguments.createArray().apply {
-                    request.request.payloads.map {
-                        Arguments.fromArray(it.map { it.toInt() }.toIntArray())
-                    }.forEach { pushArray(it) }
-                })
-            }
-            is MobileWalletAdapterRemoteRequest.SignTransactions -> Arguments.createMap().apply {
-                putString("__type", "SIGN_TRANSACTIONS")
-                putCommonIdentityFields(this, request)
-                putString("cluster", request.request.cluster)
-                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
-                putArray("payloads", Arguments.createArray().apply {
-                    request.request.payloads.map {
-                        Arguments.fromArray(it.map { it.toInt() }.toIntArray())
-                    }.forEach { pushArray(it) }
-                })
-            }
-            is MobileWalletAdapterRemoteRequest.SignAndSendTransactions -> Arguments.createMap().apply {
-                putString("__type", "SIGN_AND_SEND_TRANSACTIONS")
-                putCommonIdentityFields(this, request)
-                putString("cluster", request.request.cluster)
-                putArray("authorizationScope", request.request.authorizationScope.toWritableArray())
-                putArray("payloads", Arguments.createArray().apply {
-                    request.request.payloads.map {
-                        Arguments.fromArray(it.map { it.toInt() }.toIntArray())
-                    }.forEach { pushArray(it) }
-                })
-                putString("minContextSlot", request.request.minContextSlot?.toString())
-            }
-        }
+        // this is dirty, the requestId needs to line up so have to manually overwrite here
+        // should we change javascript side to accept json?
+        val eventInfo = 
+            JsonObject(json.encodeToJsonElement(MobileWalletAdapterRequestSerializer, surrogate)
+                .jsonObject.toMutableMap().apply { 
+                    put("requestId", JsonPrimitive(request.id))
+                }).toReadableMap()
 
-        eventInfo?.putString("sessionId", scenarioId)
-        eventInfo?.putString("requestId", request.id)
-
-        eventInfo?.let { params ->
-            sendEvent(reactContext,
-                Companion.MOBILE_WALLET_ADAPTER_SERVICE_REQUEST_BRIDGE_NAME, params)
-        }
+        sendEvent(reactContext, Companion.MOBILE_WALLET_ADAPTER_SERVICE_REQUEST_BRIDGE_NAME, eventInfo)
     }
 
-    private fun sendEvent(reactContext: ReactContext, eventName: String, params: WritableMap? = null) {
+    private fun sendEvent(reactContext: ReactContext, eventName: String, params: ReadableMap? = null) {
         reactContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit(eventName, params)
