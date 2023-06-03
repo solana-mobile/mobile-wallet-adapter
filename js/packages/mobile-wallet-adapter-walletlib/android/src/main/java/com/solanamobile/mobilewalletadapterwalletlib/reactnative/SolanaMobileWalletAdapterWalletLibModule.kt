@@ -248,6 +248,12 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
     }
 
+    private fun checkSessionId(sessionId: String, doIfValid: (() -> Unit)) = 
+        if (sessionId == scenarioId) doIfValid() 
+        else sendSessionEventToReact(MobileWalletAdapterSessionEvent.ScenarioError(
+            "Invalid session ($sessionId). This session does not exist/is no longer active."
+        ))
+
     private fun sendSessionEventToReact(sessionEvent: MobileWalletAdapterSessionEvent) {
         val eventInfo = when(sessionEvent) {
             is MobileWalletAdapterSessionEvent.None -> null
