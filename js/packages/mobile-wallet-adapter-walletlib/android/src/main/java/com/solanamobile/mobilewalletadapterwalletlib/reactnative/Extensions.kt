@@ -1,7 +1,6 @@
 package com.solanamobile.mobilewalletadapterwalletlib.reactnative
 
 import com.facebook.react.bridge.*
-import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -97,29 +96,4 @@ internal fun JsonArray.toReadableArray(): ReadableArray {
         }
     }
     return array
-}
-
-internal fun ReadableMap.toMobileWalletAdapterConfig(): MobileWalletAdapterConfig {
-    val supportsSignAndSendTransactions = getBoolean("supportsSignAndSendTransactions")
-    val maxTransactionsPerSigningRequest = getInt("maxTransactionsPerSigningRequest")
-    val maxMessagesPerSigningRequest = getInt("maxMessagesPerSigningRequest")
-    val readableArray = getArray("supportedTransactionVersions")
-    val supportedTransactionVersions = mutableListOf<Any>()
-    for (i in 0 until readableArray?.size()!!) {
-        when (readableArray?.getType(i)) {
-            ReadableType.Number -> supportedTransactionVersions.add(readableArray.getInt(i))
-            ReadableType.String -> supportedTransactionVersions.add(readableArray.getString(i))
-            else -> throw IllegalArgumentException("Unsupported type in supportedTransactionVersions array")
-        }
-    }
-
-    val noConnectionWarningTimeoutMs = getDouble("noConnectionWarningTimeoutMs").toLong()
-
-    return MobileWalletAdapterConfig(
-        supportsSignAndSendTransactions,
-        maxTransactionsPerSigningRequest,
-        maxMessagesPerSigningRequest,
-        supportedTransactionVersions.toTypedArray(),
-        noConnectionWarningTimeoutMs
-    )
 }

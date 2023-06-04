@@ -111,7 +111,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     fun createScenario(
         walletName: String,
         uriStr: String,
-        config: ReadableMap
+        config: String,
     ) = launch {
         val uri = Uri.parse(uriStr)
 
@@ -133,7 +133,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
         scenarioUri = uri
 
-        val kotlinConfig = config.toMobileWalletAdapterConfig()
+        val kotlinConfig = json.decodeFromString(MobileWalletAdapterConfigSerializer, config)
 
         // created a scenario, told it to start (kicks off some threads in the background)
         // we've kept a reference to it in the global state of this module (scenario)
