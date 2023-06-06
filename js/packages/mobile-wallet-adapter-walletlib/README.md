@@ -1,9 +1,16 @@
 # `@solana-mobile/mobile-wallet-adapter-walletlib`
 
-This is a package that provides React Native bridge for the native `mobile-wallet-adapter-walletlib` library and it is designed for *Wallet apps* built in React Native. It provides an API to implement the wallet endpoint of the [mobile wallet adapter protocol](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md)
+This is a package that provides React Native bridge for the native `mobile-wallet-adapter-walletlib` library and it is designed for *Wallet apps* built in React Native. It provides an API to implement the wallet endpoint of the [mobile wallet adapter protocol](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/spec/spec.md).
+
+Deep dive and read the full Mobile Wallet Adapter protocol [specification](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#mobile-wallet-adapter-specification).
+
+## TODO
+- Implement dApp identity verification/reauthorization
+- Separate bottom sheet signing experience or make optional
 
 ## Note
 This package is still in alpha and is not production ready. However, the API is stable and will not change drastically, so you can begin integration with your wallet.
+
 
 ## Quickstart
 

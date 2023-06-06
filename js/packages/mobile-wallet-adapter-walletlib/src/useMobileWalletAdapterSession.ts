@@ -1,4 +1,4 @@
-import { TransactionVersion } from '@solana/web3.js';
+import type { TransactionVersion } from '@solana/web3.js';
 import { useEffect } from 'react';
 import { Linking, NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
