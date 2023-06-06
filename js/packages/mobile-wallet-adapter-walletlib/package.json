@@ -1,50 +1,69 @@
 {
-  "name": "@solana-mobile/mobile-wallet-adapter-walletlib",
-  "description": "A React Native wrapper of the Solana Mobile, Mobile Wallet Adapter Wallet Library. Wallet apps can use this to handle dapp requests for signing and sending.",
-  "version": "0.0.6",
-  "author": "Michael Sulistio <mike.sulistio@solanamobile.com>",
-  "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
-  "license": "Apache-2.0",
-  "type": "module",
-  "sideEffects": false,
-  "main": "lib/cjs/index.js",
-  "react-native": "lib/cjs/index.native.js",
-  "module": "lib/esm/index.js",
-  "types": "lib/types/index.d.ts",
-  "browser": {
-      "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
-      "./lib/esm/index.js": "./lib/esm/index.browser.js"
-  },
-  "exports": {
-      "./package.json": "./package.json",
-      ".": {
-          "import": "./lib/esm/index.js",
-          "require": "./lib/cjs/index.js"
+    "name": "@solana-mobile/mobile-wallet-adapter-walletlib",
+    "description": "A React Native wrapper of the Solana Mobile, Mobile Wallet Adapter Wallet Library. Wallet apps can use this to handle dapp requests for signing and sending.",
+    "version": "1.0.0",
+    "author": "Michael Sulistio <mike.sulistio@solanamobile.com>",
+    "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
+    "license": "Apache-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "react-native": "src/index",
+    "main": "lib/commonjs/index",
+    "module": "lib/module/index",
+    "types": "lib/typescript/index.d.ts",
+    "files": [
+        "android",
+        "!android/build",
+        "lib",
+        "src",
+        "LICENSE"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint \"**/*.{js,ts,tsx}\"",
+        "prepack": "bob build",
+        "release": "release-it",
+        "example": "yarn --cwd example",
+        "bootstrap": "yarn example && yarn install && yarn example pods",
+        "clean": "shx rm -rf lib/*"
+    },
+    "devDependencies": {
+        "@release-it/conventional-changelog": "^5.0.0",
+        "@solana/web3.js": "^1.58.0",
+        "@types/react-native": "^0.69.3",
+        "react-native-builder-bob": "^0.20.4",
+        "release-it": "^15.0.0"
+    },
+    "peerDependencies": {
+        "react-native": ">0.69"
+    },
+    "release-it": {
+        "git": {
+          "commitMessage": "chore: release ${version}",
+          "tagName": "v${version}"
+        },
+        "npm": {
+          "publish": true
+        },
+        "github": {
+          "release": true
+        },
+        "plugins": {
+          "@release-it/conventional-changelog": {
+            "preset": "angular"
+          }
+        }
+      },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+          "commonjs",
+          "module",
+          "typescript"
+        ]
       }
-  },
-  "files": [
-      "android",
-      "!android/build",
-      "lib",
-      "LICENSE"
-  ],
-  "publishConfig": {
-      "access": "public"
-  },
-  "scripts": {
-      "clean": "shx rm -rf lib/*",
-      "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-      "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
-      "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
-      "prepublishOnly": "agadoo"
-  },
-  "devDependencies": {
-      "@solana/web3.js": "^1.58.0",
-      "@types/react-native": "^0.69.3",
-      "agadoo": "^2.0.0",
-      "cross-env": "^7.0.3"
-  },
-  "peerDependencies": {
-      "react-native": ">0.69"
-  }
 }
