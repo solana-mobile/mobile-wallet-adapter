@@ -10,18 +10,17 @@ _Part of the [Solana Mobile Stack](https://github.com/solana-mobile/solana-mobil
 Join us on [Discord](https://discord.gg/solanamobile)
 
 ## See our [documentation website](https://docs.solanamobile.com/) for:
-- [General Development Setup](https://docs.solanamobile.com/getting-started/development_setup)
+- [General Development Setup](https://docs.solanamobile.com/getting-started/development-setup)
 - React Native
-    - [Quickstart Setup](https://docs.solanamobile.com/react-native/quickstart)
-    - [dApp Integration Guide](https://docs.solanamobile.com/react-native/mwa_integration_rn)
-    - [Hello World Tutorial](https://docs.solanamobile.com/getting-started/hello_world_tutorial)
+    - [Setup](https://docs.solanamobile.com/react-native/setup)
+    - [Quickstart](https://docs.solanamobile.com/react-native/quickstart)
+    - [Builc your first dApp](https://docs.solanamobile.com/getting-started/first_app_tutorial)
 - Android
-    - [Quickstart Setup](https://docs.solanamobile.com/android-native/quickstart)
-    - [dApp Integration Guide](https://docs.solanamobile.com/android-native/mwa_integration)
+    - [Setup](https://docs.solanamobile.com/android-native/setup)
+    - [Quickstart](https://docs.solanamobile.com/android-native/quickstart)
 - Unity
-    - [Quickstart Setup](https://docs.solanamobile.com/additional-sdks/unity_intro#solana-unity-sdk-setup)
-    - [dApp Integration Guide](https://docs.solanamobile.com/additional-sdks/unity_intro#mobile-wallet-adapter-integration-guide)
-- [Sample App Reference](https://docs.solanamobile.com/sample-apps/sample_app_overview)
+    - [Overview](https://docs.solanamobile.com/additional-sdks/unity_intro#solana-unity-sdk-setup)
+- [Sample Apps](https://docs.solanamobile.com/sample-apps/sample_app_overview)
 
 
 ## Summary
@@ -52,7 +51,7 @@ This repository is intended for consumption by Solana mobile developers.
 All Android projects within this repository can be built using [Android Studio](https://developer.android.com/studio)
 
 Documentation site:
-- [General Development Setup](https://docs.solanamobile.com/getting-started/development_setup)
+- [General Development Setup](https://docs.solanamobile.com/getting-started/development-setup)
 
 ### How to reference these libraries in your project
 
@@ -60,9 +59,9 @@ Documentation site:
 
 For a more thorough setup guide, see our documentation site:
 - Android:
-    - [Quickstart setup](https://docs.solanamobile.com/android-native/quickstart)
+    - [Setup](https://docs.solanamobile.com/android-native/setup)
 - React Native:
-    - [Quickstart setup](https://docs.solanamobile.com/react-native/quickstart)
+    - [Setup](https://docs.solanamobile.com/react-native/setup)
 
 Java
 ```
