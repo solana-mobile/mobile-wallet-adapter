@@ -14,7 +14,7 @@ Join us on [Discord](https://discord.gg/solanamobile)
 - React Native
     - [Setup](https://docs.solanamobile.com/react-native/setup)
     - [Quickstart](https://docs.solanamobile.com/react-native/quickstart)
-    - [Builc your first dApp](https://docs.solanamobile.com/getting-started/first_app_tutorial)
+    - [Build your first dApp](https://docs.solanamobile.com/getting-started/first_app_tutorial)
 - Android
     - [Setup](https://docs.solanamobile.com/android-native/setup)
     - [Quickstart](https://docs.solanamobile.com/android-native/quickstart)
