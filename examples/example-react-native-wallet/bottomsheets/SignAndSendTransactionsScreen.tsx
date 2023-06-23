@@ -1,5 +1,5 @@
 import {Keypair} from '@solana/web3.js';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {NativeModules, StyleSheet, View} from 'react-native';
 import {Button, Text} from 'react-native-paper';
 import {
@@ -15,6 +15,7 @@ import {
 } from '../utils/SendTransactionsUseCase';
 import {useWallet} from '../components/WalletProvider';
 import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
+import { useClientTrust } from '../components/ClientTrustProvider';
 
 const signAndSendTransactions = async (
   wallet: Keypair,
@@ -74,11 +75,34 @@ export default function SignAndSendTransactionsScreen({
   request,
 }: SignAndSendTransactionsScreenProps) {
   const {wallet} = useWallet();
+  const {clientTrustUseCase} = useClientTrust();
+  const [verified, setVerified] = useState(false);
 
   // We should always have an available keypair here.
   if (!wallet) {
     throw new Error('Wallet is null or undefined');
   }
+
+  useEffect(() => {
+
+    const verifyClient = async () => {
+      const authScope = new TextDecoder().decode(request.authorizationScope);
+      const verified = await clientTrustUseCase?.verifyPrivaledgedMethodSource(
+        authScope, 
+        request.appIdentity?.identityUri
+      ) ?? false;
+      setVerified(verified);
+
+      // Note: this will silently decline the request. Not great UX
+      // The wallet should inform the user that the source of this request was not verified  
+      if (!verified) {
+        resolve(request, {failReason: MWARequestFailReason.UserDeclined});
+      }
+    }
+
+    verifyClient();
+    
+  }, []);
 
   return (
     <View>
@@ -94,6 +118,7 @@ export default function SignAndSendTransactionsScreen({
       <View style={styles.buttonGroup}>
         <Button
           style={styles.actionButton}
+          disabled={!verified}
           onPress={() => {
             signAndSendTransactions(wallet, request);
           }}

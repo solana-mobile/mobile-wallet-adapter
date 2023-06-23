@@ -1,5 +1,6 @@
+import "fast-text-encoding";
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {StyleSheet, View, BackHandler, ActivityIndicator} from 'react-native';
+import {StyleSheet, View, BackHandler, ActivityIndicator, Linking} from 'react-native';
 import Modal from 'react-native-modal';
 import {
   MobileWalletAdapterConfig,
@@ -12,12 +13,23 @@ import {
   MWARequest,
   MWASessionEvent,
   MWASessionEventType,
+  resolve,
+  ReauthorizeDappResponse,
+  MWARequestFailReason,
+  getCallingPackage,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
 import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactionsScreen';
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
 import WalletProvider from '../components/WalletProvider';
+import { 
+  ClientTrustUseCase, 
+  NotVerifiable, 
+  VerificationFailed, 
+  VerificationSucceeded 
+} from '../utils/ClientTrustUseCase';
+import ClientTrustProvider, { useClientTrust } from "../components/ClientTrustProvider";
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
@@ -41,6 +53,7 @@ function getRequestScreenComponent(request: MWARequest | null | undefined) {
 
 export default function MobileWalletAdapterEntrypointBottomSheet() {
   const [isVisible, setIsVisible] = useState(true);
+  const [clientTrustUseCase, setClientTrustUseCase] = useState<ClientTrustUseCase | null>(null)
   const [curRequest, setCurRequest] = useState<MWARequest | undefined>(
     undefined,
   );
@@ -75,6 +88,17 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
   }, []);
 
   useEffect(() => {
+
+    const initClientTrustUseCase = async () => {
+      let callingPackage: string | undefined = await getCallingPackage();
+      let clientTrustUseCase = new ClientTrustUseCase(await Linking.getInitialURL() ?? '', callingPackage);
+      setClientTrustUseCase(clientTrustUseCase);
+    };
+
+    initClientTrustUseCase();
+  }, []);
+
+  useEffect(() => {
     if (!curEvent) {
       return;
     }
@@ -83,6 +107,43 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       endWalletSession();
     }
   }, [curEvent, endWalletSession]);
+
+  useEffect(() => {
+    if (!curRequest) {
+      return;
+    }
+
+    // handling reauth here, could probably be cleaner
+    // important thing here is that we verify the source and complete the request without bugging the user
+    if (curRequest.__type === MWARequestType.ReauthorizeDappRequest) {
+      let request = curRequest
+      const authScope = new TextDecoder().decode(request.authorizationScope);
+
+      // try to verify the reauthorization source, with 3 second timeout 
+      Promise.race([
+        clientTrustUseCase!!.verifyReauthorizationSource(authScope, request.appIdentity?.identityUri), 
+        async () => {
+          setTimeout(() => {
+            throw new Error('Timed out waiting for reauthorization source verification')
+          }, 3000);
+        }
+      ]).then((verificationState) => {
+        if (verificationState instanceof VerificationSucceeded) {
+          console.log('Reauthorization source verification succeeded')
+          resolve(request, {} as ReauthorizeDappResponse)
+        } else if (verificationState instanceof NotVerifiable) {
+          console.log('Reauthorization source not verifiable; approving')
+          resolve(request, {} as ReauthorizeDappResponse)
+        } else if (verificationState instanceof VerificationFailed) {
+          console.log('Reauthorization source verification failed')
+          resolve(request, {failReason: MWARequestFailReason.UserDeclined})
+        }
+      }).catch(() => {
+        console.log('Timed out waiting for reauthorization source verification')
+        resolve(request, {failReason: MWARequestFailReason.UserDeclined})
+      });
+    }
+  }, [curRequest, endWalletSession]);
 
   // Start an MWA session
   useMobileWalletAdapterSession(
@@ -99,10 +160,10 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       swipeDirection={['up', 'down']}
       onSwipeComplete={() => endWalletSession()}
       onBackdropPress={() => endWalletSession()}>
-      <WalletProvider>
+      <WalletProvider><ClientTrustProvider clientTrustUseCase={clientTrustUseCase}>
         <View style={styles.bottomSheet}>
           {getRequestScreenComponent(curRequest)}
-        </View>
+        </View></ClientTrustProvider>
       </WalletProvider>
     </Modal>
   );

@@ -4,6 +4,7 @@ import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.Authorize
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterFailureResponse
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterRequest
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterResponse
+import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.ReauthorizeDappResponse
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.SignedAndSentTransactions
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.SignedPayloads
 import kotlinx.serialization.DeserializationStrategy
@@ -17,8 +18,10 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTransformingSerializer
+import kotlinx.serialization.json.buildJsonObject
 
 internal open class TypeTransformingSerializer<T: Any>(serializer: KSerializer<T>) : JsonTransformingSerializer<T>(serializer) {
     override fun transformSerialize(element: JsonElement): JsonElement =
@@ -32,6 +35,29 @@ internal open class TypeTransformingSerializer<T: Any>(serializer: KSerializer<T
         if ((element as? JsonObject)?.containsKey("__type") == true)
             JsonObject(element.toMutableMap().apply {
                 this["type"] = this.remove("__type")!!
+            })
+        else element
+}
+
+internal object AppIdentityTransformingSerializer : JsonTransformingSerializer<MobileWalletAdapterRequest>(MobileWalletAdapterRequest.serializer()) {
+    override fun transformSerialize(element: JsonElement): JsonElement =
+        if ((element as? JsonObject)?.containsKey("identityUri") == true)
+            JsonObject(element.toMutableMap().apply {
+                this["appIdentity"] = buildJsonObject {
+                    put("identityName", this@apply.remove("identityName") ?: JsonNull)
+                    put("identityUri", this@apply.remove("identityUri") ?: JsonNull)
+                    put("iconRelativeUri", this@apply.remove("iconRelativeUri") ?: JsonNull)
+                }
+            })
+        else element
+
+    override fun transformDeserialize(element: JsonElement): JsonElement =
+        if ((element as? JsonObject)?.containsKey("appIdentity") == true)
+            JsonObject(element.toMutableMap().apply {
+                val appIdentity = this.remove("appIdentity")!! as JsonObject
+                put("identityName", appIdentity["identityName"] ?: JsonNull)
+                put("identityUri", appIdentity["identityUri"] ?: JsonNull)
+                put("iconRelativeUri", appIdentity["iconRelativeUri"] ?: JsonNull)
             })
         else element
 }
@@ -52,10 +78,11 @@ internal object MobileWalletAdapterResponseSerializer : JsonContentPolymorphicSe
         else if ((element as? JsonObject)?.containsKey("publicKey") == true) AuthorizeDappResponse.serializer()
         else if ((element as? JsonObject)?.containsKey("signedPayloads") == true) SignedPayloads.serializer()
         else if ((element as? JsonObject)?.containsKey("signedTransactions") == true) SignedAndSentTransactions.serializer() 
+        else if ((element as? JsonObject)?.isEmpty() == true) ReauthorizeDappResponse.serializer()
         else MobileWalletAdapterResponse.serializer()
 }
 
-internal object MobileWalletAdapterRequestSerializer : TypeTransformingSerializer<MobileWalletAdapterRequest>(MobileWalletAdapterRequest.serializer())
+internal object MobileWalletAdapterRequestSerializer : TypeTransformingSerializer<MobileWalletAdapterRequest>(AppIdentityTransformingSerializer)
 
 internal object ByteArrayAsMapSerializer : KSerializer<ByteArray> {
     override val descriptor: SerialDescriptor = ByteArraySerializer().descriptor

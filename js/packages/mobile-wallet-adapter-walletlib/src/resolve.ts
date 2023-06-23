@@ -39,7 +39,8 @@ export type MWARequest =
     | SignMessagesRequest
     | SignTransactionsRequest
     | SignAndSendTransactionsRequest
-    | AuthorizeDappRequest;
+    | AuthorizeDappRequest
+    | ReauthorizeDappRequest;
 
 export enum MWARequestType {
     AuthorizeDappRequest = 'AUTHORIZE_DAPP',
@@ -136,6 +137,10 @@ export type AuthorizeDappCompleteResponse = Readonly<{
 }>;
 export type AuthorizeDappResponse = AuthorizeDappCompleteResponse | UserDeclinedResponse;
 
+/* Reauthorize Dapp */
+export type ReauthorizeDappCompleteResponse = Readonly<{}>;
+export type ReauthorizeDappResponse = ReauthorizeDappCompleteResponse | UserDeclinedResponse;
+
 /* Sign Transactions/Messages */
 export type SignPayloadsCompleteResponse = Readonly<{ signedPayloads: Uint8Array[] }>;
 export type SignPayloadsFailResponse =
@@ -157,6 +162,7 @@ export type SignAndSendTransactionsResponse =
     | InvalidSignaturesResponse;
 
 export function resolve(request: AuthorizeDappRequest, response: AuthorizeDappResponse): void;
+export function resolve(request: ReauthorizeDappRequest, response: ReauthorizeDappResponse): void;
 export function resolve(request: SignMessagesRequest, response: SignMessagesResponse): void;
 export function resolve(request: SignTransactionsRequest, response: SignTransactionsResponse): void;
 export function resolve(request: SignAndSendTransactionsRequest, response: SignAndSendTransactionsResponse): void;
