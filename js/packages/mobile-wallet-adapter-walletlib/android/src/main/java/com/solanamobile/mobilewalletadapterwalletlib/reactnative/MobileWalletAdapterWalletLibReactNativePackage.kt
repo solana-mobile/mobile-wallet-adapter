@@ -7,7 +7,10 @@ import com.facebook.react.uimanager.ViewManager
 
 class MobileWalletAdapterWalletLibReactNativePackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(SolanaMobileWalletAdapterWalletLibModule(reactContext))
+        return listOf(
+            SolanaMobileWalletAdapterWalletLibModule(reactContext), 
+            SolanaMobileDigitalAssetLinksModule(reactContext)
+        )
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {

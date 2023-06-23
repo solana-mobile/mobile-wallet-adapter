@@ -31,22 +31,6 @@ const SolanaMobileWalletAdapterWalletLib =
 
 const MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME = 'MobileWalletAdapterServiceRequestBridge';
 
-export async function getCallingPackage(): Promise<string | undefined> {
-    return await SolanaMobileWalletAdapterWalletLib.getCallingPackage()
-}
-
-export async function verifyCallingPackage(clientIdentityUri: string) {
-    return await SolanaMobileWalletAdapterWalletLib.verifyCallingPackage(clientIdentityUri)
-}
-
-export async function getCallingPackageUid() {
-    return await SolanaMobileWalletAdapterWalletLib.getCallingPackageUid()
-}
-
-export async function getUidForPackage(packageName: string) {
-    return await SolanaMobileWalletAdapterWalletLib.getUidForPackage(packageName)
-}
-
 export interface MobileWalletAdapterConfig {
     supportsSignAndSendTransactions: boolean;
     maxTransactionsPerSigningRequest: number;

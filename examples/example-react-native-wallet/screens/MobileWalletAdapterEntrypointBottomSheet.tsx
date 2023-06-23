@@ -23,13 +23,13 @@ import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
 import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactionsScreen';
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
 import WalletProvider from '../components/WalletProvider';
+import ClientTrustProvider from "../components/ClientTrustProvider";
 import { 
   ClientTrustUseCase, 
   NotVerifiable, 
   VerificationFailed, 
   VerificationSucceeded 
 } from '../utils/ClientTrustUseCase';
-import ClientTrustProvider, { useClientTrust } from "../components/ClientTrustProvider";
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 

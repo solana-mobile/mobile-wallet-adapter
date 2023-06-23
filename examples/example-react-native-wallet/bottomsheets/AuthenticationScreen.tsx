@@ -39,7 +39,7 @@ export default function AuthenticationScreen({
 
     verifyClient();
     
-  }, [clientTrustUseCase]);
+  }, []);
 
   return (
     <View>

@@ -1,11 +1,9 @@
 package com.solanamobile.mobilewalletadapterwalletlib.reactnative
 
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.solana.digitalassetlinks.AndroidAppPackageVerifier
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -20,7 +18,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
-import java.net.URI
 import java.util.UUID
 
 class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicationContext) :
@@ -243,59 +240,6 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 else -> completeWithInvalidResponse()
             }
         }
-    }
-
-    /* Client Verification Utils */
-    @ReactMethod
-    fun getCallingPackage(promise: Promise) {
-        promise.resolve(currentActivity?.callingPackage)
-        // currentActivity?.callingPackage?.let { callingPackage -> 
-        //     promise.resolve(callingPackage)
-        // } ?: run {
-        //     promise.reject(Error("No calling package"))
-        // }
-    }
-
-    @ReactMethod
-    fun verifyCallingPackage(clientIdentityUri: String, promise: Promise) {
-        currentActivity?.callingPackage?.let { callingPackage -> 
-            verifyPackage(callingPackage, clientIdentityUri, promise)
-        } ?: run {
-            promise.resolve(false)
-        }
-    }
-
-    @ReactMethod
-    fun verifyPackage(packageName: String, clientIdentityUri: String, promise: Promise) {
-        val packageManager = reactContext.getPackageManager()
-        val verifier = AndroidAppPackageVerifier(packageManager)
-        val verified = try {
-            verifier.verify(packageName, URI.create(clientIdentityUri))
-        } catch (e: AndroidAppPackageVerifier.CouldNotVerifyPackageException) {
-            Log.w(TAG, "Package verification failed for package=$packageName, clientIdentityUri=$clientIdentityUri")
-            false
-        }
-        promise.resolve(verified)
-    }
-
-    @ReactMethod
-    fun getCallingPackageUid(promise: Promise) {
-        currentActivity?.callingPackage?.let { callingPackage -> 
-            getUidForPackage(callingPackage, promise)
-        } ?: run {
-            promise.reject(Error("Cannot get UID for calling package: No calling package found"))
-        }
-    }
-
-    @ReactMethod
-    fun getUidForPackage(packageName: String, promise: Promise) {
-        val packageManager = reactContext.getPackageManager()
-        val uid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            packageManager.getPackageUid(packageName, 0)
-        } else {
-            packageManager.getApplicationInfo(packageName, 0).uid
-        }
-        promise.resolve(uid)
     }
 
     private fun checkSessionId(sessionId: String, doIfValid: (() -> Unit)) = 
