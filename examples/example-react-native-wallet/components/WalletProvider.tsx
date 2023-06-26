@@ -1,7 +1,6 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import {Keypair} from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {NativeModules} from 'react-native';
 import {encode, decode} from 'bs58';
 
 interface WalletContextType {
@@ -62,7 +61,7 @@ const WalletProvider: React.FC<WalletProviderProps> = ({children}) => {
         }
         setKeypair(keypair);
       } catch (error) {
-        NativeModules.WalletLib.log('Error retrieving keypair');
+        console.log('Error retrieving keypair');
       }
     };
 

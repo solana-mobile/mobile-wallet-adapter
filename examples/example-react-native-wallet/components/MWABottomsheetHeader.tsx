@@ -1,11 +1,18 @@
 import React from 'react';
 import {StyleSheet, View, Image} from 'react-native';
 import {Divider, Text} from 'react-native-paper';
+import { 
+  VerificationFailed, 
+  VerificationInProgress, 
+  VerificationState, 
+  VerificationSucceeded 
+} from '../utils/ClientTrustUseCase';
 
 interface MWABottomsheetHeaderProps {
   title: String;
   cluster: String;
   appIdentity: AppIdentity;
+  verificationState?: VerificationState | undefined;
   children?: React.ReactNode;
 }
 
@@ -22,6 +29,7 @@ export default function MWABottomsheetHeader({
   title,
   cluster,
   appIdentity,
+  verificationState,
   children,
 }: MWABottomsheetHeaderProps) {
   const iconSource =
@@ -33,6 +41,19 @@ export default function MWABottomsheetHeader({
           ).toString(),
         }
       : require('../img/unknownapp.jpg');
+
+  let statusText = <Text style={styles.metadataText}>Status: Verification in progress </Text>
+  if (verificationState instanceof VerificationSucceeded) {
+    statusText = <Text style={styles.metadataText}>Status: Verification Succeeded </Text>
+  } else if (verificationState instanceof VerificationFailed) {
+    statusText = <Text style={styles.metadataText}>Status: Verification Failed </Text>
+  }
+
+  const verificationStatusText = function(): string {
+    if (verificationState instanceof VerificationFailed) return 'Verification Failed'
+    if (verificationState instanceof VerificationSucceeded) return 'Verification Succeeded'
+    else return 'Verification in progress'
+  }
 
   return (
     <>
@@ -52,6 +73,8 @@ export default function MWABottomsheetHeader({
         <Text style={styles.metadataText}>
           App URI: {appIdentity?.identityUri}
         </Text>
+        {verificationState && <Text style={styles.metadataText}>Status: {verificationStatusText()}</Text>}
+        {verificationState && <Text style={styles.metadataText}>Scope: {verificationState?.authorizationScope}</Text>}
       </View>
       <View>{children}</View>
       <Divider style={styles.spacer} />

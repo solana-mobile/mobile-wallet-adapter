@@ -1,5 +1,5 @@
 import {Keypair} from '@solana/web3.js';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Button, Text} from 'react-native-paper';
 
@@ -8,14 +8,13 @@ import {
   MWARequestType,
   resolve,
   SignMessagesRequest,
-  SignMessagesResponse,
   SignTransactionsRequest,
-  SignTransactionsResponse,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import {SolanaSigningUseCase} from '../utils/SolanaSigningUseCase';
 import {useWallet} from '../components/WalletProvider';
 import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
+import { useClientTrust } from '../components/ClientTrustProvider';
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
@@ -90,6 +89,8 @@ interface SignPayloadsScreenProps {
 // Should either combine them or pull common code to base abstraction
 export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
   const {wallet} = useWallet();
+  const {clientTrustUseCase} = useClientTrust();
+  const [verified, setVerified] = useState(false);
   const isSignTransactions =
     request.__type === MWARequestType.SignTransactionsRequest;
 
@@ -97,6 +98,31 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
   if (!wallet) {
     throw new Error('Wallet is null or undefined');
   }
+
+  useEffect(() => {
+
+    const verifyClient = async () => {
+      const authScope = new TextDecoder().decode(request.authorizationScope);
+      const verified = await clientTrustUseCase?.verifyPrivaledgedMethodSource(
+        authScope, 
+        request.appIdentity?.identityUri
+      ) ?? false;
+      setVerified(verified);
+
+      // Note: this will silently decline the request. Not great UX
+      // The wallet should inform the user that the source of this request was not verified  
+      if (!verified) {
+        if (request.__type == MWARequestType.SignTransactionsRequest) {
+          resolve(request, {failReason: MWARequestFailReason.UserDeclined});
+        } else if (request.__type == MWARequestType.SignMessagesRequest) {
+          resolve(request, {failReason: MWARequestFailReason.UserDeclined});
+        }
+      }
+    }
+
+    verifyClient();
+    
+  }, []);
 
   return (
     <View>
@@ -113,6 +139,7 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
       <View style={styles.buttonGroup}>
         <Button
           style={styles.actionButton}
+          disabled={!verified}
           onPress={() => {
             signPayloads(wallet, request);
           }}
@@ -122,7 +149,11 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
         <Button 
           style={styles.actionButton} 
           onPress={() => {
-            request.completeWithDecline();
+            if (request.__type == MWARequestType.SignTransactionsRequest) {
+              resolve(request, {failReason: MWARequestFailReason.UserDeclined});
+            } else if (request.__type == MWARequestType.SignMessagesRequest) {
+              resolve(request, {failReason: MWARequestFailReason.UserDeclined});
+            }
           }}
           mode="outlined">
           Reject

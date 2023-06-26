@@ -151,17 +151,11 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     /* Generic Request functions */
     @ReactMethod
     fun cancelRequest(sessionId: String, requestId: String) {
-        Log.d(TAG, "Cancelled request $requestId");
+        Log.d(TAG, "Cancelled request $requestId")
         (pendingRequests.remove(requestId) as? ScenarioRequest)?.let { scenarioRequest ->
-            scenarioRequest.cancel();
+            scenarioRequest.cancel()
         }
     }
-
-    // Apparently we cant have overlaod methods like this becuase React is completly idiotic
-    // @ReactMethod
-    // fun resolve(request: ReadableMap, response: ReadableMap) {
-    //     resolve(request.toJson().toString(), response.toJson().toString())
-    // }
 
     @ReactMethod
     fun resolve(requestJson: String, responseJson: String) = launch {
@@ -195,7 +189,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                             response.publicKey,
                             response.accountLabel,
                             null, //Uri.parse(response.walletUriBase),
-                            null //response.authorizationScope
+                            response.authorizationScope
                         )
                 else -> completeWithInvalidResponse()
             }
@@ -207,7 +201,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         else -> completeWithInvalidResponse()
                     }
                 }
-                is AuthorizeDappResponse ->
+                is ReauthorizeDappResponse ->
                     (pendingRequest as? MobileWalletAdapterRemoteRequest.ReauthorizeDapp)?.request?.completeWithReauthorize()
                 else -> completeWithInvalidResponse()
             }
@@ -359,9 +353,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
 
         override fun onReauthorizeRequest(request: ReauthorizeRequest) {
-            Log.i(TAG, "Reauthorization request: auto completing, DO NOT DO THIS IN PRODUCTION")
-            // TODO: Implement client trust use case
-            request.completeWithReauthorize()
+            val request = MobileWalletAdapterRemoteRequest.ReauthorizeDapp(request)
+            pendingRequests.put(request.id, request)
+            sendWalletServiceRequestToReact(request)
         }
 
         override fun onSignTransactionsRequest(request: SignTransactionsRequest) {
@@ -381,11 +375,6 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             val request = MobileWalletAdapterRemoteRequest.SignAndSendTransactions(request, endpointUri)
             pendingRequests.put(request.id, request)
             sendWalletServiceRequestToReact(request)
-        }
-
-        private fun verifyPrivilegedMethodSource(request: VerifiableIdentityRequest): Boolean {
-            // TODO: Implement client trust use case
-            return true
         }
 
         override fun onDeauthorizedEvent(event: DeauthorizedEvent) {

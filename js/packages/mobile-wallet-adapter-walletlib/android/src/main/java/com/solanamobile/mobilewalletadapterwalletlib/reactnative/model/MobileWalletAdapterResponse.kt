@@ -36,6 +36,9 @@ data class AuthorizeDappResponse(
 ) : MobileWalletAdapterResponse()
 
 @Serializable
+object ReauthorizeDappResponse : MobileWalletAdapterResponse()
+
+@Serializable
 data class SignedPayloads(
     @Serializable(with = ByteArrayCollectionAsMapCollectionSerializer::class) val signedPayloads: List<ByteArray>
 ) : MobileWalletAdapterResponse()
