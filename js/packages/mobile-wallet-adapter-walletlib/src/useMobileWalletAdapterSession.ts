@@ -71,7 +71,11 @@ async function initializeScenario(walletName: string, walletConfig: MobileWallet
     const initialUrl = await Linking.getInitialURL();
 
     // Create Scenario and establish session with dapp
-    SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, JSON.stringify(walletConfig));
+    if (initialUrl !== null) {
+        SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, JSON.stringify(walletConfig));
+    } else {
+        console.warn('Initial URL is unexpectedly null');
+    }
 }
 
 function isMWARequest(nativeEvent: any): boolean {
