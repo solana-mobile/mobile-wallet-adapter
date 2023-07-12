@@ -1,6 +1,8 @@
 package com.solanamobile.mobilewalletadapter.reactnative
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import com.facebook.react.bridge.*
@@ -31,10 +33,33 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     companion object {
         private const val ASSOCIATION_TIMEOUT_MS = 10000
         private const val CLIENT_TIMEOUT_MS = 90000
+        private const val REQUEST_LOCAL_ASSOCIATION = 0
 
         // Used to ensure that you can't start more than one session at a time.
         private val mutex: Mutex = Mutex()
         private var sessionState: SessionState? = null
+    }
+
+    private val mActivityEventListener: ActivityEventListener =
+        object : BaseActivityEventListener() {
+            override fun onActivityResult(
+                activity: Activity?,
+                requestCode: Int,
+                resultCode: Int,
+                data: Intent?
+            ) {
+                if (requestCode == REQUEST_LOCAL_ASSOCIATION && resultCode == Activity.RESULT_CANCELLED) {
+                    sessionState?.apply{
+                        Log.d(name, "Local association cancelled by user, ending session")
+                        localAssociation.close().get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
+                        cleanup()
+                    }
+                }
+            }
+        }
+
+    init {
+        reactContext.addActivityEventListener(mActivityEventListener)
     }
 
     override fun getName(): String {
@@ -55,7 +80,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 localAssociation.port,
                 localAssociation.session
             )
-            currentActivity?.startActivityForResult(intent, 0)
+            currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
                 ?: throw NullPointerException("Could not find a current activity from which to launch a local association")
             val client =
                 localAssociation.start().get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
