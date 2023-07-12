@@ -40,6 +40,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         private var sessionState: SessionState? = null
     }
 
+    private val mActivityEventCallbacks = mutableMapOf<Int, (Int, Intent?) -> (Unit)>()
     private val mActivityEventListener: ActivityEventListener =
         object : BaseActivityEventListener() {
             override fun onActivityResult(
@@ -48,12 +49,9 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 resultCode: Int,
                 data: Intent?
             ) {
-                if (requestCode == REQUEST_LOCAL_ASSOCIATION && resultCode == Activity.RESULT_CANCELLED) {
-                    sessionState?.apply{
-                        Log.d(name, "Local association cancelled by user, ending session")
-                        localAssociation.close().get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
-                        cleanup()
-                    }
+                mActivityEventCallbacks[requestCode]?.let { callback ->
+                    callback(resultCode, data)
+                    mActivityEventCallbacks.remove(requestCode)
                 }
             }
         }
@@ -80,8 +78,14 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 localAssociation.port,
                 localAssociation.session
             )
-            currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
-                ?: throw NullPointerException("Could not find a current activity from which to launch a local association")
+            launchIntent(intent, REQUEST_LOCAL_ASSOCIATION) { resultCode, _ ->
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    Log.d(name, "Local association cancelled by user, ending session")
+                    promise.reject("Session not established: Local association cancelled by user", 
+                        LocalAssociationScenario.ConnectionFailedException("Local association cancelled by user"))
+                    localAssociation.close()
+                }
+            }
             val client =
                 localAssociation.start().get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
             sessionState = SessionState(client, localAssociation)
@@ -154,6 +158,14 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
             }
         }
     } ?: throw NullPointerException("Tried to end a session without an active session")
+
+    private fun launchIntent(intent: Intent, requestCode: Int, callback: (Int, Intent?) -> (Unit)) {
+        mActivityEventCallbacks[requestCode] = callback
+        currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION) ?: run {
+            mActivityEventCallbacks.remove(requestCode)
+            throw NullPointerException("Could not find a current activity from which to launch a local association")
+        }
+    }
 
     private fun cleanup() {
         sessionState = null
