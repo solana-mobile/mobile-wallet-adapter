@@ -2,6 +2,7 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
+import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
@@ -15,21 +16,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-sealed class TransactionResult<T> {
-    data class Success<T>(
-        val payload: T
-    ): TransactionResult<T>()
-
-    class Failure<T>(
-        val message: String,
-        val e: Exception
-    ): TransactionResult<T>()
-
-    class NoWalletFound<T>(
-        val message: String
-    ): TransactionResult<T>()
-}
-
 /**
  * Convenience property to access success payload. Will be null if not successful.
  */
@@ -42,6 +28,10 @@ class MobileWalletAdapter(
 ) {
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
+
+    fun provideCredentials(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster) {
+
+    }
 
     suspend fun <T> transact(
         sender: ActivityResultSender,
