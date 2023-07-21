@@ -14,7 +14,8 @@ import {
   MWASessionEvent,
   MWASessionEventType,
   resolve,
-  ReauthorizeDappResponse,
+  ReuthorizeDappCompleteResponse,
+  DeauthorizeDappResponse,
   MWARequestFailReason,
   getCallingPackage,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
@@ -22,7 +23,7 @@ import {
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
 import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactionsScreen';
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
-import WalletProvider from '../components/WalletProvider';
+import WalletProvider, { useWallet } from '../components/WalletProvider';
 import ClientTrustProvider from "../components/ClientTrustProvider";
 import { 
   ClientTrustUseCase, 
@@ -53,6 +54,7 @@ function getRequestScreenComponent(request: MWARequest | null | undefined) {
 
 export default function MobileWalletAdapterEntrypointBottomSheet() {
   const [isVisible, setIsVisible] = useState(true);
+  const {wallet} = useWallet();
   const [clientTrustUseCase, setClientTrustUseCase] = useState<ClientTrustUseCase | null>(null)
   const [curRequest, setCurRequest] = useState<MWARequest | undefined>(
     undefined,
@@ -130,20 +132,28 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       ]).then((verificationState) => {
         if (verificationState instanceof VerificationSucceeded) {
           console.log('Reauthorization source verification succeeded')
-          resolve(request, {} as ReauthorizeDappResponse)
+          resolve(request, {
+            authorizationScope: new TextEncoder().encode(verificationState?.authorizationScope)
+          } as ReuthorizeDappCompleteResponse)
         } else if (verificationState instanceof NotVerifiable) {
           console.log('Reauthorization source not verifiable; approving')
-          resolve(request, {} as ReauthorizeDappResponse)
+          resolve(request, {
+            authorizationScope: new TextEncoder().encode(verificationState?.authorizationScope)
+          } as ReuthorizeDappCompleteResponse)
         } else if (verificationState instanceof VerificationFailed) {
           console.log('Reauthorization source verification failed')
-          resolve(request, {failReason: MWARequestFailReason.UserDeclined})
+          resolve(request, {failReason: MWARequestFailReason.AuthorizationNotValid})
         }
       }).catch(() => {
         console.log('Timed out waiting for reauthorization source verification')
-        resolve(request, {failReason: MWARequestFailReason.UserDeclined})
+        resolve(request, {failReason: MWARequestFailReason.AuthorizationNotValid})
       });
     }
-  }, [curRequest, endWalletSession]);
+
+    if (curRequest.__type === MWARequestType.DeauthorizeDappRequest) {
+      resolve(curRequest, {} as DeauthorizedDappResponse)
+    }
+  }, [wallet, curRequest, endWalletSession]);
 
   // Start an MWA session
   useMobileWalletAdapterSession(

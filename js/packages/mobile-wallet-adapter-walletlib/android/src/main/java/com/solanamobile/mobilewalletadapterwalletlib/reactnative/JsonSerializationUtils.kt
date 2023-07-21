@@ -1,6 +1,7 @@
 package com.solanamobile.mobilewalletadapterwalletlib.reactnative
 
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.AuthorizeDappResponse
+import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.DeauthorizeDappResponse
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterFailureResponse
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterRequest
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterResponse
@@ -76,9 +77,10 @@ internal object MobileWalletAdapterResponseSerializer : JsonContentPolymorphicSe
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out MobileWalletAdapterResponse> =
         if ((element as? JsonObject)?.containsKey("failReason") == true) FailReasonTransformingSerializer
         else if ((element as? JsonObject)?.containsKey("publicKey") == true) AuthorizeDappResponse.serializer()
+        else if ((element as? JsonObject)?.containsKey("authorizationScope") == true) ReauthorizeDappResponse.serializer()
         else if ((element as? JsonObject)?.containsKey("signedPayloads") == true) SignedPayloads.serializer()
         else if ((element as? JsonObject)?.containsKey("signedTransactions") == true) SignedAndSentTransactions.serializer() 
-        else if ((element as? JsonObject)?.isEmpty() == true) ReauthorizeDappResponse.serializer()
+        else if ((element as? JsonObject)?.isEmpty() == true) DeauthorizeDappResponse.serializer()
         else MobileWalletAdapterResponse.serializer()
 }
 

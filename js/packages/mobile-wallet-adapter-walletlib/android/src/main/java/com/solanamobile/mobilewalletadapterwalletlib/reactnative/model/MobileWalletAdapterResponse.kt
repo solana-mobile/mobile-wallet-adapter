@@ -32,11 +32,19 @@ data class AuthorizeDappResponse(
     @Serializable(with = ByteArrayAsMapSerializer::class) val publicKey: ByteArray,
     val accountLabel: String? = String(publicKey),
     val walletUriBase: String? = null,
-    @Serializable(with = ByteArrayAsMapSerializer::class) val authorizationScope: ByteArray? = null
+    @Serializable(with = ByteArrayAsMapSerializer::class) val authorizationScope: ByteArray
 ) : MobileWalletAdapterResponse()
 
 @Serializable
-object ReauthorizeDappResponse : MobileWalletAdapterResponse()
+data class ReauthorizeDappResponse(
+    @Serializable(with = ByteArrayAsMapSerializer::class) val publicKey: ByteArray? = null,
+    val accountLabel: String? = publicKey?.let { String(publicKey) },
+    val walletUriBase: String? = null,
+    @Serializable(with = ByteArrayAsMapSerializer::class) val authorizationScope: ByteArray
+) : MobileWalletAdapterResponse()
+
+@Serializable
+object DeauthorizeDappResponse : MobileWalletAdapterResponse()
 
 @Serializable
 data class SignedPayloads(

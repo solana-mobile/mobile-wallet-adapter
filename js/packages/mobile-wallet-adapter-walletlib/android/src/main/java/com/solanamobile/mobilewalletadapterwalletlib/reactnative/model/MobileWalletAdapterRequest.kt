@@ -42,6 +42,17 @@ data class ReauthorizeDapp(
 ) : VerifiableIdentityRequestSurrogate()
 
 @Serializable
+@SerialName("DEAUTHORIZE_DAPP")
+data class DeauthorizeDapp(
+    override val sessionId: String,
+    override val cluster: String,
+    override val identityName: String?,
+    override val identityUri: String?,
+    override val iconRelativeUri: String?,
+    override val authorizationScope: ByteArray
+) : VerifiableIdentityRequestSurrogate()
+
+@Serializable
 sealed class SignPayloads : VerifiableIdentityRequestSurrogate() {
     abstract val payloads: List<ByteArray>
 }
