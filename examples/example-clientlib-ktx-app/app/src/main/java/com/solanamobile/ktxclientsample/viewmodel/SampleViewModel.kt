@@ -4,10 +4,14 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.portto.solana.web3.PublicKey
 import com.portto.solana.web3.SerializeConfig
 import com.portto.solana.web3.Transaction
 import com.portto.solana.web3.programs.MemoProgram
-import com.solana.mobilewalletadapter.clientlib.*
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
+import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
+import com.solana.mobilewalletadapter.clientlib.TransactionResult
+import com.solana.mobilewalletadapter.clientlib.successPayload
 import com.solanamobile.ktxclientsample.usecase.Connected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
@@ -73,23 +77,20 @@ class SampleViewModel @Inject constructor(
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
+            //TODO: Let's implement just a connect method for cases like this
             val result = walletAdapter.transact(sender) { }
 
             when (result) {
                 is TransactionResult.Success -> {
-                    val currentConn = result.payload
-
-                    // result.authResult?.authToken //TODO: Need to think how we want to do this
-
-                    persistanceUseCase.persistConnection(
-                        currentConn.publicKey,
-                        currentConn.accountLabel,
-                        currentConn.authToken
+                    val currentConn = Connected(
+                        PublicKey(result.safeAuthResult.publicKey),
+                        result.safeAuthResult.accountLabel ?: "",
+                        result.safeAuthResult.authToken
                     )
 
-                    _state.value.copy(
-                        isLoading = true
-                    ).updateViewState()
+                    persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
+
+                    _state.value.copy(isLoading = true).updateViewState()
 
                     val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
                     val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
@@ -144,9 +145,7 @@ class SampleViewModel @Inject constructor(
                 tx.feePayer = conn.publicKey
 
                 val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
-
                 val result = walletAdapter.transact(sender) {
-                    reauthorize(solanaUri, iconUri, identityName, conn.authToken)
                     signAndSendTransactions(arrayOf(bytes))
                 }
 

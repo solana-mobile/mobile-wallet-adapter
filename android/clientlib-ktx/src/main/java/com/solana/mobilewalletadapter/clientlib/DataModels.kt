@@ -23,7 +23,11 @@ sealed class TransactionResult<T> {
     data class Success<T>(
         val payload: T,
         val authResult: AuthorizationResult? = null
-    ): TransactionResult<T>()
+    ): TransactionResult<T>() {
+
+        val safeAuthResult: AuthorizationResult
+            get() = authResult!!
+    }
 
     class Failure<T>(
         val message: String,
