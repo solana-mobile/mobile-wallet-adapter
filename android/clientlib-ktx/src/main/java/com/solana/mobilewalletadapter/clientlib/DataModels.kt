@@ -1,6 +1,7 @@
 package com.solana.mobilewalletadapter.clientlib
 
 import android.net.Uri
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult
 
 sealed class CredentialState {
     data class Provided(
@@ -21,7 +22,7 @@ data class ConnectionCredentials(
 sealed class TransactionResult<T> {
     data class Success<T>(
         val payload: T,
-        val authToken: String? = null
+        val authResult: AuthorizationResult? = null
     ): TransactionResult<T>()
 
     class Failure<T>(

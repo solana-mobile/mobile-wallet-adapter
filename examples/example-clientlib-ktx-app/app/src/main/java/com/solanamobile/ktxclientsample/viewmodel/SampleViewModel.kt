@@ -4,13 +4,11 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.portto.solana.web3.PublicKey
 import com.portto.solana.web3.SerializeConfig
 import com.portto.solana.web3.Transaction
 import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.*
 import com.solanamobile.ktxclientsample.usecase.Connected
-import com.solanamobile.ktxclientsample.usecase.NotConnected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -75,32 +73,13 @@ class SampleViewModel @Inject constructor(
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
-            val conn = persistanceUseCase.getWalletConnection()
-
-            val result = walletAdapter.transact(sender) {
-                when (conn) {
-                   is NotConnected -> {
-                       val authed = authorize(solanaUri, iconUri, identityName, RpcCluster.Devnet)
-                       Connected(
-                           PublicKey(authed.publicKey),
-                           authed.accountLabel ?: "",
-                           authed.authToken
-                       )
-                   }
-                   is Connected -> {
-                       val reauthed = reauthorize(solanaUri, iconUri, identityName, conn.authToken)
-                       Connected(
-                           PublicKey(reauthed.publicKey),
-                           reauthed.accountLabel ?: "",
-                           reauthed.authToken
-                       )
-                   }
-                }
-            }
+            val result = walletAdapter.transact(sender) { }
 
             when (result) {
                 is TransactionResult.Success -> {
                     val currentConn = result.payload
+
+                    // result.authResult?.authToken //TODO: Need to think how we want to do this
 
                     persistanceUseCase.persistConnection(
                         currentConn.publicKey,

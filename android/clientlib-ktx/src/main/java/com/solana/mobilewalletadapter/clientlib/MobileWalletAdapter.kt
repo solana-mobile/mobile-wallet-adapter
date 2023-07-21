@@ -73,13 +73,13 @@ class MobileWalletAdapter(
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
 
-                    val latestAuthToken = credsState.let { creds ->
+                    val authResult = credsState.let { creds ->
                         if (creds is CredentialState.Provided) {
                             with (creds.credentials) {
                                 if (authToken == null) {
-                                    adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster).authToken
+                                    adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
                                 } else {
-                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, authToken).authToken
+                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, authToken)
                                 }
                             }
                         } else {
@@ -89,7 +89,7 @@ class MobileWalletAdapter(
 
                     val result = block(adapterOperations)
 
-                    TransactionResult.Success(result, latestAuthToken)
+                    TransactionResult.Success(result, authResult)
                 } catch (e: InterruptedException) {
                     TransactionResult.Failure("Interrupted while waiting for local association to be ready", e)
                 } catch (e: TimeoutException) {
