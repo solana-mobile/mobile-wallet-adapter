@@ -2,7 +2,6 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
-import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
@@ -27,10 +26,12 @@ class MobileWalletAdapter(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
+    private var credsState: CredentialState = CredentialState.NotProvided
+
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    fun provideCredentials(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster) {
-
+    fun provideCredentials(credentials: ConnectionCredentials) {
+        credsState = CredentialState.Provided(credentials)
     }
 
     suspend fun <T> transact(
@@ -70,11 +71,25 @@ class MobileWalletAdapter(
                 try {
                     @Suppress("BlockingMethodInNonBlockingContext")
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-
                     adapterOperations.client = client
+
+                    val latestAuthToken = credsState.let { creds ->
+                        if (creds is CredentialState.Provided) {
+                            with (creds.credentials) {
+                                if (authToken == null) {
+                                    adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster).authToken
+                                } else {
+                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, authToken).authToken
+                                }
+                            }
+                        } else {
+                            null
+                        }
+                    }
+
                     val result = block(adapterOperations)
 
-                    TransactionResult.Success(result)
+                    TransactionResult.Success(result, latestAuthToken)
                 } catch (e: InterruptedException) {
                     TransactionResult.Failure("Interrupted while waiting for local association to be ready", e)
                 } catch (e: TimeoutException) {
