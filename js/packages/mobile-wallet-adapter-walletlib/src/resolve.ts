@@ -40,7 +40,8 @@ export type MWARequest =
     | SignTransactionsRequest
     | SignAndSendTransactionsRequest
     | AuthorizeDappRequest
-    | ReauthorizeDappRequest;
+    | ReauthorizeDappRequest
+    | DeauthorizeDappRequest;
 
 export enum MWARequestType {
     AuthorizeDappRequest = 'AUTHORIZE_DAPP',
@@ -50,6 +51,7 @@ export enum MWARequestType {
     SignTransactionsRequest = 'SIGN_TRANSACTIONS',
     SignAndSendTransactionsRequest = 'SIGN_AND_SEND_TRANSACTIONS',
 }
+
 interface IMWARequest {
     __type: MWARequestType;
     requestId: string;
@@ -99,6 +101,8 @@ export type SignAndSendTransactionsRequest = Readonly<{
 
 export type MWAResponse =
     | AuthorizeDappResponse
+    | ReauthorizeDappResponse
+    | DeauthorizeDappResponse
     | SignMessagesResponse
     | SignTransactionsResponse
     | SignAndSendTransactionsResponse;
@@ -138,8 +142,14 @@ export type AuthorizeDappCompleteResponse = Readonly<{
 export type AuthorizeDappResponse = AuthorizeDappCompleteResponse | UserDeclinedResponse;
 
 /* Reauthorize Dapp */
-export type ReauthorizeDappCompleteResponse = Readonly<{}>;
-export type ReauthorizeDappResponse = ReauthorizeDappCompleteResponse | UserDeclinedResponse;
+export type ReauthorizeDappCompleteResponse = Readonly<{
+    authorizationScope?: Uint8Array;
+}>;
+export type ReauthorizeDappResponse = ReauthorizeDappCompleteResponse | AuthorizationNotValidResponse;
+
+/* Deauthorize Dapp */
+export type DeauthorizeDappCompleteResponse = Readonly<{}>;
+export type DeauthorizeDappResponse = DeauthorizeDappCompleteResponse | AuthorizationNotValidResponse;
 
 /* Sign Transactions/Messages */
 export type SignPayloadsCompleteResponse = Readonly<{ signedPayloads: Uint8Array[] }>;
@@ -163,9 +173,10 @@ export type SignAndSendTransactionsResponse =
 
 export function resolve(request: AuthorizeDappRequest, response: AuthorizeDappResponse): void;
 export function resolve(request: ReauthorizeDappRequest, response: ReauthorizeDappResponse): void;
+export function resolve(request: DeauthorizeDappRequest, response: DeauthorizeDappResponse): void;
 export function resolve(request: SignMessagesRequest, response: SignMessagesResponse): void;
 export function resolve(request: SignTransactionsRequest, response: SignTransactionsResponse): void;
 export function resolve(request: SignAndSendTransactionsRequest, response: SignAndSendTransactionsResponse): void;
-export function resolve(request: MWARequest, response: unknown): void {
+export function resolve(request: MWARequest, response: MWAResponse): void {
     SolanaMobileWalletAdapterWalletLib.resolve(JSON.stringify(request), JSON.stringify(response));
 }

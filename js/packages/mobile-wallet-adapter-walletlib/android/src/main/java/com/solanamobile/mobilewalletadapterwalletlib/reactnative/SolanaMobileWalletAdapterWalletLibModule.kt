@@ -69,6 +69,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                                                   val id: String = UUID.randomUUID().toString()) {
         data class AuthorizeDapp(override val request: AuthorizeRequest) : MobileWalletAdapterRemoteRequest(request)
         data class ReauthorizeDapp(override val request: ReauthorizeRequest) : MobileWalletAdapterRemoteRequest(request)
+        data class DeauthorizeDapp(override val request: DeauthorizedEvent) : MobileWalletAdapterRemoteRequest(request)
 
         sealed class SignPayloads(override val request: SignPayloadsRequest) : MobileWalletAdapterRemoteRequest(request)
         data class SignTransactions(override val request: SignTransactionsRequest) : SignPayloads(request)
@@ -196,13 +197,18 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             is ReauthorizeDapp -> when (response) {
                 is MobileWalletAdapterFailureResponse -> {
                     when (response) {
-                        is UserDeclinedResponse ->
+                        is AuthorizationNotValidResponse ->
                             (pendingRequest as? MobileWalletAdapterRemoteRequest.ReauthorizeDapp)?.request?.completeWithDecline()
                         else -> completeWithInvalidResponse()
                     }
                 }
                 is ReauthorizeDappResponse ->
                     (pendingRequest as? MobileWalletAdapterRemoteRequest.ReauthorizeDapp)?.request?.completeWithReauthorize()
+                else -> completeWithInvalidResponse()
+            }
+            is DeauthorizeDapp -> when (response) {
+                is DeauthorizeDappResponse ->
+                    (pendingRequest as? MobileWalletAdapterRemoteRequest.DeauthorizeDapp)?.request?.complete()
                 else -> completeWithInvalidResponse()
             }
             is SignAndSendTransactions -> when (response) {
@@ -273,6 +279,11 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString()
             )
             is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> ReauthorizeDapp(
+                scenarioId!!, request.request.cluster, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.authorizationScope
+            )
+            is MobileWalletAdapterRemoteRequest.DeauthorizeDapp -> DeauthorizeDapp(
                 scenarioId!!, request.request.cluster, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope
@@ -378,7 +389,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         }
 
         override fun onDeauthorizedEvent(event: DeauthorizedEvent) {
-            event.complete()
+            val request = MobileWalletAdapterRemoteRequest.DeauthorizeDapp(event)
+            pendingRequests.put(request.id, request)
+            sendWalletServiceRequestToReact(request)
         }
     }
 
