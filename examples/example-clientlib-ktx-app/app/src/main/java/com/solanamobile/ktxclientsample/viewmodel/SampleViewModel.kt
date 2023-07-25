@@ -91,7 +91,7 @@ class SampleViewModel @Inject constructor(
             when (result) {
                 is TransactionResult.Success -> {
                     val currentConn = Connected(
-                        PublicKey(result.authResult.authToken),
+                        PublicKey(result.authResult.publicKey),
                         result.authResult.accountLabel ?: "",
                         result.authResult.authToken
                     )
