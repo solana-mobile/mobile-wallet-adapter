@@ -9,6 +9,7 @@ import com.portto.solana.web3.SerializeConfig
 import com.portto.solana.web3.Transaction
 import com.portto.solana.web3.programs.MemoProgram
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
+import com.solana.mobilewalletadapter.clientlib.ConnectionCredentials
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
 import com.solana.mobilewalletadapter.clientlib.successPayload
@@ -55,24 +56,32 @@ class SampleViewModel @Inject constructor(
         get() = _state
 
     fun loadConnection() {
-        val connection = persistanceUseCase.getWalletConnection()
-        if (connection is Connected) {
+        var connectionCreds = ConnectionCredentials(solanaUri, iconUri, identityName,)
+        val persistedConn = persistanceUseCase.getWalletConnection()
+
+        if (persistedConn is Connected) {
             _state.value.copy(
                 isLoading = true,
                 canTransact = true,
-                userAddress = connection.publicKey.toBase58(),
-                userLabel = connection.accountLabel,
+                userAddress = persistedConn.publicKey.toBase58(),
+                userLabel = persistedConn.accountLabel,
             ).updateViewState()
 
             viewModelScope.launch {
-                val balance = solanaRpcUseCase.getBalance(connection.publicKey)
+                val balance = solanaRpcUseCase.getBalance(persistedConn.publicKey)
 
                 _state.value.copy(
                     isLoading = false,
                     solBalance = balance
                 ).updateViewState()
             }
+
+            connectionCreds = connectionCreds.copy(
+                authToken = persistedConn.authToken
+            )
         }
+
+        walletAdapter.provideCredentials(connectionCreds)
     }
 
     fun addFunds(sender: ActivityResultSender) {
@@ -83,9 +92,9 @@ class SampleViewModel @Inject constructor(
             when (result) {
                 is TransactionResult.Success -> {
                     val currentConn = Connected(
-                        PublicKey(result.safeAuthResult.publicKey),
-                        result.safeAuthResult.accountLabel ?: "",
-                        result.safeAuthResult.authToken
+                        PublicKey(result.authResult.authToken),
+                        result.authResult.accountLabel ?: "",
+                        result.authResult.authToken
                     )
 
                     persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)

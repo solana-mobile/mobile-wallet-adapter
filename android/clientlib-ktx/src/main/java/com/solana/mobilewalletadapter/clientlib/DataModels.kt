@@ -20,13 +20,17 @@ data class ConnectionCredentials(
 )
 
 sealed class TransactionResult<T> {
-    data class Success<T>(
+    class Success<T>(
         val payload: T,
-        val authResult: AuthorizationResult? = null
+        private val result: AuthorizationResult? = null
     ): TransactionResult<T>() {
 
-        val safeAuthResult: AuthorizationResult
-            get() = authResult!!
+        val authResult: AuthorizationResult
+            get() = try {
+                result!!
+            } catch (e: NullPointerException) {
+                throw IllegalStateException("Auth result accessor is only available when connections credentials have been provided prior to authorize/reauthorize.")
+            }
     }
 
     class Failure<T>(
