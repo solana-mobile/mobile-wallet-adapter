@@ -86,8 +86,7 @@ class SampleViewModel @Inject constructor(
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
-            //TODO: Let's implement just a connect method for cases like this
-            val result = walletAdapter.transact(sender) { }
+            val result = walletAdapter.connect(sender)
 
             when (result) {
                 is TransactionResult.Success -> {

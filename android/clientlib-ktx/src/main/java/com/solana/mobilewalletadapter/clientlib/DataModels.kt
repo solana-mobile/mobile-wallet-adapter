@@ -19,6 +19,12 @@ data class ConnectionCredentials(
     val authToken: String? = null
 )
 
+/**
+ * Convenience property to access success payload. Will be null if not successful.
+ */
+val <T> TransactionResult<T>.successPayload: T?
+    get() = (this as? TransactionResult.Success)?.payload
+
 sealed class TransactionResult<T> {
     class Success<T>(
         val payload: T,

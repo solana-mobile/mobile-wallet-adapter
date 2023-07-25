@@ -15,12 +15,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-/**
- * Convenience property to access success payload. Will be null if not successful.
- */
-val <T> TransactionResult<T>.successPayload: T?
-    get() = (this as? TransactionResult.Success)?.payload
-
 class MobileWalletAdapter(
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -32,6 +26,10 @@ class MobileWalletAdapter(
 
     fun provideCredentials(credentials: ConnectionCredentials) {
         credsState = CredentialState.Provided(credentials)
+    }
+
+    suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
+        return transact(sender) { }
     }
 
     suspend fun <T> transact(
