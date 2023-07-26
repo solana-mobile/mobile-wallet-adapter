@@ -1,6 +1,12 @@
-import "fast-text-encoding";
+import 'fast-text-encoding';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {StyleSheet, View, BackHandler, ActivityIndicator, Linking} from 'react-native';
+import {
+  StyleSheet,
+  View,
+  BackHandler,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import Modal from 'react-native-modal';
 import {
   MobileWalletAdapterConfig,
@@ -23,13 +29,13 @@ import {
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
 import SignAndSendTransactionsScreen from '../bottomsheets/SignAndSendTransactionsScreen';
 import SignPayloadsScreen from '../bottomsheets/SignPayloadsScreen';
-import WalletProvider, { useWallet } from '../components/WalletProvider';
-import ClientTrustProvider from "../components/ClientTrustProvider";
-import { 
-  ClientTrustUseCase, 
-  NotVerifiable, 
-  VerificationFailed, 
-  VerificationSucceeded 
+import WalletProvider, {useWallet} from '../components/WalletProvider';
+import ClientTrustProvider from '../components/ClientTrustProvider';
+import {
+  ClientTrustUseCase,
+  NotVerifiable,
+  VerificationFailed,
+  VerificationSucceeded,
 } from '../utils/ClientTrustUseCase';
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
@@ -55,7 +61,8 @@ function getRequestScreenComponent(request: MWARequest | null | undefined) {
 export default function MobileWalletAdapterEntrypointBottomSheet() {
   const [isVisible, setIsVisible] = useState(true);
   const {wallet} = useWallet();
-  const [clientTrustUseCase, setClientTrustUseCase] = useState<ClientTrustUseCase | null>(null)
+  const [clientTrustUseCase, setClientTrustUseCase] =
+    useState<ClientTrustUseCase | null>(null);
   const [curRequest, setCurRequest] = useState<MWARequest | undefined>(
     undefined,
   );
@@ -90,10 +97,12 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
   }, []);
 
   useEffect(() => {
-
     const initClientTrustUseCase = async () => {
       let callingPackage: string | undefined = await getCallingPackage();
-      let clientTrustUseCase = new ClientTrustUseCase(await Linking.getInitialURL() ?? '', callingPackage);
+      let clientTrustUseCase = new ClientTrustUseCase(
+        (await Linking.getInitialURL()) ?? '',
+        callingPackage,
+      );
       setClientTrustUseCase(clientTrustUseCase);
     };
 
@@ -118,44 +127,72 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
     // handling reauth here, could probably be cleaner
     // important thing here is that we verify the source and complete the request without bugging the user
     if (curRequest.__type === MWARequestType.ReauthorizeDappRequest) {
-      let request = curRequest
+      let request = curRequest;
       const authScope = new TextDecoder().decode(request.authorizationScope);
 
-      // try to verify the reauthorization source, with 3 second timeout 
+      // try to verify the reauthorization source, with 3 second timeout
       Promise.race([
-        clientTrustUseCase!!.verifyReauthorizationSource(authScope, request.appIdentity?.identityUri), 
+        clientTrustUseCase!!.verifyReauthorizationSource(
+          authScope,
+          request.appIdentity?.identityUri,
+        ),
         async () => {
           setTimeout(() => {
-            throw new Error('Timed out waiting for reauthorization source verification')
+            throw new Error(
+              'Timed out waiting for reauthorization source verification',
+            );
           }, 3000);
-        }
-      ]).then((verificationState) => {
-        if (verificationState instanceof VerificationSucceeded) {
-          console.log('Reauthorization source verification succeeded')
+        },
+      ])
+        .then(verificationState => {
+          if (verificationState instanceof VerificationSucceeded) {
+            console.log('Reauthorization source verification succeeded');
+            resolve(request, {
+              authorizationScope: new TextEncoder().encode(
+                verificationState?.authorizationScope,
+              ),
+            } as ReuthorizeDappCompleteResponse);
+          } else if (verificationState instanceof NotVerifiable) {
+            console.log('Reauthorization source not verifiable; approving');
+            resolve(request, {
+              authorizationScope: new TextEncoder().encode(
+                verificationState?.authorizationScope,
+              ),
+            } as ReuthorizeDappCompleteResponse);
+          } else if (verificationState instanceof VerificationFailed) {
+            console.log('Reauthorization source verification failed');
+            resolve(request, {
+              failReason: MWARequestFailReason.AuthorizationNotValid,
+            });
+          }
+        })
+        .catch(() => {
+          console.log(
+            'Timed out waiting for reauthorization source verification',
+          );
           resolve(request, {
-            authorizationScope: new TextEncoder().encode(verificationState?.authorizationScope)
-          } as ReuthorizeDappCompleteResponse)
-        } else if (verificationState instanceof NotVerifiable) {
-          console.log('Reauthorization source not verifiable; approving')
-          resolve(request, {
-            authorizationScope: new TextEncoder().encode(verificationState?.authorizationScope)
-          } as ReuthorizeDappCompleteResponse)
-        } else if (verificationState instanceof VerificationFailed) {
-          console.log('Reauthorization source verification failed')
-          resolve(request, {failReason: MWARequestFailReason.AuthorizationNotValid})
-        }
-      }).catch(() => {
-        console.log('Timed out waiting for reauthorization source verification')
-        resolve(request, {failReason: MWARequestFailReason.AuthorizationNotValid})
-      });
+            failReason: MWARequestFailReason.AuthorizationNotValid,
+          });
+        });
     }
 
     if (curRequest.__type === MWARequestType.DeauthorizeDappRequest) {
-      resolve(curRequest, {} as DeauthorizedDappResponse)
+      resolve(curRequest, {} as DeauthorizedDappResponse);
     }
-  }, [wallet, curRequest, endWalletSession]);
+  }, [wallet, curRequest, endWalletSession, clientTrustUseCase]);
 
   // Start an MWA session
+
+  useEffect(() => {
+    if (!curEvent) {
+      return;
+    }
+
+    if (curEvent.__type === MWASessionEventType.SessionTerminatedEvent) {
+      endWalletSession();
+    }
+  }, [curEvent, endWalletSession]);
+
   useMobileWalletAdapterSession(
     'Example RN Wallet',
     config,
@@ -170,10 +207,12 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       swipeDirection={['up', 'down']}
       onSwipeComplete={() => endWalletSession()}
       onBackdropPress={() => endWalletSession()}>
-      <WalletProvider><ClientTrustProvider clientTrustUseCase={clientTrustUseCase}>
-        <View style={styles.bottomSheet}>
-          {getRequestScreenComponent(curRequest)}
-        </View></ClientTrustProvider>
+      <WalletProvider>
+        <ClientTrustProvider clientTrustUseCase={clientTrustUseCase}>
+          <View style={styles.bottomSheet}>
+            {getRequestScreenComponent(curRequest)}
+          </View>
+        </ClientTrustProvider>
       </WalletProvider>
     </Modal>
   );
