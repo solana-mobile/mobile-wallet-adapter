@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
-import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import kotlinx.coroutines.*
@@ -17,7 +16,8 @@ import java.util.concurrent.TimeoutException
 
 class MobileWalletAdapter(
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val scenarioProvider: AssociationScenarioProvider
 ) {
 
     private var credsState: CredentialState = CredentialState.NotProvided
@@ -37,7 +37,7 @@ class MobileWalletAdapter(
         block: suspend AdapterOperations.() -> T,
     ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
-            val scenario = LocalAssociationScenario(timeout)
+            val scenario = scenarioProvider.provideAssociationScenario(timeout)
             val details = scenario.associationDetails()
 
             val intent = LocalAssociationIntentCreator.createAssociationIntent(

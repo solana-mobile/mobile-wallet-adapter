@@ -1,38 +1,78 @@
 package com.solana.mobilewalletadapter.clientlib
 
-import androidx.activity.ComponentActivity
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession
+import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.android.controller.ActivityController
 
 @RunWith(RobolectricTestRunner::class)
 class MobileWalletAdapterTest {
 
+    lateinit var testDispatcher: TestDispatcher
+    lateinit var mockProvider: AssociationScenarioProvider
+
     lateinit var sender: ActivityResultSender
-    lateinit var mwa: MobileWalletAdapter
-    lateinit var activity: ActivityController<ComponentActivity>
+    lateinit var mobileWalletAdapter: MobileWalletAdapter
 
     @Before
     fun before() {
-        activity = Robolectric.buildActivity(ComponentActivity::class.java)
-            .create(null)
+        testDispatcher = StandardTestDispatcher()
 
-        sender = ActivityResultSender(activity.get())
-        mwa = MobileWalletAdapter(
-            ioDispatcher = StandardTestDispatcher()
+        sender = mock {
+            onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
+                val callback = invocation.arguments[1] as (Int) -> Unit
+                callback(-1)
+            }
+        }
+
+        val mockSession = mock<MobileWalletAdapterSession> {
+            on { encodedAssociationPublicKey } doAnswer { byteArrayOf() }
+        }
+
+        val mockClient = mock<MobileWalletAdapterClient>()
+        val future = NotifyingCompletableFuture<MobileWalletAdapterClient>()
+
+        val mockScenario = mock<LocalAssociationScenario> {
+            on { start() } doAnswer {
+                future.complete(mockClient)
+                future
+            }
+            on { session } doReturn mockSession
+            on { close() } doAnswer {
+                val future = NotifyingCompletableFuture<Void>()
+                future.complete(null)
+                future
+            }
+        }
+
+        mockProvider = mock {
+            on { provideAssociationScenario(any()) } doReturn mockScenario
+        }
+
+        mobileWalletAdapter = MobileWalletAdapter(
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
         )
     }
 
     @Test
-    fun runTest() = runTest() {
-        mwa.transact(sender) {
-
+    fun runTest() = runTest(testDispatcher) {
+        val result = mobileWalletAdapter.transact(sender) {
+            "hi"
         }
+
+        assert(result.successPayload == "hi")
     }
 
 }
