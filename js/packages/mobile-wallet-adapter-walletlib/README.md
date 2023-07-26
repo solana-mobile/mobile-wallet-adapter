@@ -26,7 +26,7 @@ AppRegistry.registerComponent(
 );
 ```
 
-### 1. Start listening and handling MWA requests
+### 2. Start listening and handling MWA requests
 
 Use this API to start a session and start handling requests:
 ```typescript
@@ -83,7 +83,7 @@ const response = {
 resolve(authorizationRequest, response)
 ```
 
-There are a a selection of "fail" responses that you can return to the dApp. These are for cases where the user
+There are a a selection of "fail" responses that you can return to the dApp. These are for cases where the user declines, or an error occurs during signing, etc.
 ```typescript
 import {
   UserDeclinedResponse
@@ -96,5 +96,63 @@ const response = {
 // Tells the dApp user has declined the authorization request
 resolve(authorizationRequest, response)
 ```
-  
+
+## Properties of an MWA Request
+Each MWA Request is defined in [`resolve.ts`](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/js/packages/mobile-wallet-adapter-walletlib/src/resolve.ts#L38). 
+Each come with their own properties and completion response structures.
+
+If you want to understand the dApp perspective and how a dApp would send these requests, see [MWA API Documentation](https://docs.solanamobile.com/reference/) for dAppstypescript/mobile-wallet-adapter.
+
+## MWARequest Interfaces
+
+### `IMWARequest`
+This is the base interface that all MWARequsts inherit from. The fields defined here are used in the package's internal implementation and the package consumer will generally not use them.
+
+Fields:
+- `__type`: An enum defining the type of MWA Request it is.
+- `requestId`: A unique identifier of this specific MWA Request
+- `sessionId`: A unique identifier of the MWA Session this request belongs to.
+
+### `IVerifiableIdentityRequest`
+This an interface that describes MWA Requests that come with a verifiable identity and the following 3 fields.
+
+Fields:
+- `authorizationScope`: A byte representation of the authorization token granted to the dApp.
+- `cluster`: The Solana RPC cluster that the dApp intends to use.
+- `appIdentity`: An object containing 3 optional identity fields about the dApp:
+    - Note: The `iconRelativeUri` is a relative path, relative to `identityUri`.
+```
+{
+  identityName: 'dApp Name',
+  identityUri:  'https://yourdapp.com'
+  iconRelativeUri: "favicon.ico", // Full path resolves to https://yourdapp.com/favicon.ico
+}
+```
+
+### MWARequest Types
+
+- `AuthorizeDappRequest`
+  - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#authorize)
+  - Interfaces: `IMWARequest`
+
+- `ReauthorizeDappRequest`
+  - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#reauthorize)
+  - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
+
+- `DeauthorizeDappRequest`
+  - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#deauthorize)
+  - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
+
+- `SignMessagesRequest`
+  - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#sign_messages)
+  - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
+
+- `SignTransactionsRequest`
+  - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#sign_transactions)
+  - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
+
+- `SignAndSendTransactionsRequest`
+  - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#sign_and_send_transactions)
+  - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
+
 
