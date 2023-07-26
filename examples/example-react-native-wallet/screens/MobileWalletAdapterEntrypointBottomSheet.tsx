@@ -20,7 +20,7 @@ import {
   MWASessionEvent,
   MWASessionEventType,
   resolve,
-  ReuthorizeDappCompleteResponse,
+  ReauthorizeDappCompleteResponse,
   DeauthorizeDappResponse,
   MWARequestFailReason,
   getCallingPackage,
@@ -151,14 +151,14 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
               authorizationScope: new TextEncoder().encode(
                 verificationState?.authorizationScope,
               ),
-            } as ReuthorizeDappCompleteResponse);
+            } as ReauthorizeDappCompleteResponse);
           } else if (verificationState instanceof NotVerifiable) {
             console.log('Reauthorization source not verifiable; approving');
             resolve(request, {
               authorizationScope: new TextEncoder().encode(
                 verificationState?.authorizationScope,
               ),
-            } as ReuthorizeDappCompleteResponse);
+            } as ReauthorizeDappCompleteResponse);
           } else if (verificationState instanceof VerificationFailed) {
             console.log('Reauthorization source verification failed');
             resolve(request, {
@@ -177,7 +177,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
     }
 
     if (curRequest.__type === MWARequestType.DeauthorizeDappRequest) {
-      resolve(curRequest, {} as DeauthorizedDappResponse);
+      resolve(curRequest, {} as DeauthorizeDappResponse);
     }
   }, [wallet, curRequest, endWalletSession, clientTrustUseCase]);
 
