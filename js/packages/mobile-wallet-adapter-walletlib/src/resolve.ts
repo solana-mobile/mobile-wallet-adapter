@@ -56,6 +56,9 @@ interface IMWARequest {
     __type: MWARequestType;
     requestId: string;
     sessionId: string;
+}
+
+interface IVerifiableIdentityRequest {
     cluster: string;
     authorizationScope: Uint8Array;
     appIdentity?: AppIdentity;
@@ -63,37 +66,44 @@ interface IMWARequest {
 
 export type AuthorizeDappRequest = Readonly<{
     __type: MWARequestType.AuthorizeDappRequest;
+    cluster: string;
+    appIdentity?: AppIdentity;
 }> &
     IMWARequest;
 
 export type ReauthorizeDappRequest = Readonly<{
     __type: MWARequestType.ReauthorizeDappRequest;
 }> &
-    IMWARequest;
+    IMWARequest &
+    IVerifiableIdentityRequest;
 
 export type DeauthorizeDappRequest = Readonly<{
     __type: MWARequestType.DeauthorizeDappRequest;
 }> &
-    IMWARequest;
+    IMWARequest &
+    IVerifiableIdentityRequest;
 
 export type SignMessagesRequest = Readonly<{
     __type: MWARequestType.SignMessagesRequest;
     payloads: Uint8Array[];
 }> &
-    IMWARequest;
+    IMWARequest &
+    IVerifiableIdentityRequest;
 
 export type SignTransactionsRequest = Readonly<{
     __type: MWARequestType.SignTransactionsRequest;
     payloads: Uint8Array[];
 }> &
-    IMWARequest;
+    IMWARequest &
+    IVerifiableIdentityRequest;
 
 export type SignAndSendTransactionsRequest = Readonly<{
     __type: MWARequestType.SignAndSendTransactionsRequest;
     payloads: Uint8Array[];
     minContextSlot?: number;
 }> &
-    IMWARequest;
+    IMWARequest &
+    IVerifiableIdentityRequest;
 
 /**
  * MWA Request Responses
