@@ -66,6 +66,8 @@ interface IVerifiableIdentityRequest {
 
 export type AuthorizeDappRequest = Readonly<{
     __type: MWARequestType.AuthorizeDappRequest;
+    cluster: string;
+    appIdentity?: AppIdentity;
 }> &
     IMWARequest;
 
