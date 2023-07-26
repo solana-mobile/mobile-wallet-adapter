@@ -57,13 +57,12 @@ export function useMobileWalletAdapterSession(
                 console.warn('Unexpected native event type');
             }
         });
+        initializeScenario(walletName, config);
 
         return () => {
             listener.remove();
         };
     }, []);
-
-    initializeScenario(walletName, config);
 }
 
 async function initializeScenario(walletName: string, walletConfig: MobileWalletAdapterConfig) {
@@ -71,10 +70,10 @@ async function initializeScenario(walletName: string, walletConfig: MobileWallet
     const initialUrl = await Linking.getInitialURL();
 
     // Create Scenario and establish session with dapp
-    if (initialUrl !== null) {
+    if (initialUrl) {
         SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, JSON.stringify(walletConfig));
     } else {
-        console.warn('Initial URL is unexpectedly null');
+        console.warn('Initial URL is unexpectedly uninitialized');
     }
 }
 
