@@ -5,7 +5,6 @@ This is a package that provides React Native bridge for the native `mobile-walle
 Deep dive and read the full Mobile Wallet Adapter protocol [specification](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#mobile-wallet-adapter-specification).
 
 ## TODO
-- Implement dApp identity verification/reauthorization
 - Separate bottom sheet signing experience or make optional
 
 ## Note
@@ -155,4 +154,21 @@ Fields:
   - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#sign_and_send_transactions)
   - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
 
+
+# Changelog
+
+## 1.0.3
+- Fixed a rerender bug within `useMobileWalletAdapterSession` where `initializeScenario` was needlessly called on rerender. 
+
+- Added `DeauthorizeDappRequest` type, so Javascript side now knows when a dApp requests for deauthorization.
+
+- Added `ReauthorizeDappRequest` type, so Javascript side now knows when a dApp requests for reauthorization.
+
+- Refactored `IMWARequest` to only include fields `requestId`, `sessionId`, and `__type`. 
+
+- Added `IVerifableIdentityRequest` to take on the fields `authorizationScope`, `cluster`, and `appIdentity`.
+
+- `AuthorizeDappRequest` now no longer includes `authorizationScope`. This was mistakenly included previously.
+
+- Updated documentation in the README. See "Properties of an MWA Request".
 
