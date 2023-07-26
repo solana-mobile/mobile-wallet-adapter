@@ -15,6 +15,7 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 class MobileWalletAdapterTest {
@@ -68,11 +69,9 @@ class MobileWalletAdapterTest {
 
     @Test
     fun runTest() = runTest(testDispatcher) {
-        val result = mobileWalletAdapter.transact(sender) {
-            "hi"
-        }
+        val result = mobileWalletAdapter.connect(sender)
 
-        assert(result.successPayload == "hi")
+        assertIs<String>(result.successPayload)
     }
 
 }
