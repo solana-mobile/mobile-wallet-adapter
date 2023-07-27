@@ -17,7 +17,7 @@ import java.util.concurrent.TimeoutException
 class MobileWalletAdapter(
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val scenarioProvider: AssociationScenarioProvider
+    private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider()
 ) {
 
     private var credsState: CredentialState = CredentialState.NotProvided
@@ -29,7 +29,11 @@ class MobileWalletAdapter(
     }
 
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
-        return transact(sender) { }
+        return transact(sender) {
+            if (credsState is CredentialState.NotProvided) {
+                throw IllegalStateException("App credentials must be provided prior to utilizing the connect method.")
+            }
+        }
     }
 
     suspend fun <T> transact(
@@ -45,6 +49,7 @@ class MobileWalletAdapter(
                 details.port,
                 details.session
             )
+
             try {
                 withTimeout(ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
                     sender.startActivityForResult(intent) {
@@ -138,6 +143,8 @@ class MobileWalletAdapter(
             return@coroutineScope TransactionResult.Failure("Request was interrupted", e)
         } catch (e: ActivityNotFoundException) {
             return@coroutineScope TransactionResult.NoWalletFound("No compatible wallet found.")
+        } catch (e: java.lang.IllegalStateException) {
+            return@coroutineScope TransactionResult.Failure(e.message.toString(), e)
         }
     }
 
