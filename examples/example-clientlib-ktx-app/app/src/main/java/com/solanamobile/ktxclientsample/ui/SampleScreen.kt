@@ -167,7 +167,7 @@ fun SampleScreen(
                         backgroundColor = Color.Red.copy(red = 0.7f)
                     ),
                     onClick = {
-                        viewModel.disconnect(intentSender)
+                        viewModel.disconnect()
                     }
                 ) {
                     Text(

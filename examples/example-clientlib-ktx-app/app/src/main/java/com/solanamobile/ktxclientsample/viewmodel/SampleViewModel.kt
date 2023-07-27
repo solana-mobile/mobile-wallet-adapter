@@ -12,7 +12,6 @@ import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.ConnectionCredentials
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
-import com.solana.mobilewalletadapter.clientlib.successPayload
 import com.solanamobile.ktxclientsample.usecase.Connected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
@@ -157,7 +156,13 @@ class SampleViewModel @Inject constructor(
                     signAndSendTransactions(arrayOf(bytes))
                 }
 
-                result.successPayload?.signatures?.firstOrNull()?.let { sig ->
+                (result as? TransactionResult.Success)?.let { txResult ->
+                    val updatedAuth = txResult.authResult
+                    //TODO: At some point in the future add a method to just persist
+                    //just the auth token value as that is all we need in this case
+                    persistanceUseCase.persistConnection(PublicKey(updatedAuth.publicKey), updatedAuth.accountLabel ?: "", updatedAuth.authToken)
+
+                    val sig = txResult.payload.signatures.firstOrNull()
                     val readableSig = Base58.encode(sig)
 
                     _state.value.copy(
@@ -173,15 +178,10 @@ class SampleViewModel @Inject constructor(
         }
     }
 
-    fun disconnect(sender: ActivityResultSender) {
+    fun disconnect() {
         viewModelScope.launch {
             val conn = persistanceUseCase.getWalletConnection()
-
             if (conn is Connected) {
-                walletAdapter.transact(sender) {
-                    deauthorize(conn.authToken)
-                }
-
                 persistanceUseCase.clearConnection()
 
                 SampleViewState().updateViewState()
