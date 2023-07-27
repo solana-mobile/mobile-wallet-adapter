@@ -4,6 +4,7 @@ import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -17,6 +18,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.TimeoutException
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -90,6 +93,7 @@ class MobileWalletAdapterTest {
         val result = mobileWalletAdapter.connect(sender)
 
         assertIs<TransactionResult.Failure<Unit>>(result)
+        assertTrue { result.e.message == "App credentials must be provided prior to utilizing the connect method." }
         assertTrue { result.successPayload == null }
     }
 
@@ -109,6 +113,23 @@ class MobileWalletAdapterTest {
         assertTrue { result is TransactionResult.Success<Unit> }
         assertTrue { result.successPayload is Unit }
         assertTrue { (result as TransactionResult.Success<Unit>).authResult == mockAuthResult }
+    }
+
+    @Test
+    fun `validate accessing authresult property without providing creds during transact throws an exception`() = runTest(testDispatcher) {
+        val result = mobileWalletAdapter.transact(sender) {
+            authorize(Uri.EMPTY, Uri.EMPTY, "name")
+
+            "No auth result returned"
+        }
+
+        assertIs<TransactionResult.Success<String>>(result)
+        assertTrue { result.successPayload is String }
+        assertTrue { result.successPayload == "No auth result returned" }
+
+        assertFailsWith(IllegalStateException::class) {
+            val willNotUseMe = result.authResult
+        }
     }
 
     @Test
@@ -175,8 +196,6 @@ class MobileWalletAdapterTest {
 
     @Test
     fun `validate providing credentials with an authToken and calling transact multiple times results in reauth each time`() = runTest(testDispatcher) {
-        val refString = "Returning a string for validation"
-
         val creds = ConnectionCredentials(
             identityUri = Uri.EMPTY,
             iconUri = Uri.EMPTY,
@@ -194,5 +213,56 @@ class MobileWalletAdapterTest {
 
         assertTrue { result is TransactionResult.Success<Unit> }
         assertTrue { (result as TransactionResult.Success<Unit>).authResult == mockAuthResult }
+    }
+
+    @Test
+    fun `validate relevant exception is caught when thrown from sender`() = runTest(testDispatcher) {
+        sender = mock {
+            onBlocking { startActivityForResult(any(), any()) } doAnswer { _ ->
+                throw InterruptedException("hello")
+            }
+        }
+
+        val result = mobileWalletAdapter.transact(sender) { }
+
+        assertTrue { result is TransactionResult.Failure }
+        assertTrue { (result as TransactionResult.Failure).e.message == "hello" }
+    }
+
+    @Test
+    fun `validate relevant exception is caught when thrown transact operations`() = runTest(testDispatcher) {
+        val result = mobileWalletAdapter.transact(sender) {
+            throw TimeoutException("hello")
+        }
+
+        assertTrue { result is TransactionResult.Failure }
+        assertTrue { (result as TransactionResult.Failure).e.message == "hello" }
+    }
+
+    @Test
+    fun `validate relevant exception is caught when thrown generally`() = runTest(testDispatcher) {
+        mockProvider = mock {
+            on { provideAssociationScenario(any()) } doAnswer {
+                throw CancellationException("err")
+            }
+        }
+
+        mobileWalletAdapter = MobileWalletAdapter(
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+
+        val creds = ConnectionCredentials(
+            identityUri = Uri.EMPTY,
+            iconUri = Uri.EMPTY,
+            identityName = "",
+        )
+
+        mobileWalletAdapter.provideCredentials(creds)
+
+        val result = mobileWalletAdapter.connect(sender)
+
+        assertTrue { result is TransactionResult.Failure }
+        assertTrue { (result as TransactionResult.Failure).e.message == "err"}
     }
 }
