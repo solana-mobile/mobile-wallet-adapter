@@ -55,7 +55,7 @@ class SampleViewModel @Inject constructor(
         get() = _state
 
     fun loadConnection() {
-        var connectionCreds = ConnectionCredentials(solanaUri, iconUri, identityName,)
+        var connectionCreds = ConnectionCredentials(solanaUri, iconUri, identityName)
         val persistedConn = persistanceUseCase.getWalletConnection()
 
         if (persistedConn is Connected) {
@@ -96,8 +96,11 @@ class SampleViewModel @Inject constructor(
                     )
 
                     persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
-
-                    _state.value.copy(isLoading = true).updateViewState()
+                    _state.value.copy(
+                        isLoading = true,
+                        userAddress = currentConn.publicKey.toBase58(),
+                        userLabel = currentConn.accountLabel
+                    ).updateViewState()
 
                     val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
                     val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
@@ -115,8 +118,7 @@ class SampleViewModel @Inject constructor(
                     } else {
                         _state.value.copy(
                             isLoading = false,
-                            canTransact = true,
-                            solBalance = 0.0,
+                            canTransact = false,
                             userAddress = "Error airdropping",
                             userLabel = "",
                         ).updateViewState()

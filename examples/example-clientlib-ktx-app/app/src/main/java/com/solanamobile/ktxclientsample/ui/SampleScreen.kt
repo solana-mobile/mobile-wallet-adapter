@@ -103,7 +103,7 @@ fun SampleScreen(
                             .padding(end = 8.dp)
                     )
 
-                    val accountLabel = if (viewState.canTransact) {
+                    val accountLabel = if (viewState.walletFound) {
                         if (viewState.userLabel.isNotEmpty()) {
                             "${viewState.userLabel} - ${viewState.userAddress}"
                         } else {
