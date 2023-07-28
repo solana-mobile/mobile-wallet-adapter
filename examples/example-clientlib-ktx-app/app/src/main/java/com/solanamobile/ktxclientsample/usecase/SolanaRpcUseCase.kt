@@ -4,7 +4,11 @@ import com.portto.solana.web3.Connection
 import com.portto.solana.web3.PublicKey
 import com.portto.solana.web3.rpc.types.config.Commitment
 import com.portto.solana.web3.util.Cluster
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SolanaRpcUseCase @Inject constructor() {
@@ -20,7 +24,7 @@ class SolanaRpcUseCase @Inject constructor() {
         return coroutineScope {
             async {
                 return@async withContext(Dispatchers.IO) {
-                    repeat(10) {
+                    repeat(5) {
                         val conf = api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString()
 
                         if (conf != null) {

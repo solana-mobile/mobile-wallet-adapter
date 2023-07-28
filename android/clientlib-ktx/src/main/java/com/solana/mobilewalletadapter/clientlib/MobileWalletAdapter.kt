@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
-import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import kotlinx.coroutines.*
@@ -15,40 +14,34 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-sealed class TransactionResult<T> {
-    data class Success<T>(
-        val payload: T
-    ): TransactionResult<T>()
-
-    class Failure<T>(
-        val message: String,
-        val e: Exception
-    ): TransactionResult<T>()
-
-    class NoWalletFound<T>(
-        val message: String
-    ): TransactionResult<T>()
-}
-
-/**
- * Convenience property to access success payload. Will be null if not successful.
- */
-val <T> TransactionResult<T>.successPayload: T?
-    get() = (this as? TransactionResult.Success)?.payload
-
 class MobileWalletAdapter(
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider()
 ) {
 
+    private var credsState: CredentialState = CredentialState.NotProvided
+
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
+
+    fun provideCredentials(credentials: ConnectionCredentials) {
+        credsState = CredentialState.Provided(credentials)
+    }
+
+    suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
+        return transact(sender) {
+            if (credsState is CredentialState.NotProvided) {
+                throw IllegalStateException("App credentials must be provided prior to utilizing the connect method.")
+            }
+        }
+    }
 
     suspend fun <T> transact(
         sender: ActivityResultSender,
         block: suspend AdapterOperations.() -> T,
     ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
-            val scenario = LocalAssociationScenario(timeout)
+            val scenario = scenarioProvider.provideAssociationScenario(timeout)
             val details = scenario.associationDetails()
 
             val intent = LocalAssociationIntentCreator.createAssociationIntent(
@@ -56,6 +49,7 @@ class MobileWalletAdapter(
                 details.port,
                 details.session
             )
+
             try {
                 withTimeout(ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
                     sender.startActivityForResult(intent) {
@@ -80,11 +74,25 @@ class MobileWalletAdapter(
                 try {
                     @Suppress("BlockingMethodInNonBlockingContext")
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-
                     adapterOperations.client = client
+
+                    val authResult = credsState.let { creds ->
+                        if (creds is CredentialState.Provided) {
+                            with (creds.credentials) {
+                                if (authToken == null) {
+                                    adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
+                                } else {
+                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, authToken)
+                                }
+                            }
+                        } else {
+                            null
+                        }
+                    }
+
                     val result = block(adapterOperations)
 
-                    TransactionResult.Success(result)
+                    TransactionResult.Success(result, authResult)
                 } catch (e: InterruptedException) {
                     TransactionResult.Failure("Interrupted while waiting for local association to be ready", e)
                 } catch (e: TimeoutException) {
@@ -135,6 +143,8 @@ class MobileWalletAdapter(
             return@coroutineScope TransactionResult.Failure("Request was interrupted", e)
         } catch (e: ActivityNotFoundException) {
             return@coroutineScope TransactionResult.NoWalletFound("No compatible wallet found.")
+        } catch (e: java.lang.IllegalStateException) {
+            return@coroutineScope TransactionResult.Failure(e.message.toString(), e)
         }
     }
 

@@ -1,12 +1,36 @@
 package com.solanamobile.ktxclientsample.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.*
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Snackbar
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VpnKey
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,178 +68,190 @@ fun SampleScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colors.surface)
-                    .padding(8.dp),
+                    .padding(top = 8.dp),
                 text = "Ktx Client Sample",
                 style = MaterialTheme.typography.h4,
                 textAlign = TextAlign.Center
             )
 
             Column(
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colors.surface)
+                    .padding(8.dp)
             ) {
                 Divider(
                     modifier = Modifier.padding(
-                        top = 16.dp,
-                        bottom = 16.dp
+                        top = 8.dp,
+                        bottom = 8.dp
                     )
                 )
 
-                var memoText by remember { mutableStateOf("") }
-
-                OutlinedTextField(
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    value = memoText,
-                    label = { Text("Memo Text") },
-                    onValueChange = { memoText = it }
-                )
+                        .padding(
+                            top = 4.dp,
+                            bottom = 4.dp
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.VpnKey,
+                        contentDescription = "Address",
+                        tint = Color.Black,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(end = 8.dp)
+                    )
 
-                val openDialog = remember { mutableStateOf(false)  }
+                    val accountLabel = if (viewState.walletFound) {
+                        if (viewState.userLabel.isNotEmpty()) {
+                            "${viewState.userLabel} - ${viewState.userAddress}"
+                        } else {
+                            viewState.userAddress
+                        }
+                    } else ""
 
-                if (openDialog.value) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            openDialog.value = false
-                        },
-                        text = {
-                            Text("Clicking the \"Publish\" button will send a transaction that publishes the text you've typed above onto the Solana Blockchain using the Memo program.")
-                        },
-                        confirmButton = {
-                            Button(
-                                onClick = {
-                                    openDialog.value = false
-                                }
-                            ) {
-                                Text("Got it")
-                            }
-                        },
+                    Text(
+                        text = accountLabel,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Row {
-                    Button(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        enabled = viewState.canTransact && memoText.isNotEmpty(),
-                        onClick = {
-                            viewModel.publishMemo(intentSender, memoText)
-                        }
-                    ) {
-                        Text("Publish Memo")
-                    }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Balance: \u25ce",
+                        style = MaterialTheme.typography.h5,
+                        maxLines = 1
+                    )
 
-                    OutlinedButton(
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = if (viewState.canTransact && viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
+                        style = MaterialTheme.typography.h5,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Button(
+                        enabled = viewState.walletFound,
+                        elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = MaterialTheme.colors.secondaryVariant
                         ),
                         onClick = {
-                            openDialog.value = true
+                            viewModel.addFunds(intentSender)
                         }
                     ) {
                         Text(
-                            text = "?",
-                            color = MaterialTheme.colors.primary
+                            text = "Add Funds",
+                            color = MaterialTheme.colors.primary,
                         )
                     }
+                }
+
+                val buttonText = when {
+                    viewState.canTransact && viewState.walletFound -> "Disconnect"
+                    !viewState.walletFound -> "Please install a compatible wallet"
+                    else -> "Add funds to get started"
+                }
+
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    enabled = viewState.canTransact,
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color.Red.copy(red = 0.7f)
+                    ),
+                    onClick = {
+                        viewModel.disconnect()
+                    }
+                ) {
+                    Text(
+                        color = MaterialTheme.colors.onPrimary,
+                        text = buttonText
+                    )
                 }
             }
         }
 
+        if (viewState.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .height(48.dp)
+                    .width(48.dp)
+                    .align(Alignment.Center)
+            )
+        }
+
         Column(
             modifier = Modifier
-                .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .background(MaterialTheme.colors.surface)
                 .padding(8.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Balance: \u25ce",
-                    style = MaterialTheme.typography.h5,
+            var memoText by remember { mutableStateOf("") }
+
+            OutlinedTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                value = memoText,
+                label = { Text("Memo Text") },
+                onValueChange = { memoText = it }
+            )
+
+            val openDialog = remember { mutableStateOf(false)  }
+
+            if (openDialog.value) {
+                AlertDialog(
+                    onDismissRequest = {
+                        openDialog.value = false
+                    },
+                    text = {
+                        Text("Clicking the \"Publish\" button will send a transaction that publishes the text you've typed above onto the Solana Blockchain using the Memo program.")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                openDialog.value = false
+                            }
+                        ) {
+                            Text("Got it")
+                        }
+                    },
                 )
+            }
 
-                Text(
-                    text = if (viewState.canTransact && viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
-                    style = MaterialTheme.typography.h5,
-                )
-
-                Spacer(Modifier.weight(1f))
-
-                if (viewState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .height(24.dp)
-                            .width(24.dp)
-                    )
+            Row {
+                Button(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    enabled = viewState.canTransact && memoText.isNotEmpty(),
+                    onClick = {
+                        viewModel.publishMemo(intentSender, memoText)
+                    }
+                ) {
+                    Text("Publish Memo")
                 }
 
-                Button(
-                    enabled = viewState.walletFound,
-                    elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
+                OutlinedButton(
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.secondaryVariant
                     ),
                     onClick = {
-                        viewModel.addFunds(intentSender)
+                        openDialog.value = true
                     }
                 ) {
                     Text(
-                        text = "Add Funds",
+                        text = "?",
                         color = MaterialTheme.colors.primary
                     )
                 }
-            }
-
-            Row {
-                Icon(
-                    imageVector = Icons.Filled.VpnKey,
-                    contentDescription = "Address",
-                    tint = Color.Black,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .padding(end = 8.dp)
-                )
-
-                val accountLabel = if (viewState.canTransact) {
-                    if (viewState.userLabel.isNotEmpty()) {
-                        "${viewState.userLabel} - ${viewState.userAddress}"
-                    } else {
-                        viewState.userAddress
-                    }
-                } else ""
-
-                Text(
-                    text = accountLabel,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            val buttonText = when {
-                viewState.canTransact && viewState.walletFound -> "Disconnect"
-                !viewState.walletFound -> "Please install a compatible wallet"
-                else -> "Add funds to get started"
-            }
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                enabled = viewState.canTransact,
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color.Red.copy(red = 0.7f)
-                ),
-                onClick = {
-                    viewModel.disconnect(intentSender)
-                }
-            ) {
-                Text(
-                    color = MaterialTheme.colors.onPrimary,
-                    text = buttonText
-                )
             }
 
             val uriHandler = LocalUriHandler.current
