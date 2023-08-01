@@ -127,7 +127,7 @@ dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test:1.8.21'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
     testImplementation 'org.robolectric:robolectric:4.10.3'
-    implementation 'org.mockito.kotlin:mockito-kotlin:4.1.0'
+    implementation 'org.mockito.kotlin:mockito-kotlin:5.0.0'
     implementation 'org.mockito:mockito-inline:5.1.1'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
