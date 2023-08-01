@@ -1,9 +1,12 @@
 package com.solanamobile.ktxclientsample.usecase
 
-import com.portto.solana.web3.Connection
-import com.portto.solana.web3.PublicKey
-import com.portto.solana.web3.rpc.types.config.Commitment
-import com.portto.solana.web3.util.Cluster
+import com.solana.Solana
+import com.solana.api.getBalance
+import com.solana.api.getConfirmedTransaction
+import com.solana.api.requestAirdrop
+import com.solana.core.PublicKey
+import com.solana.networking.HttpNetworkingRouter
+import com.solana.networking.RPCEndpoint
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -13,11 +16,19 @@ import javax.inject.Inject
 
 class SolanaRpcUseCase @Inject constructor() {
 
-    private val api by lazy { Connection(Cluster.DEVNET) }
+    private val api by lazy {
+        val endPoint = RPCEndpoint.devnetSolana
+        val network = HttpNetworkingRouter(endPoint)
+
+        Solana(network).api
+    }
 
     suspend fun requestAirdrop(pubkey: PublicKey): String =
         withContext(Dispatchers.IO) {
-            api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
+//            api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
+
+            val result = api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
+            result.getOrNull()!!
         }
 
     suspend fun awaitConfirmationAsync(signature: String): Deferred<Boolean> {
@@ -25,9 +36,10 @@ class SolanaRpcUseCase @Inject constructor() {
             async {
                 return@async withContext(Dispatchers.IO) {
                     repeat(5) {
-                        val conf = api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString()
+                        val result = api.getConfirmedTransaction(signature)
+//                        val conf = api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString()
 
-                        if (conf != null) {
+                        if (result.getOrNull() != null) {
                             return@withContext true
                         }
                     }
@@ -40,18 +52,20 @@ class SolanaRpcUseCase @Inject constructor() {
 
     suspend fun getBalance(pubkey: PublicKey, asReadable: Boolean = true): Double =
         withContext(Dispatchers.IO) {
-            val bal = api.getBalance(pubkey, Commitment.CONFIRMED)
+//            val bal = api.getBalance(pubkey, Commitment.CONFIRMED)
+            val result = api.getBalance(pubkey)
 
             if (asReadable) {
-                bal.toDouble() / LAMPORTS_PER_SOL.toDouble()
+                result.getOrNull()!!.toDouble() / LAMPORTS_PER_SOL.toDouble()
             } else {
-                bal.toDouble()
+                result.getOrNull()!!.toDouble()
             }
         }
 
     suspend fun getLatestBlockHash(): String? =
         withContext(Dispatchers.IO) {
-            api.getLatestBlockhash(Commitment.FINALIZED)
+//            api.getLatestBlockhash(Commitment.FINALIZED)
+            "TODO"
         }
 
     companion object {

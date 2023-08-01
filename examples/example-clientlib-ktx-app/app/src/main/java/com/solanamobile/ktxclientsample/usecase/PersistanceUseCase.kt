@@ -1,7 +1,7 @@
 package com.solanamobile.ktxclientsample.usecase
 
 import android.content.SharedPreferences
-import com.portto.solana.web3.PublicKey
+import com.solana.core.PublicKey
 import javax.inject.Inject
 
 sealed class WalletConnection
