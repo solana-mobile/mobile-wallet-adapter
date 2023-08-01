@@ -25,7 +25,7 @@ Wallet --> Dapp ++-- : error {ERROR_AUTHORIZATION_FAILED}
 == Reauthorize ==
 
 Dapp -> Dapp : <i>i</i> = DappIdentity()
-Dapp -> Dapp : <i>c</i> = "{cluster}"
+Dapp -> Dapp : <i>c</i> = "{namespace}:{chain_reference}"
 Dapp -> Wallet ++-- : authorize {<i>i</i>, <i>c</i>, <i>at</i>}
 Wallet -> Wallet : validate Dapp identity <i>i</i> matches <i>at</i>
 Wallet -> Wallet : Generate new auth token\n<i>at2</i> = RegenerateAuthToken(<i>i</i>, <i>at</i>)

@@ -103,6 +103,14 @@ _reflector_ - an intermediary which brokers connections between two endpoints, w
 
 _wallet endpoint_ - an app implementing wallet-like functionality (i.e. providing transaction signing services). This endpoint acts as the server in this protocol.
 
+## Chain Identifiers
+
+In order to identify blockchains in a canonical, human readable form, namespaced identifiers are used in the format `${namespace}:${reference}`. This scheme is compatible with [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md) chain IDs, but are not required to be used.
+
+The currently supported Solana network chains are `solana:mainnet`, `solana:testnet`, and `solana:devnet`. 
+
+Previous versions of this specification used a `cluster` parameter to specify the Solana network cluster with which the dapp endpoint intends to interact. The supported values for the `cluster` parameter were `mainnet-beta`, `testnet`, and `devnet`. These values have been replaced by the above chain references.
+
 ## Transport
 
 ### WebSockets
@@ -322,7 +330,7 @@ authorize
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
-    "cluster": "<cluster>",
+    "chain": "<chain>",
     “auth_token”: “<auth_token>”,
 }
 ```
@@ -333,7 +341,7 @@ where:
   - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
   - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
-- `cluster`: (optional) if set, the Solana network cluster with which the dapp endpoint intends to interact; supported values include `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `mainnet-beta`.
+- `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`. If not set, defaults to `solana:mainnet`.
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint sliently without promting the user. 
 
 ###### Result
@@ -363,7 +371,7 @@ where:
 
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_AUTHORIZATION_FAILED` if the wallet endpoint did not authorize access to the requested privileged methods
-- `ERROR_CLUSTER_NOT_SUPPORTED` if the wallet endpoint does not support the requested Solana cluster
+- `ERROR_CHAIN_NOT_SUPPORTED` if the wallet endpoint does not support the requested chain
 
 ##### Description
 
@@ -377,7 +385,7 @@ If an `auth_token` is provided by the dapp endpoint, and the result is `ERROR_AU
 
 Wallet endpoints should make every effort possible to [verify the authenticity](#dapp-identity-verification) of the presented identity. While the `uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
 
-The `cluster` parameter allows the dapp endpoint to select a specific Solana cluster with which to interact. This is relevant for both [`sign_transactions`](#sign_transactions), where a wallet may refuse to sign transactions without a currently valid blockhash, and for [`sign_and_send_transactions`](#sign_and_send_transactions), where the wallet endpoint must know which cluster to submit the transactions to. This parameter would normally be used to select a cluster other than `mainnet-beta` for dapp development and testing purposes. Under normal circumstances, this field should be omitted, in which case the wallet endpoint will interact with the `mainnet-beta` cluster.
+The `chain` parameter allows the dapp endpoint to select a specific chain with which to interact. This is relevant for both [`sign_transactions`](#sign_transactions), where a wallet may refuse to sign transactions without a currently valid blockhash, and for [`sign_and_send_transactions`](#sign_and_send_transactions), where the wallet endpoint must know which cluster to submit the transactions to. This parameter would normally be used to select a cluster other than `solana:mainnet` for dapp development and testing purposes. Under normal circumstances, this field should be omitted, in which case the wallet endpoint will interact with the `solana:mainnet` cluster.
 
 ##### Non-normative commentary
 
@@ -753,7 +761,7 @@ const ERROR_NOT_SIGNED = -3
 const ERROR_NOT_SUBMITTED = -4
 const ERROR_NOT_CLONED = -5
 const ERROR_TOO_MANY_PAYLOADS = -6
-const ERROR_CLUSTER_NOT_SUPPORTED = -7
+const ERROR_CHAIN_NOT_SUPPORTED = -7
 
 const ERROR_ATTEST_ORIGIN_ANDROID = -100
 ```
