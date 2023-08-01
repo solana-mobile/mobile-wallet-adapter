@@ -102,23 +102,32 @@ class SampleViewModel @Inject constructor(
                         userLabel = currentConn.accountLabel
                     ).updateViewState()
 
-                    val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
-                    val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
+                    try {
+                        val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
+                        val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
 
-                    if (confirmed) {
-                        val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
+                        if (confirmed) {
+                            val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
 
+                            _state.value.copy(
+                                isLoading = false,
+                                canTransact = true,
+                                solBalance = balance,
+                                userAddress = currentConn.publicKey.toBase58(),
+                                userLabel = currentConn.accountLabel,
+                            ).updateViewState()
+                        } else {
+                            _state.value.copy(
+                                isLoading = false,
+                                canTransact = false,
+                                userAddress = "Balance not yet confirmed",
+                                userLabel = "",
+                            ).updateViewState()
+                        }
+                    } catch (e: Exception) {
                         _state.value.copy(
                             isLoading = false,
                             canTransact = true,
-                            solBalance = balance,
-                            userAddress = currentConn.publicKey.toBase58(),
-                            userLabel = currentConn.accountLabel,
-                        ).updateViewState()
-                    } else {
-                        _state.value.copy(
-                            isLoading = false,
-                            canTransact = false,
                             userAddress = "Error airdropping",
                             userLabel = "",
                         ).updateViewState()

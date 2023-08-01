@@ -1,8 +1,10 @@
 package com.solanamobile.ktxclientsample.usecase
 
 import com.solana.Solana
+import com.solana.api.Api
 import com.solana.api.getBalance
 import com.solana.api.getConfirmedTransaction
+import com.solana.api.getRecentBlockhash
 import com.solana.api.requestAirdrop
 import com.solana.core.PublicKey
 import com.solana.networking.HttpNetworkingRouter
@@ -16,19 +18,19 @@ import javax.inject.Inject
 
 class SolanaRpcUseCase @Inject constructor() {
 
-    private val api by lazy {
+    private val api: Api
+
+    init {
         val endPoint = RPCEndpoint.devnetSolana
         val network = HttpNetworkingRouter(endPoint)
 
-        Solana(network).api
+        api = Solana(network).api
     }
 
     suspend fun requestAirdrop(pubkey: PublicKey): String =
         withContext(Dispatchers.IO) {
-//            api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
-
             val result = api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
-            result.getOrNull()!!
+            result.getOrThrow()
         }
 
     suspend fun awaitConfirmationAsync(signature: String): Deferred<Boolean> {
@@ -37,9 +39,8 @@ class SolanaRpcUseCase @Inject constructor() {
                 return@async withContext(Dispatchers.IO) {
                     repeat(5) {
                         val result = api.getConfirmedTransaction(signature)
-//                        val conf = api.confirmTransaction(signature, Commitment.CONFIRMED)?.value?.toString()
 
-                        if (result.getOrNull() != null) {
+                        if (result.getOrThrow().slot != null) {
                             return@withContext true
                         }
                     }
@@ -52,20 +53,18 @@ class SolanaRpcUseCase @Inject constructor() {
 
     suspend fun getBalance(pubkey: PublicKey, asReadable: Boolean = true): Double =
         withContext(Dispatchers.IO) {
-//            val bal = api.getBalance(pubkey, Commitment.CONFIRMED)
             val result = api.getBalance(pubkey)
 
             if (asReadable) {
-                result.getOrNull()!!.toDouble() / LAMPORTS_PER_SOL.toDouble()
+                result.getOrThrow().toDouble() / LAMPORTS_PER_SOL.toDouble()
             } else {
-                result.getOrNull()!!.toDouble()
+                result.getOrThrow().toDouble()
             }
         }
 
-    suspend fun getLatestBlockHash(): String? =
+    suspend fun getLatestBlockHash(): String =
         withContext(Dispatchers.IO) {
-//            api.getLatestBlockhash(Commitment.FINALIZED)
-            "TODO"
+            api.getRecentBlockhash().getOrThrow()
         }
 
     companion object {
