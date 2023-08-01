@@ -103,13 +103,25 @@ _reflector_ - an intermediary which brokers connections between two endpoints, w
 
 _wallet endpoint_ - an app implementing wallet-like functionality (i.e. providing transaction signing services). This endpoint acts as the server in this protocol.
 
-## Chain Identifiers
+## Identifiers
 
-In order to identify blockchains in a canonical, human readable form, namespaced identifiers are used in the format `${namespace}:${reference}`. This scheme is compatible with [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md) chain IDs, but are not required to be used.
+Namespaced identifiers are used in the format `${namespace}:${reference}` to refer to objects like blockchains and features in a canonical and human readable form. 
+
+### Chain Identifiers
+
+Namespaced chain identifiers are used to refer to blockchains with which a dapp intends to interact with. This scheme is compatible with [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md) chain IDs, but are not required to be used.
 
 The currently supported Solana network chains are `solana:mainnet`, `solana:testnet`, and `solana:devnet`. 
 
 Previous versions of this specification used a `cluster` parameter to specify the Solana network cluster with which the dapp endpoint intends to interact. The supported values for the `cluster` parameter were `mainnet-beta`, `testnet`, and `devnet`. These values have been replaced by the above chain references.
+
+### Feature Identifiers
+
+Feature identifiers are used to identify features that are supported by a wallet or account. The currently supported standard features include: 
+
+- `solana:signMessage`
+- `solana:signTransaction`
+- `solana:signAndSendTransaction`
 
 ## Transport
 
@@ -351,7 +363,12 @@ where:
 {
     “auth_token”: “<auth_token>”,
     “accounts”: [
-        {“address”: “<address>", “label”: “<label>”},
+        {
+            “address”: “<address>", 
+            “label”: “<label>”, 
+            "chains": ["<chain_id>", ...], 
+            "features": ["<feature_id>", ...]
+        },
         ...
     ],
     “wallet_uri_base”: “<wallet_uri_base>”,
@@ -363,6 +380,8 @@ where:
 - `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to reauthorize access to [privileged methods](#privileged-methods).
 - `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
   - `address`: a base64-encoded address for this account
+  - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
+  - `features`: a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account.
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 
@@ -465,6 +484,7 @@ get_capabilities
     "max_transactions_per_request": <max_transactions_per_request>,
     "max_messages_per_request": <max_messages_per_request>,
     "supported_transaction_versions": [<supported_transaction_versions>, ...]
+    "features": ["<feature_id>", ...]
 }
 ```
 
@@ -475,6 +495,7 @@ where:
 - `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transactions`](#sign_transactions) or [`sign_and_send_transactions`](#sign_and_send_transactions) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 - `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_messages`](#sign_messages) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 - `supported_transaction_versions`: the Solana network transaction formats supported by this wallet endpoint. Allowed values are those defined for [`TransactionVersion`](https://solana-labs.github.io/solana-web3.js/modules.html#TransactionVersion) (for e.g., `"legacy"`, `0`, etc).
+- `features`: a list of [feature identifiers](#feature-identifiers) for the features supported by the wallet.
 
 ###### Errors
 {: .no_toc }
