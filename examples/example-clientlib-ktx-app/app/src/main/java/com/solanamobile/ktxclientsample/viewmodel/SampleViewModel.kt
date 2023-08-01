@@ -85,6 +85,7 @@ class SampleViewModel @Inject constructor(
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
+            //TODO: Don't reconnect if already connected; skip over hopping to wallet
             val result = walletAdapter.connect(sender)
 
             when (result) {
