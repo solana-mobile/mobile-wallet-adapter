@@ -84,63 +84,74 @@ class SampleViewModel @Inject constructor(
 
     fun addFunds(sender: ActivityResultSender) {
         viewModelScope.launch {
-            //TODO: Don't reconnect if already connected; skip over hopping to wallet
-            val result = walletAdapter.connect(sender)
+            val conn = persistanceUseCase.getWalletConnection()
 
-            when (result) {
-                is TransactionResult.Success -> {
-                    val currentConn = Connected(
-                        PublicKey(result.authResult.publicKey),
-                        result.authResult.accountLabel ?: "",
-                        result.authResult.authToken
-                    )
+            if (conn is Connected) {
+                requestAirdrop(conn.publicKey)
+            } else {
+                when (val result = walletAdapter.connect(sender)) {
+                    is TransactionResult.Success -> {
+                        val currentConn = Connected(
+                            PublicKey(result.authResult.publicKey),
+                            result.authResult.accountLabel ?: "",
+                            result.authResult.authToken
+                        )
 
-                    val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
+                        val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
 
-                    persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
-                    _state.value.copy(
-                        isLoading = true,
-                        solBalance = balance,
-                        userAddress = currentConn.publicKey.toBase58(),
-                        userLabel = currentConn.accountLabel
-                    ).updateViewState()
+                        persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
 
-                    try {
-                        val tx = solanaRpcUseCase.requestAirdrop(currentConn.publicKey)
-                        val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
+                        _state.value.copy(
+                            isLoading = true,
+                            solBalance = balance,
+                            userAddress = currentConn.publicKey.toBase58(),
+                            userLabel = currentConn.accountLabel
+                        ).updateViewState()
 
-                        if (confirmed) {
-                            _state.value.copy(
-                                isLoading = false
-                            ).updateViewState()
-                        } else {
-                            _state.value.copy(
-                                isLoading = false,
-                            ).updateViewState()
-                        }
-                    } catch (e: Exception) {
+                        requestAirdrop(currentConn.publicKey)
+                    }
+
+                    is TransactionResult.NoWalletFound -> {
+                        _state.value.copy(
+                            walletFound = false
+                        ).updateViewState()
+
+                    }
+
+                    is TransactionResult.Failure -> {
                         _state.value.copy(
                             isLoading = false,
-                            userAddress = "Error airdropping",
+                            canTransact = false,
+                            userAddress = "",
                             userLabel = "",
                         ).updateViewState()
                     }
                 }
-                is TransactionResult.NoWalletFound -> {
-                    _state.value.copy(
-                        walletFound = false
-                    ).updateViewState()
-
-                }
-                is TransactionResult.Failure -> {
-                    _state.value.copy(
-                        isLoading = false,
-                        canTransact = false,
-                        userAddress = "",
-                        userLabel = "",
-                    ).updateViewState()
-                }
             }
+        }
+    }
+
+    private suspend fun requestAirdrop(publicKey: PublicKey) {
+        try {
+            val tx = solanaRpcUseCase.requestAirdrop(publicKey)
+            val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
+
+            if (confirmed) {
+                _state.value.copy(
+                    isLoading = false,
+                    solBalance = solanaRpcUseCase.getBalance(publicKey)
+                ).updateViewState()
+            } else {
+                _state.value.copy(
+                    isLoading = false,
+                ).updateViewState()
+            }
+        } catch (e: Exception) {
+            _state.value.copy(
+                isLoading = false,
+                userAddress = "Error airdropping",
+                userLabel = "",
+            ).updateViewState()
         }
     }
 
