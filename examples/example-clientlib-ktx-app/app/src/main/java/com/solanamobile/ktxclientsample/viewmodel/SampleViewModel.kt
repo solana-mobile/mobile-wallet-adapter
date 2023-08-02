@@ -1,7 +1,6 @@
 package com.solanamobile.ktxclientsample.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.core.PublicKey
@@ -112,19 +111,16 @@ class SampleViewModel @Inject constructor(
 
                         if (confirmed) {
                             _state.value.copy(
-                                isLoading = false,
-                                canTransact = true
+                                isLoading = false
                             ).updateViewState()
                         } else {
                             _state.value.copy(
                                 isLoading = false,
-                                canTransact = false,
                             ).updateViewState()
                         }
                     } catch (e: Exception) {
                         _state.value.copy(
                             isLoading = false,
-                            canTransact = true,
                             userAddress = "Error airdropping",
                             userLabel = "",
                         ).updateViewState()
@@ -137,7 +133,12 @@ class SampleViewModel @Inject constructor(
 
                 }
                 is TransactionResult.Failure -> {
-                    Log.v("KTX Sample", result.message)
+                    _state.value.copy(
+                        isLoading = false,
+                        canTransact = false,
+                        userAddress = "",
+                        userLabel = "",
+                    ).updateViewState()
                 }
             }
         }
