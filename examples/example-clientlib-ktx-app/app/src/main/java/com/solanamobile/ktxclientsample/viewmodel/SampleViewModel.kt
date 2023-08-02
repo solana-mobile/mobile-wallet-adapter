@@ -96,9 +96,12 @@ class SampleViewModel @Inject constructor(
                         result.authResult.authToken
                     )
 
+                    val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
+
                     persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
                     _state.value.copy(
                         isLoading = true,
+                        solBalance = balance,
                         userAddress = currentConn.publicKey.toBase58(),
                         userLabel = currentConn.accountLabel
                     ).updateViewState()
@@ -108,21 +111,14 @@ class SampleViewModel @Inject constructor(
                         val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()
 
                         if (confirmed) {
-                            val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
-
                             _state.value.copy(
                                 isLoading = false,
-                                canTransact = true,
-                                solBalance = balance,
-                                userAddress = currentConn.publicKey.toBase58(),
-                                userLabel = currentConn.accountLabel,
+                                canTransact = true
                             ).updateViewState()
                         } else {
                             _state.value.copy(
                                 isLoading = false,
                                 canTransact = false,
-                                userAddress = "Balance not yet confirmed",
-                                userLabel = "",
                             ).updateViewState()
                         }
                     } catch (e: Exception) {
