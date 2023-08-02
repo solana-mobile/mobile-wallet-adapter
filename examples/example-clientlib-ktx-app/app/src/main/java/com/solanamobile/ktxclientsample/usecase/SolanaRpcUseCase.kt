@@ -3,10 +3,11 @@ package com.solanamobile.ktxclientsample.usecase
 import com.solana.Solana
 import com.solana.api.Api
 import com.solana.api.getBalance
-import com.solana.api.getConfirmedTransaction
 import com.solana.api.getRecentBlockhash
+import com.solana.api.getSignatureStatuses
 import com.solana.api.requestAirdrop
 import com.solana.core.PublicKey
+import com.solana.networking.Commitment
 import com.solana.networking.HttpNetworkingRouter
 import com.solana.networking.RPCEndpoint
 import kotlinx.coroutines.Deferred
@@ -38,9 +39,10 @@ class SolanaRpcUseCase @Inject constructor() {
             async {
                 return@async withContext(Dispatchers.IO) {
                     repeat(5) {
-                        val result = api.getConfirmedTransaction(signature)
+                        val result = api.getSignatureStatuses(listOf(signature))
+                        val status = result.getOrThrow()[0].confirmationStatus
 
-                        if (result.getOrThrow().slot != null) {
+                        if (status == Commitment.CONFIRMED.value) {
                             return@withContext true
                         }
                     }
