@@ -11,6 +11,12 @@ sealed class CredentialState {
     object NotProvided: CredentialState()
 }
 
+data class ConnectionIdentity(
+    val identityUri: Uri,
+    val iconUri: Uri,
+    val identityName: String,
+)
+
 data class ConnectionCredentials(
     val identityUri: Uri,
     val iconUri: Uri,
