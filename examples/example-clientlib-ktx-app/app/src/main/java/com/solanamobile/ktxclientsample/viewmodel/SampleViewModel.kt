@@ -1,13 +1,11 @@
 package com.solanamobile.ktxclientsample.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.core.PublicKey
 import com.solana.core.SerializeConfig
 import com.solana.core.Transaction
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
-import com.solana.mobilewalletadapter.clientlib.ConnectionCredentials
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
 import com.solana.programs.MemoProgram
@@ -33,10 +31,6 @@ data class SampleViewState(
     val walletFound: Boolean = true
 )
 
-val solanaUri = Uri.parse("https://solana.com")
-val iconUri = Uri.parse("favicon.ico")
-val identityName = "Solana"
-
 @HiltViewModel
 class SampleViewModel @Inject constructor(
     private val walletAdapter: MobileWalletAdapter,
@@ -54,7 +48,6 @@ class SampleViewModel @Inject constructor(
         get() = _state
 
     fun loadConnection() {
-        var connectionCreds = ConnectionCredentials(solanaUri, iconUri, identityName)
         val persistedConn = persistanceUseCase.getWalletConnection()
 
         if (persistedConn is Connected) {
@@ -74,12 +67,8 @@ class SampleViewModel @Inject constructor(
                 ).updateViewState()
             }
 
-            connectionCreds = connectionCreds.copy(
-                authToken = persistedConn.authToken
-            )
+            walletAdapter.authToken = persistedConn.authToken
         }
-
-        walletAdapter.provideCredentials(connectionCreds)
     }
 
     fun addFunds(sender: ActivityResultSender) {

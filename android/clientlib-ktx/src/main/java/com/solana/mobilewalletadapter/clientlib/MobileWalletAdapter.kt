@@ -2,7 +2,6 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
-import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
@@ -16,7 +15,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class MobileWalletAdapter(
-    private val connectionIdentity: ConnectionIdentity? = null,
+    connectionIdentity: ConnectionIdentity? = null,
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider()
@@ -28,6 +27,10 @@ class MobileWalletAdapter(
 
     var authToken: String? = null
 
+    /**
+     * Specify the RPC cluster used for all operations. Note: changing at runtime will invalidate
+     * the auth token and reauthorization will be required
+     */
     var rpcCluster: RpcCluster = RpcCluster.Devnet
         set(value) {
             if (value != field) {
@@ -39,13 +42,8 @@ class MobileWalletAdapter(
 
     init {
         connectionIdentity?.let {
-            //TODO: Update this once the object gets updated
-            credsState = CredentialState.Provided(ConnectionCredentials(Uri.EMPTY, Uri.EMPTY, ""))
+            credsState = CredentialState.Provided(it)
         }
-    }
-
-    fun provideCredentials(credentials: ConnectionCredentials) {
-        credsState = CredentialState.Provided(credentials)
     }
 
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
@@ -99,11 +97,14 @@ class MobileWalletAdapter(
                     val authResult = credsState.let { creds ->
                         if (creds is CredentialState.Provided) {
                             with (creds.credentials) {
-                                if (authToken == null) {
+                                val authResult = authToken?.let { token ->
+                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
+                                } ?: run {
                                     adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
-                                } else {
-                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, authToken)
                                 }
+
+                                authToken = authResult.authToken
+                                authResult
                             }
                         } else {
                             null
