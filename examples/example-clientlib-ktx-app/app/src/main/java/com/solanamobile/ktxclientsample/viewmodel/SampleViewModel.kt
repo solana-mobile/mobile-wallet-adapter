@@ -135,7 +135,7 @@ class SampleViewModel @Inject constructor(
                     isLoading = false,
                 ).updateViewState()
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             _state.value.copy(
                 isLoading = false,
                 userAddress = "Error airdropping",

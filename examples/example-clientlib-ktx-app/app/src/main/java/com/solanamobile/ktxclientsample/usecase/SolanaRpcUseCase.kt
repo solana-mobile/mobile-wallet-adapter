@@ -7,6 +7,7 @@ import com.solana.api.getRecentBlockhash
 import com.solana.api.getSignatureStatuses
 import com.solana.api.requestAirdrop
 import com.solana.core.PublicKey
+import com.solana.models.SignatureStatusRequestConfiguration
 import com.solana.networking.Commitment
 import com.solana.networking.HttpNetworkingRouter
 import com.solana.networking.RPCEndpoint
@@ -39,10 +40,10 @@ class SolanaRpcUseCase @Inject constructor() {
             async {
                 return@async withContext(Dispatchers.IO) {
                     repeat(5) {
-                        val result = api.getSignatureStatuses(listOf(signature))
+                        val result = api.getSignatureStatuses(listOf(signature), SignatureStatusRequestConfiguration(true))
                         val status = result.getOrThrow()[0].confirmationStatus
 
-                        if (status == Commitment.CONFIRMED.value) {
+                        if (status == Commitment.CONFIRMED.value || status == Commitment.FINALIZED.value) {
                             return@withContext true
                         }
                     }
