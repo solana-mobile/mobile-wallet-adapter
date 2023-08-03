@@ -30,7 +30,8 @@ class MobileWalletAdapterTest {
 
     lateinit var mockProvider: AssociationScenarioProvider
     lateinit var mockClient: MobileWalletAdapterClient
-    lateinit var mockAuthResult: AuthorizationResult
+    lateinit var sampleAuthResult: AuthorizationResult
+    lateinit var sampleReauthResult: AuthorizationResult
 
     lateinit var sender: ActivityResultSender
     lateinit var mobileWalletAdapter: MobileWalletAdapter
@@ -46,16 +47,19 @@ class MobileWalletAdapterTest {
             }
         }
 
-        mockAuthResult = mock()
+
+        sampleAuthResult = AuthorizationResult.create("AUTHRESULTTOKEN", byteArrayOf(), "Some Label", Uri.EMPTY)
+        sampleReauthResult = AuthorizationResult.create("REAUTHRESULTTOKEN", byteArrayOf(), "Some Label", Uri.EMPTY)
+
         mockClient = mock {
             on { authorize(any(), any(), any(), any()) } doAnswer {
                 mock {
-                    on { get() } doReturn mockAuthResult
+                    on { get() } doReturn sampleAuthResult
                 }
             }
             on { reauthorize(any(), any(), any(), any()) } doAnswer {
                 mock {
-                    on { get() } doReturn mockAuthResult
+                    on { get() } doReturn sampleReauthResult
                 }
             }
         }
@@ -93,26 +97,29 @@ class MobileWalletAdapterTest {
         val result = mobileWalletAdapter.connect(sender)
 
         assertIs<TransactionResult.Failure<Unit>>(result)
-        assertTrue { result.e.message == "App credentials must be provided prior to utilizing the connect method." }
+        assertTrue { result.e.message == "App identity credentials must be provided via the constructor to use the connect method." }
         assertTrue { result.successPayload == null }
     }
 
     @Test
     fun `validate calling connect is successful when credentials are provided`() = runTest(testDispatcher) {
-        val creds = ConnectionCredentials(
+        val creds = ConnectionIdentity(
             identityUri = Uri.EMPTY,
             iconUri = Uri.EMPTY,
             identityName = "Test App",
-            rpcCluster = RpcCluster.Devnet
         )
 
-        mobileWalletAdapter.provideCredentials(creds)
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
 
         val result = mobileWalletAdapter.connect(sender)
 
         assertTrue { result is TransactionResult.Success<Unit> }
         assertTrue { result.successPayload is Unit }
-        assertTrue { (result as TransactionResult.Success<Unit>).authResult == mockAuthResult }
+        assertTrue { (result as TransactionResult.Success<Unit>).authResult == sampleAuthResult }
     }
 
     @Test
@@ -147,17 +154,41 @@ class MobileWalletAdapterTest {
     }
 
     @Test
-    fun `validate providing credentials before transact results in an authorize call`() = runTest(testDispatcher) {
+    fun `validate setting auth token or rpc cluster does not activate automatic auth or reauth`() = runTest(testDispatcher) {
         val refString = "Returning a string for validation"
 
-        val creds = ConnectionCredentials(
+        mobileWalletAdapter.transact(sender) { }
+
+        verify(mockClient, times(0)).authorize(any(), any(), any(), any())
+
+        mobileWalletAdapter.authToken = "SOMETOKENTHATWONTAFFECTANTYHING"
+        mobileWalletAdapter.rpcCluster = RpcCluster.Devnet
+
+        mobileWalletAdapter.connect(sender)
+        val result2 = mobileWalletAdapter.transact(sender) {
+            refString + "hi"
+        }
+
+        verify(mockClient, times(0)).authorize(any(), any(), any(), any())
+        verify(mockClient, times(0)).reauthorize(any(), any(), any(), any())
+
+        assertTrue { result2.successPayload == refString + "hi" }
+    }
+
+    @Test
+    fun `validate providing credentials in the constructor results in an authorize call`() = runTest(testDispatcher) {
+        val refString = "Returning a string for validation"
+        val creds = ConnectionIdentity(
             identityUri = Uri.EMPTY,
             iconUri = Uri.EMPTY,
             identityName = "Test App",
-            rpcCluster = RpcCluster.Devnet
         )
 
-        mobileWalletAdapter.provideCredentials(creds)
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
 
         val result = mobileWalletAdapter.transact(sender) {
             refString
@@ -166,22 +197,24 @@ class MobileWalletAdapterTest {
         verify(mockClient, times(1)).authorize(any(), any(), any(), any())
         assertTrue { result is TransactionResult.Success<String> }
         assertTrue { result.successPayload == refString }
-        assertTrue { (result as TransactionResult.Success<String>).authResult == mockAuthResult }
+        assertTrue { (result as TransactionResult.Success<String>).authResult == sampleAuthResult }
     }
 
     @Test
-    fun `validate providing credentials with authToken before transact results in an reauthorize call`() = runTest(testDispatcher) {
+    fun `validate providing credentials and an authToken before transact results in an reauthorize call`() = runTest(testDispatcher) {
         val refString = "Returning a string for validation"
-
-        val creds = ConnectionCredentials(
+        val creds = ConnectionIdentity(
             identityUri = Uri.EMPTY,
             iconUri = Uri.EMPTY,
             identityName = "Test App",
-            rpcCluster = RpcCluster.Devnet,
-            authToken = "1234567890"
         )
 
-        mobileWalletAdapter.provideCredentials(creds)
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+        mobileWalletAdapter.authToken = "ASAMPLETOKEN"
 
         val result = mobileWalletAdapter.transact(sender) {
             refString
@@ -191,20 +224,23 @@ class MobileWalletAdapterTest {
 
         assertTrue { result is TransactionResult.Success<String> }
         assertTrue { result.successPayload == refString }
-        assertTrue { (result as TransactionResult.Success<String>).authResult == mockAuthResult }
+        assertTrue { (result as TransactionResult.Success<String>).authResult == sampleReauthResult }
     }
 
     @Test
-    fun `validate providing credentials with an authToken and calling transact multiple times results in reauth each time`() = runTest(testDispatcher) {
-        val creds = ConnectionCredentials(
+    fun `validate providing credentials and an authToken then calling transact multiple times results in reauth each time`() = runTest(testDispatcher) {
+        val creds = ConnectionIdentity(
             identityUri = Uri.EMPTY,
             iconUri = Uri.EMPTY,
             identityName = "Test App",
-            rpcCluster = RpcCluster.Devnet,
-            authToken = "1234567890"
         )
 
-        mobileWalletAdapter.provideCredentials(creds)
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+        mobileWalletAdapter.authToken = "ASAMPLETOKEN"
 
         mobileWalletAdapter.transact(sender) { }
         val result = mobileWalletAdapter.transact(sender) { }
@@ -212,7 +248,7 @@ class MobileWalletAdapterTest {
         verify(mockClient, times(2)).reauthorize(any(), any(), any(), any())
 
         assertTrue { result is TransactionResult.Success<Unit> }
-        assertTrue { (result as TransactionResult.Success<Unit>).authResult == mockAuthResult }
+        assertTrue { (result as TransactionResult.Success<Unit>).authResult == sampleReauthResult }
     }
 
     @Test
@@ -248,21 +284,70 @@ class MobileWalletAdapterTest {
         }
 
         mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = ConnectionIdentity(
+                identityUri = Uri.EMPTY,
+                iconUri = Uri.EMPTY,
+                identityName = "",
+            ),
             scenarioProvider = mockProvider,
             ioDispatcher = testDispatcher
         )
-
-        val creds = ConnectionCredentials(
-            identityUri = Uri.EMPTY,
-            iconUri = Uri.EMPTY,
-            identityName = "",
-        )
-
-        mobileWalletAdapter.provideCredentials(creds)
 
         val result = mobileWalletAdapter.connect(sender)
 
         assertTrue { result is TransactionResult.Failure }
         assertTrue { (result as TransactionResult.Failure).e.message == "err"}
+    }
+
+    @Test
+    fun `validate the proper auth token is returned on when authenticating and re-authenticating`() = runTest(testDispatcher) {
+        val creds = ConnectionIdentity(
+            identityUri = Uri.EMPTY,
+            iconUri = Uri.EMPTY,
+            identityName = "Test App",
+        )
+
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+
+        val result1 = mobileWalletAdapter.transact(sender) { }
+
+        assertTrue { result1 is TransactionResult.Success<Unit> }
+        assertTrue { (result1 as TransactionResult.Success<Unit>).authResult.authToken == sampleAuthResult.authToken }
+
+        val result2 = mobileWalletAdapter.transact(sender) { }
+
+        assertTrue { result2 is TransactionResult.Success<Unit> }
+        assertTrue { (result2 as TransactionResult.Success<Unit>).authResult.authToken == sampleReauthResult.authToken }
+    }
+
+    @Test
+    fun `validate changing the rpc cluster at runtime invalidates the auth token and calls authorize`() = runTest(testDispatcher) {
+        val creds = ConnectionIdentity(
+            identityUri = Uri.EMPTY,
+            iconUri = Uri.EMPTY,
+            identityName = "Test App",
+        )
+
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+        mobileWalletAdapter.authToken = "SOMEAUTHTOKEN"
+
+        assertTrue { mobileWalletAdapter.rpcCluster is RpcCluster.Devnet }
+
+        mobileWalletAdapter.rpcCluster = RpcCluster.Testnet
+
+        assertTrue { mobileWalletAdapter.authToken == null }
+        assertTrue { mobileWalletAdapter.rpcCluster is RpcCluster.Testnet }
+
+        mobileWalletAdapter.transact(sender) { }
+
+        verify(mockClient, times(1)).authorize(any(), any(), any(), any())
     }
 }

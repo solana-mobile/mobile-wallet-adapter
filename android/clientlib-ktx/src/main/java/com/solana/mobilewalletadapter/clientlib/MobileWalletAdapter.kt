@@ -49,7 +49,7 @@ class MobileWalletAdapter(
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
         return transact(sender) {
             if (credsState is CredentialState.NotProvided) {
-                throw IllegalStateException("App credentials must be provided prior to utilizing the connect method.")
+                throw IllegalStateException("App identity credentials must be provided via the constructor to use the connect method.")
             }
         }
     }
