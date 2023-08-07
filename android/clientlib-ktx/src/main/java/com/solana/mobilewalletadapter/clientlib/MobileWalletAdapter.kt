@@ -15,10 +15,10 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class MobileWalletAdapter(
-    connectionIdentity: ConnectionIdentity? = null,
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider()
+    private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider(),
+    connectionIdentity: ConnectionIdentity? = null,
 ) {
 
     private var credsState: CredentialState = CredentialState.NotProvided
