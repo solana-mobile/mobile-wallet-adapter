@@ -5,18 +5,16 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 
 sealed class CredentialState {
     data class Provided(
-        val credentials: ConnectionCredentials
+        val credentials: ConnectionIdentity
     ): CredentialState()
 
     object NotProvided: CredentialState()
 }
 
-data class ConnectionCredentials(
+data class ConnectionIdentity(
     val identityUri: Uri,
     val iconUri: Uri,
     val identityName: String,
-    val rpcCluster: RpcCluster = RpcCluster.Devnet,
-    val authToken: String? = null
 )
 
 /**

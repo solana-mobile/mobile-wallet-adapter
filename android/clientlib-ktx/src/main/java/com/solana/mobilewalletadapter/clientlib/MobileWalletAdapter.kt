@@ -17,21 +17,39 @@ import java.util.concurrent.TimeoutException
 class MobileWalletAdapter(
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider()
+    private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider(),
+    connectionIdentity: ConnectionIdentity? = null,
 ) {
 
     private var credsState: CredentialState = CredentialState.NotProvided
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
-    fun provideCredentials(credentials: ConnectionCredentials) {
-        credsState = CredentialState.Provided(credentials)
+    var authToken: String? = null
+
+    /**
+     * Specify the RPC cluster used for all operations. Note: changing at runtime will invalidate
+     * the auth token and reauthorization will be required
+     */
+    var rpcCluster: RpcCluster = RpcCluster.Devnet
+        set(value) {
+            if (value != field) {
+                authToken = null
+            }
+
+            field = value
+        }
+
+    init {
+        connectionIdentity?.let {
+            credsState = CredentialState.Provided(it)
+        }
     }
 
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
         return transact(sender) {
             if (credsState is CredentialState.NotProvided) {
-                throw IllegalStateException("App credentials must be provided prior to utilizing the connect method.")
+                throw IllegalStateException("App identity credentials must be provided via the constructor to use the connect method.")
             }
         }
     }
@@ -79,11 +97,14 @@ class MobileWalletAdapter(
                     val authResult = credsState.let { creds ->
                         if (creds is CredentialState.Provided) {
                             with (creds.credentials) {
-                                if (authToken == null) {
+                                val authResult = authToken?.let { token ->
+                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
+                                } ?: run {
                                     adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
-                                } else {
-                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, authToken)
                                 }
+
+                                authToken = authResult.authToken
+                                authResult
                             }
                         } else {
                             null

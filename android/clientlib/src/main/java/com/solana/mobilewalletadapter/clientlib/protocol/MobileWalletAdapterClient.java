@@ -159,6 +159,15 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     ", walletUriBase=" + walletUriBase +
                     '}';
         }
+
+        public static AuthorizationResult create(
+                String authToken,
+                byte[] publicKey,
+                String accountLabel,
+                Uri walletUriBase
+        ) {
+            return new AuthorizationResult(authToken, publicKey, accountLabel, walletUriBase);
+        }
     }
 
     public static class AuthorizationFuture
