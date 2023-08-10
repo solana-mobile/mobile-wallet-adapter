@@ -122,6 +122,7 @@ Feature identifiers are used to identify features that are supported by a wallet
 - `solana:signMessage`
 - `solana:signTransaction`
 - `solana:signAndSendTransaction`
+- `solana:signInWithSolana`
 
 ## Transport
 
@@ -354,7 +355,7 @@ where:
   - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
 - `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`. If not set, defaults to `solana:mainnet`.
-- `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint sliently without promting the user. 
+- `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
 
 ###### Result
 {: .no_toc }
@@ -721,6 +722,98 @@ where:
 ##### Description
 
 The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account address, and return the signed messages to the dapp endpoint. The signatures should be appended to the message, in the same order as `addresses`.
+
+#### sign_in_with_solana
+
+##### JSON-RPC method specification
+
+###### Method
+{: .no_toc }
+
+```
+sign_in_with_solana
+```
+
+###### Params
+{: .no_toc }
+
+```
+{
+    “header”: {
+        "t": "<payload_type>"
+    },
+    “payload”: {
+        domain: "<domain>";
+        address: "<address>";
+        statement: "<statement>";
+        uri: "<uri>";
+        version: "<version>";
+        chainId: "<chain_id>";
+        nonce: "<nonce>";
+        issuedAt: "<issuedAt>";
+        expirationTime: "<expirationTime>";
+        notBefore: "<notBefore>";
+        requestId: "<requestId>";
+        resources: ["<resource>"];
+    }
+}
+```
+
+where:
+- `t`: specifies format of the payload.
+- `domain`: [RFC 4501](https://www.rfc-editor.org/rfc/rfc4501) dns authority that is requesting the signing.
+- `address`: Solana address performing the signing
+- `statement`: (optional) Human-readable ASCII assertion that the user will sign, and it must not contain newline characters. 
+- `uri`: [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986) URI referring to the resource that is the subject of the signing.
+- `version`: Current version of the message. 
+- `chainId`: (optional) [Chain ID](#chain-identifiers) to which the session is bound, and the network where Contract Accounts must be resolved. Defaults to `solana:mainnet`
+- `nonce`: Randomized token used to prevent replay attacks, at least 8 alphanumeric characters.
+- `issuedAt`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime string of the current time.
+- `expirationTime`: (optional) [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime string that, if present, indicates when the signed authentication message is no longer valid.
+        expirationTime?: string;
+- `notBefore`: (optional) [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime string that, if present, indicates when the signed authentication message will become valid.
+        notBefore?: string;
+- `requestId`: (optional) System-specific identifier that may be used to uniquely refer to the sign-in request.
+- `resources`: (optional) List of information or references to information the user wishes to have resolved as part of authentication by the relying party. They are expressed as [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986) URIs separated by `'\n- '`.
+
+###### Result
+{: .no_toc }
+
+```
+{
+    t: "<signature_scheme>",
+    metadata: {},
+    signature: "<signature>",
+}
+```
+
+where:
+
+- `t`: the signature scheme
+- `metadata`: (optional) value object containing signature related metadata 
+- `signature`: signature
+
+###### Errors
+{: .no_toc }
+
+- `-32602` (Invalid params) if the params object does not match the format defined above
+- `-32601` (Method not found) if [`sign_in_with_solana`](#sign_in_with_solana) is not supported by this wallet endpoint
+- `EXPIRED_MESSAGE` if `expirationTime` is present and in the past.
+- `INVALID_DOMAIN` if `domain` is not a valid authority or is empty.
+- `DOMAIN_MISMATCH` if `domain` doesn't match the domain provided for verification.
+- `NONCE_MISMATCH` if `nonce` don't match the nonce provided for verification.
+- `INVALID_ADDRESS` if `address` is not a valid solana address, or if the address has not been authorized for this session via the [`authorize`](#authorize) method.
+- `INVALID_URI` if `uri` does not conform to RFC 3986
+- `INVALID_NONCE` if `nonce` is smaller then 8 characters or is not alphanumeric.
+- `NOT_YET_VALID_MESSAGE` if `notBefore` is present and in the future.
+- `INVALID_TIME_FORMAT` if `expirationTime`, `notBefore` or `issuedAt` not compliant to ISO-8601.
+- `INVALID_MESSAGE_VERSION` if the message `version` is not 1.
+
+##### Description
+
+_Implementation of this method by a wallet endpoint is optional._
+
+This is an implementation of [Sign In with Solana](https://siws.web3auth.io/). Wallets should present a dedicated UI that clearly displays the relevant parameters of the sig in request to the user before asking them to sign. If a wallet endpoint does not support this method, dapp endpoints can manually construct the sign in payload and use the [`sign_messages`](#sign_messages) request to obtain a sign in signature from the wallet endpoint. 
 
 #### clone_authorization
 
