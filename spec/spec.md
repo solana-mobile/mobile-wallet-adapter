@@ -760,7 +760,7 @@ sign_in_with_solana
 ```
 
 where:
-- `t`: specifies format of the payload.
+- `t`: specifies format of the payload, expected to be `sip99` though other types are allowed.
 - `domain`: [RFC 4501](https://www.rfc-editor.org/rfc/rfc4501) dns authority that is requesting the signing.
 - `address`: Solana address performing the signing
 - `statement`: (optional) Human-readable ASCII assertion that the user will sign, and it must not contain newline characters. 
@@ -789,7 +789,7 @@ where:
 
 where:
 
-- `t`: the signature scheme
+- `t`: the signature scheme, expected to be `sip99` though other types are allowed.
 - `metadata`: (optional) value object containing signature related metadata 
 - `signature`: signature
 
