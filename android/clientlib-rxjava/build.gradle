@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.solana.mobilewalletadapter.clientlib-rxjava"
+    namespace = "com.solana.mobilewalletadapter.clientlib_rxjava"
 
     compileSdk 33
 
