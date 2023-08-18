@@ -3,8 +3,7 @@
   ~ Copyright (c) 2022 Solana Mobile Inc.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.solana.mobilewalletadapter.fakedapp">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
