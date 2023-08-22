@@ -113,7 +113,7 @@ Namespaced chain identifiers are used to refer to blockchains with which a dapp 
 
 The currently supported Solana network chains are `solana:mainnet`, `solana:testnet`, and `solana:devnet`. 
 
-Previous versions of this specification used a `cluster` parameter to specify the Solana network cluster with which the dapp endpoint intends to interact. The supported values for the `cluster` parameter were `mainnet-beta`, `testnet`, and `devnet`. These values have been replaced by the above chain references.
+Previous versions of this specification used a `cluster` parameter to specify the Solana network cluster with which the dapp endpoint intends to interact. The supported values for the `cluster` parameter were `mainnet-beta`, `testnet`, and `devnet`. These values have been replaced by the above chain references, but will continue to be supported in the interest of backwards compatibility with pervious versions of the specification. 
 
 ### Feature Identifiers
 
@@ -345,7 +345,8 @@ authorize
     },
     "chain": "<chain>",
     “auth_token”: “<auth_token>”,
-    "sign_in_payload": <sign_in_payload>
+    "sign_in_payload": <sign_in_payload>,
+    "cluster": "<cluster>"
 }
 ```
 
@@ -358,6 +359,7 @@ where:
 - `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`. If not set, defaults to `solana:mainnet`.
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
 - `sign_in_payload`: (optional) a value object containing the payload portion of a [Sign In With Solana message](https://siws.web3auth.io/spec). If present, the wallet endpoint should present the SIWS message to the user and return the resulting signature and signed message, as described below.  
+- `cluster`: (deprecated) (optional) if set, the Solana network cluster with which the dapp endpoint intends to interact; supported values include `mainnet-beta`, `testnet`, `devnet`. This parameter is deprecated but maintained for backwards compatibility with previous versions of the spec, and will be ignored if the `chain` parameter is present. 
 
 ###### Result
 {: .no_toc }
@@ -390,7 +392,7 @@ where:
 - `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
   - `address`: a base64-encoded address for this account
   - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
-  - `features`: a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). 
+  - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
@@ -432,6 +434,8 @@ If an `auth_token` is provided by the dapp endpoint, and the result is `ERROR_AU
 Wallet endpoints should make every effort possible to [verify the authenticity](#dapp-identity-verification) of the presented identity. While the `uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
 
 The `chain` parameter allows the dapp endpoint to select a specific chain with which to interact. This is relevant for both [`sign_transactions`](#sign_transactions), where a wallet may refuse to sign transactions without a currently valid blockhash, and for [`sign_and_send_transactions`](#sign_and_send_transactions), where the wallet endpoint must know which cluster to submit the transactions to. This parameter would normally be used to select a cluster other than `solana:mainnet` for dapp development and testing purposes. Under normal circumstances, this field should be omitted, in which case the wallet endpoint will interact with the `solana:mainnet` cluster.
+
+If both an `auth_token` and `chain` are provided by the dapp endpoint, the wallet must verify that the specified chain is the same that was associated with the specified `auth_token`. If the `chain` was not previously authorized for use with this `auth_token`, the wallet must request authorization for the new chain from the user and issue a new `auth_token` associated with the new chain.  
 
 Wallet endpoints may optionally support the `sign_in_payload` parameter as an implementation of [Sign In with Solana](https://siws.web3auth.io/). Wallets should present a dedicated UI that clearly displays the relevant parameters of the sign in request to the user before asking them to sign. The wallet endpoint must return the `sign_in_result` in the response, or a relevant error if the sign in payload was invalid. If a wallet endpoint does not support this method, dapp endpoints can manually construct the sign in message and use the [`sign_messages`](#sign_messages) request to obtain a sign in signature from the wallet endpoint after authorization.
 
@@ -839,6 +843,80 @@ const ERROR_ATTEST_ORIGIN_ANDROID = -100
 {% plantuml %}
 {% include_relative _diagrams/reauthorize_and_sign.plantuml %}
 {% endplantuml %}
+
+### Deprecated Methods
+
+These methods have been deprecated in the current version of the specification, but should still be supported by wallet endpoints for backwards compatibility. These methods may be removed in a future version of the specification. 
+
+#### reauthorize
+
+##### JSON-RPC method specification
+
+###### Method
+{: .no_toc }
+
+```
+reauthorize
+```
+
+###### Params
+{: .no_toc }
+
+```
+{
+    “identity”: {
+        “uri”: “<dapp_uri>”,
+        “icon”: “<dapp_icon_relative_path>”,
+        “name”: “<dapp_name>”,
+    },
+    “auth_token”: “<auth_token>”,
+}
+```
+
+where:
+
+- `identity`: as defined for [`authorize`](#authorize)
+- `auth_token`: an opaque string previously returned by a call to [`authorize`](#authorize), [`reauthorize`](#reauthorize), or [`clone_authorization`](#clone_authorization)
+
+###### Result
+{: .no_toc }
+
+```
+{
+    “auth_token”: “<auth_token>”,
+    “accounts”: [
+        {“address”: “<address>", “label”: “<label>”},
+        ...
+    ],
+    “wallet_uri_base”: “<wallet_uri_base>”,
+}
+```
+
+where:
+
+- `auth_token`: as defined for [`authorize`](#authorize)
+- `accounts`: as defined for [`authorize`](#authorize)
+- `wallet_uri_base`: as defined for [`authorize`](#authorize)
+
+###### Errors
+{: .no_toc }
+
+- `-32602` (Invalid params) if the params object does not match the format defined above
+- `ERROR_AUTHORIZATION_FAILED` if the wallet endpoint declined to authorize the current session with `auth_token` for any reason
+
+##### Description
+
+This method attempts to put the current session in an authorized state, with privileges associated with the specified `auth_token`.
+
+On success, the current session will be placed into an authorized state. Additionally, updated values for `auth_token`, `accounts`, and/or `wallet_uri_base` will be returned. These may differ from those originally provided in the [`authorize`](#authorize) response for this auth token; if so, they override any previous values for these parameters. The prior values should be discarded and not reused. This allows a wallet endpoint to update the auth token used by the dapp endpoint, or to modify the set of authorized account addresses or their labels without requiring the dapp endpoint to restart the authorization process.
+
+If the result is `ERROR_AUTHORIZATION_FAILED`, this auth token cannot be reused, and should be discarded. The dapp endpoint should request a new token with the [`authorize`](#authorize) method. The session with be placed into the unauthorized state.
+
+##### Non-normative commentary
+
+`reauthorize` is intended to be a lightweight operation, as compared to [`authorize`](#authorize). It normally should not present any UI to the user, but instead perform only the subset of dapp endpoint identity checks that can be performed quickly and without user intervention. The intent is to quickly verify that an auth token remains valid for use by this dapp endpoint. If verification fails for any reason, the wallet endpoint should report `ERROR_AUTHORIZATION_FAILED` to the dapp endpoint, which would then discard the stored auth token and begin authorization from scratch with a new call to [`authorize`](#authorize).
+
+Wallet endpoints should balance the responsibility for performing these identity checks against their latency impact. For example, a wallet endpoint may choose to accept an auth token issued in the last several minutes without performing any additional checks, but require dapp endpoint identity checks to be performed for an auth token that was issued before then. This facilitates multiple [sessions to be established](#session-establishment) in a short timespan, related to the same user interaction with a dapp endpoint. The auth token validity policy is a competency of the wallet endpoint, and dictating any specific auth token lifespan or timeout is outside the scope of this protocol specification. However, it is strongly recommended that wallet endpoints do not issue auth tokens with unlimited lifespans or for which dapp endpoint identity checks are never performed on `reauthorize`.
 
 ## Dapp identity verification
 
