@@ -124,61 +124,6 @@ Feature identifiers are used to identify features that are supported by a wallet
 - `solana:signAndSendTransaction`
 - `solana:signInWithSolana`
 
-#### Feature Descriptions
-
-Feature interfaces are described as Remote Procedure Calls as defined by the JSON RPC-2.0 specification, and as presented in the [Wallet RPC Interface](#wallet-rpc-interface) section of this document. 
-
-```
-{
-    "method": "<method_name>"
-    "params": {
-        "param_1": "<param_1>",
-        "param_2": "<param_2>",
-        ...
-        "param_n": "<param_n>"
-    }
-    "result": <result>
-    "errors": [ "<error_1>", "<error_2>", ... "<error_n>" ]
-}
-```
-
-where:
-- `method`: A string containing the name of the method to be invoked. 
-- `params`: (optional) A structured value that holds the parameter values to be used during the invocation of the method.
-- `result`: A structured value that describes the result returned by this method.
-- `errors`: A list of possible error strings returned by this method.
-
-Features can then be described by their feature identifier and feature description:
-
-```
-{
-    "<feature_id>": <feature_description>
-}
-```
-
-where:
-- `feature_id`: the [feature identifier](#feature-identifiers) for this feature.
-- `feature_description`: the description of the feature, as defined above.
-
-#### Example
-
-For example, the [`solana:signMessages`](#sign_messages) feature would be described as:
-```
-{
-    "solana:signMessages": {
-        "method": "sign_messages"
-        "params": {
-            "addresses": ["<address>", ...],
-            “payloads”: [“<message>”, ...],
-        }
-        "result": {
-            “payloads”: [“<transaction>”, ...],
-        }
-        "errors": [ "-32602", "ERROR_AUTHORIZATION_FAILED", "ERROR_INVALID_PAYLOADS", "ERROR_NOT_SIGNED", "ERROR_TOO_MANY_PAYLOADS" ]
-    }
-}
-```
-
 ## Transport
 
 ### WebSockets
@@ -536,25 +481,20 @@ get_capabilities
 ```
 {
     "supports_clone_authorization": <supports_clone_authorization>,
-    "supports_sign_and_send_transactions": <supports_sign_and_send_transactions>,
     "max_transactions_per_request": <max_transactions_per_request>,
     "max_messages_per_request": <max_messages_per_request>,
     "supported_transaction_versions": [<supported_transaction_versions>, ...]
-    "features": {
-        "<feature_id>": <feature_description>, 
-        ...
-    }
+    "features": ["<feature_id>"]
 }
 ```
 
 where:
 
 - `supports_clone_authorization`: `true` if the [`clone_authorization`](#clone_authorization) method is supported, otherwise `false`
-- `supports_sign_and_send_transactions`: `true` if the [`sign_and_send_transactions`](#sign_and_send_transactions) method is supported, otherwise `false`
 - `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transactions`](#sign_transactions) or [`sign_and_send_transactions`](#sign_and_send_transactions) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 - `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_messages`](#sign_messages) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 - `supported_transaction_versions`: the Solana network transaction formats supported by this wallet endpoint. Allowed values are those defined for [`TransactionVersion`](https://solana-labs.github.io/solana-web3.js/modules.html#TransactionVersion) (for e.g., `"legacy"`, `0`, etc).
-- `features`: a value object containing the [`feature descriptions`](#feature-descriptions) of all the features supported by the wallet, indexed by their [feature identifiers](#feature-identifiers)
+- `features`: a list of [feature identifiers](#feature-identifiers) for the optional features supported by this wallet endpoint.
 
 ###### Errors
 {: .no_toc }
@@ -563,7 +503,7 @@ where:
 
 ##### Description
 
-This method can be used to enumerate the capabilities and limits of a wallet endpoint's implementation of this specification. It returns whether optional specification features are supported, as well as any implementation-specific limits.
+This method can be used to enumerate the capabilities and limits of a wallet endpoint's implementation of this specification. It returns whether optional specification features are supported, as well as any implementation-specific limits. 
 
 #### sign_in_with_solana
 
