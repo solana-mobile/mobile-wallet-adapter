@@ -345,6 +345,7 @@ authorize
     },
     "chain": "<chain>",
     “auth_token”: “<auth_token>”,
+    "sign_in_payload": <sign_in_payload>
 }
 ```
 
@@ -356,6 +357,7 @@ where:
   - `name`: (optional) the display name for this dapp endpoint
 - `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`. If not set, defaults to `solana:mainnet`.
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
+- `sign_in_payload`: (optional) a value object containing the payload portion of a [Sign In With Solana message](https://siws.web3auth.io/spec). If present, the wallet endpoint should present the SIWS message to the user and return the resulting signature and signed message, as described below.  
 
 ###### Result
 {: .no_toc }
@@ -373,6 +375,12 @@ where:
         ...
     ],
     “wallet_uri_base”: “<wallet_uri_base>”,
+    "sign_in_result": {
+        “address”: “<address>", 
+        "signed_message": "<signed_message>"
+        "signature": "<signature>"
+        "signature_type": "<signature_type>"
+    }
 }
 ```
 
@@ -385,6 +393,11 @@ where:
   - `features`: a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). 
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
+- `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
+  - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
+  - `signed_message`: the base64-encoded signed message payload
+  - `signature`: the base64-encoded signature
+  - `signature_type`: (optional) the type of the message signature produced. If not provided, the signature must be `"ed25519"`.
 
 ###### Errors
 {: .no_toc }
@@ -392,6 +405,19 @@ where:
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_AUTHORIZATION_FAILED` if the wallet endpoint did not authorize access to the requested privileged methods
 - `ERROR_CHAIN_NOT_SUPPORTED` if the wallet endpoint does not support the requested chain
+
+If the `sign_in_payload` parameter was included but invalid:
+
+- `EXPIRED_MESSAGE` if `expirationTime` is present and in the past.
+- `INVALID_DOMAIN` if `domain` is not a valid authority or is empty.
+- `DOMAIN_MISMATCH` if `domain` doesn't match the domain provided for verification.
+- `NONCE_MISMATCH` if `nonce` don't match the nonce provided for verification.
+- `INVALID_ADDRESS` if `address` is not a valid solana address, or if the address has not been authorized for this session via the [`authorize`](#authorize) method.
+- `INVALID_URI` if `uri` does not conform to RFC 3986
+- `INVALID_NONCE` if `nonce` is smaller then 8 characters or is not alphanumeric.
+- `NOT_YET_VALID_MESSAGE` if `notBefore` is present and in the future.
+- `INVALID_TIME_FORMAT` if `expirationTime`, `notBefore` or `issuedAt` not compliant to ISO-8601.
+- `INVALID_MESSAGE_VERSION` if the message `version` is not 1.
 
 ##### Description
 
@@ -406,6 +432,8 @@ If an `auth_token` is provided by the dapp endpoint, and the result is `ERROR_AU
 Wallet endpoints should make every effort possible to [verify the authenticity](#dapp-identity-verification) of the presented identity. While the `uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
 
 The `chain` parameter allows the dapp endpoint to select a specific chain with which to interact. This is relevant for both [`sign_transactions`](#sign_transactions), where a wallet may refuse to sign transactions without a currently valid blockhash, and for [`sign_and_send_transactions`](#sign_and_send_transactions), where the wallet endpoint must know which cluster to submit the transactions to. This parameter would normally be used to select a cluster other than `solana:mainnet` for dapp development and testing purposes. Under normal circumstances, this field should be omitted, in which case the wallet endpoint will interact with the `solana:mainnet` cluster.
+
+Wallet endpoints may optionally support the `sign_in_payload` parameter as an implementation of [Sign In with Solana](https://siws.web3auth.io/). Wallets should present a dedicated UI that clearly displays the relevant parameters of the sign in request to the user before asking them to sign. The wallet endpoint must return the `sign_in_result` in the response, or a relevant error if the sign in payload was invalid. If a wallet endpoint does not support this method, dapp endpoints can manually construct the sign in message and use the [`sign_messages`](#sign_messages) request to obtain a sign in signature from the wallet endpoint after authorization.
 
 ##### Non-normative commentary
 
@@ -504,122 +532,6 @@ where:
 ##### Description
 
 This method can be used to enumerate the capabilities and limits of a wallet endpoint's implementation of this specification. It returns whether optional specification features are supported, as well as any implementation-specific limits. 
-
-#### sign_in_with_solana
-
-##### JSON-RPC method specification
-
-###### Method
-{: .no_toc }
-
-```
-sign_in_with_solana
-```
-
-###### Params
-{: .no_toc }
-
-```
-{
-    “identity”: {
-        “uri”: “<dapp_uri>”,
-        “icon”: “<dapp_icon_relative_path>”,
-        “name”: “<dapp_name>”,
-    },
-    "chain": "<chain>",
-    "statement": "<statement>",
-    "version": "<version>"
-}
-```
-
-where:
-- `identity`: a JSON object identifying the connecting dapp endpoint, as defined by [`authorize`](#authorize).
-- `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact, as defined by [`authorize`](#authorize).
-- `statement`: (optional) Human-readable ASCII assertion that the user will sign, and it must not contain newline characters. 
-- `version`: (optional) Current version of the message. Defaults to `"1"`
-
-###### Result
-{: .no_toc }
-
-```
-{
-    “auth_token”: “<auth_token>”,
-    “account”: {
-        “address”: “<address>", 
-        “label”: “<label>”, 
-        "chains": ["<chain_id>", ...], 
-        "features": ["<feature_id>", ...]
-    },
-    “wallet_uri_base”: “<wallet_uri_base>”,
-    "siws": {
-        “header”: {
-            "t": "<payload_type>"
-        },
-        “payload”: {
-            domain: "<domain>",
-            address: "<address>",
-            statement: "<statement>",
-            uri: "<uri>",
-            version: "<version>",
-            chainId: "<chain_id>",
-            nonce: "<nonce>",
-            issuedAt: "<issuedAt>",
-            expirationTime: "<expirationTime>",
-            notBefore: "<notBefore>",
-            requestId: "<requestId>",
-            resources: ["<resource>"],
-        }
-        "signature": {
-            t: "<signature_scheme>",
-            metadata: {},
-            signature: "<signature>",
-        }
-    }
-}
-```
-
-where:
-
-- `auth_token`: the authorization token, as returned by [`authorize`](#authorize).
-- `account`: the account object that was used to sign in, and to which the auth token corresponds. Its properties are identical to the account objects returned by [`authorize`](#authorize).
-- `wallet_uri_base`: (optional) the [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, as returned by [`authorize`](#authorize).
-- `siws`: a value object containing the [Sign In With Solana CACAO (CAIP-74) struct](https://siws.web3auth.io/spec):
-    - `header`: a value object containing the SIWS header, as defined by [CAIP-74](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-74.md) containing the following fields:
-        - `t`: specifies format of the payload, expected to be `sip99` though other types are allowed.
-    - `payload`: a value object containing the SIWS payload, as defined by [CAIP-74](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-74.md) containing the following fields:
-        - `domain`: [RFC 4501](https://www.rfc-editor.org/rfc/rfc4501) dns authority that is requesting the signing.
-        - `address`: Solana address performing the signing
-        - `statement`: (optional) Human-readable ASCII assertion that the user will sign, and it must not contain newline characters. 
-        - `uri`: [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986) URI referring to the resource that is the subject of the signing.
-        - `version`: Current version of the message. 
-        - `chainId`: (optional) [Chain ID](#chain-identifiers) to which the session is bound, and the network where Contract Accounts must be resolved. Defaults to `solana:mainnet`
-        - `nonce`: Randomized token used to prevent replay attacks, at least 8 alphanumeric characters.
-        - `issuedAt`: [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime string of the current time.
-        - `expirationTime`: (optional) [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime string that, if present, indicates when the signed authentication message is no longer valid.
-                expirationTime?: string;
-        - `notBefore`: (optional) [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime string that, if present, indicates when the signed authentication message will become valid.
-                notBefore?: string;
-        - `requestId`: (optional) System-specific identifier that may be used to uniquely refer to the sign-in request.
-        - `resources`: (optional) List of information or references to information the user wishes to have resolved as part of authentication by the relying party. They are expressed as [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986) URIs separated by `'\n- '`.
-    - `signature`: a value object containing the SIWS signature result, as defined by [CAIP-74](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-74.md) containing the following fields:
-        - `t`: the signature scheme, expected to be `sip99` though other types are allowed.
-        - `metadata`: (optional) value object containing signature related metadata 
-        - `signature`: signature
-
-###### Errors
-{: .no_toc }
-
-- `-32602` (Invalid params) if the params object does not match the format defined above
-- `-32601` (Method not found) if [`sign_in_with_solana`](#sign_in_with_solana) is not supported by this wallet endpoint
-- `INVALID_DOMAIN` if `domain` is not a valid authority or is empty.
-- `INVALID_URI` if `uri` does not conform to RFC 3986
-- `INVALID_MESSAGE_VERSION` if the message `version` is not 1.
-
-##### Description
-
-_Implementation of this method by a wallet endpoint is optional._
-
-This is an implementation of [Sign In with Solana](https://siws.web3auth.io/). Wallets should present a dedicated UI that clearly displays the relevant parameters of the sign in request to the user before asking them to sign. If a wallet endpoint does not support this method, dapp endpoints can manually construct the sign in payload and use the [`sign_messages`](#sign_messages) request to obtain a sign in signature from the wallet endpoint. 
 
 ### Privileged methods
 
