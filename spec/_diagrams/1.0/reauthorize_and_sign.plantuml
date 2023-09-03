@@ -1,0 +1,62 @@
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+participant Solana as "Solana\nnetwork"
+participant Dapp
+participant Wallet
+
+note across : Dapp has established a session with Wallet for transaction signing using a previously obtained auth token
+
+activate Dapp
+
+Dapp -> Dapp : <i>at</i>, <i>pub</i> = Load()
+Dapp -> Dapp : <i>t</i> = CreateTransaction(<i>pub</i>, ...)
+
+== Submit for signing with cached auth token ==
+
+Dapp -> Wallet ++-- : sign_transactions {<i>at</i>, <i>t</i>}
+Wallet -X Wallet : validate auth token <i>at</i>
+Wallet --> Dapp ++-- : error {ERROR_REAUTHORIZE}
+
+== Reauthorize ==
+
+Dapp -> Dapp : <i>i</i> = DappIdentity()
+Dapp -> Wallet ++-- : reauthorize {<i>i</i>, <i>at</i>}
+Wallet -> Wallet : validate Dapp identity <i>i</i> matches <i>at</i>
+Wallet -> Wallet : Generate new auth token\n<i>at2</i> = RegenerateAuthToken(<i>i</i>, <i>at</i>)
+Wallet -> Wallet : <i>pub</i> = base58encode(GetPublicKey())
+alt if wallet endpoint has an endpoint-specific URI
+    Wallet -> Wallet : <i>uri</i> = EndpointBaseURI() 
+end
+Wallet --> Dapp ++-- : response(<i>at2</i>, <i>pub</i>, <i>uri</i>)
+Dapp -> Dapp : Store(<i>at2</i>, <i>pub</i>, <i>uri</i>)
+
+== Resubmit for signing with new auth token ==
+
+Dapp -> Wallet ++-- : sign_transactions(<i>at2</i>, <i>t</i>)
+Wallet -> Wallet : validate auth token <i>at2</i>
+Wallet -> Wallet : validate transaction <i>t</i>
+Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransactions(<i>t</i>)
+Wallet --> Dapp ++-- : response(<i>st</i>)
+
+== Submit signed transaction to network ==
+
+create Solana
+Dapp --> Solana -- : {<i>st</i>}
+
+== Complete ==
+
+legend
+| <i>i</i>   | the dapp identity (name, icon, website URI)                                                           |
+| <i>at</i>  | a persistent authentication token issued by the wallet to this dapp which is no longer valid          |
+| <i>at2</i> | a persistent authentication token with the same privileges as <i>at</i> which is valid                |
+| <i>pub</i> | the wallet account public key for which this dapp is authorized                                       |
+| <i>t</i>   | the transaction that the dapp wishes to have signed\nwith the private key corresponding to <i>pub</i> |
+| <i>st</i>  | <i>t</i>, signed with the private key corresponding to <i>pub</i>                                     |
+end legend
+
+@enduml

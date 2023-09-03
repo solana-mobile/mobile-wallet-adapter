@@ -1,0 +1,53 @@
+@startuml
+
+!theme cerulean
+skinparam backgroundColor #FFFFFF
+
+hide footbox
+
+participant Solana as "Solana\nnetwork"
+participant Dapp
+participant Wallet
+
+note across : Dapp has established a session with Wallet for the first time
+
+activate Dapp
+
+== Authorize for transaction signing ==
+
+Dapp -> Dapp : <i>i</i> = DappIdentity()
+Dapp -> Wallet ++-- : authorize {<i>i</i>, ["sign_transactions"]}
+Wallet -> Wallet : validate Dapp identity <i>i</i>
+Wallet -> Wallet : Generate new auth token\n<i>at</i> = GenerateAuthToken(<i>i</i>, ["sign_transactions"])
+Wallet -> Wallet : <i>pub</i> = base58encode(GetPublicKey())
+alt if wallet endpoint has an endpoint-specific URI
+    Wallet -> Wallet : <i>uri</i> = EndpointBaseURI() 
+end
+Wallet --> Dapp ++-- : response {<i>at</i>, <i>pub</i>, <i>uri</i>}
+Dapp -> Dapp : Store(<i>at</i>, <i>pub</i>, <i>uri</i>)
+
+== Submit transaction for signing ==
+
+Dapp -> Dapp : <i>t</i> = CreateTransaction(<i>pub</i>, ...)
+Dapp -> Wallet ++-- : sign_transactions {<i>at</i>, <i>t</i>}
+Wallet -> Wallet : validate auth token <i>at</i>
+Wallet -> Wallet : validate transaction <i>t</i>
+Wallet -> Wallet : sign transaction\n<i>st</i> = SignSolanaTransactions(<i>t</i>)
+Wallet --> Dapp ++-- : response {<i>st</i>}
+
+== Submit signed transaction to network ==
+
+create Solana
+Dapp --> Solana -- : {<i>st</i>}
+
+== Complete ==
+
+legend
+| <i>i</i>   | the dapp identity (name, icon, website URI)                                                           |
+| <i>at</i>  | a persistent authentication token issued by the wallet to this dapp                                   |
+| <i>pub</i> | the wallet account public key for which this dapp is authorized                                       |
+| <i>t</i>   | the transaction that the dapp wishes to have signed\nwith the private key corresponding to <i>pub</i> |
+| <i>st</i>  | <i>t</i>, signed with the private key corresponding to <i>pub</i>                                     |
+end legend
+
+@enduml
