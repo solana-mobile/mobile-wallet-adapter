@@ -160,18 +160,25 @@ Association is the process of establishing a shared association identifier betwe
 
 The dapp endpoint should generate an ephemeral EC keypair on the P-256 curve, and encode the public keypoint Qa using the X9.62 public key format `(0x04 || x || y)`. This public keypoint is then base64url-encoded, and the resulting string is called the association token. The private keypoint for this keypair will be used during session establishment.
 
+### Protocol Version Negotiation
+
+When establishing a session, dapp and wallet endpoints must agree on a version of the protocol to be used for the session. Association URIs include a protocol version in the first path segment (`solana-wallet:/v1/...`) to indicate the version of the protocol and corresponding behaviors used for the session. Any future revisions to this specification that introduce protocol breaking changes must increment the version field in the association URI. 
+
+A version query parameter is used in the association uris below to allow dapp endpoints to specify the major version(s) of the protocol that the client supports. If this version parameter is present in the association URI, the wallet endpoint should additionally send a [session properties](#session-properties) payload during session establishment to indicate the negotiated version to the client. If no version query parameter is present, the connection is assumed to be a legacy connection (v1). 
+
 ### Local URI
 
 When running on Android or iOS, the dapp endpoint should first attempt to associate with a local wallet endpoint by opening a URI (either from within the browser for a web dapp, or directly from a native dapp) with the `solana-wallet:` scheme. The URI should be formatted as:
 
 ```
-solana-wallet:/v1/associate/local?association=<association_token>&port=<port_number>
+solana-wallet:/v1/associate/local?association=<association_token>&port=<port_number>&v=<version>
 ```
 
 where:
 
 - `association_token` is as described above
 - `port_number` is a random number between 49152 and 65535
+- `version` is the major version of the protocol that the client supports. This value can be repeated to specify multiple major versions supported by the client. The wallet endpoint should select the highest version from this set that it supports. 
 
 Once the URI is opened, the dapp endpoint should attempt to connect to the local WebSocket address, `ws://localhost:<port_number>/solana-wallet`, and proceed to [Session establishment](#session-establishment).
 
@@ -196,7 +203,7 @@ Since desktop OSes do not generally allow launching an app with a URI, a dapp en
 When running on a desktop OS, or when connecting to a local wallet endpoint fails, the dapp endpoint may present a URI suitable for connection via a [reflector WebSocket server](#reflector-protocol), which will reflect traffic between two parties. The URI should be formatted as:
 
 ```
-solana-wallet:/v1/associate/remote?association=<association_token>&reflector=<host_authority>&id=<reflector_unique_id>
+solana-wallet:/v1/associate/remote?association=<association_token>&reflector=<host_authority>&id=<reflector_unique_id>&v=<version>
 ```
 
 where:
@@ -204,6 +211,7 @@ where:
 - `association_token` is as described above
 - `host_authority` is the address of a publicly routable WebSocket server implementing the reflector protocol
 - `reflector_unique_id` is a number generated securely at random by the dapp endpoint, 0 ≤ n ≤ 2^53 - 1
+- `version` is the major version of the protocol that the client supports, as described above
 
 This URI should be provided to the wallet endpoint through an out-of-band mechanism, detailed in the subsections below. Each of the dapp and wallet endpoints should attempt to connect to the WebSocket address `wss://<host_authority>/reflect?id=<reflector_unique_id>`. On connection, each endpoint should wait for the [Reflector protocol](#reflector-protocol) to signal that the counterparty endpoint has connected.
 
@@ -299,6 +307,30 @@ Upon sending of the `HELLO_RSP` message by the wallet endpoint, and receipt of t
 Once each endpoint has calculated the ephemeral shared secret, they should proceed to providing or consuming the [Wallet RPC interface](#wallet-rpc-interface).
 
 If either public keypoint `Qd` or `Qw` is not valid, if no `HELLO_RSP` message is received by the dapp endpoint within no less than 10 seconds, or if a second `HELLO_RSP` message is received by the dapp endpoint at any time during the connection, all ephemeral key materials should be discarded, and the connection should be closed.
+
+### SESSION_PROPS
+
+#### Direction
+
+Wallet endpoint to dapp endpoint
+
+#### Specification
+
+```
+{
+    "v":"<version>"
+}
+```
+
+where:
+
+- `version`: is the major version of the protocol in use for the session. This is expected to be the highest protocol version supported by both dapp and wallet endpoints, as specified [during association](#protocol-version-negotiation)
+
+#### Description
+
+Immediately after sending the `HELLO_RSP` message, the wallet endpoint should follow up with a `SESSION_PROPS` message to convey information mandatory to the proper operation of the session, such as the negotiated version. This message consists of a JSON payload as described above.This payload is only valid during session establishment; a client receiving this at any other time should discard it and close the session.
+
+A wallet may only send this payload if the `v=` query parameter is present in the association URI presented by the client (to avoid sending it to a client that does not understand it). If the connecting dapp endpoint is using a legacy connection (no `v=` parameter present during association), the wallet should not send the `SESSION_PROPS` message to the client. If a client supports legacy connection establishment, failure to receive this session properties message indicates that the connection is a legacy connection.
 
 ## Wallet RPC interface
 
