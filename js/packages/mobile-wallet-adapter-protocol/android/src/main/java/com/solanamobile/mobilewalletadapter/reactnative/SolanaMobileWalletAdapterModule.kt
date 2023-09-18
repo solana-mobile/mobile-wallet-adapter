@@ -129,6 +129,8 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 val userInfo = Arguments.createMap()
                 userInfo.putInt("jsonRpcErrorCode", cause.code)
                 promise.reject("JSON_RPC_ERROR", cause, userInfo)
+            } else if (cause is TimeoutException) {
+                promise.reject("Timed out waiting for response", e)
             } else {
                 throw e
             }
