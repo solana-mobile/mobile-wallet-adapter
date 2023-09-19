@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Mobile Wallet Adapter specification
+title: Mobile Wallet Adapter 1.0 specification
 ---
 
 {%- comment -%}
