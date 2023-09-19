@@ -16,7 +16,7 @@ Please don't introduce unnecessary line breaks in this specification - it's diff
 
 This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Software_versioning#Semantic_versioning)
 
-**Version: 1.0.0**
+**Version: 2.0.0-DRAFT**
 
 ## Changelog (oldest to newest)
 
@@ -328,9 +328,7 @@ where:
 
 #### Description
 
-Immediately after sending the `HELLO_RSP` message, the wallet endpoint should follow up with a `SESSION_PROPS` message to convey information mandatory to the proper operation of the session, such as the negotiated version. This message consists of a JSON payload as described above.This payload is only valid during session establishment; a client receiving this at any other time should discard it and close the session.
-
-A wallet may only send this payload if the `v=` query parameter is present in the association URI presented by the client (to avoid sending it to a client that does not understand it). If the connecting dapp endpoint is using a legacy connection (no `v=` parameter present during association), the wallet should not send the `SESSION_PROPS` message to the client. If a client supports legacy connection establishment, failure to receive this session properties message indicates that the connection is a legacy connection.
+If a `v=` query parameter is present in the association URI presented by the dapp endpoint, the wallet endpoint MUST send a `SESSION_PROPS` message to the client immediately after the `HELLO_RSP` message. If the connecting dapp endpoint runs software for a legacy version of this standard (i.e. no `v=` parameter present during association), the wallet MUST NOT send the `SESSION_PROPS` message to the client, and must assume that the connection is a legacy connection. If the wallet endpoint does not support legacy connections, it should close the connection immediately upon receipt of the `HELLO_REQ` message.
 
 ## Wallet RPC interface
 
