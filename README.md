@@ -66,14 +66,14 @@ For a more thorough setup guide, see our documentation site:
 Java
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:1.0.5'
+    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib:1.2.0'
 }
 ```
 
 Kotlin
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib-ktx:1.0.5'
+    implementation 'com.solanamobile:mobile-wallet-adapter-clientlib-ktx:1.2.0'
 }
 ```
 
@@ -81,7 +81,7 @@ dependencies {
 
 ```
 dependencies {
-    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:1.0.5'
+    implementation 'com.solanamobile:mobile-wallet-adapter-walletlib:1.2.0'
 }
 ```
 
