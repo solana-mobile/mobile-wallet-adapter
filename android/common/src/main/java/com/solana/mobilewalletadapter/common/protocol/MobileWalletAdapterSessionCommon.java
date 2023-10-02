@@ -26,6 +26,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -64,6 +65,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
     @NonNull
     protected abstract ECPublicKey getAssociationPublicKey();
+
+    @Nullable
+    protected abstract Integer getSelectedProtocolVersion();
 
     @Override
     public synchronized void receiverConnected(@NonNull MessageSender messageSender) {

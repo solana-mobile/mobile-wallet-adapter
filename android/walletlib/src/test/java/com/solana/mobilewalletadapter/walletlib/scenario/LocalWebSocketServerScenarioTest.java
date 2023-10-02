@@ -16,6 +16,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -57,7 +58,7 @@ public class LocalWebSocketServerScenarioTest {
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port, powerConfig).start();
+                lowPowerNoConnectionCallback, publicKey, port, powerConfig, List.of(1)).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
@@ -96,7 +97,7 @@ public class LocalWebSocketServerScenarioTest {
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port,powerConfig).start();
+                lowPowerNoConnectionCallback, publicKey, port, powerConfig, List.of(1)).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then

@@ -14,6 +14,9 @@ import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -21,7 +24,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
     private static final String TAG = MobileWalletAdapterSession.class.getSimpleName();
@@ -29,16 +34,37 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private final KeyPair mAssociationKey;
 
+    @NonNull
+    private final List<Integer> mSupportedProtocolVersions;
+
+    private ECPublicKey mCachedEncryptionPublicKey;
+
+    @Nullable
+    private Integer mSelectedProtocolVersion;
+
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
+        this(decryptedPayloadReceiver, stateCallbacks, new ArrayList<>());
+    }
+
+    public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
+                                      @Nullable StateCallbacks stateCallbacks,
+                                      @NonNull List<Integer> supportedProtocolVersions) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mAssociationKey = generateECP256KeyPair();
+        mSupportedProtocolVersions = supportedProtocolVersions;
     }
 
     @NonNull
     @Override
     protected ECPublicKey getAssociationPublicKey() {
         return (ECPublicKey) mAssociationKey.getPublic();
+    }
+
+    @Nullable
+    @Override
+    protected Integer getSelectedProtocolVersion() {
+        return mSelectedProtocolVersion;
     }
 
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
@@ -91,8 +117,19 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
             throws SessionMessageException {
         Log.v(TAG, "handleSessionEstablishmentMessage");
 
-        final ECPublicKey theirPublicKey = parseHelloRsp(payload);
-        generateSessionECDHSecret(theirPublicKey);
+        // TODO: this only works if the wallet actually sends the SESSION_PROPS message
+        //  if the wallet is legacy and does not send SESSION_PROPS, we will get stuck
+
+        // first the wallet sends HELLO_RSP, so we parse that
+        if (mCachedEncryptionPublicKey == null) {
+            mCachedEncryptionPublicKey = parseHelloRsp(payload);
+        } else {
+            // then wallet should send SESSION_PROPS
+            mSelectedProtocolVersion = parseSessionProps(payload);
+            // now we can move session state to ENCRYPTED_SESSION
+            generateSessionECDHSecret(mCachedEncryptionPublicKey);
+            mCachedEncryptionPublicKey = null;
+        }
     }
 
     @NonNull
@@ -107,5 +144,20 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         Log.v(TAG, "Received public key " + otherPublicKey.getW().getAffineX() + "/" +
                 otherPublicKey.getW().getAffineY());
         return otherPublicKey;
+    }
+
+    @NonNull
+    private Integer parseSessionProps(@NonNull byte[] message) throws SessionMessageException {
+        final Integer version;
+        try {
+            String versionContent = new JSONObject(new String(message)).getString("v");
+            version = Integer.parseInt(versionContent);
+        } catch (JSONException e) {
+            throw new SessionMessageException("Failed to parse SESSION_PROPS", e);
+        }
+
+        Log.v(TAG, "Received session properties: version = " + version);
+
+        return version;
     }
 }

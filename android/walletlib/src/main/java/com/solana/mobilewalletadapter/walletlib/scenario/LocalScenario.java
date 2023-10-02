@@ -26,6 +26,8 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -36,6 +38,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class LocalScenario implements Scenario {
     private static final String TAG = LocalScenario.class.getSimpleName();
+
+    @Nullable
+    final public Integer selectedProtocolVersion;
 
     @NonNull
     final public byte[] associationPublicKey;
@@ -69,7 +74,7 @@ public abstract class LocalScenario implements Scenario {
                             @NonNull Callbacks callbacks,
                             @NonNull byte[] associationPublicKey) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, new DevicePowerConfigProvider(context));
+                associationPublicKey, new DevicePowerConfigProvider(context), new ArrayList<>());
     }
 
     /*package*/ LocalScenario(@NonNull Context context,
@@ -77,10 +82,21 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull AuthIssuerConfig authIssuerConfig,
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
-                              @NonNull PowerConfigProvider powerConfigProvider) {
+                              @NonNull PowerConfigProvider powerConfigProvider,
+                              @NonNull List<Integer> supportedProtocolVersions) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationPublicKey = associationPublicKey;
+
+        Integer maxSupportedProtocolVersion = null;
+        for (int version : supportedProtocolVersions) {
+            if (maxSupportedProtocolVersion == null ||
+                    (version > maxSupportedProtocolVersion &&
+                            mobileWalletAdapterConfig.supportedProtocolVersions.contains(version))) {
+                maxSupportedProtocolVersion = version;
+            }
+        }
+        this.selectedProtocolVersion = maxSupportedProtocolVersion;
 
         final LooperThread t = new LooperThread();
         t.start();
@@ -96,6 +112,10 @@ public abstract class LocalScenario implements Scenario {
     public byte[] getAssociationPublicKey() {
         return associationPublicKey;
     }
+
+    @Nullable
+    @Override
+    public Integer getSelectedProtocolVersion() { return  selectedProtocolVersion; }
 
     @Override
     protected void finalize() {

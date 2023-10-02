@@ -15,12 +15,16 @@ import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSession
 import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
+import java.util.List;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
     private static final String TAG = MobileWalletAdapterSession.class.getSimpleName();
@@ -44,6 +48,10 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         return mAssociationPublicKey;
     }
 
+    @Nullable
+    @Override
+    protected Integer getSelectedProtocolVersion() { return mScenario.getSelectedProtocolVersion(); }
+
     @Override
     protected void handleSessionEstablishmentMessage(@NonNull byte[] payload)
             throws SessionMessageException {
@@ -60,6 +68,17 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
             mMessageSender.send(createHelloRsp(ourPublicKey));
         } catch (IOException e) {
             Log.e(TAG, "Failed to send HELLO_RSP; terminating session", e);
+            onSessionError();
+        }
+
+        // Send unsolicited session properties message, if applicable
+        try {
+            Integer selectedProtocolVersion = getSelectedProtocolVersion();
+            if (selectedProtocolVersion != null) {
+                mMessageSender.send(createSessionProps(selectedProtocolVersion));
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to send SESSION_PROPS; terminating session", e);
             onSessionError();
         }
     }
@@ -107,5 +126,18 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private static byte[] createHelloRsp(@NonNull ECPublicKey publicKey) {
         return ECDSAKeys.encodeP256PublicKey(publicKey);
+    }
+
+    @NonNull
+    private static byte[] createSessionProps(int protocolVersion) throws SessionMessageException {
+        JSONObject sessionProperties = new JSONObject();
+
+        try {
+            sessionProperties.put("v", protocolVersion);
+        } catch (JSONException e) {
+            throw new SessionMessageException("Failed to encode session properties", e);
+        }
+
+        return sessionProperties.toString().getBytes();
     }
 }

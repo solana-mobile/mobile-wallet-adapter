@@ -21,6 +21,7 @@ import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,6 +37,9 @@ public class LocalAssociationScenario extends Scenario {
     private final int mPort;
     @NonNull
     private final URI mWebSocketUri;
+
+    @NonNull
+    private final List<Integer> mSupportedProtocolVersions;
 
     // All access to these members must be protected by mLock
     private final Object mLock = new Object();
@@ -55,8 +59,17 @@ public class LocalAssociationScenario extends Scenario {
         return mMobileWalletAdapterSession;
     }
 
+    public List<Integer> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
+
     public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs) {
+        this(clientTimeoutMs, new ArrayList<>());
+    }
+
+    public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs,
+                                    @NonNull List<Integer> supportedProtocolVersions) {
         super(clientTimeoutMs);
+
+        mSupportedProtocolVersions = supportedProtocolVersions;
 
         mPort = new Random().nextInt(WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MAX -
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN + 1) +
@@ -71,7 +84,8 @@ public class LocalAssociationScenario extends Scenario {
 
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
-                mSessionStateCallbacks);
+                mSessionStateCallbacks,
+                mSupportedProtocolVersions);
 
         Log.v(TAG, "Creating local association scenario for " + mWebSocketUri);
     }

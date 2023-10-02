@@ -5,10 +5,14 @@
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 
 public interface Scenario {
+
+    @Nullable
+    Integer getSelectedProtocolVersion();
 
     byte[] getAssociationPublicKey();
 

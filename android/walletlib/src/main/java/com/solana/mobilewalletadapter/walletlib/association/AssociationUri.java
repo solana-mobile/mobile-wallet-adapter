@@ -16,6 +16,9 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AssociationUri {
     @NonNull
     public final Uri uri;
@@ -23,10 +26,14 @@ public abstract class AssociationUri {
     @NonNull
     public final byte[] associationPublicKey;
 
+    @NonNull
+    public final List<Integer> supportedProtocolVersions;
+
     protected AssociationUri(@NonNull Uri uri) {
         this.uri = uri;
         validate(uri);
         associationPublicKey = parseAssociationToken(uri);
+        supportedProtocolVersions = parseSupportedProtocolVersions(uri);
     }
 
     private static void validate(@NonNull Uri uri) {
@@ -50,6 +57,22 @@ public abstract class AssociationUri {
         }
 
         return Base64.decode(associationToken, Base64.URL_SAFE);
+    }
+
+    @NonNull
+    private static List<Integer> parseSupportedProtocolVersions(@NonNull Uri uri) {
+        final List<Integer> supportedVersions = new ArrayList<>();
+
+        for (String supportVersionStr : uri.getQueryParameters(
+                AssociationContract.PARAMETER_PROTOCOL_VERSION)) {
+            try {
+                supportedVersions.add(Integer.parseInt(supportVersionStr, 10));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("port parameter must be a number", e);
+            }
+        }
+
+        return supportedVersions;
     }
 
     @Nullable

@@ -17,6 +17,9 @@ import androidx.annotation.Nullable;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.common.AssociationContract;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LocalAssociationIntentCreator {
 
     private LocalAssociationIntentCreator() { }
@@ -25,20 +28,28 @@ public class LocalAssociationIntentCreator {
     public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
                                                  @IntRange(from = 0, to = 65535) int port,
                                                  @NonNull MobileWalletAdapterSession session) {
+        return createAssociationIntent(endpointPrefix, port, session, new ArrayList<>());
+    }
+
+    @NonNull
+    public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
+                                                 @IntRange(from = 0, to = 65535) int port,
+                                                 @NonNull MobileWalletAdapterSession session,
+                                                 @NonNull List<Integer> supportedProtocolVersions) {
         final byte[] associationPublicKey = session.getEncodedAssociationPublicKey();
         final String associationToken = Base64.encodeToString(associationPublicKey,
                 Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
         return new Intent()
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(endpointPrefix, port, associationToken));
+                .setData(createAssociationUri(endpointPrefix, port, associationToken, supportedProtocolVersions));
     }
 
     public static boolean isWalletEndpointAvailable(@NonNull PackageManager pm) {
         final Intent intent = new Intent()
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(null, 0, ""));
+                .setData(createAssociationUri(null, 0, "", new ArrayList<>()));
         final ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return (resolveInfo != null);
     }
@@ -46,7 +57,8 @@ public class LocalAssociationIntentCreator {
     @NonNull
     private static Uri createAssociationUri(@Nullable Uri endpointPrefix,
                                             @IntRange(from = 0, to = 65535) int port,
-                                            @NonNull String associationToken) {
+                                            @NonNull String associationToken,
+                                            @NonNull List<Integer> supportedProtocolVersions) {
         if (endpointPrefix != null && (!"https".equals(endpointPrefix.getScheme()) || !endpointPrefix.isHierarchical())) {
             throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute with scheme 'https' and hierarchical");
         }
@@ -61,12 +73,18 @@ public class LocalAssociationIntentCreator {
             dataUriBuilder = new Uri.Builder()
                     .scheme(AssociationContract.SCHEME_MOBILE_WALLET_ADAPTER);
         }
-        return dataUriBuilder
-                .appendEncodedPath(AssociationContract.LOCAL_PATH_SUFFIX)
+
+        dataUriBuilder.appendEncodedPath(AssociationContract.LOCAL_PATH_SUFFIX)
                 .appendQueryParameter(AssociationContract.PARAMETER_ASSOCIATION_TOKEN,
                         associationToken)
                 .appendQueryParameter(AssociationContract.LOCAL_PARAMETER_PORT,
-                        Integer.toString(port))
-                .build();
+                        Integer.toString(port));
+
+        for (int version : supportedProtocolVersions) {
+            dataUriBuilder.appendQueryParameter(AssociationContract.PARAMETER_PROTOCOL_VERSION,
+                    String.valueOf(version));
+        }
+
+        return dataUriBuilder.build();
     }
 }

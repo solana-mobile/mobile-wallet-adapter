@@ -13,6 +13,9 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LocalWebSocketServerScenario extends LocalScenario {
     @WebSocketsTransportContract.LocalPortRange
     public final int port;
@@ -28,7 +31,18 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, port, new DevicePowerConfigProvider(context));
+                associationPublicKey, port, new DevicePowerConfigProvider(context), new ArrayList<>());
+    }
+
+    public LocalWebSocketServerScenario(@NonNull Context context,
+                                        @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                        @NonNull AuthIssuerConfig authIssuerConfig,
+                                        @NonNull LocalScenario.Callbacks callbacks,
+                                        @NonNull byte[] associationPublicKey,
+                                        @WebSocketsTransportContract.LocalPortRange int port,
+                                        @NonNull List<Integer> supportedProtocolVersions) {
+        this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
+                associationPublicKey, port, new DevicePowerConfigProvider(context), supportedProtocolVersions);
     }
 
     /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
@@ -37,8 +51,9 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                              @NonNull LocalScenario.Callbacks callbacks,
                                              @NonNull byte[] associationPublicKey,
                                              @WebSocketsTransportContract.LocalPortRange int port,
-                                             PowerConfigProvider powerConfigProvider) {
-        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider);
+                                             PowerConfigProvider powerConfigProvider,
+                                             @NonNull List<Integer> supportedProtocolVersions) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider, supportedProtocolVersions);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }
