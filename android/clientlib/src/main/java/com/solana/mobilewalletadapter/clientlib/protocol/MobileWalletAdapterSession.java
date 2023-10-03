@@ -13,9 +13,9 @@ import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -35,12 +35,10 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     private final KeyPair mAssociationKey;
 
     @NonNull
-    private final List<Integer> mSupportedProtocolVersions;
+    private final List<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
 
-    private ECPublicKey mCachedEncryptionPublicKey;
-
-    @Nullable
-    private Integer mSelectedProtocolVersion;
+    @NonNull
+    private SessionProperties mSessionProperties;
 
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
@@ -49,10 +47,11 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks,
-                                      @NonNull List<Integer> supportedProtocolVersions) {
+                                      @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mAssociationKey = generateECP256KeyPair();
         mSupportedProtocolVersions = supportedProtocolVersions;
+        mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
     }
 
     @NonNull
@@ -61,10 +60,10 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         return (ECPublicKey) mAssociationKey.getPublic();
     }
 
-    @Nullable
+    @NonNull
     @Override
-    protected Integer getSelectedProtocolVersion() {
-        return mSelectedProtocolVersion;
+    protected SessionProperties getSessionProperties() {
+        return mSessionProperties;
     }
 
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
@@ -117,18 +116,15 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
             throws SessionMessageException {
         Log.v(TAG, "handleSessionEstablishmentMessage");
 
-        // TODO: this only works if the wallet actually sends the SESSION_PROPS message
-        //  if the wallet is legacy and does not send SESSION_PROPS, we will get stuck
+        final ECPublicKey theirPublicKey = parseHelloRsp(payload);
+        generateSessionECDHSecret(theirPublicKey);
 
-        // first the wallet sends HELLO_RSP, so we parse that
-        if (mCachedEncryptionPublicKey == null) {
-            mCachedEncryptionPublicKey = parseHelloRsp(payload);
+        if (mSupportedProtocolVersions.contains(SessionProperties.ProtocolVersion.V1)) {
+            byte[] encryptedSessionProperties =
+                    Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
+            mSessionProperties = parseSessionProps(encryptedSessionProperties);
         } else {
-            // then wallet should send SESSION_PROPS
-            mSelectedProtocolVersion = parseSessionProps(payload);
-            // now we can move session state to ENCRYPTED_SESSION
-            generateSessionECDHSecret(mCachedEncryptionPublicKey);
-            mCachedEncryptionPublicKey = null;
+            mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
         }
     }
 
@@ -147,17 +143,17 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     }
 
     @NonNull
-    private Integer parseSessionProps(@NonNull byte[] message) throws SessionMessageException {
-        final Integer version;
+    private SessionProperties parseSessionProps(@NonNull byte[] message) throws SessionMessageException {
+        final SessionProperties properties;
         try {
-            String versionContent = new JSONObject(new String(message)).getString("v");
-            version = Integer.parseInt(versionContent);
+            byte[] sessionProps = decryptSessionPayload(message);
+            properties = SessionProperties.deserialize(sessionProps);
         } catch (JSONException e) {
             throw new SessionMessageException("Failed to parse SESSION_PROPS", e);
         }
 
-        Log.v(TAG, "Received session properties: version = " + version);
+        Log.v(TAG, "Received session properties: version = " + properties.protocolVersion);
 
-        return version;
+        return properties;
     }
 }

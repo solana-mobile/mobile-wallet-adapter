@@ -21,6 +21,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -329,7 +330,10 @@ object MobileWalletAdapterUseCase {
         async {
             mobileWalletAdapterClientSem.withPermit {
                 val contract = intentLauncher.contract as StartMobileWalletAdapterActivity
-                val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS, listOf(1))
+                val localAssociation = LocalAssociationScenario(
+                    Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
+                    listOf(SessionProperties.ProtocolVersion.V1)
+                )
 
                 val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
                     uriPrefix, localAssociation.port, localAssociation.session,

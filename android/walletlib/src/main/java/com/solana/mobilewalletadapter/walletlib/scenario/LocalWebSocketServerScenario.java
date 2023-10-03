@@ -9,6 +9,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
@@ -40,7 +41,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                         @NonNull LocalScenario.Callbacks callbacks,
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port,
-                                        @NonNull List<Integer> supportedProtocolVersions) {
+                                        @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
                 associationPublicKey, port, new DevicePowerConfigProvider(context), supportedProtocolVersions);
     }
@@ -52,7 +53,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                              @NonNull byte[] associationPublicKey,
                                              @WebSocketsTransportContract.LocalPortRange int port,
                                              PowerConfigProvider powerConfigProvider,
-                                             @NonNull List<Integer> supportedProtocolVersions) {
+                                             @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider, supportedProtocolVersions);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);

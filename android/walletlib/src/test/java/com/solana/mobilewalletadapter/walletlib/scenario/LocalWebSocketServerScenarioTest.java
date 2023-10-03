@@ -7,6 +7,7 @@ import android.content.Context;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 
@@ -56,9 +57,12 @@ public class LocalWebSocketServerScenarioTest {
 
         PowerConfigProvider powerConfig = () -> false;
 
+        List<SessionProperties.ProtocolVersion> supportedVersions =
+                List.of(SessionProperties.ProtocolVersion.LEGACY);
+
         // when
         new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port, powerConfig, List.of(1)).start();
+                lowPowerNoConnectionCallback, publicKey, port, powerConfig, supportedVersions).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
@@ -95,9 +99,12 @@ public class LocalWebSocketServerScenarioTest {
 
         PowerConfigProvider powerConfig = () -> true;
 
+        List<SessionProperties.ProtocolVersion> supportedVersions =
+                List.of(SessionProperties.ProtocolVersion.LEGACY);
+
         // when
         new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port, powerConfig, List.of(1)).start();
+                lowPowerNoConnectionCallback, publicKey, port, powerConfig, supportedVersions).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then

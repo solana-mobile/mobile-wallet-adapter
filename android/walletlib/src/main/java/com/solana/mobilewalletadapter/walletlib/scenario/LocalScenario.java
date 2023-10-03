@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
@@ -39,8 +40,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class LocalScenario implements Scenario {
     private static final String TAG = LocalScenario.class.getSimpleName();
 
-    @Nullable
-    final public Integer selectedProtocolVersion;
+    @NonNull
+    final public SessionProperties sessionProperties;
 
     @NonNull
     final public byte[] associationPublicKey;
@@ -83,20 +84,20 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider,
-                              @NonNull List<Integer> supportedProtocolVersions) {
+                              @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationPublicKey = associationPublicKey;
 
-        Integer maxSupportedProtocolVersion = null;
-        for (int version : supportedProtocolVersions) {
-            if (maxSupportedProtocolVersion == null ||
-                    (version > maxSupportedProtocolVersion &&
-                            mobileWalletAdapterConfig.supportedProtocolVersions.contains(version))) {
+        SessionProperties.ProtocolVersion maxSupportedProtocolVersion =
+                SessionProperties.ProtocolVersion.LEGACY;
+        for (SessionProperties.ProtocolVersion version : supportedProtocolVersions) {
+            if (version.ordinal() > maxSupportedProtocolVersion.ordinal()
+                    && mobileWalletAdapterConfig.supportedProtocolVersions.contains(version)) {
                 maxSupportedProtocolVersion = version;
             }
         }
-        this.selectedProtocolVersion = maxSupportedProtocolVersion;
+        this.sessionProperties = new SessionProperties(maxSupportedProtocolVersion);
 
         final LooperThread t = new LooperThread();
         t.start();
@@ -115,7 +116,7 @@ public abstract class LocalScenario implements Scenario {
 
     @Nullable
     @Override
-    public Integer getSelectedProtocolVersion() { return  selectedProtocolVersion; }
+    public SessionProperties getSessionProperties() { return sessionProperties; }
 
     @Override
     protected void finalize() {

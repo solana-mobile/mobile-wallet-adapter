@@ -15,6 +15,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSess
 import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
@@ -39,7 +40,7 @@ public class LocalAssociationScenario extends Scenario {
     private final URI mWebSocketUri;
 
     @NonNull
-    private final List<Integer> mSupportedProtocolVersions;
+    private final List<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
 
     // All access to these members must be protected by mLock
     private final Object mLock = new Object();
@@ -59,14 +60,14 @@ public class LocalAssociationScenario extends Scenario {
         return mMobileWalletAdapterSession;
     }
 
-    public List<Integer> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
+    public List<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
 
     public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs) {
-        this(clientTimeoutMs, new ArrayList<>());
+        this(clientTimeoutMs, List.of(SessionProperties.ProtocolVersion.LEGACY));
     }
 
     public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs,
-                                    @NonNull List<Integer> supportedProtocolVersions) {
+                                    @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(clientTimeoutMs);
 
         mSupportedProtocolVersions = supportedProtocolVersions;

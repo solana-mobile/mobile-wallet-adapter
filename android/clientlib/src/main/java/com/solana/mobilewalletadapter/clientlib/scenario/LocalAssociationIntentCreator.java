@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.common.AssociationContract;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class LocalAssociationIntentCreator {
     public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
                                                  @IntRange(from = 0, to = 65535) int port,
                                                  @NonNull MobileWalletAdapterSession session,
-                                                 @NonNull List<Integer> supportedProtocolVersions) {
+                                                 @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         final byte[] associationPublicKey = session.getEncodedAssociationPublicKey();
         final String associationToken = Base64.encodeToString(associationPublicKey,
                 Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
@@ -58,7 +59,7 @@ public class LocalAssociationIntentCreator {
     private static Uri createAssociationUri(@Nullable Uri endpointPrefix,
                                             @IntRange(from = 0, to = 65535) int port,
                                             @NonNull String associationToken,
-                                            @NonNull List<Integer> supportedProtocolVersions) {
+                                            @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         if (endpointPrefix != null && (!"https".equals(endpointPrefix.getScheme()) || !endpointPrefix.isHierarchical())) {
             throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute with scheme 'https' and hierarchical");
         }
@@ -80,9 +81,10 @@ public class LocalAssociationIntentCreator {
                 .appendQueryParameter(AssociationContract.LOCAL_PARAMETER_PORT,
                         Integer.toString(port));
 
-        for (int version : supportedProtocolVersions) {
-            dataUriBuilder.appendQueryParameter(AssociationContract.PARAMETER_PROTOCOL_VERSION,
-                    String.valueOf(version));
+        for (SessionProperties.ProtocolVersion version : supportedProtocolVersions) {
+            if (version != SessionProperties.ProtocolVersion.LEGACY)
+                dataUriBuilder.appendQueryParameter(
+                        AssociationContract.PARAMETER_PROTOCOL_VERSION, version.toString());
         }
 
         return dataUriBuilder.build();

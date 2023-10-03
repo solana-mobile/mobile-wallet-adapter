@@ -8,6 +8,8 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
+
 import java.util.List;
 
 public class MobileWalletAdapterConfig {
@@ -30,7 +32,7 @@ public class MobileWalletAdapterConfig {
     public final Object[] supportedTransactionVersions;
 
     @NonNull
-    public final List<Integer> supportedProtocolVersions;
+    public final List<SessionProperties.ProtocolVersion> supportedProtocolVersions;
 
     public MobileWalletAdapterConfig(boolean supportsSignAndSendTransactions,
                                      @IntRange(from = 0) int maxTransactionsPerSigningRequest,
@@ -42,7 +44,7 @@ public class MobileWalletAdapterConfig {
                 maxMessagesPerSigningRequest,
                 supportedTransactionVersions,
                 noConnectionWarningTimeoutMs,
-                List.of(1));
+                List.of(SessionProperties.ProtocolVersion.V1));
     }
 
     public MobileWalletAdapterConfig(boolean supportsSignAndSendTransactions,
@@ -50,7 +52,7 @@ public class MobileWalletAdapterConfig {
                                      @IntRange(from = 0) int maxMessagesPerSigningRequest,
                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
                                      @IntRange(from = 0) long noConnectionWarningTimeoutMs,
-                                     @NonNull List<Integer> supportedProtocolVersions) {
+                                     @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
         this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
         this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;

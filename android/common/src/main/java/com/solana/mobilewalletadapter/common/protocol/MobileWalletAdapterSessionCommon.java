@@ -26,7 +26,6 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -66,8 +65,8 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     @NonNull
     protected abstract ECPublicKey getAssociationPublicKey();
 
-    @Nullable
-    protected abstract Integer getSelectedProtocolVersion();
+    @NonNull
+    protected abstract SessionProperties getSessionProperties();
 
     @Override
     public synchronized void receiverConnected(@NonNull MessageSender messageSender) {
@@ -211,7 +210,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
         final int seqNum = ByteBuffer.wrap(payload, 0, SEQ_NUM_LENGTH_BYTES).getInt(); // Big-endian
         if (seqNum != (mSeqNumberRx + 1)) {
-            throw new SessionMessageException("Encrypted messages has invalid sequence number");
+            throw new SessionMessageException("Encrypted messages has invalid sequence number: " + seqNum + " expected " + (mSeqNumberRx + 1));
         }
         mSeqNumberRx = seqNum;
 

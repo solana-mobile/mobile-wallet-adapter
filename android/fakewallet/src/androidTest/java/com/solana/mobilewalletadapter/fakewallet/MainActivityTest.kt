@@ -79,7 +79,7 @@ class MainActivityTest {
             null,
             localAssociation.port,
             localAssociation.session,
-            listOf(1)
+            localAssociation.supportedProtocolVersions
         )
 
         // when
@@ -113,7 +113,7 @@ class MainActivityTest {
             null,
             localAssociation.port,
             localAssociation.session,
-            listOf(1)
+            localAssociation.supportedProtocolVersions
         )
 
         // when
@@ -152,7 +152,7 @@ class MainActivityTest {
             null,
             localAssociation.port,
             localAssociation.session,
-            listOf(1)
+            localAssociation.supportedProtocolVersions
         )
 
         // when
@@ -184,7 +184,7 @@ class MainActivityTest {
             null,
             localAssociation.port,
             localAssociation.session,
-            listOf(1)
+            localAssociation.supportedProtocolVersions
         )
 
         TestScopeLowPowerMode = false
@@ -207,7 +207,7 @@ class MainActivityTest {
             null,
             localAssociation.port,
             localAssociation.session,
-            listOf(1)
+            localAssociation.supportedProtocolVersions
         )
 
         TestScopeLowPowerMode = true
