@@ -239,7 +239,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public AuthorizationFuture authorize(@Nullable Uri identityUri,
                                          @Nullable Uri iconUri,
                                          @Nullable String identityName,
-                                         @Nullable String cluster)
+                                         @Nullable String chain)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -255,7 +255,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
-            authorize.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
+            authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }

@@ -258,7 +258,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.cluster}")
+        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.chain}")
 
         request.request.completeWithSignatures(request.signatures!!)
     }
@@ -268,7 +268,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.cluster}")
+        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.chain}")
 
         val signatures = request.signatures!!
         val notSubmittedSignatures = Array(signatures.size) { i ->

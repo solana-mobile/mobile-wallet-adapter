@@ -7,7 +7,8 @@ package com.solana.mobilewalletadapter.common;
 public class ProtocolContract {
     public static final String METHOD_AUTHORIZE = "authorize";
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY
-    public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
+    // METHOD_AUTHORIZE takes an optional PARAMETER_AUTH_TOKEN
+    // METHOD_AUTHORIZE takes an optional PARAMETER_CHAIN
     // METHOD_AUTHORIZE returns a RESULT_AUTH_TOKEN
     // METHOD_AUTHORIZE returns a RESULT_ACCOUNTS
     // METHOD_AUTHORIZE returns an optional RESULT_WALLET_URI_BASE
@@ -15,6 +16,7 @@ public class ProtocolContract {
     public static final String METHOD_DEAUTHORIZE = "deauthorize";
     // METHOD_DEAUTHORIZE takes a PARAMETER_AUTH_TOKEN
 
+    @Deprecated
     public static final String METHOD_REAUTHORIZE = "reauthorize";
     // METHOD_REAUTHORIZE takes an optional PARAMETER_IDENTITY
     // METHOD_REAUTHORIZE takes a PARAMETER_AUTH_TOKEN
@@ -31,6 +33,7 @@ public class ProtocolContract {
     public static final String RESULT_MAX_TRANSACTIONS_PER_REQUEST = "max_transactions_per_request"; // type: Number
     public static final String RESULT_MAX_MESSAGES_PER_REQUEST = "max_messages_per_request"; // type: Number
     public static final String RESULT_SUPPORTED_TRANSACTION_VERSIONS = "supported_transaction_versions"; // type: JSON array of any primitive datatype
+    public static final String RESULT_SUPPORTED_FEATURES = "features"; // type: JSON array of String (feature identifiers)
 
     public static final String METHOD_SIGN_TRANSACTIONS = "sign_transactions";
     // METHOD_SIGN_TRANSACTIONS takes a PARAMETER_PAYLOADS
@@ -51,6 +54,11 @@ public class ProtocolContract {
     public static final String PARAMETER_IDENTITY_URI = "uri"; // type: String (absolute URI)
     public static final String PARAMETER_IDENTITY_ICON = "icon"; // type: String (relative URI)
     public static final String PARAMETER_IDENTITY_NAME = "name"; // type: String
+
+    @Deprecated // alias for PARAMETER_CHAIN
+    public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
+
+    public static final String PARAMETER_CHAIN = "chain"; // type: String (one of the CHAIN_* values)
 
     public static final String PARAMETER_AUTH_TOKEN = "auth_token"; // type: String
 
@@ -82,6 +90,12 @@ public class ProtocolContract {
     public static final String CLUSTER_MAINNET_BETA = "mainnet-beta";
     public static final String CLUSTER_TESTNET = "testnet";
     public static final String CLUSTER_DEVNET = "devnet";
+
+    public static final String CHAIN_SOLANA_MAINNET = "solana:mainnet";
+    public static final String CHAIN_SOLANA_TESTNET = "solana:testnet";
+    public static final String CHAIN_SOLANA_DEVNET = "solana:devnet";
+
+    public static final String NAMESPACE_SOLANA = "solana";
 
     private ProtocolContract() {}
 }

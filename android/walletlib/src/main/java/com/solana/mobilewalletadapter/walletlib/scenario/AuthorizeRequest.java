@@ -26,18 +26,18 @@ public class AuthorizeRequest
     protected final Uri mIconUri;
 
     @NonNull
-    protected final String mCluster;
+    protected final String mChain;
 
     /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
                                  @Nullable String identityName,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
-                                 @NonNull String cluster) {
+                                 @NonNull String chain) {
         super(request);
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;
-        mCluster = cluster;
+        mChain = chain;
     }
 
     @Nullable
@@ -55,9 +55,14 @@ public class AuthorizeRequest
         return mIconUri;
     }
 
-    @NonNull
+    @NonNull @Deprecated
     public String getCluster() {
-        return mCluster;
+        return mChain;
+    }
+
+    @NonNull
+    public String getChain() {
+        return mChain;
     }
 
     public void completeWithAuthorize(@NonNull byte[] publicKey,

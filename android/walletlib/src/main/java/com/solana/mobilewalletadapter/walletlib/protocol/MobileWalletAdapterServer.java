@@ -41,11 +41,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     public interface MethodHandlers {
         void authorize(@NonNull AuthorizeRequest request);
-        void reauthorize(@NonNull ReauthorizeRequest request);
         void deauthorize(@NonNull DeauthorizeRequest request);
         void signTransactions(@NonNull SignTransactionsRequest request);
         void signMessages(@NonNull SignMessagesRequest request);
         void signAndSendTransactions(@NonNull SignAndSendTransactionsRequest request);
+
+        @Deprecated
+        void reauthorize(@NonNull ReauthorizeRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
@@ -63,10 +65,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         try {
             switch (method) {
                 case ProtocolContract.METHOD_AUTHORIZE:
-                    handleAuthorize(id, params);
-                    break;
                 case ProtocolContract.METHOD_REAUTHORIZE:
-                    handleReauthorize(id, params);
+                    handleAuthorize(id, params);
                     break;
                 case ProtocolContract.METHOD_DEAUTHORIZE:
                     handleDeauthorize(id, params);
@@ -186,15 +186,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final Uri iconUri;
         @Nullable
         public final String identityName;
+        @Nullable
+        public final String authToken;
 
         private AuthorizationRequest(@Nullable Object id,
                                      @Nullable Uri identityUri,
                                      @Nullable Uri iconUri,
-                                     @Nullable String identityName) {
+                                     @Nullable String identityName,
+                                     @Nullable String authToken) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
+            this.authToken = authToken;
         }
 
         @Override
@@ -294,24 +298,35 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             identityName = null;
         }
 
-        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER, ProtocolContract.CLUSTER_MAINNET_BETA);
+        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
+        final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
+        final String chain = !chainParam.isEmpty() ? chainParam : !cluster.isEmpty() ? cluster : null;
 
-        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName, cluster);
+        final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
+        final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;
+
+        final AuthorizeRequest request =
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, authToken);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
 
     public static class AuthorizeRequest extends AuthorizationRequest {
-        @NonNull
+
+        @Nullable @Deprecated
         public final String cluster;
+        @Nullable
+        public final String chain;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @Nullable String identityName,
-                                 @NonNull String cluster) {
-            super(id, identityUri, iconUri, identityName);
-            this.cluster = cluster;
+                                 @Nullable String chain,
+                                 @Nullable String authToken) {
+            super(id, identityUri, iconUri, identityName, authToken);
+            this.chain = chain;
+            this.cluster = chain;
         }
 
         @Override
@@ -326,7 +341,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Override
         public String toString() {
             return "AuthorizeRequest{" +
-                    "cluster='" + cluster + '\'' +
+                    "chain='" + chain + '\'' +
                     '/' + super.toString() +
                     '}';
         }
@@ -336,6 +351,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     // reauthorize
     // =============================================================================================
 
+    @Deprecated
     private void handleReauthorize(@Nullable Object id, @Nullable Object params) throws IOException {
         if (!(params instanceof JSONObject)) {
             handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
@@ -393,7 +409,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                    @Nullable Uri iconUri,
                                    @Nullable String identityName,
                                    @NonNull String authToken) {
-            super(id, identityUri, iconUri, identityName);
+            super(id, identityUri, iconUri, identityName, authToken);
             this.authToken = authToken;
         }
 
