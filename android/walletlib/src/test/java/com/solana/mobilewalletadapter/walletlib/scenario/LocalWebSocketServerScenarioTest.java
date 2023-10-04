@@ -37,11 +37,11 @@ public class LocalWebSocketServerScenarioTest {
         AuthIssuerConfig authConfig = new AuthIssuerConfig("Test");
 
         MobileWalletAdapterConfig config = new MobileWalletAdapterConfig(
-                false,
                 1,
                 1,
                 new Object[] { "legacy" },
-                noConnectionTimeout
+                noConnectionTimeout,
+                new String[] {}
         );
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -76,11 +76,11 @@ public class LocalWebSocketServerScenarioTest {
         AuthIssuerConfig authConfig = new AuthIssuerConfig("Test");
 
         MobileWalletAdapterConfig config = new MobileWalletAdapterConfig(
-                false,
                 1,
                 1,
                 new Object[] { "legacy" },
-                noConnectionTimeout
+                noConnectionTimeout,
+                new String[] {}
         );
 
         CountDownLatch latch = new CountDownLatch(1);

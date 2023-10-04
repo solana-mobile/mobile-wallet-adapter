@@ -14,6 +14,7 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
@@ -22,7 +23,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -345,8 +348,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     public static class GetCapabilitiesResult {
+        @Deprecated
         public final boolean supportsCloneAuthorization;
-
+        @Deprecated
         public final boolean supportsSignAndSendTransactions;
 
         @IntRange(from = 0)
@@ -359,16 +363,31 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         @Size(min = 1)
         public final Object[] supportedTransactionVersions;
 
-        private GetCapabilitiesResult(boolean supportsCloneAuthorization,
-                                      boolean supportsSignAndSendTransactions,
-                                      @IntRange(from = 0) int maxTransactionsPerSigningRequest,
+        @NonNull
+        public final String[] supportedOptionalFeatures;
+
+        private GetCapabilitiesResult(@IntRange(from = 0) int maxTransactionsPerSigningRequest,
                                       @IntRange(from = 0) int maxMessagesPerSigningRequest,
-                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions) {
-            this.supportsCloneAuthorization = supportsCloneAuthorization;
-            this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
+                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
+                                      @NonNull String[] supportedFeatures) {
             this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
             this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
             this.supportedTransactionVersions = supportedTransactionVersions;
+            this.supportedOptionalFeatures = supportedFeatures;
+
+            boolean supportsCloneAuthorization = false;
+            boolean supportsSignAndSendTransactions = false;
+            for (String featureId : supportedFeatures) {
+                if (featureId == null) continue;
+                if (featureId.equals(ProtocolContract.FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS)) {
+                    supportsSignAndSendTransactions = true;
+                }
+                if (featureId.equals(ProtocolContract.FEATURE_ID_CLONE_AUTHORIZATION)) {
+                    supportsCloneAuthorization = true;
+                }
+            }
+            this.supportsCloneAuthorization = supportsCloneAuthorization;
+            this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
         }
 
         @NonNull
@@ -380,6 +399,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     ", maxTransactionsPerSigningRequest=" + maxTransactionsPerSigningRequest +
                     ", maxMessagesPerSigningRequest=" + maxMessagesPerSigningRequest +
                     ", supportedTransactionVersions=" + Arrays.toString(supportedTransactionVersions) +
+                    ", supportedOptionalFeatures=" + Arrays.toString(supportedOptionalFeatures) +
                     '}';
         }
     }
@@ -406,9 +426,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             final int maxTransactionsPerSigningRequest;
             final int maxMessagesPerSigningRequest;
             final Object[] supportedTransactionVersions;
+            final String[] supportedOptionalFeatures;
             try {
-                supportsCloneAuthorization = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION);
-                supportsSignAndSendTransactions = jo.getBoolean(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS);
+                supportsCloneAuthorization = jo.optBoolean(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION);
+                supportsSignAndSendTransactions = jo.optBoolean(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS);
                 maxTransactionsPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, 0);
                 maxMessagesPerSigningRequest = jo.optInt(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, 0);
 
@@ -430,15 +451,35 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     // transactions are supported.
                     supportedTransactionVersions = new Object[] { TransactionVersion.LEGACY };
                 }
+
+                final JSONArray supportedOptionalFeaturesArr = jo.optJSONArray(ProtocolContract.RESULT_SUPPORTED_FEATURES);
+                if (supportedOptionalFeaturesArr != null) {
+                    final int length = supportedOptionalFeaturesArr.length();
+                    supportedOptionalFeatures = new String[length];
+                    for (int i = 0; i < length; i++) {
+                        final String sof = supportedOptionalFeaturesArr.getString(i);
+                        if (!Identifier.isValidIdentifier(sof)) {
+                            throw new JSONException("features expected to contain only valid namespaced feature identifiers (String)");
+                        }
+                        supportedOptionalFeatures[i] = sof;
+                    }
+                } else {
+                    // Previous versions of the Mobile Wallet Adapter protocol spec used explicit
+                    // parameters for optional features. Map the old feature support parameters to
+                    // the new optional features array
+                    List<String> supportedOptionalFeaturesList = new ArrayList<>();
+                    if (supportsCloneAuthorization) supportedOptionalFeaturesList.add(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION);
+                    if (supportsSignAndSendTransactions) supportedOptionalFeaturesList.add(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS);
+                    supportedOptionalFeatures = supportedOptionalFeaturesList.toArray(new String[0]);
+                }
             } catch (JSONException e) {
                 throw new JsonRpc20InvalidResponseException("result does not conform to expected format");
             }
 
-            return new GetCapabilitiesResult(supportsCloneAuthorization,
-                    supportsSignAndSendTransactions,
-                    maxTransactionsPerSigningRequest,
+            return new GetCapabilitiesResult(maxTransactionsPerSigningRequest,
                     maxMessagesPerSigningRequest,
-                    supportedTransactionVersions);
+                    supportedTransactionVersions,
+                    supportedOptionalFeatures);
         }
 
         @Override

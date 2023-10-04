@@ -28,12 +28,14 @@ public class ProtocolContract {
     // METHOD_CLONE_AUTHORIZATION returns a RESULT_AUTH_TOKEN
 
     public static final String METHOD_GET_CAPABILITIES = "get_capabilities";
-    public static final String RESULT_SUPPORTS_CLONE_AUTHORIZATION = "supports_clone_authorization"; // type: Boolean
-    public static final String RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS = "supports_sign_and_send_transactions"; // type: Boolean
     public static final String RESULT_MAX_TRANSACTIONS_PER_REQUEST = "max_transactions_per_request"; // type: Number
     public static final String RESULT_MAX_MESSAGES_PER_REQUEST = "max_messages_per_request"; // type: Number
     public static final String RESULT_SUPPORTED_TRANSACTION_VERSIONS = "supported_transaction_versions"; // type: JSON array of any primitive datatype
     public static final String RESULT_SUPPORTED_FEATURES = "features"; // type: JSON array of String (feature identifiers)
+    @Deprecated
+    public static final String RESULT_SUPPORTS_CLONE_AUTHORIZATION = "supports_clone_authorization"; // type: Boolean
+    @Deprecated
+    public static final String RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS = "supports_sign_and_send_transactions"; // type: Boolean
 
     public static final String METHOD_SIGN_TRANSACTIONS = "sign_transactions";
     // METHOD_SIGN_TRANSACTIONS takes a PARAMETER_PAYLOADS
@@ -96,6 +98,15 @@ public class ProtocolContract {
     public static final String CHAIN_SOLANA_DEVNET = "solana:devnet";
 
     public static final String NAMESPACE_SOLANA = "solana";
+
+    // Mandatory Features
+    public static final String FEATURE_ID_SIGN_MESSAGES = "solana:signAndSendTransaction";
+    public static final String FEATURE_ID_SIGN_TRANSACTIONS = "solana:signTransactions";
+
+    // Optional Features
+    public static final String FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS = "solana:signAndSendTransaction";
+    public static final String FEATURE_ID_SIGN_IN_WITH_SOLANA = "solana:signInWithSolana";
+    public static final String FEATURE_ID_CLONE_AUTHORIZATION = "solana:cloneAuthorization";
 
     private ProtocolContract() {}
 }

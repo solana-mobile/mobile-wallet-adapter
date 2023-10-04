@@ -505,7 +505,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         final JSONObject result = new JSONObject();
         try {
             result.put(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION, false);
-            result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS, mConfig.supportsSignAndSendTransactions);
             if (mConfig.maxTransactionsPerSigningRequest != 0) {
                 result.put(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, mConfig.maxTransactionsPerSigningRequest);
             }
@@ -513,6 +512,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result.put(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, mConfig.maxMessagesPerSigningRequest);
             }
             result.put(ProtocolContract.RESULT_SUPPORTED_TRANSACTION_VERSIONS, new JSONArray(mConfig.supportedTransactionVersions));
+            result.put(ProtocolContract.RESULT_SUPPORTED_FEATURES, new JSONArray(mConfig.optionalFeatures));
+
+            // retained for backwards compatibility
+            result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS, mConfig.supportsSignAndSendTransactions);
         } catch (JSONException e) {
             throw new RuntimeException("Failed preparing get_capabilities response", e);
         }
