@@ -59,11 +59,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         scenario = associationUri.createScenario(
             getApplication<FakeWalletApplication>().applicationContext,
             MobileWalletAdapterConfig(
+                true,
                 10,
                 10,
                 arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
-                arrayOf(ProtocolContract.FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS)
+                LOW_POWER_NO_CONNECTION_TIMEOUT_MS
             ),
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
@@ -258,7 +258,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.chain}")
+        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.cluster}")
 
         request.request.completeWithSignatures(request.signatures!!)
     }
@@ -268,7 +268,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.chain}")
+        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.cluster}")
 
         val signatures = request.signatures!!
         val notSubmittedSignatures = Array(signatures.size) { i ->
