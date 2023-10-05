@@ -19,6 +19,7 @@ import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -156,17 +157,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
             assert(result != null); // checked in AuthorizeRequest.complete()
 
-            final String publicKeyBase64 = Base64.encodeToString(result.publicKey, Base64.NO_WRAP);
-
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                final JSONObject account = new JSONObject();
-                account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
-                if (result.accountLabel != null) {
-                    account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, result.accountLabel);
+                final JSONArray accounts = new JSONArray();
+                for (AuthorizedAccount aa : result.accounts) {
+                    final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
+                    final JSONObject account = new JSONObject();
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
+                    if (aa.accountLabel != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
+                    }
+                    accounts.put(account);
                 }
-                final JSONArray accounts = new JSONArray().put(account); // TODO(#44): support multiple accounts
                 o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
@@ -226,15 +229,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final String authToken;
 
-        @NonNull
+        @Deprecated @NonNull
         public final byte[] publicKey;
 
-        @Nullable
+        @Deprecated @Nullable
         public final String accountLabel;
 
         @Nullable
         public final Uri walletUriBase;
 
+        @NonNull @Size(min = 1)
+        public final AuthorizedAccount[] accounts;
+
+        @Deprecated
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull byte[] publicKey,
                                    @Nullable String accountLabel,
@@ -243,6 +250,18 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.publicKey = publicKey;
             this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
+            this.accounts = new AuthorizedAccount[] {
+                    new AuthorizedAccount(publicKey, accountLabel, null, null) };
+        }
+
+        public AuthorizationResult(@NonNull String authToken,
+                                   @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
+                                   @Nullable Uri walletUriBase) {
+            this.authToken = authToken;
+            this.walletUriBase = walletUriBase;
+            this.accounts = accounts;
+            this.publicKey = accounts[0].publicKey;
+            this.accountLabel = accounts[0].accountLabel;
         }
 
         @NonNull
@@ -250,9 +269,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
-                    ", publicKey=" + Arrays.toString(publicKey) +
-                    ", accountLabel='" + accountLabel + '\'' +
                     ", walletUriBase=" + walletUriBase +
+                    ", accounts=" + Arrays.toString(accounts) +
                     '}';
         }
     }

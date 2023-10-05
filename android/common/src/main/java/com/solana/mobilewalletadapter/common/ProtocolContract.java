@@ -70,6 +70,8 @@ public class ProtocolContract {
     public static final String RESULT_ACCOUNTS = "accounts"; // type: JSON array of Account
     public static final String RESULT_ACCOUNTS_ADDRESS = "address"; // type: String (base64-encoded addresses)
     public static final String RESULT_ACCOUNTS_LABEL = "label"; // type: String
+    public static final String RESULT_ACCOUNTS_CHAINS = "chains"; // type: String
+    // RESULT_ACCOUNTS optionally includes a RESULT_SUPPORTED_FEATURES
 
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
 

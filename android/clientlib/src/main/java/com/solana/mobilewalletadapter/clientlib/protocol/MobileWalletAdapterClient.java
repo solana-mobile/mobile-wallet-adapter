@@ -11,6 +11,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
+import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
@@ -18,6 +19,7 @@ import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 
+import org.jetbrains.annotations.TestOnly;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -135,21 +137,23 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public static class AuthorizationResult {
         @NonNull
         public final String authToken;
-        @NonNull
+        @Deprecated @NonNull
         public final byte[] publicKey;
-        @Nullable
+        @Deprecated @Nullable
         public final String accountLabel;
         @Nullable
         public final Uri walletUriBase;
+        @NonNull @Size(min = 1)
+        public final AuthorizedAccount[] accounts;
 
         private AuthorizationResult(@NonNull String authToken,
-                                    @NonNull byte[] publicKey,
-                                    @Nullable String accountLabel,
+                                    @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                                     @Nullable Uri walletUriBase) {
             this.authToken = authToken;
-            this.publicKey = publicKey;
-            this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
+            this.accounts = accounts;
+            this.publicKey = accounts[0].publicKey;
+            this.accountLabel = accounts[0].accountLabel;
         }
 
         @NonNull
@@ -157,19 +161,61 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public String toString() {
             return "AuthorizationResult{" +
                     "authToken=<REDACTED>" +
-                    ", publicKey=" + Arrays.toString(publicKey) +
-                    ", accountLabel='" + accountLabel + '\'' +
                     ", walletUriBase=" + walletUriBase +
+                    ", accounts=" + Arrays.toString(accounts) +
                     '}';
         }
 
+        public static class AuthorizedAccount {
+            @NonNull
+            public final byte[] publicKey;
+            @Nullable
+            public final String accountLabel;
+            @Nullable
+            public final String[] chains;
+            @Nullable
+            public final String[] features;
+
+            private AuthorizedAccount(@NonNull byte[] publicKey,
+                                      @Nullable String accountLabel,
+                                      @Nullable String[] chains,
+                                      @Nullable String[] features) {
+                this.publicKey = publicKey;
+                this.accountLabel = accountLabel;
+                this.chains = chains;
+                this.features = features;
+            }
+
+            @NonNull
+            @Override
+            public String toString() {
+                return "AuthorizedAccount{" +
+                        "publicKey=" + Arrays.toString(publicKey) +
+                        ", accountLabel='" + accountLabel + '\'' +
+                        ", chains=" + Arrays.toString(chains) +
+                        ", features=" + Arrays.toString(features) +
+                        '}';
+            }
+        }
+
+        @Deprecated @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
         public static AuthorizationResult create(
                 String authToken,
                 byte[] publicKey,
                 String accountLabel,
                 Uri walletUriBase
         ) {
-            return new AuthorizationResult(authToken, publicKey, accountLabel, walletUriBase);
+            AuthorizedAccount[] accounts = new AuthorizedAccount[] { new AuthorizedAccount(publicKey, accountLabel, null, null) };
+            return new AuthorizationResult(authToken, accounts, walletUriBase);
+        }
+
+        @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+        public static AuthorizationResult create(
+                String authToken,
+                AuthorizedAccount[] accounts,
+                Uri walletUriBase
+        ) {
+            return new AuthorizationResult(authToken, accounts, walletUriBase);
         }
     }
 
@@ -197,17 +243,40 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 throw new JsonRpc20InvalidResponseException("expected an auth_token");
             }
 
-            final byte[] publicKey;
-            final String accountLabel;
+            final AuthorizationResult.AuthorizedAccount[] authorizedAccounts;
             try {
                 final JSONArray accounts = jo.getJSONArray(ProtocolContract.RESULT_ACCOUNTS);
-                final JSONObject account = accounts.getJSONObject(0); // TODO(#44): support multiple addresses
-                final String b64EncodedAddress = account.getString(ProtocolContract.RESULT_ACCOUNTS_ADDRESS);
-                publicKey = JsonPack.unpackBase64PayloadToByteArray(b64EncodedAddress);
-                if (account.has(ProtocolContract.RESULT_ACCOUNTS_LABEL)) {
-                    accountLabel = account.getString(ProtocolContract.RESULT_ACCOUNTS_LABEL);
-                } else {
-                    accountLabel = null;
+                authorizedAccounts = new AuthorizationResult.AuthorizedAccount[accounts.length()];
+                for (int i = 0; i < accounts.length(); i++) {
+                    final byte[] publicKey;
+                    final String accountLabel;
+                    final String[] chains;
+                    final String[] features;
+                    final JSONObject account = accounts.getJSONObject(i);
+                    final String b64EncodedAddress = account.getString(ProtocolContract.RESULT_ACCOUNTS_ADDRESS);
+                    publicKey = JsonPack.unpackBase64PayloadToByteArray(b64EncodedAddress);
+                    if (account.has(ProtocolContract.RESULT_ACCOUNTS_LABEL)) {
+                        accountLabel = account.getString(ProtocolContract.RESULT_ACCOUNTS_LABEL);
+                    } else {
+                        accountLabel = null;
+                    }
+                    final JSONArray chainsArr = account.optJSONArray(ProtocolContract.RESULT_ACCOUNTS_CHAINS);
+                    if (chainsArr == null) chains = null;
+                    else {
+                        chains = new String[chainsArr.length()];
+                        for (int c = 0; c < chainsArr.length(); c++) {
+                            chains[c] = chainsArr.getString(0);
+                        }
+                    }
+                    final JSONArray featuresArr = account.optJSONArray(ProtocolContract.RESULT_SUPPORTED_FEATURES);
+                    if (featuresArr == null) features = null;
+                    else {
+                        features = new String[featuresArr.length()];
+                        for (int c = 0; c < featuresArr.length(); c++) {
+                            features[c] = featuresArr.getString(0);
+                        }
+                    }
+                    authorizedAccounts[i] = new AuthorizationResult.AuthorizedAccount(publicKey, accountLabel, chains, features);
                 }
             } catch (JSONException e) {
                 throw new JsonRpc20InvalidResponseException("expected one or more addresses");
@@ -221,7 +290,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                         walletUriBaseStr + "'; expected a 'https' URI");
             }
 
-            return new AuthorizationResult(authToken, publicKey, accountLabel, walletUriBase);
+            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase);
         }
 
         @Override

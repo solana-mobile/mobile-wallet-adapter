@@ -209,9 +209,10 @@ public abstract class LocalScenario implements Scenario {
                         final String name = request.identityName != null ? request.identityName : "";
                         final Uri uri = request.identityUri != null ? request.identityUri : Uri.EMPTY;
                         final Uri relativeIconUri = request.iconUri != null ? request.iconUri : Uri.EMPTY;
+                        final AuthorizedAccount account = authorize.accounts[0]; // TODO(#44): support multiple addresses
                         final AuthRecord authRecord = mAuthRepository.issue(
-                                name, uri, relativeIconUri, authorize.publicKey,
-                                authorize.accountLabel, chain, authorize.walletUriBase,
+                                name, uri, relativeIconUri, account.publicKey,
+                                account.accountLabel, chain, authorize.walletUriBase,
                                 authorize.scope);
                         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
                         synchronized (mLock) {
@@ -220,7 +221,7 @@ public abstract class LocalScenario implements Scenario {
 
                         final String authToken = mAuthRepository.toAuthToken(authRecord);
                         request.complete(new MobileWalletAdapterServer.AuthorizationResult(
-                                authToken, authorize.publicKey, authorize.accountLabel,
+                                authToken, authorize.accounts,
                                 authorize.walletUriBase));
                     } else {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(

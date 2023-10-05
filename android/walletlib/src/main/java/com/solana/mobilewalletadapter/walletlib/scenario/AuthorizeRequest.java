@@ -8,6 +8,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
@@ -65,11 +66,20 @@ public class AuthorizeRequest
         return mChain;
     }
 
+    @Deprecated
     public void completeWithAuthorize(@NonNull byte[] publicKey,
                                       @Nullable String accountLabel,
                                       @Nullable Uri walletUriBase,
                                       @Nullable byte[] scope) {
-        mRequest.complete(new Result(publicKey, accountLabel, walletUriBase, scope));
+        AuthorizedAccount[] accounts = new AuthorizedAccount[] {
+                new AuthorizedAccount(publicKey, accountLabel, null, null)};
+        mRequest.complete(new Result(accounts, walletUriBase, scope));
+    }
+
+    public void completeWithAuthorize(@NonNull AuthorizedAccount[] accounts,
+                                      @Nullable Uri walletUriBase,
+                                      @Nullable byte[] scope) {
+        mRequest.complete(new Result(accounts, walletUriBase, scope));
     }
 
     public void completeWithDecline() {
@@ -82,21 +92,17 @@ public class AuthorizeRequest
     }
 
     /*package*/ static class Result {
-        @NonNull
-        /*package*/ final byte[] publicKey;
-        @Nullable
-        /*package*/ final String accountLabel;
+        @NonNull @Size(min = 1)
+        /*package*/ final AuthorizedAccount[] accounts;
         @Nullable
         /*package*/ final Uri walletUriBase;
         @Nullable
         /*package*/ final byte[] scope;
 
-        private Result(@NonNull byte[] publicKey,
-                       @Nullable String accountLabel,
+        private Result(@NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                        @Nullable Uri walletUriBase,
                        @Nullable byte[] scope) {
-            this.publicKey = publicKey;
-            this.accountLabel = accountLabel;
+            this.accounts = accounts;
             this.walletUriBase = walletUriBase;
             this.scope = scope;
         }
