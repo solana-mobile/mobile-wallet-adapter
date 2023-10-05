@@ -21,7 +21,6 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
