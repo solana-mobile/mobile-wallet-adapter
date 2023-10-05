@@ -330,14 +330,10 @@ object MobileWalletAdapterUseCase {
         async {
             mobileWalletAdapterClientSem.withPermit {
                 val contract = intentLauncher.contract as StartMobileWalletAdapterActivity
-                val localAssociation = LocalAssociationScenario(
-                    Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
-                    listOf(SessionProperties.ProtocolVersion.V1)
-                )
+                val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
 
                 val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
-                    uriPrefix, localAssociation.port, localAssociation.session,
-                    localAssociation.supportedProtocolVersions
+                    uriPrefix, localAssociation.port, localAssociation.session
                 )
                 try {
                     contract.waitForActivityResumed() // may throw TimeoutCancellationException

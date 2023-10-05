@@ -25,11 +25,12 @@ public class LocalAssociationIntentCreator {
 
     private LocalAssociationIntentCreator() { }
 
+    @Deprecated
     @NonNull
     public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
                                                  @IntRange(from = 0, to = 65535) int port,
                                                  @NonNull MobileWalletAdapterSession session) {
-        return createAssociationIntent(endpointPrefix, port, session, new ArrayList<>());
+        return createAssociationIntent(endpointPrefix, port, session, List.of(SessionProperties.ProtocolVersion.LEGACY));
     }
 
     @NonNull

@@ -62,6 +62,7 @@ public class LocalAssociationScenario extends Scenario {
 
     public List<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
 
+    @Deprecated
     public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs) {
         this(clientTimeoutMs, List.of(SessionProperties.ProtocolVersion.LEGACY));
     }
