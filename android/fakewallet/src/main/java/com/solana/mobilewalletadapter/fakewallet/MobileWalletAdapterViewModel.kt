@@ -63,7 +63,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 10,
                 10,
                 arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                LOW_POWER_NO_CONNECTION_TIMEOUT_MS
+                LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
             ),
             AuthIssuerConfig("fakewallet"),
             MobileWalletAdapterScenarioCallbacks()
