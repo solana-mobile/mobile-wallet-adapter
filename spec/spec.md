@@ -288,34 +288,15 @@ Wallet endpoint to dapp endpoint
 #### Specification
 
 ```
-<Qw>
+<Qw><session_props>
 ```
 
 where:
 
 - `Qw`: the X9.62-encoded wallet endpoint ephemeral ECDH public keypoint
+- `session_props`: an [encrypted message](#encrypted-message-wrapping) containing the session properties JSON payload, as described below. 
 
-#### Description
-
-In response to a valid `HELLO_REQ` message to the wallet endpoint (which should be the first message received after a connection is established between the endpoints), it should generate a P-256 EC keypair and X9.62-encode the public keypoint `Qw`. This encoded public keypoint `Qw` forms the `HELLO_RSP` message.
-
-Upon sending of the `HELLO_RSP` message by the wallet endpoint, and receipt of the `HELLO_RSP` message by the dapp endpoint, each endpoint is now in possession of all necessary key materials to generate a shared secret for the [chosen encryption algorithm](#encrypted-message-wrapping), using the ECDH (as specified by [NIST SP 800-56A](https://csrc.nist.gov/publications/detail/sp/800-56a/rev-3/final)) and HKDF (as specified by [RFC5869](https://datatracker.ietf.org/doc/html/rfc5869)) algorithms with the following KDF parameters:
-
-- `ikm`: the 32-byte ECDH-derived secret
-- `salt`: the 65 byte X9.62-encoded public keypoint Qa of the [association keypair](#association-keypair)
-- `L`: 16 bytes (such that the output of the HKDF may be used directly as an AES-128 key)
-
-Once each endpoint has calculated the ephemeral shared secret, they should proceed to providing or consuming the [Wallet RPC interface](#wallet-rpc-interface).
-
-If either public keypoint `Qd` or `Qw` is not valid, if no `HELLO_RSP` message is received by the dapp endpoint within no less than 10 seconds, or if a second `HELLO_RSP` message is received by the dapp endpoint at any time during the connection, all ephemeral key materials should be discarded, and the connection should be closed.
-
-### SESSION_PROPS
-
-#### Direction
-
-Wallet endpoint to dapp endpoint
-
-#### Specification
+##### Session Properties
 
 ```
 {
@@ -329,7 +310,19 @@ where:
 
 #### Description
 
-If a `v=` query parameter is present in the association URI presented by the dapp endpoint, the wallet endpoint MUST send a `SESSION_PROPS` message to the client immediately after the `HELLO_RSP` message. If the connecting dapp endpoint runs software for a legacy version of this standard (i.e. no `v=` parameter present during association), the wallet MUST NOT send the `SESSION_PROPS` message to the client, and must assume that the connection is a legacy connection. If the wallet endpoint does not support legacy connections, it should close the connection immediately upon receipt of the `HELLO_REQ` message.
+In response to a valid `HELLO_REQ` message to the wallet endpoint (which should be the first message received after a connection is established between the endpoints), it should generate a P-256 EC keypair and X9.62-encode the public keypoint `Qw`. This encoded public keypoint `Qw` forms the first part of the `HELLO_RSP` message.
+
+If a `v=` query parameter is present in the association URI presented by the dapp endpoint, the wallet endpoint MUST append an encrypted [session properties](#session-properties) message to the `HELLO_RSP` message. If the connecting dapp endpoint runs software for a legacy version of this standard (i.e. no `v=` parameter present during association), the wallet MUST NOT send the `session_props` message to the client, and must assume that the connection is a legacy connection. If the wallet endpoint does not support legacy connections, it should close the connection immediately upon receipt of the `HELLO_REQ` message.
+
+Upon sending of the `HELLO_RSP` message by the wallet endpoint, and receipt of the `HELLO_RSP` message by the dapp endpoint, each endpoint is now in possession of all necessary key materials to generate a shared secret for the [chosen encryption algorithm](#encrypted-message-wrapping), using the ECDH (as specified by [NIST SP 800-56A](https://csrc.nist.gov/publications/detail/sp/800-56a/rev-3/final)) and HKDF (as specified by [RFC5869](https://datatracker.ietf.org/doc/html/rfc5869)) algorithms with the following KDF parameters:
+
+- `ikm`: the 32-byte ECDH-derived secret
+- `salt`: the 65 byte X9.62-encoded public keypoint Qa of the [association keypair](#association-keypair)
+- `L`: 16 bytes (such that the output of the HKDF may be used directly as an AES-128 key)
+
+Once each endpoint has calculated the ephemeral shared secret, they should proceed to providing or consuming the [Wallet RPC interface](#wallet-rpc-interface).
+
+If either public keypoint `Qd` or `Qw` is not valid, if no `HELLO_RSP` message is received by the dapp endpoint within no less than 10 seconds, or if a second `HELLO_RSP` message is received by the dapp endpoint at any time during the connection, all ephemeral key materials should be discarded, and the connection should be closed.
 
 ## Wallet RPC interface
 
