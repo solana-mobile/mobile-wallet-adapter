@@ -402,7 +402,10 @@ where:
     “accounts”: [
         {
             “address”: “<address>", 
+            "address_format": "<address_format>",
+            "public_key": "<public_key>",
             “label”: “<label>”, 
+            "icon": "<icon>",
             "chains": ["<chain_id>", ...], 
             "features": ["<feature_id>", ...]
         },
@@ -422,10 +425,13 @@ where:
 
 - `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to reauthorize access to [privileged methods](#privileged-methods).
 - `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
-  - `address`: a base64-encoded address for this account
+  - `address`: the address for this account. The format of this string will depend on the chain, and is specified by the `addressFormat` field
+  - `address_format`: (optional) the format of the `address`. Defaults to `base64` for backwards compatibility with previous versions of this spec. 
+  - `public_key`: a base64-encoded public key for this account
   - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
   - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
+  - `icon`: (optional) a relative path (from `wallet_uri_base`) to an image asset file of an icon for the account. This may be displayed by the app.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
   - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
