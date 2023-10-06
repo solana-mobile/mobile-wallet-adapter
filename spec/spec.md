@@ -375,7 +375,9 @@ authorize
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
-    "chain": "<chain>",
+    "chains": ["<chain>", ...],
+    "features": ["<feature_id>", ...],
+    "addresses": ["<address>", ...],
     “auth_token”: “<auth_token>”,
     "sign_in_payload": <sign_in_payload>,
     "cluster": "<cluster>"
