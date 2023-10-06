@@ -386,7 +386,7 @@ where:
 
 - `identity`: a JSON object, containing:
   - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
-  - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
+  - `icon`: (optional) either a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image or a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
 - `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `solana:mainnet`.
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
@@ -425,13 +425,14 @@ where:
 
 - `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to reauthorize access to [privileged methods](#privileged-methods).
 - `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
-  - `address`: the address for this account. The format of this string will depend on the chain, and is specified by the `addressFormat` field
-  - `address_format`: (optional) the format of the `address`. Defaults to `base64` for backwards compatibility with previous versions of this spec. 
-  - `public_key`: a base64-encoded public key for this account
+  - `address`: a base64-encoded public key for this account. 
+  - `display_address`: (optional) the address for this account. The format of this string will depend on the chain, and is specified by the `display_address_format` field
+  - `display_address_format`: (optional) the format of the `display_address`.
+  - `public_key`: (optional) a base64-encoded public key for this account. This is an alias for `address` with more accurate terminology. If present, this param should be preferred over `address`.
   - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
   - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
-  - `icon`: (optional) a relative path (from `wallet_uri_base`) to an image asset file of an icon for the account. This may be displayed by the app.
+  - `icon`: (optional) a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image of an icon for the account. This may be displayed by the app.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
   - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
