@@ -375,7 +375,7 @@ authorize
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
-    "chains": ["<chain>", ...],
+    "chain": "<chain>",
     "features": ["<feature_id>", ...],
     "addresses": ["<address>", ...],
     “auth_token”: “<auth_token>”,
@@ -390,12 +390,12 @@ where:
   - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
   - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
-- `chains`: (optional) if set, a list of the [chain identifiers](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `[solana:mainnet]`.
+- `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `solana:mainnet`.
 - `addresses`: (optional) if set, a list of base64 encoded account addresses that the dapp endpoint wishes to be included in the authorized scope. Defaults to `null`. 
 - `features`: (optional) if set, a list of [feature identifiers](#feature-identifiers) that the dapp endpoint intends to use in the session. Defaults to `null`. 
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
 - `sign_in_payload`: (optional) a value object containing the payload portion of a [Sign In With Solana message](https://siws.web3auth.io/spec). If present, the wallet endpoint should present the SIWS message to the user and return the resulting signature and signed message, as described below.  
-- `cluster`: (optional) used to specify a solana cluster . This parameter is maintained for backwards compatibility with previous versions of the spec, and will be ignored if the `chains` parameter is present. 
+- `cluster`: (optional) an alias for `chain`. This parameter is maintained for backwards compatibility with previous versions of the spec, and will be ignored if the `chain` parameter is present.
 
 ###### Result
 {: .no_toc }
