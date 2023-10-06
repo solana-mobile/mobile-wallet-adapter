@@ -375,7 +375,9 @@ authorize
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
-    "chain": "<chain>",
+    "chains": ["<chain>", ...],
+    "features": ["<feature_id>", ...],
+    "addresses": ["<address>", ...],
     “auth_token”: “<auth_token>”,
     "sign_in_payload": <sign_in_payload>,
     "cluster": "<cluster>"
@@ -388,7 +390,9 @@ where:
   - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
   - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
-- `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `solana:mainnet`.
+- `chains`: (optional) if set, a list of the [chain identifiers](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `[solana:mainnet]`.
+- `addresses`: (optional) if set, a list of base64 encoded account addresses that the dapp endpoint wishes to be included in the authorized scope. Defaults to `null`. 
+- `features`: (optional) if set, a list of [feature identifiers](#feature-identifiers) that the dapp endpoint wishes to be included in the authorized scope. Defaults to `null`. 
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
 - `sign_in_payload`: (optional) a value object containing the payload portion of a [Sign In With Solana message](https://siws.web3auth.io/spec). If present, the wallet endpoint should present the SIWS message to the user and return the resulting signature and signed message, as described below.  
 - `cluster`: (optional) an alias for `chain`. This parameter is maintained for backwards compatibility with previous versions of the spec, and will be ignored if the `chain` parameter is present. 
@@ -409,6 +413,8 @@ where:
         ...
     ],
     “wallet_uri_base”: “<wallet_uri_base>”,
+    "chains": ["<chain_id>", ...], 
+    "features": ["<feature_id>", ...],
     "sign_in_result": {
         “address”: “<address>", 
         "signed_message": "<signed_message>"
@@ -427,6 +433,8 @@ where:
   - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
+- `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
+- `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
   - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
   - `signed_message`: the base64-encoded signed message payload
