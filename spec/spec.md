@@ -402,8 +402,8 @@ where:
     “accounts”: [
         {
             “address”: “<address>", 
-            "address_format": "<address_format>",
-            "public_key": "<public_key>",
+            "display_address": "<display_address>",
+            "display_address_format": "<display_address_format>",
             “label”: “<label>”, 
             "icon": "<icon>",
             "chains": ["<chain_id>", ...], 
@@ -428,7 +428,6 @@ where:
   - `address`: a base64-encoded public key for this account. 
   - `display_address`: (optional) the address for this account. The format of this string will depend on the chain, and is specified by the `display_address_format` field
   - `display_address_format`: (optional) the format of the `display_address`.
-  - `public_key`: (optional) a base64-encoded public key for this account. This is an alias for `address` with more accurate terminology. If present, this param should be preferred over `address`.
   - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
   - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
