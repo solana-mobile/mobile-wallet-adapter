@@ -19,6 +19,7 @@ import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,11 +42,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
     public interface MethodHandlers {
         void authorize(@NonNull AuthorizeRequest request);
-        void reauthorize(@NonNull ReauthorizeRequest request);
         void deauthorize(@NonNull DeauthorizeRequest request);
         void signTransactions(@NonNull SignTransactionsRequest request);
         void signMessages(@NonNull SignMessagesRequest request);
         void signAndSendTransactions(@NonNull SignAndSendTransactionsRequest request);
+
+        @Deprecated
+        void reauthorize(@NonNull ReauthorizeRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
@@ -63,10 +66,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         try {
             switch (method) {
                 case ProtocolContract.METHOD_AUTHORIZE:
-                    handleAuthorize(id, params);
-                    break;
                 case ProtocolContract.METHOD_REAUTHORIZE:
-                    handleReauthorize(id, params);
+                    handleAuthorize(id, params);
                     break;
                 case ProtocolContract.METHOD_DEAUTHORIZE:
                     handleDeauthorize(id, params);
@@ -156,17 +157,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
             assert(result != null); // checked in AuthorizeRequest.complete()
 
-            final String publicKeyBase64 = Base64.encodeToString(result.publicKey, Base64.NO_WRAP);
-
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                final JSONObject account = new JSONObject();
-                account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
-                if (result.accountLabel != null) {
-                    account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, result.accountLabel);
+                final JSONArray accounts = new JSONArray();
+                for (AuthorizedAccount aa : result.accounts) {
+                    final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
+                    final JSONObject account = new JSONObject();
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
+                    if (aa.accountLabel != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
+                    }
+                    accounts.put(account);
                 }
-                final JSONArray accounts = new JSONArray().put(account); // TODO(#44): support multiple accounts
                 o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
             } catch (JSONException e) {
@@ -186,15 +189,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final Uri iconUri;
         @Nullable
         public final String identityName;
+        @Nullable
+        public final String authToken;
 
         private AuthorizationRequest(@Nullable Object id,
                                      @Nullable Uri identityUri,
                                      @Nullable Uri iconUri,
-                                     @Nullable String identityName) {
+                                     @Nullable String identityName,
+                                     @Nullable String authToken) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
+            this.authToken = authToken;
         }
 
         @Override
@@ -222,15 +229,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final String authToken;
 
-        @NonNull
+        @Deprecated @NonNull
         public final byte[] publicKey;
 
-        @Nullable
+        @Deprecated @Nullable
         public final String accountLabel;
 
         @Nullable
         public final Uri walletUriBase;
 
+        @NonNull @Size(min = 1)
+        public final AuthorizedAccount[] accounts;
+
+        @Deprecated
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull byte[] publicKey,
                                    @Nullable String accountLabel,
@@ -239,6 +250,18 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.publicKey = publicKey;
             this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
+            this.accounts = new AuthorizedAccount[] {
+                    new AuthorizedAccount(publicKey, accountLabel, null, null) };
+        }
+
+        public AuthorizationResult(@NonNull String authToken,
+                                   @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
+                                   @Nullable Uri walletUriBase) {
+            this.authToken = authToken;
+            this.walletUriBase = walletUriBase;
+            this.accounts = accounts;
+            this.publicKey = accounts[0].publicKey;
+            this.accountLabel = accounts[0].accountLabel;
         }
 
         @NonNull
@@ -246,9 +269,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
-                    ", publicKey=" + Arrays.toString(publicKey) +
-                    ", accountLabel='" + accountLabel + '\'' +
                     ", walletUriBase=" + walletUriBase +
+                    ", accounts=" + Arrays.toString(accounts) +
                     '}';
         }
     }
@@ -294,24 +316,35 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             identityName = null;
         }
 
-        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER, ProtocolContract.CLUSTER_MAINNET_BETA);
+        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
+        final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
+        final String chain = !chainParam.isEmpty() ? chainParam : !cluster.isEmpty() ? cluster : null;
 
-        final AuthorizeRequest request = new AuthorizeRequest(id, identityUri, iconUri, identityName, cluster);
+        final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
+        final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;
+
+        final AuthorizeRequest request =
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, authToken);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
 
     public static class AuthorizeRequest extends AuthorizationRequest {
-        @NonNull
+
+        @Nullable @Deprecated
         public final String cluster;
+        @Nullable
+        public final String chain;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @Nullable String identityName,
-                                 @NonNull String cluster) {
-            super(id, identityUri, iconUri, identityName);
-            this.cluster = cluster;
+                                 @Nullable String chain,
+                                 @Nullable String authToken) {
+            super(id, identityUri, iconUri, identityName, authToken);
+            this.chain = chain;
+            this.cluster = chain;
         }
 
         @Override
@@ -326,7 +359,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Override
         public String toString() {
             return "AuthorizeRequest{" +
-                    "cluster='" + cluster + '\'' +
+                    "chain='" + chain + '\'' +
                     '/' + super.toString() +
                     '}';
         }
@@ -336,6 +369,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     // reauthorize
     // =============================================================================================
 
+    @Deprecated
     private void handleReauthorize(@Nullable Object id, @Nullable Object params) throws IOException {
         if (!(params instanceof JSONObject)) {
             handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
@@ -393,7 +427,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                    @Nullable Uri iconUri,
                                    @Nullable String identityName,
                                    @NonNull String authToken) {
-            super(id, identityUri, iconUri, identityName);
+            super(id, identityUri, iconUri, identityName, authToken);
             this.authToken = authToken;
         }
 
@@ -489,7 +523,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         final JSONObject result = new JSONObject();
         try {
             result.put(ProtocolContract.RESULT_SUPPORTS_CLONE_AUTHORIZATION, false);
-            result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS, mConfig.supportsSignAndSendTransactions);
             if (mConfig.maxTransactionsPerSigningRequest != 0) {
                 result.put(ProtocolContract.RESULT_MAX_TRANSACTIONS_PER_REQUEST, mConfig.maxTransactionsPerSigningRequest);
             }
@@ -497,6 +530,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result.put(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, mConfig.maxMessagesPerSigningRequest);
             }
             result.put(ProtocolContract.RESULT_SUPPORTED_TRANSACTION_VERSIONS, new JSONArray(mConfig.supportedTransactionVersions));
+            result.put(ProtocolContract.RESULT_SUPPORTED_FEATURES, new JSONArray(mConfig.optionalFeatures));
+
+            // retained for backwards compatibility
+            result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS, mConfig.supportsSignAndSendTransactions);
         } catch (JSONException e) {
             throw new RuntimeException("Failed preparing get_capabilities response", e);
         }

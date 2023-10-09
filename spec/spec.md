@@ -376,6 +376,8 @@ authorize
         “name”: “<dapp_name>”,
     },
     "chain": "<chain>",
+    "features": ["<feature_id>", ...],
+    "addresses": ["<address>", ...],
     “auth_token”: “<auth_token>”,
     "sign_in_payload": <sign_in_payload>,
     "cluster": "<cluster>"
@@ -389,6 +391,8 @@ where:
   - `icon`: (optional) either a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image or a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
 - `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `solana:mainnet`.
+- `addresses`: (optional) if set, a list of base64 encoded account addresses that the dapp endpoint wishes to be included in the authorized scope. Defaults to `null`. 
+- `features`: (optional) if set, a list of [feature identifiers](#feature-identifiers) that the dapp endpoint intends to use in the session. Defaults to `null`. 
 - `auth_token`: (optional) an opaque string previously returned by a call to [`authorize`](#authorize), or [`clone_authorization`](#clone_authorization). When present, the wallet endpoint should attempt to reauthorize the dapp endpoint silently without prompting the user. 
 - `sign_in_payload`: (optional) a value object containing the payload portion of a [Sign In With Solana message](https://siws.web3auth.io/spec). If present, the wallet endpoint should present the SIWS message to the user and return the resulting signature and signed message, as described below.  
 - `cluster`: (optional) an alias for `chain`. This parameter is maintained for backwards compatibility with previous versions of the spec, and will be ignored if the `chain` parameter is present. 
@@ -464,6 +468,8 @@ The `chain` parameter allows the dapp endpoint to select a specific chain with w
 If both an `auth_token` and `chain` are provided by the dapp endpoint, the wallet must verify that the specified chain is the same that was associated with the specified `auth_token`. If the `chain` was not previously authorized for use with this `auth_token`, the wallet must request authorization for the new chain from the user and issue a new `auth_token` associated with the new chain.  
 
 There are 3 parameters in the result that are derived from the unique identity of the account: address, display_address, and display_address_format. address contains the public key of the account (for whatever cryptographic system is used as the authority for the account). For example, in the Solana blockchain, this is the Ed25519 public key. address should always be encoded with base64, as this parameter is inteded for programmatic consumption rather than human consumption. In contrast, the display_address and display_address_format are representations of the account appropriate for human consumption. The contents of these two fields are chain-specific; for the Solana blockchain, display_address_format will be base58, and display_address will be the public key for the account, encoded with base58. Other chains may use different encodings and/or different methods for obtaining a human-consumable address.
+
+The `features` and `addresses` parameters in the request indicate to the wallet endpoint what account(s) should be used in the session. `addresses` can be used by the dapp to request accounts that it already knows about (likely from a previous session, a cached user account, etc.). The `features` parameter can be used to request accounts that have access to a specified feature, or set of features. These parameters are not meant to limit what the wallet endpoint is providing access to, they are used to provide clues to the wallet as to what accounts are most appropriate to use for this request. 
 
 Wallet endpoints may optionally support the `sign_in_payload` parameter as an implementation of [Sign In with Solana](https://siws.web3auth.io/). Wallets should present a dedicated UI that clearly displays the relevant parameters of the sign in request to the user before asking them to sign. The wallet endpoint must return the `sign_in_result` in the response, or a relevant error if the sign in payload was invalid. If a wallet endpoint does not support this method, dapp endpoints can manually construct the sign in message and use the [`sign_messages`](#sign_messages) request to obtain a sign in signature from the wallet endpoint after authorization.
 
