@@ -43,7 +43,8 @@ public class LocalWebSocketServerScenarioTest {
                 1,
                 new Object[] { "legacy" },
                 noConnectionTimeout,
-                new String[] {}
+                new String[] {},
+                List.of(SessionProperties.ProtocolVersion.LEGACY)
         );
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -85,7 +86,8 @@ public class LocalWebSocketServerScenarioTest {
                 1,
                 new Object[] { "legacy" },
                 noConnectionTimeout,
-                new String[] {}
+                new String[] {},
+                List.of(SessionProperties.ProtocolVersion.LEGACY)
         );
 
         CountDownLatch latch = new CountDownLatch(1);
