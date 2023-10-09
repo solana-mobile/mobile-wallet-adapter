@@ -210,7 +210,7 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
 
         final int seqNum = ByteBuffer.wrap(payload, 0, SEQ_NUM_LENGTH_BYTES).getInt(); // Big-endian
         if (seqNum != (mSeqNumberRx + 1)) {
-            throw new SessionMessageException("Encrypted messages has invalid sequence number: " + seqNum + " expected " + (mSeqNumberRx + 1));
+            throw new SessionMessageException("Encrypted messages has invalid sequence number");
         }
         mSeqNumberRx = seqNum;
 
