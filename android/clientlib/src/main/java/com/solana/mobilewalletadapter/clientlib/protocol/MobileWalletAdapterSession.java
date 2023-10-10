@@ -64,7 +64,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     @NonNull
     @Override
-    protected SessionProperties getSessionProperties() {
+    public SessionProperties getSessionProperties() {
         if (mSessionProperties == null)
             throw new IllegalStateException("session properties unknown, no session has been established");
         return mSessionProperties;
