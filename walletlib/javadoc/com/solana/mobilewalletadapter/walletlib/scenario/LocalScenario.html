@@ -132,6 +132,9 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <div class="col-first odd-row-color"><code>protected final <a href="../protocol/MobileWalletAdapterConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterConfig</a></code></div>
 <div class="col-second odd-row-color"><code><a href="#mMobileWalletAdapterConfig" class="member-name-link">mMobileWalletAdapterConfig</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>final com.solana.mobilewalletadapter.common.protocol.SessionProperties</code></div>
+<div class="col-second even-row-color"><code><a href="#sessionProperties" class="member-name-link">sessionProperties</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -177,9 +180,12 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>byte[]</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getAssociationPublicKey()" class="member-name-link">getAssociationPublicKey</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#start()" class="member-name-link">start</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.solana.mobilewalletadapter.common.protocol.SessionProperties</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getSessionProperties()" class="member-name-link">getSessionProperties</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#start()" class="member-name-link">start</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -197,6 +203,13 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <section class="field-details" id="field-detail">
 <h2>Field Details</h2>
 <ul class="member-list">
+<li>
+<section class="detail" id="sessionProperties">
+<h3>sessionProperties</h3>
+<div class="member-signature"><span class="annotations">@NonNull
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type">com.solana.mobilewalletadapter.common.protocol.SessionProperties</span>&nbsp;<span class="element-name">sessionProperties</span></div>
+</section>
+</li>
 <li>
 <section class="detail" id="associationPublicKey">
 <h3>associationPublicKey</h3>
@@ -277,6 +290,17 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <dl class="notes">
 <dt>Specified by:</dt>
 <dd><code><a href="Scenario.html#getAssociationPublicKey()">getAssociationPublicKey</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="getSessionProperties()">
+<h3>getSessionProperties</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type">com.solana.mobilewalletadapter.common.protocol.SessionProperties</span>&nbsp;<span class="element-name">getSessionProperties</span>()</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code><a href="Scenario.html#getSessionProperties()">getSessionProperties</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
 </dl>
 </section>
 </li>

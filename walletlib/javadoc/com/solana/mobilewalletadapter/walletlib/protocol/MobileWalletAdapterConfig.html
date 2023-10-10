@@ -101,12 +101,15 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</code></div>
 <div class="col-second even-row-color"><code><a href="#optionalFeatures" class="member-name-link">optionalFeatures</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>[]</code></div>
-<div class="col-second odd-row-color"><code><a href="#supportedTransactionVersions" class="member-name-link">supportedTransactionVersions</a></code></div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</code></div>
+<div class="col-second odd-row-color"><code><a href="#supportedProtocolVersions" class="member-name-link">supportedProtocolVersions</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>final boolean</code></div>
-<div class="col-second even-row-color"><code><a href="#supportsSignAndSendTransactions" class="member-name-link">supportsSignAndSendTransactions</a></code></div>
-<div class="col-last even-row-color">
+<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>[]</code></div>
+<div class="col-second even-row-color"><code><a href="#supportedTransactionVersions" class="member-name-link">supportedTransactionVersions</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>final boolean</code></div>
+<div class="col-second odd-row-color"><code><a href="#supportsSignAndSendTransactions" class="member-name-link">supportsSignAndSendTransactions</a></code></div>
+<div class="col-last odd-row-color">
 <div class="block"><span class="deprecated-label">Deprecated.</span></div>
 </div>
 </div>
@@ -128,11 +131,12 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color">
 <div class="block"><span class="deprecated-label">Deprecated.</span></div>
 </div>
-<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(int,int,java.lang.Object%5B%5D,long,java.lang.String%5B%5D)" class="member-name-link">MobileWalletAdapterConfig</a><wbr>(int&nbsp;maxTransactionsPerSigningRequest,
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(int,int,java.lang.Object%5B%5D,long,java.lang.String%5B%5D,java.util.List)" class="member-name-link">MobileWalletAdapterConfig</a><wbr>(int&nbsp;maxTransactionsPerSigningRequest,
  int&nbsp;maxMessagesPerSigningRequest,
  <a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>[]&nbsp;supportedTransactionVersions,
  long&nbsp;noConnectionWarningTimeoutMs,
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;supportedFeatures)</code></div>
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;supportedFeatures,
+ <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;&nbsp;supportedProtocolVersions)</code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </section>
@@ -207,6 +211,13 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
+<section class="detail" id="supportedProtocolVersions">
+<h3>supportedProtocolVersions</h3>
+<div class="member-signature"><span class="annotations">@NonNull
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</span>&nbsp;<span class="element-name">supportedProtocolVersions</span></div>
+</section>
+</li>
+<li>
 <section class="detail" id="optionalFeatures">
 <h3>optionalFeatures</h3>
 <div class="member-signature"><span class="annotations">@NonNull
@@ -238,7 +249,7 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="&lt;init&gt;(int,int,java.lang.Object[],long,java.lang.String[])">
+<section class="detail" id="&lt;init&gt;(int,int,java.lang.Object[],long,java.lang.String[],java.util.List)">
 <h3>MobileWalletAdapterConfig</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">MobileWalletAdapterConfig</span><wbr><span class="parameters">(@IntRange(from=0L)
  int&nbsp;maxTransactionsPerSigningRequest,
@@ -249,7 +260,9 @@ loadScripts(document, 'script');</script>
  @IntRange(from=0L)
  long&nbsp;noConnectionWarningTimeoutMs,
  @NonNull
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;supportedFeatures)</span></div>
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;supportedFeatures,
+ @NonNull
+ <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;&nbsp;supportedProtocolVersions)</span></div>
 </section>
 </li>
 </ul>

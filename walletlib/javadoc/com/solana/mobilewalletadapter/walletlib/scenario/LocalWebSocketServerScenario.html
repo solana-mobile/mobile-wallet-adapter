@@ -111,7 +111,7 @@ loadScripts(document, 'script');</script>
 </div>
 <div class="inherited-list">
 <h3 id="fields-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario">Fields inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="LocalScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario</a></h3>
-<code><a href="LocalScenario.html#associationPublicKey">associationPublicKey</a>, <a href="LocalScenario.html#mAuthRepository">mAuthRepository</a>, <a href="LocalScenario.html#mCallbacks">mCallbacks</a>, <a href="LocalScenario.html#mIoHandler">mIoHandler</a>, <a href="LocalScenario.html#mIoLooper">mIoLooper</a>, <a href="LocalScenario.html#mMobileWalletAdapterConfig">mMobileWalletAdapterConfig</a></code></div>
+<code><a href="LocalScenario.html#associationPublicKey">associationPublicKey</a>, <a href="LocalScenario.html#mAuthRepository">mAuthRepository</a>, <a href="LocalScenario.html#mCallbacks">mCallbacks</a>, <a href="LocalScenario.html#mIoHandler">mIoHandler</a>, <a href="LocalScenario.html#mIoLooper">mIoLooper</a>, <a href="LocalScenario.html#mMobileWalletAdapterConfig">mMobileWalletAdapterConfig</a>, <a href="LocalScenario.html#sessionProperties">sessionProperties</a></code></div>
 </section>
 </li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
@@ -129,6 +129,14 @@ loadScripts(document, 'script');</script>
  byte[]&nbsp;associationPublicKey,
  int&nbsp;port)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(android.content.Context,com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig,com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig,com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario.Callbacks,byte%5B%5D,int,java.util.List)" class="member-name-link">LocalWebSocketServerScenario</a><wbr>(<a href="https://d.android.com/reference/android/content/Context.html" title="class or interface in android.content" class="external-link">Context</a>&nbsp;context,
+ <a href="../protocol/MobileWalletAdapterConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterConfig</a>&nbsp;mobileWalletAdapterConfig,
+ <a href="../authorization/AuthIssuerConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthIssuerConfig</a>&nbsp;authIssuerConfig,
+ <a href="LocalScenario.Callbacks.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario.Callbacks</a>&nbsp;callbacks,
+ byte[]&nbsp;associationPublicKey,
+ int&nbsp;port,
+ <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;&nbsp;supportedProtocolVersions)</code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -154,7 +162,7 @@ loadScripts(document, 'script');</script>
 </div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario">Methods inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="LocalScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario</a></h3>
-<code><a href="LocalScenario.html#createMessageReceiver()">createMessageReceiver</a>, <a href="LocalScenario.html#finalize()">finalize</a>, <a href="LocalScenario.html#getAssociationPublicKey()">getAssociationPublicKey</a></code></div>
+<code><a href="LocalScenario.html#createMessageReceiver()">createMessageReceiver</a>, <a href="LocalScenario.html#finalize()">finalize</a>, <a href="LocalScenario.html#getAssociationPublicKey()">getAssociationPublicKey</a>, <a href="LocalScenario.html#getSessionProperties()">getSessionProperties</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://d.android.com/reference/java/lang/Object.html#clone--" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://d.android.com/reference/java/lang/Object.html#equals-java.lang.Object-" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://d.android.com/reference/java/lang/Object.html#getClass--" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://d.android.com/reference/java/lang/Object.html#hashCode--" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notify--" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notifyAll--" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://d.android.com/reference/java/lang/Object.html#toString--" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait--" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-int-" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -197,6 +205,24 @@ loadScripts(document, 'script');</script>
  @NonNull
  byte[]&nbsp;associationPublicKey,
  int&nbsp;port)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="&lt;init&gt;(android.content.Context,com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig,com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig,com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario.Callbacks,byte[],int,java.util.List)">
+<h3>LocalWebSocketServerScenario</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">LocalWebSocketServerScenario</span><wbr><span class="parameters">(@NonNull
+ <a href="https://d.android.com/reference/android/content/Context.html" title="class or interface in android.content" class="external-link">Context</a>&nbsp;context,
+ @NonNull
+ <a href="../protocol/MobileWalletAdapterConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterConfig</a>&nbsp;mobileWalletAdapterConfig,
+ @NonNull
+ <a href="../authorization/AuthIssuerConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthIssuerConfig</a>&nbsp;authIssuerConfig,
+ @NonNull
+ <a href="LocalScenario.Callbacks.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario.Callbacks</a>&nbsp;callbacks,
+ @NonNull
+ byte[]&nbsp;associationPublicKey,
+ int&nbsp;port,
+ @NonNull
+ <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;&nbsp;supportedProtocolVersions)</span></div>
 </section>
 </li>
 </ul>
