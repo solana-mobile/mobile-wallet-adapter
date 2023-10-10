@@ -37,12 +37,12 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private final List<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
 
-    @NonNull
+    @Nullable
     private SessionProperties mSessionProperties;
 
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
-        this(decryptedPayloadReceiver, stateCallbacks, new ArrayList<>());
+        this(decryptedPayloadReceiver, stateCallbacks, List.of(SessionProperties.ProtocolVersion.LEGACY));
     }
 
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
@@ -51,8 +51,10 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         super(decryptedPayloadReceiver, stateCallbacks);
         mAssociationKey = generateECP256KeyPair();
         mSupportedProtocolVersions = supportedProtocolVersions;
-        mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
+        mSessionProperties = null;
     }
+
+    public List<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
 
     @NonNull
     @Override
@@ -63,6 +65,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     @Override
     protected SessionProperties getSessionProperties() {
+        if (mSessionProperties == null)
+            throw new IllegalStateException("session properties unknown, no session has been established");
         return mSessionProperties;
     }
 
@@ -119,11 +123,11 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         final ECPublicKey theirPublicKey = parseHelloRsp(payload);
         generateSessionECDHSecret(theirPublicKey);
 
-        if (mSupportedProtocolVersions.contains(SessionProperties.ProtocolVersion.V1)) {
+        try {
             byte[] encryptedSessionProperties =
                     Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
             mSessionProperties = parseSessionProps(encryptedSessionProperties);
-        } else {
+        } catch (ArrayIndexOutOfBoundsException e) {
             mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
         }
     }

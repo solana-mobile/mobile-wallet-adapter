@@ -25,26 +25,17 @@ public class LocalAssociationIntentCreator {
 
     private LocalAssociationIntentCreator() { }
 
-    @Deprecated
     @NonNull
     public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
                                                  @IntRange(from = 0, to = 65535) int port,
                                                  @NonNull MobileWalletAdapterSession session) {
-        return createAssociationIntent(endpointPrefix, port, session, List.of(SessionProperties.ProtocolVersion.LEGACY));
-    }
-
-    @NonNull
-    public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
-                                                 @IntRange(from = 0, to = 65535) int port,
-                                                 @NonNull MobileWalletAdapterSession session,
-                                                 @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         final byte[] associationPublicKey = session.getEncodedAssociationPublicKey();
         final String associationToken = Base64.encodeToString(associationPublicKey,
                 Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
         return new Intent()
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(endpointPrefix, port, associationToken, supportedProtocolVersions));
+                .setData(createAssociationUri(endpointPrefix, port, associationToken, session.getSupportedProtocolVersions()));
     }
 
     public static boolean isWalletEndpointAvailable(@NonNull PackageManager pm) {

@@ -39,9 +39,6 @@ public class LocalAssociationScenario extends Scenario {
     @NonNull
     private final URI mWebSocketUri;
 
-    @NonNull
-    private final List<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
-
     // All access to these members must be protected by mLock
     private final Object mLock = new Object();
     private State mState = State.NOT_STARTED;
@@ -60,8 +57,6 @@ public class LocalAssociationScenario extends Scenario {
         return mMobileWalletAdapterSession;
     }
 
-    public List<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
-
     @Deprecated
     public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs) {
         this(clientTimeoutMs, List.of(SessionProperties.ProtocolVersion.LEGACY));
@@ -71,7 +66,7 @@ public class LocalAssociationScenario extends Scenario {
                                     @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(clientTimeoutMs);
 
-        mSupportedProtocolVersions = supportedProtocolVersions;
+//        mSupportedProtocolVersions = supportedProtocolVersions;
 
         mPort = new Random().nextInt(WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MAX -
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN + 1) +
@@ -87,7 +82,7 @@ public class LocalAssociationScenario extends Scenario {
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
                 mSessionStateCallbacks,
-                mSupportedProtocolVersions);
+                supportedProtocolVersions);
 
         Log.v(TAG, "Creating local association scenario for " + mWebSocketUri);
     }

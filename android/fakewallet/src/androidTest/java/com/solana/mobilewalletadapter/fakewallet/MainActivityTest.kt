@@ -78,8 +78,7 @@ class MainActivityTest {
         val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
             null,
             localAssociation.port,
-            localAssociation.session,
-            localAssociation.supportedProtocolVersions
+            localAssociation.session
         )
 
         // when
@@ -112,8 +111,7 @@ class MainActivityTest {
         val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
             null,
             localAssociation.port,
-            localAssociation.session,
-            localAssociation.supportedProtocolVersions
+            localAssociation.session
         )
 
         // when
@@ -151,8 +149,7 @@ class MainActivityTest {
         val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
             null,
             localAssociation.port,
-            localAssociation.session,
-            localAssociation.supportedProtocolVersions
+            localAssociation.session
         )
 
         // when
@@ -183,8 +180,7 @@ class MainActivityTest {
         val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
             null,
             localAssociation.port,
-            localAssociation.session,
-            localAssociation.supportedProtocolVersions
+            localAssociation.session
         )
 
         TestScopeLowPowerMode = false
@@ -206,8 +202,7 @@ class MainActivityTest {
         val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
             null,
             localAssociation.port,
-            localAssociation.session,
-            localAssociation.supportedProtocolVersions
+            localAssociation.session
         )
 
         TestScopeLowPowerMode = true
