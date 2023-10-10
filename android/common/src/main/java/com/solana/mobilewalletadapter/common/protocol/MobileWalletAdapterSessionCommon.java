@@ -65,6 +65,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
     @NonNull
     protected abstract ECPublicKey getAssociationPublicKey();
 
+    @NonNull
+    protected abstract SessionProperties getSessionProperties();
+
     @Override
     public synchronized void receiverConnected(@NonNull MessageSender messageSender) {
         Log.v(TAG, "receiverConnected");

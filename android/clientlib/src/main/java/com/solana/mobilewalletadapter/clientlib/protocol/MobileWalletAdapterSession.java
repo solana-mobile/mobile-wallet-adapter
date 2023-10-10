@@ -13,6 +13,9 @@ import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -21,7 +24,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
     private static final String TAG = MobileWalletAdapterSession.class.getSimpleName();
@@ -29,16 +34,40 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private final KeyPair mAssociationKey;
 
+    @NonNull
+    private final List<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
+
+    @Nullable
+    private SessionProperties mSessionProperties;
+
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
+        this(decryptedPayloadReceiver, stateCallbacks, List.of(SessionProperties.ProtocolVersion.LEGACY));
+    }
+
+    public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
+                                      @Nullable StateCallbacks stateCallbacks,
+                                      @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mAssociationKey = generateECP256KeyPair();
+        mSupportedProtocolVersions = supportedProtocolVersions;
+        mSessionProperties = null;
     }
+
+    public List<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
 
     @NonNull
     @Override
     protected ECPublicKey getAssociationPublicKey() {
         return (ECPublicKey) mAssociationKey.getPublic();
+    }
+
+    @NonNull
+    @Override
+    protected SessionProperties getSessionProperties() {
+        if (mSessionProperties == null)
+            throw new IllegalStateException("session properties unknown, no session has been established");
+        return mSessionProperties;
     }
 
     // N.B. Does not need to be synchronized; it consumes only a final immutable object
@@ -93,6 +122,14 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         final ECPublicKey theirPublicKey = parseHelloRsp(payload);
         generateSessionECDHSecret(theirPublicKey);
+
+        try {
+            byte[] encryptedSessionProperties =
+                    Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
+            mSessionProperties = parseSessionProps(encryptedSessionProperties);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
+        }
     }
 
     @NonNull
@@ -107,5 +144,20 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         Log.v(TAG, "Received public key " + otherPublicKey.getW().getAffineX() + "/" +
                 otherPublicKey.getW().getAffineY());
         return otherPublicKey;
+    }
+
+    @NonNull
+    private SessionProperties parseSessionProps(@NonNull byte[] message) throws SessionMessageException {
+        final SessionProperties properties;
+        try {
+            byte[] sessionProps = decryptSessionPayload(message);
+            properties = SessionProperties.deserialize(sessionProps);
+        } catch (JSONException e) {
+            throw new SessionMessageException("Failed to parse SESSION_PROPS", e);
+        }
+
+        Log.v(TAG, "Received session properties: version = " + properties.protocolVersion);
+
+        return properties;
     }
 }
