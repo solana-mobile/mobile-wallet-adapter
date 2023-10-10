@@ -116,6 +116,10 @@ loadScripts(document, 'script');</script>
 <div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(com.solana.mobilewalletadapter.common.protocol.MessageReceiver,com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks)" class="member-name-link">MobileWalletAdapterSession</a><wbr>(com.solana.mobilewalletadapter.common.protocol.MessageReceiver&nbsp;decryptedPayloadReceiver,
  com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks&nbsp;stateCallbacks)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(com.solana.mobilewalletadapter.common.protocol.MessageReceiver,com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks,java.util.List)" class="member-name-link">MobileWalletAdapterSession</a><wbr>(com.solana.mobilewalletadapter.common.protocol.MessageReceiver&nbsp;decryptedPayloadReceiver,
+ com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks&nbsp;stateCallbacks,
+ <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;&nbsp;supportedProtocolVersions)</code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -135,6 +139,12 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>byte[]</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getEncodedAssociationPublicKey()" class="member-name-link">getEncodedAssociationPublicKey</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected com.solana.mobilewalletadapter.common.protocol.SessionProperties</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getSessionProperties()" class="member-name-link">getSessionProperties</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getSupportedProtocolVersions()" class="member-name-link">getSupportedProtocolVersions</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#handleSessionEstablishmentMessage(byte%5B%5D)" class="member-name-link">handleSessionEstablishmentMessage</a><wbr>(byte[]&nbsp;payload)</code></div>
@@ -171,6 +181,17 @@ loadScripts(document, 'script');</script>
  com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks&nbsp;stateCallbacks)</span></div>
 </section>
 </li>
+<li>
+<section class="detail" id="&lt;init&gt;(com.solana.mobilewalletadapter.common.protocol.MessageReceiver,com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks,java.util.List)">
+<h3>MobileWalletAdapterSession</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">MobileWalletAdapterSession</span><wbr><span class="parameters">(@NonNull
+ com.solana.mobilewalletadapter.common.protocol.MessageReceiver&nbsp;decryptedPayloadReceiver,
+ @Nullable
+ com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon.StateCallbacks&nbsp;stateCallbacks,
+ @NonNull
+ <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;&nbsp;supportedProtocolVersions)</span></div>
+</section>
+</li>
 </ul>
 </section>
 </li>
@@ -180,6 +201,12 @@ loadScripts(document, 'script');</script>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
+<section class="detail" id="getSupportedProtocolVersions()">
+<h3>getSupportedProtocolVersions</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</span>&nbsp;<span class="element-name">getSupportedProtocolVersions</span>()</div>
+</section>
+</li>
+<li>
 <section class="detail" id="getAssociationPublicKey()">
 <h3>getAssociationPublicKey</h3>
 <div class="member-signature"><span class="annotations">@NonNull
@@ -187,6 +214,17 @@ loadScripts(document, 'script');</script>
 <dl class="notes">
 <dt>Specified by:</dt>
 <dd><code>getAssociationPublicKey</code>&nbsp;in class&nbsp;<code>com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon</code></dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="getSessionProperties()">
+<h3>getSessionProperties</h3>
+<div class="member-signature"><span class="annotations">@NonNull
+</span><span class="modifiers">protected</span>&nbsp;<span class="return-type">com.solana.mobilewalletadapter.common.protocol.SessionProperties</span>&nbsp;<span class="element-name">getSessionProperties</span>()</div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code>getSessionProperties</code>&nbsp;in class&nbsp;<code>com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon</code></dd>
 </dl>
 </section>
 </li>
