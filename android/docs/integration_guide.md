@@ -3,8 +3,8 @@
 ## Documentation Site
 
 If you're a mobile dApp developer, see our new dApp integration guides hosted on our documentation site!
-- [React Native Integration Guide](https://docs.solanamobile.com/react-native/mwa_integration_rn)
-- [Android Native Integration Guide](https://docs.solanamobile.com/android-native/mwa_integration)
+- [React Native Setup](https://docs.solanamobile.com/react-native/overview)
+- [Android Native Setup](https://docs.solanamobile.com/android-native/setup)
 
 ## Summary
 
