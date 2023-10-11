@@ -46,6 +46,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     private final SessionProperties.ProtocolVersion mProtocolVersion;
 
+    @Deprecated
     public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs) {
         mClientTimeoutMs = clientTimeoutMs;
         mProtocolVersion = SessionProperties.ProtocolVersion.LEGACY;
@@ -339,6 +340,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
             if (mProtocolVersion == SessionProperties.ProtocolVersion.LEGACY) {
+                if (chain != null && Identifier.isValidIdentifier(chain)) {
+                    throw new IllegalArgumentException("Client is using a legacy protocol version, but a chain identifier was provided");
+                }
                 // use cluster alias for backwards compat
                 authorize.put(ProtocolContract.PARAMETER_CLUSTER, chain); // null is OK
             } else {
