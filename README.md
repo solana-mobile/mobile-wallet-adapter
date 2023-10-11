@@ -35,8 +35,6 @@ This repository is intended for consumption by Solana mobile developers.
 
 - The [Mobile Wallet Adapter protocol specification](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html)
 - An [integration guide](android/docs/integration_guide.md) for Android wallets and dapps
-    - [React Native Integration Guide](https://docs.solanamobile.com/react-native/mwa_integration_rn)
-    - [Android Native Integration Guide](https://docs.solanamobile.com/android-native/mwa_integration)
 - An Android library for [wallets](android/walletlib) to provide Mobile Wallet Adapter transaction signing services to dapps
 - An Android library for [dapps](android/clientlib) to consume Mobile Wallet Adapter transaction signing services
 - A [fake wallet](android/fakewallet) and a [fake dapp](android/fakedapp) demonstrating how to integrate walletlib and clientlib
