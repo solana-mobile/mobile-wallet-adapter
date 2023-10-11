@@ -15,6 +15,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -42,8 +43,18 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @IntRange(from = 0)
     private final int mClientTimeoutMs;
 
+    @NonNull
+    private final SessionProperties.ProtocolVersion mProtocolVersion;
+
     public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs) {
         mClientTimeoutMs = clientTimeoutMs;
+        mProtocolVersion = SessionProperties.ProtocolVersion.LEGACY;
+    }
+
+    public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs,
+                                     @NonNull SessionProperties.ProtocolVersion protocolVersion) {
+        mClientTimeoutMs = clientTimeoutMs;
+        mProtocolVersion = protocolVersion;
     }
 
     private static abstract class JsonRpc20MethodResultFuture<T> implements Future<T> {
@@ -327,7 +338,15 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
-            authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
+            if (mProtocolVersion == SessionProperties.ProtocolVersion.LEGACY) {
+                // use cluster alias for backwards compat
+                authorize.put(ProtocolContract.PARAMETER_CLUSTER, chain); // null is OK
+            } else {
+                if (chain != null && !Identifier.isValidIdentifier(chain)) {
+                    throw new IllegalArgumentException("provided chain is not a valid chain identifier");
+                }
+                authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
+            }
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
