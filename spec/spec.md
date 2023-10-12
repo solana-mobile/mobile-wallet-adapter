@@ -388,7 +388,7 @@ where:
 
 - `identity`: a JSON object, containing:
   - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
-  - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
+  - `icon`: (optional) either a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image or a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
 - `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `solana:mainnet`.
 - `addresses`: (optional) if set, a list of base64 encoded account addresses that the dapp endpoint wishes to be included in the authorized scope. Defaults to `null`. 
@@ -406,7 +406,10 @@ where:
     “accounts”: [
         {
             “address”: “<address>", 
+            "display_address": "<display_address>",
+            "display_address_format": "<display_address_format>",
             “label”: “<label>”, 
+            "icon": "<icon>",
             "chains": ["<chain_id>", ...], 
             "features": ["<feature_id>", ...]
         },
@@ -426,10 +429,13 @@ where:
 
 - `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to reauthorize access to [privileged methods](#privileged-methods).
 - `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
-  - `address`: a base64-encoded address for this account
+  - `address`: a base64-encoded public key for this account. 
+  - `display_address`: (optional) the address for this account. The format of this string will depend on the chain, and is specified by the `display_address_format` field
+  - `display_address_format`: (optional) the format of the `display_address`.
   - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
   - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
+  - `icon`: (optional) a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image of an icon for the account. This may be displayed by the app.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
   - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
@@ -447,7 +453,7 @@ where:
 
 ##### Description
 
-This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods, along with addresses and optional labels for all authorized accounts. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris). After a successful call to [`authorize`](#authorize)`, the current session will be placed into an authorized state, with privileges associated with the returned `auth_token`. On failure, the current session with be placed into the unauthorized state.
+This method allows the dapp endpoint to request authorization from the wallet endpoint for access to [privileged methods](#privileged-methods). On success, it returns an `auth_token` providing access to privileged methods, along with addresses and optional labels for all authorized accounts. It may also return a URI suitable for future use as an [endpoint-specific URI](#endpoint-specific-uris). After a successful call to [`authorize`](#authorize), the current session will be placed into an authorized state, with privileges associated with the returned `auth_token`. On failure, the current session with be placed into the unauthorized state.
 
 The returned `auth_token` is an opaque string with meaning only to the wallet endpoint which created it. It is recommended that the wallet endpoint include a mechanism to authenticate the contents of auth tokens it issues (for e.g., with an HMAC, or by encryption with a secret symmetric key). This `auth_token` may be used to reauthorize future sessions between these dapp and wallet endpoints by including it in future calls to [`authorize`](#authorize).
 
@@ -461,13 +467,15 @@ The `chain` parameter allows the dapp endpoint to select a specific chain with w
 
 If both an `auth_token` and `chain` are provided by the dapp endpoint, the wallet must verify that the specified chain is the same that was associated with the specified `auth_token`. If the `chain` was not previously authorized for use with this `auth_token`, the wallet must request authorization for the new chain from the user and issue a new `auth_token` associated with the new chain.  
 
+There are 3 parameters in the result that are derived from the unique identity of the account: `address`, `display_address`, and `display_address_format`. `address` contains the public key of the account (for whatever cryptographic system is used as the authority for the account). For example, in the Solana blockchain, this is the Ed25519 public key. `address` should always be encoded with base64, as this parameter is intended for programmatic consumption rather than human consumption. In contrast, the `display_address` and `display_address_format` are representations of the account appropriate for human consumption. The contents of these two fields are chain-specific; for the Solana blockchain, `display_address_format` will be `base58`, and `display_address` will be the public key for the account, encoded with base58. Other chains may use different encodings and/or different methods for obtaining a human-consumable address.
+
 The `features` and `addresses` parameters in the request indicate to the wallet endpoint what account(s) should be used in the session. `addresses` can be used by the dapp to request accounts that it already knows about (likely from a previous session, a cached user account, etc.). The `features` parameter can be used to request accounts that have access to a specified feature, or set of features. These parameters are not meant to limit what the wallet endpoint is providing access to, they are used to provide clues to the wallet as to what accounts are most appropriate to use for this request. 
 
 Wallet endpoints may optionally support the `sign_in_payload` parameter as an implementation of [Sign In with Solana](https://siws.web3auth.io/). Wallets should present a dedicated UI that clearly displays the relevant parameters of the sign in request to the user before asking them to sign. The wallet endpoint must return the `sign_in_result` in the response, or a relevant error if the sign in payload was invalid. If a wallet endpoint does not support this method, dapp endpoints can manually construct the sign in message and use the [`sign_messages`](#sign_messages) request to obtain a sign in signature from the wallet endpoint after authorization.
 
 ##### Non-normative commentary
 
-Previous versions of this specification (pre 2.0) defiend a separate `reauthorize` method that required an `auth_token` parameter and attempted to put the current session in an authorized state, with privileges associated with the specified `auth_token`. The additon of the optional `auth-token` parameter on the [`authorize`](#authorize) method allows dapps to reauthorize a previously issued auth token. This change was made to simplify the interface and reduce confusion on when to use each method, and to align with the functionaly of the [wallet-standard `connect`](https://github.com/wallet-standard/wallet-standard/blob/master/packages/core/features/src/connect.ts) feature which takes an optional `silent` parameter to request accounts that have already been authorized without prompting the user.
+Previous versions of this specification (pre 2.0) defined a separate `reauthorize` method that required an `auth_token` parameter and attempted to put the current session in an authorized state, with privileges associated with the specified `auth_token`. The addition of the optional `auth-token` parameter on the [`authorize`](#authorize) method allows dapps to reauthorize a previously issued auth token. This change was made to simplify the interface and reduce confusion on when to use each method, and to align with the functionality of the [wallet-standard `connect`](https://github.com/wallet-standard/wallet-standard/blob/master/packages/core/features/src/connect.ts) feature which takes an optional `silent` parameter to request accounts that have already been authorized without prompting the user.
 
 Authorization of a previously issued auth token is intended to be a lightweight operation, as compared to issuing a new auth token. It normally should not present any UI to the user, but instead perform only the subset of dapp endpoint identity checks that can be performed quickly and without user intervention. The intent is to quickly verify that an auth token remains valid for use by this dapp endpoint. If verification fails for any reason, the wallet endpoint should report `ERROR_AUTHORIZATION_FAILED` to the dapp endpoint, which would then discard the stored auth token and begin authorization from scratch with a new call to [`authorize`](#authorize).
 
