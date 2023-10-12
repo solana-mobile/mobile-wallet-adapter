@@ -342,6 +342,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                          @Nullable Uri iconUri,
                                          @Nullable String identityName,
                                          @Nullable String chain,
+                                         @Nullable String authToken,
                                          @Nullable String[] features,
                                          @Nullable byte[][] addresses
                                          /* TODO: sign in payload */)
@@ -368,6 +369,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
             authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
+            authorize.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken); // null is OK
             authorize.put(ProtocolContract.PARAMETER_FEATURES, featuresArr); // null is OK
             authorize.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr); // null is OK
         } catch (JSONException e) {
