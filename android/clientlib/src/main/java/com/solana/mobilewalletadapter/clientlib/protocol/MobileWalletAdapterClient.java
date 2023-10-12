@@ -308,6 +308,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // authorize
     // =============================================================================================
 
+    @Deprecated
     @NonNull
     public AuthorizationFuture authorize(@Nullable Uri identityUri,
                                          @Nullable Uri iconUri,
@@ -337,16 +338,26 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     }
 
     @NonNull
-    public AuthorizationFuture authorizeV2(@Nullable Uri identityUri,
+    public AuthorizationFuture authorize(@Nullable Uri identityUri,
                                          @Nullable Uri iconUri,
                                          @Nullable String identityName,
-                                         @Nullable String chain)
+                                         @Nullable String chain,
+                                         @Nullable String[] features,
+                                         @Nullable byte[][] addresses
+                                         /* TODO: sign in payload */)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
         } else if (iconUri != null && !iconUri.isRelative()) {
             throw new IllegalArgumentException("If non-null, iconRelativeUri must be a relative Uri");
         }
+
+        if (chain != null && !Identifier.isValidIdentifier(chain)) {
+            throw new IllegalArgumentException("provided chain is not a valid chain identifier");
+        }
+
+        final JSONArray featuresArr = features != null ? JsonPack.packStrings(features) : null;
+        final JSONArray addressesArr = addresses != null ? JsonPack.packByteArraysToBase64PayloadsArray(addresses) : null;
 
         final JSONObject authorize;
         try {
@@ -357,6 +368,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
             authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
+            authorize.put(ProtocolContract.PARAMETER_FEATURES, featuresArr); // null is OK
+            authorize.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr); // null is OK
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }

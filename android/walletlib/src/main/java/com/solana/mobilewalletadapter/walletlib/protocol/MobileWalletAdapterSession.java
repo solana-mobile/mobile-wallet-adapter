@@ -65,8 +65,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
         // Send a response to allow the counterparty to perform ECDH as well
         try {
-            mMessageSender.send(createHelloRsp(ourPublicKey,
-                    new SessionProperties(SessionProperties.ProtocolVersion.LEGACY)));
+            mMessageSender.send(createHelloRsp(ourPublicKey, getSessionProperties()));
         } catch (IOException e) {
             Log.e(TAG, "Failed to send HELLO_RSP; terminating session", e);
             onSessionError();
