@@ -43,19 +43,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @IntRange(from = 0)
     private final int mClientTimeoutMs;
 
-    @NonNull
-    private final SessionProperties.ProtocolVersion mProtocolVersion;
-
-    @Deprecated
     public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs) {
         mClientTimeoutMs = clientTimeoutMs;
-        mProtocolVersion = SessionProperties.ProtocolVersion.LEGACY;
-    }
-
-    public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs,
-                                     @NonNull SessionProperties.ProtocolVersion protocolVersion) {
-        mClientTimeoutMs = clientTimeoutMs;
-        mProtocolVersion = protocolVersion;
     }
 
     private static abstract class JsonRpc20MethodResultFuture<T> implements Future<T> {
@@ -323,6 +312,34 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public AuthorizationFuture authorize(@Nullable Uri identityUri,
                                          @Nullable Uri iconUri,
                                          @Nullable String identityName,
+                                         @Nullable String cluster)
+            throws IOException {
+        if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
+            throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
+        } else if (iconUri != null && !iconUri.isRelative()) {
+            throw new IllegalArgumentException("If non-null, iconRelativeUri must be a relative Uri");
+        }
+
+        final JSONObject authorize;
+        try {
+            final JSONObject identity = new JSONObject();
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
+            identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
+            authorize = new JSONObject();
+            authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
+            authorize.put(ProtocolContract.PARAMETER_CLUSTER, cluster); // null is OK
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
+        }
+
+        return new AuthorizationFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
+    }
+
+    @NonNull
+    public AuthorizationFuture authorizeV2(@Nullable Uri identityUri,
+                                         @Nullable Uri iconUri,
+                                         @Nullable String identityName,
                                          @Nullable String chain)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
@@ -339,18 +356,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
             authorize = new JSONObject();
             authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
-            if (mProtocolVersion == SessionProperties.ProtocolVersion.LEGACY) {
-                if (chain != null && Identifier.isValidIdentifier(chain)) {
-                    throw new IllegalArgumentException("Client is using a legacy protocol version, but a chain identifier was provided");
-                }
-                // use cluster alias for backwards compat
-                authorize.put(ProtocolContract.PARAMETER_CLUSTER, chain); // null is OK
-            } else {
-                if (chain != null && !Identifier.isValidIdentifier(chain)) {
-                    throw new IllegalArgumentException("provided chain is not a valid chain identifier");
-                }
-                authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
-            }
+            authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }

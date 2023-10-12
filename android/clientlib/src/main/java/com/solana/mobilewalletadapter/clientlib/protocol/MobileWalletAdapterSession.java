@@ -40,6 +40,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @Nullable
     private SessionProperties mSessionProperties;
 
+    @Deprecated
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
         this(decryptedPayloadReceiver, stateCallbacks, List.of(SessionProperties.ProtocolVersion.LEGACY));
