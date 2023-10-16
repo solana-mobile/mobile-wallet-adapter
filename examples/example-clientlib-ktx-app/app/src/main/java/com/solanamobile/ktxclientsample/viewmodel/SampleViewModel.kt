@@ -23,7 +23,6 @@ import javax.inject.Inject
 
 data class SampleViewState(
     val isLoading: Boolean = false,
-    val canTransact: Boolean = false,
     val solBalance: Double = 0.0,
     val userAddress: String = "",
     val userLabel: String = "",
@@ -53,7 +52,6 @@ class SampleViewModel @Inject constructor(
         if (persistedConn is Connected) {
             _state.value.copy(
                 isLoading = true,
-                canTransact = true,
                 userAddress = persistedConn.publicKey.toBase58(),
                 userLabel = persistedConn.accountLabel,
             ).updateViewState()
@@ -110,7 +108,6 @@ class SampleViewModel @Inject constructor(
                     is TransactionResult.Failure -> {
                         _state.value.copy(
                             isLoading = false,
-                            canTransact = false,
                             userAddress = "",
                             userLabel = "",
                         ).updateViewState()

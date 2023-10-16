@@ -129,7 +129,7 @@ fun SampleScreen(
 
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = if (viewState.canTransact && viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
+                        text = if (viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
                         style = MaterialTheme.typography.h5,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -150,30 +150,6 @@ fun SampleScreen(
                             color = MaterialTheme.colors.primary,
                         )
                     }
-                }
-
-                val buttonText = when {
-                    viewState.canTransact && viewState.walletFound -> "Disconnect"
-                    !viewState.walletFound -> "Please install a compatible wallet"
-                    else -> "Add funds to get started"
-                }
-
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    enabled = viewState.canTransact,
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color.Red.copy(red = 0.7f)
-                    ),
-                    onClick = {
-                        viewModel.disconnect()
-                    }
-                ) {
-                    Text(
-                        color = MaterialTheme.colors.onPrimary,
-                        text = buttonText
-                    )
                 }
             }
         }
@@ -231,9 +207,10 @@ fun SampleScreen(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
-                    enabled = viewState.canTransact && memoText.isNotEmpty(),
                     onClick = {
-                        viewModel.publishMemo(intentSender, memoText)
+                        if (memoText.isNotEmpty()) {
+                            viewModel.publishMemo(intentSender, memoText)
+                        }
                     }
                 ) {
                     Text("Publish Memo")
