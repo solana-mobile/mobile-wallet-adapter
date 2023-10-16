@@ -10,12 +10,15 @@ import com.solana.core.PublicKey
 import com.solana.models.SignatureStatusRequestConfiguration
 import com.solana.networking.Commitment
 import com.solana.networking.HttpNetworkingRouter
+import com.solana.networking.Network
 import com.solana.networking.RPCEndpoint
+import com.solanamobile.ktxclientsample.BuildConfig
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import java.net.URL
 import javax.inject.Inject
 
 class SolanaRpcUseCase @Inject constructor() {
@@ -23,7 +26,9 @@ class SolanaRpcUseCase @Inject constructor() {
     private val api: Api
 
     init {
-        val endPoint = RPCEndpoint.devnetSolana
+        val url = URL("https://devnet.helius-rpc.com/?api-key=${BuildConfig.HELIUS_KEY}")
+
+        val endPoint = RPCEndpoint.custom(url, url, Network.devnet)
         val network = HttpNetworkingRouter(endPoint)
 
         api = Solana(network).api

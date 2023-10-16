@@ -19,6 +19,11 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+
+        buildConfigField "String", "HELIUS_KEY", "\"${properties.getProperty("HELIUS_KEY")}\""
     }
 
     buildTypes {
