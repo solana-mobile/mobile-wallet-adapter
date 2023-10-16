@@ -94,9 +94,14 @@ class MobileWalletAdapter(
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
 
+                    //scenario.session.sessionProperties.protocolVersion
+
                     val authResult = credsState.let { creds ->
                         if (creds is CredentialState.Provided) {
                             with (creds.credentials) {
+                                //NOTE: Full MWA 2.0 compatibility will add feature requests & multi-address support. Being omitted for now
+                                //but will be added in a future minor update.
+
                                 val authResult = authToken?.let { token ->
                                     adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
                                 } ?: run {
