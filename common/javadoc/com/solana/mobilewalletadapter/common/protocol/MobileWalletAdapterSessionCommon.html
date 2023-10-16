@@ -149,45 +149,48 @@ implements <a href="MessageReceiver.html" title="interface in com.solana.mobilew
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected byte[]</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#decryptSessionPayload(byte%5B%5D)" class="member-name-link">decryptSessionPayload</a><wbr>(byte[]&nbsp;payload)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected byte[]</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#encryptSessionPayload(byte%5B%5D)" class="member-name-link">encryptSessionPayload</a><wbr>(byte[]&nbsp;payload)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#doSessionEstablished()" class="member-name-link">doSessionEstablished</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>protected static <a href="https://d.android.com/reference/java/security/KeyPair.html" title="class or interface in java.security" class="external-link">KeyPair</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#generateECP256KeyPair()" class="member-name-link">generateECP256KeyPair</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#generateSessionECDHKeyPair()" class="member-name-link">generateSessionECDHKeyPair</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#generateSessionECDHSecret(java.security.interfaces.ECPublicKey)" class="member-name-link">generateSessionECDHSecret</a><wbr>(<a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a>&nbsp;otherPublicKey)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected byte[]</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#encryptSessionPayload(byte%5B%5D)" class="member-name-link">encryptSessionPayload</a><wbr>(byte[]&nbsp;payload)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>protected abstract <a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#getAssociationPublicKey()" class="member-name-link">getAssociationPublicKey</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>protected abstract <a href="SessionProperties.html" title="class in com.solana.mobilewalletadapter.common.protocol">SessionProperties</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#getSessionProperties()" class="member-name-link">getSessionProperties</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>protected abstract void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#handleSessionEstablishmentMessage(byte%5B%5D)" class="member-name-link">handleSessionEstablishmentMessage</a><wbr>(byte[]&nbsp;payload)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#onReceiverConnected()" class="member-name-link">onReceiverConnected</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>protected static <a href="https://d.android.com/reference/java/security/KeyPair.html" title="class or interface in java.security" class="external-link">KeyPair</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#generateECP256KeyPair()" class="member-name-link">generateECP256KeyPair</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#generateSessionECDHKeyPair()" class="member-name-link">generateSessionECDHKeyPair</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#onSessionError()" class="member-name-link">onSessionError</a>()</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#generateSessionECDHSecret(java.security.interfaces.ECPublicKey)" class="member-name-link">generateSessionECDHSecret</a><wbr>(<a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a>&nbsp;otherPublicKey)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#receiverConnected(com.solana.mobilewalletadapter.common.protocol.MessageSender)" class="member-name-link">receiverConnected</a><wbr>(<a href="MessageSender.html" title="interface in com.solana.mobilewalletadapter.common.protocol">MessageSender</a>&nbsp;messageSender)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>protected abstract <a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#getAssociationPublicKey()" class="member-name-link">getAssociationPublicKey</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>protected abstract <a href="SessionProperties.html" title="class in com.solana.mobilewalletadapter.common.protocol">SessionProperties</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#getSessionProperties()" class="member-name-link">getSessionProperties</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>protected abstract void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#handleSessionEstablishmentMessage(byte%5B%5D)" class="member-name-link">handleSessionEstablishmentMessage</a><wbr>(byte[]&nbsp;payload)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#onReceiverConnected()" class="member-name-link">onReceiverConnected</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#onSessionError()" class="member-name-link">onSessionError</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#receiverDisconnected()" class="member-name-link">receiverDisconnected</a>()</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#receiverConnected(com.solana.mobilewalletadapter.common.protocol.MessageSender)" class="member-name-link">receiverConnected</a><wbr>(<a href="MessageSender.html" title="interface in com.solana.mobilewalletadapter.common.protocol">MessageSender</a>&nbsp;messageSender)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#receiverMessageReceived(byte%5B%5D)" class="member-name-link">receiverMessageReceived</a><wbr>(byte[]&nbsp;payload)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#receiverDisconnected()" class="member-name-link">receiverDisconnected</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#send(byte%5B%5D)" class="member-name-link">send</a><wbr>(byte[]&nbsp;message)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#receiverMessageReceived(byte%5B%5D)" class="member-name-link">receiverMessageReceived</a><wbr>(byte[]&nbsp;payload)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#send(byte%5B%5D)" class="member-name-link">send</a><wbr>(byte[]&nbsp;message)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -360,6 +363,12 @@ implements <a href="MessageReceiver.html" title="interface in com.solana.mobilew
 <h3>generateSessionECDHSecret</h3>
 <div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">generateSessionECDHSecret</span><wbr><span class="parameters">(@NonNull
  <a href="https://d.android.com/reference/java/security/interfaces/ECPublicKey.html" title="class or interface in java.security.interfaces" class="external-link">ECPublicKey</a>&nbsp;otherPublicKey)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="doSessionEstablished()">
+<h3>doSessionEstablished</h3>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">doSessionEstablished</span>()</div>
 </section>
 </li>
 </ul>
