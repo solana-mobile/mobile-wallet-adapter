@@ -24,6 +24,22 @@ class LocalAdapterOperations(
         }
     }
 
+    override suspend fun authorize(
+        identityUri: Uri,
+        iconUri: Uri,
+        identityName: String,
+        chain: String,
+        authToken: String?,
+        features: Array<String>?,
+        addresses: Array<ByteArray>?
+    ): MobileWalletAdapterClient.AuthorizationResult {
+        return withContext(ioDispatcher) {
+            @Suppress("BlockingMethodInNonBlockingContext")
+            client?.authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses)?.get()
+                ?: throw InvalidObjectException("Provide a client before performing adapter operations")
+        }
+    }
+
     override suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
