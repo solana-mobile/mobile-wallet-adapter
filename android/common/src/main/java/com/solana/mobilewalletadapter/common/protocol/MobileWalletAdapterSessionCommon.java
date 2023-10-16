@@ -290,7 +290,9 @@ public abstract class MobileWalletAdapterSessionCommon implements MessageReceive
         Log.i(TAG, "Encrypted session established");
 
         mDecryptedPayloadReceiver.receiverConnected(this);
+    }
 
+    protected void doSessionEstablished() {
         if (mStateCallbacks != null) {
             mStateCallbacks.onSessionEstablished();
         }

@@ -62,6 +62,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         // Generate an EC key on the P-256 curve, and do ECDH to produce the shared secret
         final ECPublicKey ourPublicKey = generateSessionECDHKeyPair();
         generateSessionECDHSecret(theirPublicKey);
+        doSessionEstablished();
 
         // Send a response to allow the counterparty to perform ECDH as well
         try {
