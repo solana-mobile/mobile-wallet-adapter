@@ -85,14 +85,14 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider,
-                              @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+                              @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationPublicKey = associationPublicKey;
 
         SessionProperties.ProtocolVersion maxSupportedProtocolVersion =
                 SessionProperties.ProtocolVersion.LEGACY;
-        for (SessionProperties.ProtocolVersion version : supportedProtocolVersions) {
+        for (SessionProperties.ProtocolVersion version : requestedProtocolVersions) {
             if (version.ordinal() > maxSupportedProtocolVersion.ordinal()
                     && mobileWalletAdapterConfig.supportedProtocolVersions.contains(version)) {
                 maxSupportedProtocolVersion = version;

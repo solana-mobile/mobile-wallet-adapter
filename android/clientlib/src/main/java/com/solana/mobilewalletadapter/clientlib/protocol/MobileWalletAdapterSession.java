@@ -40,6 +40,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @Nullable
     private SessionProperties mSessionProperties;
 
+    @Deprecated
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
         this(decryptedPayloadReceiver, stateCallbacks, List.of(SessionProperties.ProtocolVersion.LEGACY));
@@ -127,9 +128,11 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
             byte[] encryptedSessionProperties =
                     Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
             mSessionProperties = parseSessionProps(encryptedSessionProperties);
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
         }
+
+        doSessionEstablished();
     }
 
     @NonNull

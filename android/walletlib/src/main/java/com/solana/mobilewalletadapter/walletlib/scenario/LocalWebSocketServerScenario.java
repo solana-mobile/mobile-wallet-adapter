@@ -41,9 +41,9 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                         @NonNull LocalScenario.Callbacks callbacks,
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port,
-                                        @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+                                        @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, port, new DevicePowerConfigProvider(context), supportedProtocolVersions);
+                associationPublicKey, port, new DevicePowerConfigProvider(context), requestedProtocolVersions);
     }
 
     /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
@@ -53,8 +53,8 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                              @NonNull byte[] associationPublicKey,
                                              @WebSocketsTransportContract.LocalPortRange int port,
                                              PowerConfigProvider powerConfigProvider,
-                                             @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
-        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider, supportedProtocolVersions);
+                                             @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider, requestedProtocolVersions);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }

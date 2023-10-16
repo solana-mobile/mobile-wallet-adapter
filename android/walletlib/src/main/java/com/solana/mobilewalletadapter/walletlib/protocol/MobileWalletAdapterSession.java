@@ -62,11 +62,11 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         // Generate an EC key on the P-256 curve, and do ECDH to produce the shared secret
         final ECPublicKey ourPublicKey = generateSessionECDHKeyPair();
         generateSessionECDHSecret(theirPublicKey);
+        doSessionEstablished();
 
         // Send a response to allow the counterparty to perform ECDH as well
         try {
-            mMessageSender.send(createHelloRsp(ourPublicKey,
-                    new SessionProperties(SessionProperties.ProtocolVersion.LEGACY)));
+            mMessageSender.send(createHelloRsp(ourPublicKey, getSessionProperties()));
         } catch (IOException e) {
             Log.e(TAG, "Failed to send HELLO_RSP; terminating session", e);
             onSessionError();

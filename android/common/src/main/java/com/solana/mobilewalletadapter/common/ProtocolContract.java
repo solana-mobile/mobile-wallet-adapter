@@ -9,6 +9,8 @@ public class ProtocolContract {
     // METHOD_AUTHORIZE takes an optional PARAMETER_IDENTITY
     // METHOD_AUTHORIZE takes an optional PARAMETER_AUTH_TOKEN
     // METHOD_AUTHORIZE takes an optional PARAMETER_CHAIN
+    // METHOD_AUTHORIZE takes an optional PARAMETER_FEATURES
+    // METHOD_AUTHORIZE takes an optional PARAMETER_ADDRESSES
     // METHOD_AUTHORIZE returns a RESULT_AUTH_TOKEN
     // METHOD_AUTHORIZE returns a RESULT_ACCOUNTS
     // METHOD_AUTHORIZE returns an optional RESULT_WALLET_URI_BASE
@@ -61,6 +63,8 @@ public class ProtocolContract {
     public static final String PARAMETER_CLUSTER = "cluster"; // type: String (one of the CLUSTER_* values)
 
     public static final String PARAMETER_CHAIN = "chain"; // type: String (one of the CHAIN_* values)
+
+    public static final String PARAMETER_FEATURES = "features"; // type: JSON array of String (feature identifiers)
 
     public static final String PARAMETER_AUTH_TOKEN = "auth_token"; // type: String
 

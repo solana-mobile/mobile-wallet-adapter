@@ -66,8 +66,6 @@ public class LocalAssociationScenario extends Scenario {
                                     @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(clientTimeoutMs);
 
-//        mSupportedProtocolVersions = supportedProtocolVersions;
-
         mPort = new Random().nextInt(WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MAX -
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN + 1) +
                 WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MIN;
