@@ -168,45 +168,56 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.AuthorizationFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizationFuture</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#authorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)" class="member-name-link">authorize</a><wbr>(<a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.AuthorizationFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizationFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#authorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)" class="member-name-link">authorize</a><wbr>(<a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;iconUri,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;identityName,
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;chain)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.DeauthorizeFuture</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#deauthorize(java.lang.String)" class="member-name-link">deauthorize</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesFuture</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getCapabilities()" class="member-name-link">getCapabilities</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cluster)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
+<div class="block"><span class="deprecated-label">Deprecated.</span></div>
+</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.AuthorizationFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizationFuture</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#reauthorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)" class="member-name-link">reauthorize</a><wbr>(<a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#authorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String,java.lang.String,java.lang.String%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">authorize</a><wbr>(<a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;iconUri,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;identityName,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;chain,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;features,
+ byte[][]&nbsp;addresses)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.DeauthorizeFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.DeauthorizeFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#deauthorize(java.lang.String)" class="member-name-link">deauthorize</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.GetCapabilitiesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.GetCapabilitiesFuture</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getCapabilities()" class="member-name-link">getCapabilities</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.AuthorizationFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizationFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#reauthorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)" class="member-name-link">reauthorize</a><wbr>(<a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;iconUri,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;identityName,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer)" class="member-name-link">signAndSendTransactions</a><wbr>(byte[][]&nbsp;transactions,
- <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;minContextSlot)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessages</a><wbr>(byte[][]&nbsp;messages,
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer)" class="member-name-link">signAndSendTransactions</a><wbr>(byte[][]&nbsp;transactions,
+ <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;minContextSlot)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessages</a><wbr>(byte[][]&nbsp;messages,
  byte[][]&nbsp;addresses)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
 <div class="block"><span class="deprecated-label">Deprecated.</span>
 <div class="deprecation-comment">Consumers of <a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessages(byte[][], byte[][])</code></a> should migrate to
              <a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessagesDetached(byte[][], byte[][])</code></a>, which offers an improved
              return type, separating the message from the signatures</div>
 </div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessagesDetached</a><wbr>(byte[][]&nbsp;messages,
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessagesDetached</a><wbr>(byte[][]&nbsp;messages,
  byte[][]&nbsp;addresses)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signTransactions(byte%5B%5D%5B%5D)" class="member-name-link">signTransactions</a><wbr>(byte[][]&nbsp;transactions)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signTransactions(byte%5B%5D%5B%5D)" class="member-name-link">signTransactions</a><wbr>(byte[][]&nbsp;transactions)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -245,6 +256,27 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="authorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String)">
 <h3>authorize</h3>
+<div class="member-signature"><span class="annotations"><a href="https://d.android.com/reference/java/lang/Deprecated.html" title="class or interface in java.lang" class="external-link">@Deprecated</a>
+@NonNull
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="MobileWalletAdapterClient.AuthorizationFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizationFuture</a></span>&nbsp;<span class="element-name">authorize</span><wbr><span class="parameters">(@Nullable
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
+ @Nullable
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;iconUri,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;identityName,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cluster)</span>
+                                                        throws <span class="exceptions"><a href="https://d.android.com/reference/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></span></div>
+<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
+<dl class="notes">
+<dt>Throws:</dt>
+<dd><code><a href="https://d.android.com/reference/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></code></dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="authorize(android.net.Uri,android.net.Uri,java.lang.String,java.lang.String,java.lang.String,java.lang.String[],byte[][])">
+<h3>authorize</h3>
 <div class="member-signature"><span class="annotations">@NonNull
 </span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="MobileWalletAdapterClient.AuthorizationFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.AuthorizationFuture</a></span>&nbsp;<span class="element-name">authorize</span><wbr><span class="parameters">(@Nullable
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;identityUri,
@@ -253,7 +285,13 @@ loadScripts(document, 'script');</script>
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;identityName,
  @Nullable
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;chain)</span>
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;chain,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;features,
+ @Nullable
+ byte[][]&nbsp;addresses)</span>
                                                         throws <span class="exceptions"><a href="https://d.android.com/reference/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></span></div>
 <dl class="notes">
 <dt>Throws:</dt>
