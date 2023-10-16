@@ -50,18 +50,11 @@ class SampleViewModel @Inject constructor(
         val persistedConn = persistanceUseCase.getWalletConnection()
 
         if (persistedConn is Connected) {
-            _state.value.copy(
-                isLoading = true,
-                userAddress = persistedConn.publicKey.toBase58(),
-                userLabel = persistedConn.accountLabel,
-            ).updateViewState()
-
             viewModelScope.launch {
-                val balance = solanaRpcUseCase.getBalance(persistedConn.publicKey)
-
                 _state.value.copy(
-                    isLoading = false,
-                    solBalance = balance
+                    userAddress = persistedConn.publicKey.toBase58(),
+                    userLabel = persistedConn.accountLabel,
+                    solBalance = solanaRpcUseCase.getBalance(persistedConn.publicKey)
                 ).updateViewState()
             }
 
@@ -101,27 +94,34 @@ class SampleViewModel @Inject constructor(
                         signAndSendTransactions(arrayOf(bytes))
                     }
 
-                    (result as? TransactionResult.Success)?.let { txResult ->
-                        val updatedAuth = txResult.authResult
-                        //TODO: At some point in the future add a method to just persist
-                        //just the auth token value as that is all we need in this case
-                        persistanceUseCase.persistConnection(
-                            PublicKey(updatedAuth.publicKey),
-                            updatedAuth.accountLabel ?: "",
-                            updatedAuth.authToken
-                        )
+                    when (result) {
+                        is TransactionResult.Success -> {
+                            val updatedAuth = result.authResult
+                            //TODO: At some point in the future add a method to just persist
+                            //just the auth token value as that is all we need in this case
+                            persistanceUseCase.persistConnection(
+                                PublicKey(updatedAuth.publicKey),
+                                updatedAuth.accountLabel ?: "",
+                                updatedAuth.authToken
+                            )
 
-                        val sig = txResult.payload.signatures.firstOrNull()
-                        val readableSig = Base58.encode(sig)
+                            val sig = result.payload.signatures.firstOrNull()
+                            val readableSig = Base58.encode(sig)
 
-                        _state.value.copy(
-                            isLoading = false,
-                            memoTx = readableSig
-                        ).updateViewState()
+                            _state.value.copy(
+                                isLoading = false,
+                                memoTx = readableSig
+                            ).updateViewState()
 
-                        //Clear out the recent transaction
-                        delay(5000)
-                        _state.value.copy(memoTx = "").updateViewState()
+                            //Clear out the recent transaction
+                            delay(5000)
+                            _state.value.copy(memoTx = "").updateViewState()
+                        }
+                        else -> {
+                            _state.value.copy(
+                                isLoading = false,
+                            ).updateViewState()
+                        }
                     }
                 }
             }
@@ -145,7 +145,8 @@ class SampleViewModel @Inject constructor(
                     persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
 
                     _state.value.copy(
-                        isLoading = false,
+                        userAddress = currentConn.publicKey.toBase58(),
+                        userLabel = currentConn.accountLabel,
                         solBalance = solanaRpcUseCase.getBalance(currentConn.publicKey)
                     ).updateViewState()
 
@@ -160,7 +161,6 @@ class SampleViewModel @Inject constructor(
                 }
                 is TransactionResult.Failure -> {
                     _state.value.copy(
-                        isLoading = false,
                         userAddress = "",
                         userLabel = "",
                     ).updateViewState()
@@ -182,17 +182,14 @@ class SampleViewModel @Inject constructor(
                     isLoading = false,
                     solBalance = solanaRpcUseCase.getBalance(publicKey)
                 ).updateViewState()
-            } else {
-                _state.value.copy(
-                    isLoading = false,
-                ).updateViewState()
             }
         } catch (e: Throwable) {
             _state.value.copy(
-                isLoading = false,
                 userAddress = "Error airdropping",
                 userLabel = "",
             ).updateViewState()
         }
+
+        _state.value.copy(isLoading = false).updateViewState()
     }
 }
