@@ -84,9 +84,9 @@ class SampleViewModel @Inject constructor(
                             result.authResult.authToken
                         )
 
-                        val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
-
                         persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
+
+                        val balance = solanaRpcUseCase.getBalance(currentConn.publicKey)
 
                         _state.value.copy(
                             isLoading = true,
@@ -180,17 +180,6 @@ class SampleViewModel @Inject constructor(
                     delay(5000)
                     _state.value.copy(memoTx = "").updateViewState()
                 }
-            }
-        }
-    }
-
-    fun disconnect() {
-        viewModelScope.launch {
-            val conn = persistanceUseCase.getWalletConnection()
-            if (conn is Connected) {
-                persistanceUseCase.clearConnection()
-
-                SampleViewState().updateViewState()
             }
         }
     }
