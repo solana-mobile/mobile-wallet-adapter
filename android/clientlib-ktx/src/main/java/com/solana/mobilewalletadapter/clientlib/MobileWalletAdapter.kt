@@ -32,10 +32,33 @@ class MobileWalletAdapter(
      * Specify the RPC cluster used for all operations. Note: changing at runtime will invalidate
      * the auth token and reauthorization will be required
      */
-    var rpcCluster: RpcCluster = RpcCluster.Devnet
+    var blockchain: Blockchain = Solana.Devnet
         set(value) {
             if (value != field) {
                 authToken = null
+            }
+
+            field = value
+        }
+
+    @Deprecated(
+        "RpcCluster provides only Solana clusters; use the Blockchain object for full multi-chain support.",
+        replaceWith = ReplaceWith("Set `blockchain` property moving forward."),
+        DeprecationLevel.WARNING
+    )
+    var rpcCluster: RpcCluster = RpcCluster.Devnet
+        set(value) {
+            when (value) {
+                RpcCluster.MainnetBeta -> {
+                    blockchain = Solana.Mainnet
+                }
+                RpcCluster.Devnet -> {
+                    blockchain = Solana.Devnet
+                }
+                RpcCluster.Testnet -> {
+                    blockchain = Solana.Testnet
+                }
+                else -> { }
             }
 
             field = value
@@ -102,12 +125,12 @@ class MobileWalletAdapter(
                             with (id.appIdentity) {
                                 if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
                                     //TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
-                                    adapterOperations.authorize(identityUri, iconUri, identityName, "SOMECHAIN", authToken, null, null)
+                                    adapterOperations.authorize(identityUri, iconUri, identityName, blockchain.fullName, authToken, null, null)
                                 } else {
                                     authToken?.let { token ->
                                         adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
                                     } ?: run {
-                                        adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
+                                        adapterOperations.authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
                                     }.also {
                                         authToken = it.authToken
                                     }

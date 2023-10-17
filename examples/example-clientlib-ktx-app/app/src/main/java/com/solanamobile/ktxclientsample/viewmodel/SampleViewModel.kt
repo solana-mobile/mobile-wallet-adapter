@@ -7,6 +7,7 @@ import com.solana.core.SerializeConfig
 import com.solana.core.Transaction
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
+import com.solana.mobilewalletadapter.clientlib.RpcCluster
 import com.solana.mobilewalletadapter.clientlib.TransactionResult
 import com.solana.programs.MemoProgram
 import com.solanamobile.ktxclientsample.usecase.Connected
