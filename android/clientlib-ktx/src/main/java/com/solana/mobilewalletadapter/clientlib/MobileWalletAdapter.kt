@@ -60,7 +60,7 @@ class MobileWalletAdapter(
         block: suspend AdapterOperations.() -> T,
     ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
-            val scenario = scenarioProvider.provideAssociationScenario(timeout)
+            val scenario = scenarioProvider.provideAssociationScenario(timeout, SessionProperties.ProtocolVersion.V1)
             val details = scenario.associationDetails()
 
             val intent = LocalAssociationIntentCreator.createAssociationIntent(
