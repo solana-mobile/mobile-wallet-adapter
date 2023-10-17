@@ -264,7 +264,7 @@ public abstract class LocalScenario implements Scenario {
 
             mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
                     future, request.identityName, request.identityUri, request.iconUri, chain,
-                    request.features, request.addresses, request.authToken)));
+                    request.features, request.addresses)));
         }
 
         private void doReauthorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {

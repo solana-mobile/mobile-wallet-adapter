@@ -37,24 +37,19 @@ public class AuthorizeRequest
     @Nullable
     protected final String[] mAddresses;
 
-    @Nullable
-    protected final String mAuthToken;
-
     /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
                                  @Nullable String identityName,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @NonNull String chain,
                                  @Nullable String[] features,
-                                 @Nullable String[] addresses,
-                                 @Nullable String authToken) {
+                                 @Nullable String[] addresses) {
         super(request);
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;
         mFeatures = features;
         mAddresses = addresses;
-        mAuthToken = authToken;
 
         if (Identifier.isValidIdentifier(chain)) {
             mChain = chain;
@@ -102,9 +97,6 @@ public class AuthorizeRequest
 
     @Nullable
     public String[] getAddresses() { return  mAddresses; }
-
-    @Nullable
-    public String getAuthToken() { return  mAuthToken; }
 
     @Deprecated
     public void completeWithAuthorize(@NonNull byte[] publicKey,
