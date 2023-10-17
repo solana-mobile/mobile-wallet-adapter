@@ -7,6 +7,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import kotlinx.coroutines.*
 import java.io.IOException
 import java.util.concurrent.CancellationException
@@ -91,25 +92,26 @@ class MobileWalletAdapter(
             withContext(ioDispatcher) {
                 try {
                     @Suppress("BlockingMethodInNonBlockingContext")
+                    val protocolVersion = scenario.session.sessionProperties.protocolVersion
+
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
-
-                    //scenario.session.sessionProperties.protocolVersion
 
                     val authResult = credsState.let { creds ->
                         if (creds is CredentialState.Provided) {
                             with (creds.credentials) {
-                                //NOTE: Full MWA 2.0 compatibility will add feature requests & multi-address support. Being omitted for now
-                                //but will be added in a future minor update.
-
-                                val authResult = authToken?.let { token ->
-                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
-                                } ?: run {
-                                    adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
+                                if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
+                                    //TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
+                                    adapterOperations.authorize(identityUri, iconUri, identityName, "SOMECHAIN", authToken, null, null)
+                                } else {
+                                    authToken?.let { token ->
+                                        adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
+                                    } ?: run {
+                                        adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
+                                    }.also {
+                                        authToken = it.authToken
+                                    }
                                 }
-
-                                authToken = authResult.authToken
-                                authResult
                             }
                         } else {
                             null
