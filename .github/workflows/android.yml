@@ -156,8 +156,8 @@ jobs:
           disable-animations: true
           script: |
             adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-            ./gradlew :fakewallet:connectedDebugAndroidTest
-            ./gradlew :fakewallet:installDebug :fakedapp:connectedDebugAndroidTest
+            ./gradlew :fakewallet:connectedV1DebugAndroidTest
+            ./gradlew :fakewallet:installV1Debug :fakedapp:connectedDebugAndroidTest
       - name: Archive fakewallet test results
         if: ${{ success() || failure() }}
         uses: actions/upload-artifact@v3
