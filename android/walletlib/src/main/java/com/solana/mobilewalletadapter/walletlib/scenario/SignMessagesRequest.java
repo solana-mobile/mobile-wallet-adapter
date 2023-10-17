@@ -20,8 +20,8 @@ public class SignMessagesRequest extends SignPayloadsRequest {
                                     @Nullable Uri iconUri,
                                     @NonNull byte[] authorizationScope,
                                     @NonNull byte[] authorizedPublicKey,
-                                    @NonNull String cluster) {
-        super(request, identityName, identityUri, iconUri, authorizationScope, authorizedPublicKey, cluster);
+                                    @NonNull String chain) {
+        super(request, identityName, identityUri, iconUri, authorizationScope, authorizedPublicKey, chain);
 
         // TODO(#44): support multiple addresses
         //   this check is temporary; it will become a wallet competency to evaluate the set of

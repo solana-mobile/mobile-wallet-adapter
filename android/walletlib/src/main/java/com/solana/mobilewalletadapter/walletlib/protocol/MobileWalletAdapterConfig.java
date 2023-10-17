@@ -36,7 +36,7 @@ public class MobileWalletAdapterConfig {
     public final Object[] supportedTransactionVersions;
 
     @NonNull
-    public final List<SessionProperties.ProtocolVersion> supportedProtocolVersions;
+    public final SessionProperties.ProtocolVersion[] supportedProtocolVersions;
 
     @NonNull
     public final String[] optionalFeatures;
@@ -51,7 +51,7 @@ public class MobileWalletAdapterConfig {
                 supportedTransactionVersions, noConnectionWarningTimeoutMs,
                 supportsSignAndSendTransactions ? new String[] {
                         ProtocolContract.FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS } : new String[] {},
-                List.of(SessionProperties.ProtocolVersion.LEGACY));
+                new SessionProperties.ProtocolVersion[]{ SessionProperties.ProtocolVersion.LEGACY });
     }
 
     public MobileWalletAdapterConfig(@IntRange(from = 0) int maxTransactionsPerSigningRequest,
@@ -59,7 +59,7 @@ public class MobileWalletAdapterConfig {
                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
                                      @IntRange(from = 0) long noConnectionWarningTimeoutMs,
                                      @NonNull String[] supportedFeatures,
-                                     @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+                                     @NonNull SessionProperties.ProtocolVersion[] supportedProtocolVersions) {
         this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
         this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
         this.noConnectionWarningTimeoutMs = noConnectionWarningTimeoutMs;
@@ -85,5 +85,16 @@ public class MobileWalletAdapterConfig {
             }
         }
         this.supportsSignAndSendTransactions = supportsSignAndSendTransactions;
+    }
+
+    public MobileWalletAdapterConfig(@IntRange(from = 0) int maxTransactionsPerSigningRequest,
+                                     @IntRange(from = 0) int maxMessagesPerSigningRequest,
+                                     @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
+                                     @IntRange(from = 0) long noConnectionWarningTimeoutMs,
+                                     @NonNull String[] supportedFeatures,
+                                     @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+        this(maxTransactionsPerSigningRequest, maxMessagesPerSigningRequest,
+                supportedTransactionVersions, noConnectionWarningTimeoutMs,
+                supportedFeatures, supportedProtocolVersions.toArray(new SessionProperties.ProtocolVersion[0]));
     }
 }

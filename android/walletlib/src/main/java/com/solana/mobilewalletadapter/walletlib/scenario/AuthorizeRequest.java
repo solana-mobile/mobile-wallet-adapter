@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
 
@@ -29,16 +31,36 @@ public class AuthorizeRequest
     @NonNull
     protected final String mChain;
 
+    @Nullable
+    protected final String[] mFeatures;
+
+    @Nullable
+    protected final String[] mAddresses;
+
+    @Nullable
+    protected final String mAuthToken;
+
     /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
                                  @Nullable String identityName,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
-                                 @NonNull String chain) {
+                                 @NonNull String chain,
+                                 @Nullable String[] features,
+                                 @Nullable String[] addresses,
+                                 @Nullable String authToken) {
         super(request);
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;
-        mChain = chain;
+        mFeatures = features;
+        mAddresses = addresses;
+        mAuthToken = authToken;
+
+        if (Identifier.isValidIdentifier(chain)) {
+            mChain = chain;
+        } else {
+            throw new IllegalArgumentException("Provided chain must be a valid chain identifier");
+        }
     }
 
     @Nullable
@@ -58,7 +80,16 @@ public class AuthorizeRequest
 
     @NonNull @Deprecated
     public String getCluster() {
-        return mChain;
+        switch (mChain) {
+            case ProtocolContract.CHAIN_SOLANA_MAINNET:
+                return ProtocolContract.CLUSTER_MAINNET_BETA;
+            case ProtocolContract.CHAIN_SOLANA_TESTNET:
+                return ProtocolContract.CLUSTER_TESTNET;
+            case ProtocolContract.CHAIN_SOLANA_DEVNET:
+                return ProtocolContract.CLUSTER_DEVNET;
+            default:
+                return mChain;
+        }
     }
 
     @NonNull
@@ -66,13 +97,22 @@ public class AuthorizeRequest
         return mChain;
     }
 
+    @Nullable
+    public String[] getFeatures() { return  mFeatures; }
+
+    @Nullable
+    public String[] getAddresses() { return  mAddresses; }
+
+    @Nullable
+    public String getAuthToken() { return  mAuthToken; }
+
     @Deprecated
     public void completeWithAuthorize(@NonNull byte[] publicKey,
                                       @Nullable String accountLabel,
                                       @Nullable Uri walletUriBase,
                                       @Nullable byte[] scope) {
         AuthorizedAccount[] accounts = new AuthorizedAccount[] {
-                new AuthorizedAccount(publicKey, accountLabel, null, null)};
+                new AuthorizedAccount(publicKey, accountLabel, null, null, null)};
         mRequest.complete(new Result(accounts, walletUriBase, scope));
     }
 

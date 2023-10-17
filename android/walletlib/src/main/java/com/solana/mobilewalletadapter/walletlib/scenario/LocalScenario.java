@@ -29,6 +29,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSess
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -90,11 +91,13 @@ public abstract class LocalScenario implements Scenario {
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationPublicKey = associationPublicKey;
 
+        List<SessionProperties.ProtocolVersion> supportedProtocolVersions =
+                Arrays.asList(mobileWalletAdapterConfig.supportedProtocolVersions);
         SessionProperties.ProtocolVersion maxSupportedProtocolVersion =
                 SessionProperties.ProtocolVersion.LEGACY;
         for (SessionProperties.ProtocolVersion version : requestedProtocolVersions) {
             if (version.ordinal() > maxSupportedProtocolVersion.ordinal()
-                    && mobileWalletAdapterConfig.supportedProtocolVersions.contains(version)) {
+                    && supportedProtocolVersions.contains(version)) {
                 maxSupportedProtocolVersion = version;
             }
         }
@@ -260,7 +263,8 @@ public abstract class LocalScenario implements Scenario {
             }));
 
             mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
-                    future, request.identityName, request.identityUri, request.iconUri, chain)));
+                    future, request.identityName, request.identityUri, request.iconUri, chain,
+                    request.features, request.addresses, request.authToken)));
         }
 
         private void doReauthorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
@@ -417,7 +421,7 @@ public abstract class LocalScenario implements Scenario {
             if (authRecord != null) {
                 mIoHandler.post(() -> mCallbacks.onDeauthorizedEvent(new DeauthorizedEvent(
                         request, authRecord.identity.getName(), authRecord.identity.getUri(),
-                        authRecord.identity.getRelativeIconUri(), authRecord.cluster,
+                        authRecord.identity.getRelativeIconUri(), authRecord.chain,
                         authRecord.scope)));
             } else {
                 // No auth token was found. Just complete successfully, to avoid disclosing whether
@@ -441,7 +445,7 @@ public abstract class LocalScenario implements Scenario {
             mIoHandler.post(() -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
                     request, authRecord.identity.getName(), authRecord.identity.getUri(),
                     authRecord.identity.getRelativeIconUri(), authRecord.scope,
-                    authRecord.publicKey, authRecord.cluster)));
+                    authRecord.publicKey, authRecord.chain)));
         }
 
         @Override
@@ -460,7 +464,7 @@ public abstract class LocalScenario implements Scenario {
                 final SignMessagesRequest smr = new SignMessagesRequest(request,
                         authRecord.identity.getName(), authRecord.identity.getUri(),
                         authRecord.identity.getRelativeIconUri(), authRecord.scope,
-                        authRecord.publicKey, authRecord.cluster);
+                        authRecord.publicKey, authRecord.chain);
                 mIoHandler.post(() -> mCallbacks.onSignMessagesRequest(smr));
             } catch (IllegalArgumentException e) {
                 mIoHandler.post(() -> request.completeExceptionally(
@@ -484,7 +488,7 @@ public abstract class LocalScenario implements Scenario {
             mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionsRequest(
                     new SignAndSendTransactionsRequest(request, authRecord.identity.getName(),
                             authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
-                            authRecord.scope, authRecord.publicKey, authRecord.cluster)));
+                            authRecord.scope, authRecord.publicKey, authRecord.chain)));
         }
     };
 

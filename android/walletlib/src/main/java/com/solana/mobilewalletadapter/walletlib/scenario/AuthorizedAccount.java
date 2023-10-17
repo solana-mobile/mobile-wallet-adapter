@@ -4,6 +4,8 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -13,18 +15,44 @@ public class AuthorizedAccount {
     @NonNull
     public final byte[] publicKey;
     @Nullable
+    public final String displayAddress;
+    @Nullable
+    public final String displayAddressFormat;
+    @Nullable
     public final String accountLabel;
+    @Nullable
+    public final Uri icon;
     @Nullable
     public final String[] chains;
     @Nullable
     public final String[] features;
 
     public AuthorizedAccount(@NonNull byte[] publicKey,
-                      @Nullable String accountLabel,
-                      @Nullable String[] chains,
-                      @Nullable String[] features) {
+                             @Nullable String accountLabel,
+                             @Nullable Uri icon,
+                             @Nullable String[] chains,
+                             @Nullable String[] features) {
         this.publicKey = publicKey;
+        this.displayAddress = null;
+        this.displayAddressFormat = null;
         this.accountLabel = accountLabel;
+        this.icon = icon;
+        this.chains = chains;
+        this.features = features;
+    }
+
+    public AuthorizedAccount(@NonNull byte[] publicKey,
+                             @Nullable String displayAddress,
+                             @Nullable String displayAddressFormat,
+                             @Nullable String accountLabel,
+                             @Nullable Uri icon,
+                             @Nullable String[] chains,
+                             @Nullable String[] features) {
+        this.publicKey = publicKey;
+        this.displayAddress = displayAddress;
+        this.displayAddressFormat = displayAddressFormat;
+        this.accountLabel = accountLabel;
+        this.icon = icon;
         this.chains = chains;
         this.features = features;
     }

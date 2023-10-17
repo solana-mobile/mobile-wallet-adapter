@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
@@ -165,8 +166,15 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
                     final JSONObject account = new JSONObject();
                     account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
+                    if (aa.displayAddress != null && aa.displayAddressFormat != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS, aa.displayAddress);
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS_FORMAT, aa.displayAddressFormat);
+                    }
                     if (aa.accountLabel != null) {
                         account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
+                    }
+                    if (aa.icon != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_ICON, aa.icon);
                     }
                     accounts.put(account);
                 }
@@ -251,7 +259,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
             this.accounts = new AuthorizedAccount[] {
-                    new AuthorizedAccount(publicKey, accountLabel, null, null) };
+                    new AuthorizedAccount(publicKey, accountLabel, null, null, null) };
         }
 
         public AuthorizationResult(@NonNull String authToken,
@@ -318,13 +326,32 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
         final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
-        final String chain = !chainParam.isEmpty() ? chainParam : !cluster.isEmpty() ? cluster : null;
+        final String chain = !chainParam.isEmpty() ? chainParam
+                : !cluster.isEmpty() ? Identifier.clusterToChainIdentifier(cluster) : null;
 
         final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
         final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;
 
+        final String[] features;
+        try {
+            final JSONArray featuresArr = o.optJSONArray(ProtocolContract.PARAMETER_FEATURES);
+            features = featuresArr != null ? JsonPack.unpackStrings(featuresArr) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, features must be a JSONArray of strings", null);
+            return;
+        }
+
+        final String[] addresses;
+        try {
+            final JSONArray addressesArr = o.optJSONArray(ProtocolContract.PARAMETER_ADDRESSES);
+            addresses = addressesArr != null ? JsonPack.unpackStrings(addressesArr) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
+            return;
+        }
+
         final AuthorizeRequest request =
-                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, authToken);
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
@@ -336,15 +363,25 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Nullable
         public final String chain;
 
+        @Nullable
+        public final String[] features;
+
+        @Nullable
+        public final String[] addresses;
+
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @Nullable String identityName,
                                  @Nullable String chain,
+                                 @Nullable String[] features,
+                                 @Nullable String[] addresses,
                                  @Nullable String authToken) {
             super(id, identityUri, iconUri, identityName, authToken);
             this.chain = chain;
-            this.cluster = chain;
+            this.cluster = null;
+            this.features = features;
+            this.addresses = addresses;
         }
 
         @Override

@@ -73,7 +73,10 @@ public class ProtocolContract {
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
     public static final String RESULT_ACCOUNTS = "accounts"; // type: JSON array of Account
     public static final String RESULT_ACCOUNTS_ADDRESS = "address"; // type: String (base64-encoded addresses)
+    public static final String RESULT_ACCOUNTS_DISPLAY_ADDRESS = "display_address"; // type: String
+    public static final String RESULT_ACCOUNTS_DISPLAY_ADDRESS_FORMAT = "display_address_format"; // type: String
     public static final String RESULT_ACCOUNTS_LABEL = "label"; // type: String
+    public static final String RESULT_ACCOUNTS_ICON = "icon"; // type: String
     public static final String RESULT_ACCOUNTS_CHAINS = "chains"; // type: String
     // RESULT_ACCOUNTS optionally includes a RESULT_SUPPORTED_FEATURES
 
