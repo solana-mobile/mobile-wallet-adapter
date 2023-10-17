@@ -3,12 +3,12 @@ package com.solana.mobilewalletadapter.clientlib
 import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult
 
-sealed class CredentialState {
+internal sealed class IdentityState {
     data class Provided(
-        val credentials: ConnectionIdentity
-    ): CredentialState()
+        val appIdentity: ConnectionIdentity
+    ): IdentityState()
 
-    object NotProvided: CredentialState()
+    object NotProvided: IdentityState()
 }
 
 data class ConnectionIdentity(

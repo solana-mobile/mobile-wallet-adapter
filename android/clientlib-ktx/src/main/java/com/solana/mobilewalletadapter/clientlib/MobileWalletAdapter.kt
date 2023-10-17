@@ -22,7 +22,7 @@ class MobileWalletAdapter(
     connectionIdentity: ConnectionIdentity? = null,
 ) {
 
-    private var credsState: CredentialState = CredentialState.NotProvided
+    private var identityState: IdentityState = IdentityState.NotProvided
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
@@ -43,13 +43,13 @@ class MobileWalletAdapter(
 
     init {
         connectionIdentity?.let {
-            credsState = CredentialState.Provided(it)
+            identityState = IdentityState.Provided(it)
         }
     }
 
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
         return transact(sender) {
-            if (credsState is CredentialState.NotProvided) {
+            if (identityState is IdentityState.NotProvided) {
                 throw IllegalStateException("App identity credentials must be provided via the constructor to use the connect method.")
             }
         }
@@ -97,9 +97,9 @@ class MobileWalletAdapter(
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
 
-                    val authResult = credsState.let { creds ->
-                        if (creds is CredentialState.Provided) {
-                            with (creds.credentials) {
+                    val authResult = identityState.let { id ->
+                        if (id is IdentityState.Provided) {
+                            with (id.appIdentity) {
                                 if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
                                     //TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
                                     adapterOperations.authorize(identityUri, iconUri, identityName, "SOMECHAIN", authToken, null, null)
