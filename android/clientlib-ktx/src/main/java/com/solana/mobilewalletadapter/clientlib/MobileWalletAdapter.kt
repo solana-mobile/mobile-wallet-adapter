@@ -16,13 +16,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class MobileWalletAdapter(
+    private val connectionIdentity: ConnectionIdentity,
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider(),
-    connectionIdentity: ConnectionIdentity? = null,
 ) {
-
-    private var identityState: IdentityState = IdentityState.NotProvided
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
@@ -64,18 +62,8 @@ class MobileWalletAdapter(
             field = value
         }
 
-    init {
-        connectionIdentity?.let {
-            identityState = IdentityState.Provided(it)
-        }
-    }
-
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
-        return transact(sender) {
-            if (identityState is IdentityState.NotProvided) {
-                throw IllegalStateException("App identity credentials must be provided via the constructor to use the connect method.")
-            }
-        }
+        return transact(sender) { }
     }
 
     suspend fun <T> transact(
@@ -120,24 +108,21 @@ class MobileWalletAdapter(
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
 
-                    val authResult = identityState.let { id ->
-                        if (id is IdentityState.Provided) {
-                            with (id.appIdentity) {
-                                if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
-                                    //TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
-                                    adapterOperations.authorize(identityUri, iconUri, identityName, blockchain.fullName, authToken, null, null)
-                                } else {
-                                    authToken?.let { token ->
-                                        adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
-                                    } ?: run {
-                                        adapterOperations.authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
-                                    }.also {
-                                        authToken = it.authToken
-                                    }
-                                }
-                            }
+                    val authResult = with (connectionIdentity) {
+                        if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
+                            /**
+                             * TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
+                             * Both the features & addresses params are set to null for now.
+                             */
+                            adapterOperations.authorize(identityUri, iconUri, identityName, blockchain.fullName, authToken, null, null)
                         } else {
-                            null
+                            authToken?.let { token ->
+                                adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
+                            } ?: run {
+                                adapterOperations.authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
+                            }.also {
+                                authToken = it.authToken
+                            }
                         }
                     }
 
