@@ -327,7 +327,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
         final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
         final String chain = !chainParam.isEmpty() ? chainParam
-                : !cluster.isEmpty() ? Identifier.clusterToChainIdentifier(cluster) : null;
+                : !cluster.isEmpty() ? Identifier.clusterToChainIdentifier(cluster)
+                : ProtocolContract.CHAIN_SOLANA_MAINNET;
 
         final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
         final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;

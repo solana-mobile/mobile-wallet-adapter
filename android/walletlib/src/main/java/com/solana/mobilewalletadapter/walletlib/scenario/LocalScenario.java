@@ -105,6 +105,7 @@ public abstract class LocalScenario implements Scenario {
     }
 
     @Override
+    @NonNull
     public List<SessionProperties.ProtocolVersion> getAssociationProtocolVersions() {
         return associationProtocolVersions;
     }
