@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.fakewallet.usecase.*
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -57,19 +58,38 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             associationUri
         )
 
-        scenario = associationUri.createScenario(
-            getApplication<FakeWalletApplication>().applicationContext,
-            MobileWalletAdapterConfig(
-                10,
-                10,
-                arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
-                arrayOf(ProtocolContract.FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS),
-                arrayOf(BuildConfig.PROTOCOL_VERSION)
-            ),
-            AuthIssuerConfig("fakewallet"),
-            MobileWalletAdapterScenarioCallbacks()
-        ).also { it.start() }
+        scenario = if (BuildConfig.PROTOCOL_VERSION == SessionProperties.ProtocolVersion.LEGACY) {
+            // manually create the scenario here so we can override the association protocol version
+            // this forces ProtocolVersion.LEGACY to simulate a wallet using walletlib 1.x (for testing)
+            LocalWebSocketServerScenario(
+                getApplication<FakeWalletApplication>().applicationContext,
+                MobileWalletAdapterConfig(
+                    10,
+                    10,
+                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
+                    arrayOf(ProtocolContract.FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS)
+                ),
+                AuthIssuerConfig("fakewallet"),
+                MobileWalletAdapterScenarioCallbacks(),
+                associationUri.associationPublicKey,
+                listOf(SessionProperties.ProtocolVersion.LEGACY),
+                associationUri.port,
+            )
+        } else {
+            associationUri.createScenario(
+                getApplication<FakeWalletApplication>().applicationContext,
+                MobileWalletAdapterConfig(
+                    10,
+                    10,
+                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
+                    arrayOf(ProtocolContract.FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS)
+                ),
+                AuthIssuerConfig("fakewallet"),
+                MobileWalletAdapterScenarioCallbacks()
+            )
+        }.also { it.start() }
 
         return true
     }

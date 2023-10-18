@@ -28,8 +28,6 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -43,10 +41,9 @@ public abstract class LocalScenario implements Scenario {
     private static final String TAG = LocalScenario.class.getSimpleName();
 
     @NonNull
-    final public SessionProperties sessionProperties;
-
-    @NonNull
     final public byte[] associationPublicKey;
+    @NonNull
+    final public List<SessionProperties.ProtocolVersion> associationProtocolVersions;
 
     @NonNull
     protected final MobileWalletAdapterConfig mMobileWalletAdapterConfig;
@@ -77,7 +74,7 @@ public abstract class LocalScenario implements Scenario {
                             @NonNull Callbacks callbacks,
                             @NonNull byte[] associationPublicKey) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, new DevicePowerConfigProvider(context), new ArrayList<>());
+                associationPublicKey, new DevicePowerConfigProvider(context), List.of());
     }
 
     /*package*/ LocalScenario(@NonNull Context context,
@@ -86,22 +83,11 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider,
-                              @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
+                              @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
+        this.associationProtocolVersions = associationProtocolVersions;
         this.associationPublicKey = associationPublicKey;
-
-        List<SessionProperties.ProtocolVersion> supportedProtocolVersions =
-                Arrays.asList(mobileWalletAdapterConfig.supportedProtocolVersions);
-        SessionProperties.ProtocolVersion maxSupportedProtocolVersion =
-                SessionProperties.ProtocolVersion.LEGACY;
-        for (SessionProperties.ProtocolVersion version : requestedProtocolVersions) {
-            if (version.ordinal() > maxSupportedProtocolVersion.ordinal()
-                    && supportedProtocolVersions.contains(version)) {
-                maxSupportedProtocolVersion = version;
-            }
-        }
-        this.sessionProperties = new SessionProperties(maxSupportedProtocolVersion);
 
         final LooperThread t = new LooperThread();
         t.start();
@@ -118,9 +104,10 @@ public abstract class LocalScenario implements Scenario {
         return associationPublicKey;
     }
 
-    @Nullable
     @Override
-    public SessionProperties getSessionProperties() { return sessionProperties; }
+    public List<SessionProperties.ProtocolVersion> getAssociationProtocolVersions() {
+        return associationProtocolVersions;
+    }
 
     @Override
     protected void finalize() {

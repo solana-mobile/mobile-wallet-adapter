@@ -9,11 +9,12 @@ import androidx.annotation.NonNull;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
+import java.util.List;
+
 public interface Scenario {
 
-    SessionProperties getSessionProperties();
-
     byte[] getAssociationPublicKey();
+    List<SessionProperties.ProtocolVersion> getAssociationProtocolVersions();
 
     MessageReceiver createMessageReceiver();
 
