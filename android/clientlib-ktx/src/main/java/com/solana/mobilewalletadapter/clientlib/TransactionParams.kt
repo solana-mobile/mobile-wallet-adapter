@@ -23,7 +23,7 @@ sealed class Blockchain(
 }
 
 sealed class Solana {
-    object Mainnet: Blockchain("solana", ProtocolContract.CLUSTER_MAINNET_BETA)
+    object Mainnet: Blockchain("solana", "mainnet")
     object Testnet: Blockchain("solana", ProtocolContract.CLUSTER_TESTNET)
     object Devnet: Blockchain("solana", ProtocolContract.CLUSTER_DEVNET)
 }
