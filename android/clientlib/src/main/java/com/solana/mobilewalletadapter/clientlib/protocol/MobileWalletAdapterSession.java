@@ -24,9 +24,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
     private static final String TAG = MobileWalletAdapterSession.class.getSimpleName();
@@ -35,27 +34,27 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     private final KeyPair mAssociationKey;
 
     @NonNull
-    private final List<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
+    private final Set<SessionProperties.ProtocolVersion> mSupportedProtocolVersions;
 
     @Nullable
     private SessionProperties mSessionProperties;
 
-    @Deprecated
     public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
-        this(decryptedPayloadReceiver, stateCallbacks, List.of(SessionProperties.ProtocolVersion.LEGACY));
+        this(decryptedPayloadReceiver, stateCallbacks,
+                Set.of(SessionProperties.ProtocolVersion.LEGACY, SessionProperties.ProtocolVersion.V1));
     }
 
-    public MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
-                                      @Nullable StateCallbacks stateCallbacks,
-                                      @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+    protected MobileWalletAdapterSession(@NonNull MessageReceiver decryptedPayloadReceiver,
+                                         @Nullable StateCallbacks stateCallbacks,
+                                         @NonNull Set<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mAssociationKey = generateECP256KeyPair();
         mSupportedProtocolVersions = supportedProtocolVersions;
         mSessionProperties = null;
     }
 
-    public List<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
+    public Set<SessionProperties.ProtocolVersion> getSupportedProtocolVersions() { return mSupportedProtocolVersions; }
 
     @NonNull
     @Override
@@ -124,12 +123,15 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         final ECPublicKey theirPublicKey = parseHelloRsp(payload);
         generateSessionECDHSecret(theirPublicKey);
 
+        SessionProperties sessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
         try {
-            byte[] encryptedSessionProperties =
-                    Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
-            mSessionProperties = parseSessionProps(encryptedSessionProperties);
-        } catch (IndexOutOfBoundsException e) {
-            mSessionProperties = new SessionProperties(SessionProperties.ProtocolVersion.LEGACY);
+            if (mSupportedProtocolVersions.contains(SessionProperties.ProtocolVersion.V1)) {
+                byte[] encryptedSessionProperties =
+                        Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
+                sessionProperties = parseSessionProps(encryptedSessionProperties);
+            }
+        } finally {
+            mSessionProperties = sessionProperties;
         }
 
         doSessionEstablished();
