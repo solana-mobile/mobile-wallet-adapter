@@ -40,7 +40,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     private static final int OFFCHAIN_MESSAGE_SIGNATURE_LENGTH = 64;
 
     @IntRange(from = 0)
-    private final int mClientTimeoutMs;
+    protected final int mClientTimeoutMs;
 
     public MobileWalletAdapterClient(@IntRange(from = 0) int clientTimeoutMs) {
         mClientTimeoutMs = clientTimeoutMs;
@@ -222,7 +222,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public static class AuthorizationFuture
             extends JsonRpc20MethodResultFuture<AuthorizationResult>
             implements NotifyOnCompleteFuture<AuthorizationResult> {
-        private AuthorizationFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
+        protected AuthorizationFuture(@NonNull NotifyOnCompleteFuture<Object> methodCallFuture) {
             super(methodCallFuture);
         }
 
@@ -307,7 +307,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // authorize
     // =============================================================================================
 
-    @Deprecated
     @NonNull
     public AuthorizationFuture authorize(@Nullable Uri identityUri,
                                          @Nullable Uri iconUri,
@@ -336,7 +335,6 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         return new AuthorizationFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
     }
 
-    @NonNull
     public AuthorizationFuture authorize(@Nullable Uri identityUri,
                                          @Nullable Uri iconUri,
                                          @Nullable String identityName,
@@ -344,38 +342,25 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                          @Nullable String authToken,
                                          @Nullable String[] features,
                                          @Nullable byte[][] addresses
-                                         /* TODO: sign in payload */)
+            /* TODO: sign in payload */)
             throws IOException {
-        if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
-            throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
-        } else if (iconUri != null && !iconUri.isRelative()) {
-            throw new IllegalArgumentException("If non-null, iconRelativeUri must be a relative Uri");
+
+        String cluster;
+        if (chain == null) cluster = null;
+        else switch (chain) {
+            case ProtocolContract.CHAIN_SOLANA_MAINNET:
+                cluster = ProtocolContract.CLUSTER_MAINNET_BETA;
+                break;
+            case ProtocolContract.CHAIN_SOLANA_TESTNET:
+                cluster = ProtocolContract.CLUSTER_TESTNET;
+                break;
+            case ProtocolContract.CHAIN_SOLANA_DEVNET:
+                cluster = ProtocolContract.CLUSTER_DEVNET;
+                break;
+            default:
+                cluster = chain;
         }
-
-        if (chain != null && !Identifier.isValidIdentifier(chain)) {
-            throw new IllegalArgumentException("provided chain is not a valid chain identifier");
-        }
-
-        final JSONArray featuresArr = features != null ? JsonPack.packStrings(features) : null;
-        final JSONArray addressesArr = addresses != null ? JsonPack.packByteArraysToBase64PayloadsArray(addresses) : null;
-
-        final JSONObject authorize;
-        try {
-            final JSONObject identity = new JSONObject();
-            identity.put(ProtocolContract.PARAMETER_IDENTITY_URI, identityUri);
-            identity.put(ProtocolContract.PARAMETER_IDENTITY_ICON, iconUri);
-            identity.put(ProtocolContract.PARAMETER_IDENTITY_NAME, identityName);
-            authorize = new JSONObject();
-            authorize.put(ProtocolContract.PARAMETER_IDENTITY, identity);
-            authorize.put(ProtocolContract.PARAMETER_CHAIN, chain); // null is OK
-            authorize.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken); // null is OK
-            authorize.put(ProtocolContract.PARAMETER_FEATURES, featuresArr); // null is OK
-            authorize.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr); // null is OK
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
-        }
-
-        return new AuthorizationFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
+        return authorize(identityUri, iconUri, identityName, cluster);
     }
 
     // =============================================================================================

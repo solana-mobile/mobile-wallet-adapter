@@ -5,7 +5,6 @@
 package com.solana.mobilewalletadapter.clientlib.scenario;
 
 import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -13,11 +12,11 @@ import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 public abstract class Scenario {
     public static final int DEFAULT_CLIENT_TIMEOUT_MS = 90000;
 
-    @NonNull
-    protected final MobileWalletAdapterClient mMobileWalletAdapterClient;
+    @IntRange(from = 0)
+    protected int mClientTimeoutMs;
 
     protected Scenario(@IntRange(from = 0) int clientTimeoutMs) {
-        mMobileWalletAdapterClient = new MobileWalletAdapterClient(clientTimeoutMs);
+        mClientTimeoutMs = clientTimeoutMs;
     }
 
     public abstract NotifyOnCompleteFuture<MobileWalletAdapterClient> start();

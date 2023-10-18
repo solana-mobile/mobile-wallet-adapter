@@ -130,6 +130,8 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
                         Arrays.copyOfRange(payload, ECDSAKeys.ENCODED_PUBLIC_KEY_LENGTH_BYTES, payload.length);
                 sessionProperties = parseSessionProps(encryptedSessionProperties);
             }
+        } catch (IndexOutOfBoundsException ignored) {
+            Log.w(TAG, "could not parse session properties, falling back on legacy session");
         } finally {
             mSessionProperties = sessionProperties;
         }

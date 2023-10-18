@@ -9,12 +9,17 @@ import android.util.Log;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClientV2;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
+import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
+import com.solana.mobilewalletadapter.common.protocol.MessageSender;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
@@ -26,7 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class LocalAssociationScenario extends Scenario {
+public class LocalAssociationScenario extends Scenario implements MessageReceiver {
     private static final String TAG = LocalAssociationScenario.class.getSimpleName();
     private static final int CONNECT_MAX_ATTEMPTS = 34;
     private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 150, 150, 200, 500, 500, 750, 750, 1000 }; // == 30s, which allows time for a user to choose a wallet from the disambiguation dialog, and for that wallet to start
@@ -46,6 +51,9 @@ public class LocalAssociationScenario extends Scenario {
     private ScheduledExecutorService mConnectionBackoffExecutor; // valid in State.CONNECTING
     private NotifyingCompletableFuture<MobileWalletAdapterClient> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
     private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
+
+    @Nullable
+    private MobileWalletAdapterClient mMobileWalletAdapterClient; // non-null in State.STARTED
 
     public int getPort() {
         return mPort;
@@ -69,9 +77,8 @@ public class LocalAssociationScenario extends Scenario {
             throw new UnsupportedOperationException("Failed assembling a LocalAssociation URI", e);
         }
 
-        mMobileWalletAdapterSession = new MobileWalletAdapterSession(
-                mMobileWalletAdapterClient,
-                mSessionStateCallbacks);
+        mMobileWalletAdapterSession =
+                new MobileWalletAdapterSession(this, mSessionStateCallbacks);
 
         Log.v(TAG, "Creating local association scenario for " + mWebSocketUri);
     }
@@ -148,6 +155,26 @@ public class LocalAssociationScenario extends Scenario {
         }
 
         return future;
+    }
+
+    private MessageSender mMessageSender;
+
+    @Override
+    public void receiverConnected(@NonNull MessageSender messageSender) {
+        Log.d(TAG, "receiver connected");
+        mMessageSender = messageSender;
+    }
+
+    @Override
+    public void receiverDisconnected() {
+        Log.d(TAG, "receiver disconnected");
+        mMobileWalletAdapterClient.receiverDisconnected();
+    }
+
+    @Override
+    public void receiverMessageReceived(@NonNull byte[] payload) {
+        Log.d(TAG, "receiver message received, passing to client");
+        mMobileWalletAdapterClient.receiverMessageReceived(payload);
     }
 
     @NonNull
@@ -241,8 +268,15 @@ public class LocalAssociationScenario extends Scenario {
         assert(mState == State.ESTABLISHING_SESSION || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
         Log.d(TAG, "Session established, scenario ready for use");
+        // this should be safe here, session is established
+        SessionProperties sessionProps = mMobileWalletAdapterSession.getSessionProperties();
+        mMobileWalletAdapterClient =
+                sessionProps.protocolVersion == SessionProperties.ProtocolVersion.V1
+                        ? new MobileWalletAdapterClientV2(mClientTimeoutMs)
+                        : new MobileWalletAdapterClient(mClientTimeoutMs);
+        mMobileWalletAdapterClient.receiverConnected(mMessageSender);
         mState = State.STARTED;
-        notifySessionEstablishmentSucceeded();
+        notifySessionEstablishmentSucceeded(mMobileWalletAdapterClient);
     }
 
     @GuardedBy("mLock")
@@ -278,6 +312,7 @@ public class LocalAssociationScenario extends Scenario {
     @GuardedBy("mLock")
     private void destroyResourcesOnClose() {
         mMobileWalletAdapterSession = null;
+        mMobileWalletAdapterClient = null;
         mMobileWalletAdapterWebSocket = null;
         if (mConnectionBackoffExecutor != null) {
             mConnectionBackoffExecutor.shutdownNow();
@@ -286,8 +321,8 @@ public class LocalAssociationScenario extends Scenario {
     }
 
     @GuardedBy("mLock")
-    private void notifySessionEstablishmentSucceeded() {
-        mSessionEstablishedFuture.complete(mMobileWalletAdapterClient);
+    private void notifySessionEstablishmentSucceeded(MobileWalletAdapterClient client) {
+        mSessionEstablishedFuture.complete(client);
         mSessionEstablishedFuture = null;
     }
 
