@@ -23,9 +23,9 @@ interface AdapterOperations {
         iconUri: Uri,
         identityName: String,
         chain: String,
-        authToken: String?,
-        features: Array<String>?,
-        addresses: Array<ByteArray>?
+        authToken: String? = null,
+        features: Array<String>? = null,
+        addresses: Array<ByteArray>? = null
     ): MobileWalletAdapterClient.AuthorizationResult
 
     suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.AuthorizationResult
