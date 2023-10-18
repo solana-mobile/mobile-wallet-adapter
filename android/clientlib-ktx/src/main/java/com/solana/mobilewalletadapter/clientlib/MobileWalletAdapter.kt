@@ -103,10 +103,10 @@ class MobileWalletAdapter(
             withContext(ioDispatcher) {
                 try {
                     @Suppress("BlockingMethodInNonBlockingContext")
-                    val protocolVersion = scenario.session.sessionProperties.protocolVersion
-
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
+
+                    val protocolVersion = scenario.session.sessionProperties.protocolVersion
 
                     val authResult = with (connectionIdentity) {
                         if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
