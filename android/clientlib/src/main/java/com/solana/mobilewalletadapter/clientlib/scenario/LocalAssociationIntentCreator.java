@@ -18,8 +18,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSess
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 public class LocalAssociationIntentCreator {
 
@@ -35,14 +34,15 @@ public class LocalAssociationIntentCreator {
         return new Intent()
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(endpointPrefix, port, associationToken, session.getSupportedProtocolVersions()));
+                .setData(createAssociationUri(endpointPrefix, port, associationToken,
+                        session.getSupportedProtocolVersions()));
     }
 
     public static boolean isWalletEndpointAvailable(@NonNull PackageManager pm) {
         final Intent intent = new Intent()
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(null, 0, "", new ArrayList<>()));
+                .setData(createAssociationUri(null, 0, "", Set.of()));
         final ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return (resolveInfo != null);
     }
@@ -51,7 +51,7 @@ public class LocalAssociationIntentCreator {
     private static Uri createAssociationUri(@Nullable Uri endpointPrefix,
                                             @IntRange(from = 0, to = 65535) int port,
                                             @NonNull String associationToken,
-                                            @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+                                            @NonNull Set<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         if (endpointPrefix != null && (!"https".equals(endpointPrefix.getScheme()) || !endpointPrefix.isHierarchical())) {
             throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute with scheme 'https' and hierarchical");
         }
