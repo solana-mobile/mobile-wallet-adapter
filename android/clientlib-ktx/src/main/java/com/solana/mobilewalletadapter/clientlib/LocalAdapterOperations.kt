@@ -16,10 +16,31 @@ class LocalAdapterOperations(
 
     var client: MobileWalletAdapterClient? = null
 
+    @Deprecated(
+        "Replaced by updated authorize() method, which adds MWA 2.0 spec support",
+        replaceWith = ReplaceWith("authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses)"),
+        DeprecationLevel.WARNING
+    )
     override suspend fun authorize(identityUri: Uri, iconUri: Uri, identityName: String, rpcCluster: RpcCluster): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
             client?.authorize(identityUri, iconUri, identityName, rpcCluster.name)?.get()
+                ?: throw InvalidObjectException("Provide a client before performing adapter operations")
+        }
+    }
+
+    override suspend fun authorize(
+        identityUri: Uri,
+        iconUri: Uri,
+        identityName: String,
+        chain: String,
+        authToken: String?,
+        features: Array<String>?,
+        addresses: Array<ByteArray>?
+    ): MobileWalletAdapterClient.AuthorizationResult {
+        return withContext(ioDispatcher) {
+            @Suppress("BlockingMethodInNonBlockingContext")
+            client?.authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }
@@ -48,6 +69,11 @@ class LocalAdapterOperations(
         }
     }
 
+    @Deprecated(
+        "Replaced by signMessagesDetached, which returns the improved MobileWalletAdapterClient.SignMessagesResult type",
+        replaceWith = ReplaceWith("signMessagesDetached(messages, addresses)"),
+        DeprecationLevel.WARNING
+    )
     override suspend fun signMessages(messages: Array<ByteArray>, addresses: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
