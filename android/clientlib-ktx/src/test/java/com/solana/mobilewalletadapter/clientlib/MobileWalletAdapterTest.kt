@@ -47,7 +47,7 @@ class MobileWalletAdapterTest {
         val protocol = if (isMwa2) SessionProperties.ProtocolVersion.V1 else SessionProperties.ProtocolVersion.LEGACY
 
         return mock {
-            on { provideAssociationScenario(any(), any()) } doAnswer {
+            on { provideAssociationScenario(any()) } doAnswer {
                 mock {
                     on { start() } doAnswer {
                         mock<NotifyingCompletableFuture<MobileWalletAdapterClient>> {
@@ -258,7 +258,7 @@ class MobileWalletAdapterTest {
     @Test
     fun `validate relevant exception is caught when thrown generally`() = runTest(testDispatcher) {
         mockProvider = mock {
-            on { provideAssociationScenario(any(), any()) } doAnswer {
+            on { provideAssociationScenario(any()) } doAnswer {
                 throw CancellationException("err")
             }
         }
