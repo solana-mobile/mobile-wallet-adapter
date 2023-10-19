@@ -610,7 +610,7 @@ where:
 - `payloads`: one or more base64-encoded transaction payload to sign
 - `options`: (optional) a JSON object, containing:
   - `min_context_slot`: (optional) if set, the minimum slot number at which to perform preflight transaction checks
-  - `commitment`: (optional) desired commitment level. If provided, confirm the transaction after sending
+  - `commitment`: (optional) desired commitment level. Expected values are `"finalized"`, `"confirmed"` and `"processed"`. If provided, confirm the transaction after sending
   - `skip_preflight`: (optional) boolean to enable/disable transaction verification at the RPC
   - `max_retries`: (optional) maximum number of times for the RPC node to retry sending the transaction to the leader
   - `wait_for_commitment_to_send_next_transaction`: (optional) boolean to wait till specified commitment before sending the next transaction. If `commitment` not specified, wait till `"confirmed"` commitment
