@@ -7,8 +7,11 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
 public interface Scenario {
+
+    SessionProperties getSessionProperties();
 
     byte[] getAssociationPublicKey();
 

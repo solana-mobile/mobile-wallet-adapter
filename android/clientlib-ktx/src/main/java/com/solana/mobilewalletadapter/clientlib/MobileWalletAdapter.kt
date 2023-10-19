@@ -7,6 +7,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import kotlinx.coroutines.*
 import java.io.IOException
 import java.util.concurrent.CancellationException
@@ -15,13 +16,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class MobileWalletAdapter(
+    private val connectionIdentity: ConnectionIdentity,
     private val timeout: Int = Scenario.DEFAULT_CLIENT_TIMEOUT_MS,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider(),
-    connectionIdentity: ConnectionIdentity? = null,
 ) {
-
-    private var credsState: CredentialState = CredentialState.NotProvided
 
     private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
@@ -31,7 +30,7 @@ class MobileWalletAdapter(
      * Specify the RPC cluster used for all operations. Note: changing at runtime will invalidate
      * the auth token and reauthorization will be required
      */
-    var rpcCluster: RpcCluster = RpcCluster.Devnet
+    var blockchain: Blockchain = Solana.Devnet
         set(value) {
             if (value != field) {
                 authToken = null
@@ -40,18 +39,31 @@ class MobileWalletAdapter(
             field = value
         }
 
-    init {
-        connectionIdentity?.let {
-            credsState = CredentialState.Provided(it)
+    @Deprecated(
+        "RpcCluster provides only Solana clusters; use the Blockchain object for full multi-chain support.",
+        replaceWith = ReplaceWith("Set `blockchain` property moving forward."),
+        DeprecationLevel.WARNING
+    )
+    var rpcCluster: RpcCluster = RpcCluster.Devnet
+        set(value) {
+            when (value) {
+                RpcCluster.MainnetBeta -> {
+                    blockchain = Solana.Mainnet
+                }
+                RpcCluster.Devnet -> {
+                    blockchain = Solana.Devnet
+                }
+                RpcCluster.Testnet -> {
+                    blockchain = Solana.Testnet
+                }
+                else -> { }
+            }
+
+            field = value
         }
-    }
 
     suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
-        return transact(sender) {
-            if (credsState is CredentialState.NotProvided) {
-                throw IllegalStateException("App identity credentials must be provided via the constructor to use the connect method.")
-            }
-        }
+        return transact(sender) { }
     }
 
     suspend fun <T> transact(
@@ -94,20 +106,23 @@ class MobileWalletAdapter(
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     adapterOperations.client = client
 
-                    val authResult = credsState.let { creds ->
-                        if (creds is CredentialState.Provided) {
-                            with (creds.credentials) {
-                                val authResult = authToken?.let { token ->
-                                    adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
-                                } ?: run {
-                                    adapterOperations.authorize(identityUri, iconUri, identityName, rpcCluster)
-                                }
+                    val protocolVersion = scenario.session.sessionProperties.protocolVersion
 
-                                authToken = authResult.authToken
-                                authResult
-                            }
+                    val authResult = with (connectionIdentity) {
+                        if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
+                            /**
+                             * TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
+                             * Both the features & addresses params are set to null for now.
+                             */
+                            adapterOperations.authorize(identityUri, iconUri, identityName, blockchain.fullName, authToken, null, null)
                         } else {
-                            null
+                            authToken?.let { token ->
+                                adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
+                            } ?: run {
+                                adapterOperations.authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
+                            }.also {
+                                authToken = it.authToken
+                            }
                         }
                     }
 

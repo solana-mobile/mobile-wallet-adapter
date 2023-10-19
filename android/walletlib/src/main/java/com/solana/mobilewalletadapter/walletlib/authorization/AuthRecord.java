@@ -33,6 +33,9 @@ public class AuthRecord {
     public final String accountLabel;
 
     @NonNull
+    public final String chain;
+
+    @NonNull @Deprecated
     public final String cluster;
 
     @NonNull
@@ -53,7 +56,7 @@ public class AuthRecord {
                            @NonNull IdentityRecord identity,
                            @NonNull byte[] publicKey,
                            @Nullable String accountLabel,
-                           @NonNull String cluster,
+                           @NonNull String chain,
                            @NonNull byte[] scope,
                            @Nullable Uri walletUriBase,
                            @IntRange(from = 1) int publicKeyId,
@@ -66,7 +69,8 @@ public class AuthRecord {
         this.identity = identity;
         this.publicKey = publicKey;
         this.accountLabel = accountLabel;
-        this.cluster = cluster;
+        this.chain = chain;
+        this.cluster = chain;
         this.scope = scope;
         this.walletUriBase = walletUriBase;
         this.publicKeyId = publicKeyId;
@@ -112,7 +116,7 @@ public class AuthRecord {
                 "id=" + id +
                 ", identity=" + identity +
                 ", publicKey=" + Arrays.toString(publicKey) +
-                ", cluster='" + cluster + '\'' +
+                ", chain='" + chain + '\'' +
                 ", scope=" + Arrays.toString(scope) +
                 ", walletUriBase='" + walletUriBase + '\'' +
                 ", issued=" + issued +

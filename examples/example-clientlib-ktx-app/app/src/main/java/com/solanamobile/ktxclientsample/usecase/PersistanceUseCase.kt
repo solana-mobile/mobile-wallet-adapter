@@ -2,6 +2,7 @@ package com.solanamobile.ktxclientsample.usecase
 
 import android.content.SharedPreferences
 import com.solana.core.PublicKey
+import java.lang.IllegalArgumentException
 import javax.inject.Inject
 
 sealed class WalletConnection
@@ -17,6 +18,10 @@ data class Connected(
 class PersistanceUseCase @Inject constructor(
     private val sharedPreferences: SharedPreferences
 ) {
+
+    val connected: Connected
+        get() = getWalletConnection() as? Connected
+            ?: throw IllegalArgumentException("Only use this property when you are sure you have a valid connection.")
 
     private var connection: WalletConnection = NotConnected
 
@@ -47,16 +52,6 @@ class PersistanceUseCase @Inject constructor(
         }.apply()
 
         connection = Connected(pubKey, accountLabel, token)
-    }
-
-    fun clearConnection() {
-        sharedPreferences.edit().apply {
-            putString(PUBKEY_KEY, "")
-            putString(ACCOUNT_LABEL, "")
-            putString(AUTH_TOKEN_KEY, "")
-        }.apply()
-
-        connection = NotConnected
     }
 
     companion object {

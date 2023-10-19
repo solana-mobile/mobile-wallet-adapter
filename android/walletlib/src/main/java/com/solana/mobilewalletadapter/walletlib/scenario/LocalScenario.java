@@ -14,8 +14,10 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
@@ -26,6 +28,8 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -36,6 +40,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class LocalScenario implements Scenario {
     private static final String TAG = LocalScenario.class.getSimpleName();
+
+    @NonNull
+    final public SessionProperties sessionProperties;
 
     @NonNull
     final public byte[] associationPublicKey;
@@ -69,7 +76,7 @@ public abstract class LocalScenario implements Scenario {
                             @NonNull Callbacks callbacks,
                             @NonNull byte[] associationPublicKey) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, new DevicePowerConfigProvider(context));
+                associationPublicKey, new DevicePowerConfigProvider(context), new ArrayList<>());
     }
 
     /*package*/ LocalScenario(@NonNull Context context,
@@ -77,10 +84,21 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull AuthIssuerConfig authIssuerConfig,
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
-                              @NonNull PowerConfigProvider powerConfigProvider) {
+                              @NonNull PowerConfigProvider powerConfigProvider,
+                              @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationPublicKey = associationPublicKey;
+
+        SessionProperties.ProtocolVersion maxSupportedProtocolVersion =
+                SessionProperties.ProtocolVersion.LEGACY;
+        for (SessionProperties.ProtocolVersion version : requestedProtocolVersions) {
+            if (version.ordinal() > maxSupportedProtocolVersion.ordinal()
+                    && mobileWalletAdapterConfig.supportedProtocolVersions.contains(version)) {
+                maxSupportedProtocolVersion = version;
+            }
+        }
+        this.sessionProperties = new SessionProperties(maxSupportedProtocolVersion);
 
         final LooperThread t = new LooperThread();
         t.start();
@@ -96,6 +114,10 @@ public abstract class LocalScenario implements Scenario {
     public byte[] getAssociationPublicKey() {
         return associationPublicKey;
     }
+
+    @Nullable
+    @Override
+    public SessionProperties getSessionProperties() { return sessionProperties; }
 
     @Override
     protected void finalize() {
@@ -191,6 +213,14 @@ public abstract class LocalScenario implements Scenario {
                 mActiveAuthorization = null;
             }
 
+            if (request.authToken != null) {
+                doReauthorize(request);
+                return;
+            }
+
+            final String chain = request.chain != null
+                    ? request.chain : ProtocolContract.CHAIN_SOLANA_MAINNET;
+
             final NotifyingCompletableFuture<AuthorizeRequest.Result> future = new NotifyingCompletableFuture<>();
             future.notifyOnComplete(f -> mIoHandler.post(() -> { // Note: run in IO thread context
                 try {
@@ -200,9 +230,10 @@ public abstract class LocalScenario implements Scenario {
                         final String name = request.identityName != null ? request.identityName : "";
                         final Uri uri = request.identityUri != null ? request.identityUri : Uri.EMPTY;
                         final Uri relativeIconUri = request.iconUri != null ? request.iconUri : Uri.EMPTY;
+                        final AuthorizedAccount account = authorize.accounts[0]; // TODO(#44): support multiple addresses
                         final AuthRecord authRecord = mAuthRepository.issue(
-                                name, uri, relativeIconUri, authorize.publicKey,
-                                authorize.accountLabel, request.cluster, authorize.walletUriBase,
+                                name, uri, relativeIconUri, account.publicKey,
+                                account.accountLabel, chain, authorize.walletUriBase,
                                 authorize.scope);
                         Log.d(TAG, "Authorize request completed successfully; issued auth: " + authRecord);
                         synchronized (mLock) {
@@ -211,7 +242,7 @@ public abstract class LocalScenario implements Scenario {
 
                         final String authToken = mAuthRepository.toAuthToken(authRecord);
                         request.complete(new MobileWalletAdapterServer.AuthorizationResult(
-                                authToken, authorize.publicKey, authorize.accountLabel,
+                                authToken, authorize.accounts,
                                 authorize.walletUriBase));
                     } else {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
@@ -229,8 +260,77 @@ public abstract class LocalScenario implements Scenario {
             }));
 
             mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
+                    future, request.identityName, request.identityUri, request.iconUri, chain)));
+        }
+
+        private void doReauthorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
+            assert request.authToken != null;
+            final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
+            if (authRecord == null) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.AuthorizationNotValidException(
+                                "auth_token not valid for this request")));
+                return;
+            }
+
+            if (request.chain != null && !authRecord.chain.equals(request.chain)) {
+                mIoHandler.post(() -> request.completeExceptionally(
+                        new MobileWalletAdapterServer.AuthorizationNotValidException(
+                                "requested chain not valid for specified auth_token")));
+                return;
+            }
+
+            final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
+            future.notifyOnComplete(f -> mIoHandler.post(() -> { // Note: run in IO thread context
+                try {
+                    final Boolean reauthorize = f.get(); // won't block
+                    if (!reauthorize) {
+                        mIoHandler.post(() -> request.completeExceptionally(
+                                new MobileWalletAdapterServer.RequestDeclinedException(
+                                        "app declined reauthorization request")));
+                        mAuthRepository.revoke(authRecord);
+                        return;
+                    }
+
+                    final AuthRecord reissuedAuthRecord = mAuthRepository.reissue(authRecord);
+                    if (reissuedAuthRecord == null) {
+                        // No need to explicitly revoke the old auth token; that is part of the
+                        // reissue method contract
+                        mIoHandler.post(() -> request.completeExceptionally(
+                                new MobileWalletAdapterServer.RequestDeclinedException(
+                                        "auth_token not valid for reissue")));
+                        return;
+                    }
+                    synchronized (mLock) {
+                        mActiveAuthorization = reissuedAuthRecord;
+                    }
+
+                    final String authToken;
+                    if (reissuedAuthRecord == authRecord) {
+                        // Reissued same auth record; don't regenerate the token
+                        authToken = request.authToken;
+                    } else {
+                        authToken = mAuthRepository.toAuthToken(reissuedAuthRecord);
+                    }
+
+                    mIoHandler.post(() -> request.complete(
+                            new MobileWalletAdapterServer.AuthorizationResult(
+                                    authToken, authRecord.publicKey, authRecord.accountLabel,
+                                    authRecord.walletUriBase)));
+                } catch (ExecutionException e) {
+                    final Throwable cause = e.getCause();
+                    assert(cause instanceof Exception); // expected to always be an Exception
+                    request.completeExceptionally((Exception)cause);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Unexpected interruption while waiting for reauthorization", e);
+                } catch (CancellationException e) {
+                    request.cancel(true);
+                }
+            }));
+
+            mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(new ReauthorizeRequest(
                     future, request.identityName, request.identityUri, request.iconUri,
-                    request.cluster)));
+                    authRecord.chain, authRecord.scope)));
         }
 
         @Override
@@ -299,7 +399,7 @@ public abstract class LocalScenario implements Scenario {
 
             mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(new ReauthorizeRequest(
                     future, request.identityName, request.identityUri, request.iconUri,
-                    authRecord.cluster, authRecord.scope)));
+                    authRecord.chain, authRecord.scope)));
         }
 
         @Override

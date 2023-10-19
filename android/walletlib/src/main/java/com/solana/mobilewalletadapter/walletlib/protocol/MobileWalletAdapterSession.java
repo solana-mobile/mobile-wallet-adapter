@@ -13,7 +13,10 @@ import com.solana.mobilewalletadapter.common.crypto.ECDSAKeys;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.crypto.ECDSASignatures;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -21,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
+import java.util.List;
 
 public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon {
     private static final String TAG = MobileWalletAdapterSession.class.getSimpleName();
@@ -44,6 +48,10 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         return mAssociationPublicKey;
     }
 
+    @NonNull
+    @Override
+    protected SessionProperties getSessionProperties() { return mScenario.getSessionProperties(); }
+
     @Override
     protected void handleSessionEstablishmentMessage(@NonNull byte[] payload)
             throws SessionMessageException {
@@ -54,12 +62,16 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
         // Generate an EC key on the P-256 curve, and do ECDH to produce the shared secret
         final ECPublicKey ourPublicKey = generateSessionECDHKeyPair();
         generateSessionECDHSecret(theirPublicKey);
+        doSessionEstablished();
 
         // Send a response to allow the counterparty to perform ECDH as well
         try {
-            mMessageSender.send(createHelloRsp(ourPublicKey));
+            mMessageSender.send(createHelloRsp(ourPublicKey, getSessionProperties()));
         } catch (IOException e) {
             Log.e(TAG, "Failed to send HELLO_RSP; terminating session", e);
+            onSessionError();
+        } catch (SessionMessageException e ) {
+            Log.e(TAG, "Failed to create HELLO_RSP; terminating session", e);
             onSessionError();
         }
     }
@@ -105,7 +117,27 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     }
 
     @NonNull
-    private static byte[] createHelloRsp(@NonNull ECPublicKey publicKey) {
-        return ECDSAKeys.encodeP256PublicKey(publicKey);
+    private byte[] createHelloRsp(@NonNull ECPublicKey publicKey,
+                                  @NonNull SessionProperties sessionProperties) throws SessionMessageException {
+        byte[] encodedPublicKey = ECDSAKeys.encodeP256PublicKey(publicKey);
+
+        if (sessionProperties.protocolVersion == SessionProperties.ProtocolVersion.LEGACY)
+            return encodedPublicKey;
+
+        byte[] encryptedSessionProperties;
+        try {
+            synchronized (this) {
+                encryptedSessionProperties = this.encryptSessionPayload(sessionProperties.serialize());
+            }
+        } catch (JSONException e) {
+            throw new SessionMessageException("Failed to encode session properties", e);
+        }
+
+        byte[] helloRsp = new byte[encodedPublicKey.length + encryptedSessionProperties.length];
+        System.arraycopy(encodedPublicKey, 0, helloRsp, 0, encodedPublicKey.length);
+        System.arraycopy(encryptedSessionProperties, 0, helloRsp, encodedPublicKey.length,
+                encryptedSessionProperties.length);
+
+        return helloRsp;
     }
 }

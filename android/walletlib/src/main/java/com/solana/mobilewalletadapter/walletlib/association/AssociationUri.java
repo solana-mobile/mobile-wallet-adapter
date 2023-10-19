@@ -12,9 +12,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.AssociationContract;
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.scenario.Scenario;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AssociationUri {
     @NonNull
@@ -23,10 +27,14 @@ public abstract class AssociationUri {
     @NonNull
     public final byte[] associationPublicKey;
 
+    @NonNull
+    public final List<SessionProperties.ProtocolVersion> supportedProtocolVersions;
+
     protected AssociationUri(@NonNull Uri uri) {
         this.uri = uri;
         validate(uri);
         associationPublicKey = parseAssociationToken(uri);
+        supportedProtocolVersions = parseSupportedProtocolVersions(uri);
     }
 
     private static void validate(@NonNull Uri uri) {
@@ -50,6 +58,22 @@ public abstract class AssociationUri {
         }
 
         return Base64.decode(associationToken, Base64.URL_SAFE);
+    }
+
+    @NonNull
+    private static List<SessionProperties.ProtocolVersion> parseSupportedProtocolVersions(@NonNull Uri uri) {
+        final List<SessionProperties.ProtocolVersion> supportedVersions = new ArrayList<>();
+
+        for (String supportVersionStr : uri.getQueryParameters(
+                AssociationContract.PARAMETER_PROTOCOL_VERSION)) {
+            try {
+                supportedVersions.add(SessionProperties.ProtocolVersion.from(supportVersionStr));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("port parameter must be a number", e);
+            }
+        }
+
+        return supportedVersions;
     }
 
     @Nullable

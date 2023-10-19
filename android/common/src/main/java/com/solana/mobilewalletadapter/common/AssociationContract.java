@@ -9,6 +9,8 @@ public class AssociationContract {
 
     public static final String PARAMETER_ASSOCIATION_TOKEN = "association";
 
+    public static final String PARAMETER_PROTOCOL_VERSION = "v";
+
     public static final String LOCAL_PATH_SUFFIX = "v1/associate/local";
     public static final String LOCAL_PARAMETER_PORT = "port"; // type: Int
 
