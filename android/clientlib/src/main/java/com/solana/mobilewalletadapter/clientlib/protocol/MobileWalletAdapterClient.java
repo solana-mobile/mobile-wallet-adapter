@@ -763,6 +763,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // sign_transactions
     // =============================================================================================
 
+    @Deprecated(since = "2.0.0", forRemoval = true)
     @NonNull
     public SignPayloadsFuture signTransactions(@NonNull @Size(min = 1) byte[][] transactions)
             throws IOException {

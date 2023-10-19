@@ -90,6 +90,9 @@ class LocalAdapterOperations(
         }
     }
 
+    @Deprecated("signTransactions is deprecated in MWA 2.0, use signAndSendTransactions",
+        replaceWith = ReplaceWith("signAndSendTransactions(transactions, DefaultTransactionParams)"),
+        DeprecationLevel.WARNING)
     override suspend fun signTransactions(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
