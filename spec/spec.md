@@ -123,7 +123,7 @@ Feature identifiers are used to identify features that are supported by a wallet
 These features are mandatory and must be implemented by wallet endpoints. Dapp endpoints can assume that these features are always available without an explicit call to [`get_capabilities`](#get_capabilities).  
 
 - [`solana:signMessages`](#sign_messages)
-- [`solana:signAndSendTransaction`](#sign_and_send_transactions), an optional Wallet RPC method. 
+- [`solana:signAndSendTransaction`](#sign_and_send_transactions)
 
 #### Optional Features
 
