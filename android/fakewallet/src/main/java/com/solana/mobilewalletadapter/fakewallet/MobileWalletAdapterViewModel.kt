@@ -58,18 +58,20 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             associationUri
         )
 
+        val config = MobileWalletAdapterConfig(
+            10,
+            10,
+            arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+            LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
+            arrayOf(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)
+        )
+
         scenario = if (BuildConfig.PROTOCOL_VERSION == SessionProperties.ProtocolVersion.LEGACY) {
             // manually create the scenario here so we can override the association protocol version
             // this forces ProtocolVersion.LEGACY to simulate a wallet using walletlib 1.x (for testing)
             LocalWebSocketServerScenario(
                 getApplication<FakeWalletApplication>().applicationContext,
-                MobileWalletAdapterConfig(
-                    10,
-                    10,
-                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
-                    arrayOf(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)
-                ),
+                config,
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks(),
                 associationUri.associationPublicKey,
@@ -79,13 +81,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         } else {
             associationUri.createScenario(
                 getApplication<FakeWalletApplication>().applicationContext,
-                MobileWalletAdapterConfig(
-                    10,
-                    10,
-                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
-                    arrayOf(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)
-                ),
+                config,
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks()
             )
