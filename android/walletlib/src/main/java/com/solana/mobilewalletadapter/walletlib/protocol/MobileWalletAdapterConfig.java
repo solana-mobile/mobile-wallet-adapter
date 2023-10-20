@@ -46,8 +46,7 @@ public class MobileWalletAdapterConfig {
                                      @IntRange(from = 0) long noConnectionWarningTimeoutMs) {
         this(maxTransactionsPerSigningRequest, maxMessagesPerSigningRequest,
                 supportedTransactionVersions, noConnectionWarningTimeoutMs,
-                new String[] { ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS },
-                List.of(SessionProperties.ProtocolVersion.LEGACY));
+                new String[] { ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS });
         if (!supportsSignAndSendTransactions)
             throw new IllegalArgumentException("signAndSendTransactions is required in MWA 2.0");
     }
@@ -56,12 +55,10 @@ public class MobileWalletAdapterConfig {
                                      @IntRange(from = 0) int maxMessagesPerSigningRequest,
                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
                                      @IntRange(from = 0) long noConnectionWarningTimeoutMs,
-                                     @NonNull String[] supportedFeatures,
-                                     @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+                                     @NonNull String[] supportedFeatures) {
         this.maxTransactionsPerSigningRequest = maxTransactionsPerSigningRequest;
         this.maxMessagesPerSigningRequest = maxMessagesPerSigningRequest;
         this.noConnectionWarningTimeoutMs = noConnectionWarningTimeoutMs;
-        this.supportedProtocolVersions = supportedProtocolVersions;
         this.optionalFeatures = supportedFeatures;
         this.supportsSignAndSendTransactions = true;
 
