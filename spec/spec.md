@@ -123,15 +123,20 @@ Feature identifiers are used to identify features that are supported by a wallet
 These features are mandatory and must be implemented by wallet endpoints. Dapp endpoints can assume that these features are always available without an explicit call to [`get_capabilities`](#get_capabilities).  
 
 - [`solana:signMessages`](#sign_messages)
-- [`solana:signTransactions`](#sign_transactions)
+- [`solana:signAndSendTransaction`](#sign_and_send_transactions)
 
 #### Optional Features
 
 These features are optional, wallet endpoints may choose to implement these features. Dapp endpoints can check if a wallet supports these features by calling [`get_capabilities`](#get_capabilities).  
 
-- [`solana:signAndSendTransaction`](#sign_and_send_transactions), an optional Wallet RPC method. 
 - `solana:signInWithSolana`, an optional extension to the [`authorize`](#authorize) method. 
 - [`solana:cloneAuthorization`](#clone_authorization)
+
+### Deprecated Features
+
+These features are deprecated, but can be supported by wallet endpoints to maintain backwards compatibility with dapp endpoints using previous version of the Mobile Wallet Adapter specification. Support for these features is optional and should be indicated in the list of supported features returned by [`get_capabilities`](#get_capabilities).
+
+- [`solana:signTransactions`](#sign_transactions)
 
 ## Transport
 
@@ -573,67 +578,6 @@ This method can be used to enumerate the capabilities and limits of a wallet end
 
 Privileged methods require the current session to be in an authorized state to invoke them. For details on how a session enters and exits an authorized state, see the [non-privileged methods](#non-privileged-methods).
 
-#### sign_transactions
-
-##### JSON-RPC method specification
-
-###### Method
-{: .no_toc }
-
-```
-sign_transactions
-```
-
-###### Params
-{: .no_toc }
-
-```
-{
-    “payloads”: [“<transaction>”, ...],
-}
-```
-
-where:
-
-- `payloads`: one or more base64-encoded transaction payloads to sign
-
-###### Result
-{: .no_toc }
-
-```
-{
-    “signed_payloads”: [“<signed_transaction>”, ...],
-}
-```
-
-where:
-
-- `signed_payloads`: the corresponding base64-encoded signed transaction payloads
-
-###### Errors
-{: .no_toc }
-
-- `-32602` (Invalid params) if the params object does not match the format defined above
-- `ERROR_AUTHORIZATION_FAILED` if the current session is in the unauthorized state, either because [`authorize`](#authorize) has not been invoked for the current session, or because the current session's authorization has been revoked by the wallet endpoint
-- `ERROR_INVALID_PAYLOADS`
-
-  ```
-  “data”: {
-      “valid”: [<transaction_valid>, ...],
-  }
-  ```
-
-  if any transaction does not represent a valid transaction for signing, where:
-
-    - `valid`: an array of booleans with the same length as payloads indicating which are valid
-
-- `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign these transactions for any reason
-- `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
-
-##### Description
-
-The wallet endpoint should attempt to simulate the transactions provided by data and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should sign the transactions with the private keys for the requested authorized account addresses, and return the signed transactions to the dapp endpoint.
-
 #### sign_and_send_transactions
 
 ##### JSON-RPC method specification
@@ -653,6 +597,10 @@ sign_and_send_transactions
     “payloads”: [“<transaction>”, ...],
     "options": {
         “min_context_slot”: <min_context_slot>,
+        "commitment": "<commitment>",
+        "skip_preflight": <skip_preflight>,
+        "max_retries": <max_retries>,
+        "wait_for_commitment_to_send_next_transaction": <wait_for_commitment_to_send_next_transaction>
     }
 }
 ```
@@ -662,6 +610,10 @@ where:
 - `payloads`: one or more base64-encoded transaction payload to sign
 - `options`: (optional) a JSON object, containing:
   - `min_context_slot`: (optional) if set, the minimum slot number at which to perform preflight transaction checks
+  - `commitment`: (optional) desired commitment level. Expected values are `"finalized"`, `"confirmed"` and `"processed"`. If provided, confirm the transaction after sending
+  - `skip_preflight`: (optional) boolean to enable/disable transaction verification at the RPC
+  - `max_retries`: (optional) maximum number of times for the RPC node to retry sending the transaction to the leader
+  - `wait_for_commitment_to_send_next_transaction`: (optional) boolean to wait till specified commitment before sending the next transaction. If `commitment` not specified, wait till `"confirmed"` commitment
 
 ###### Result
 {: .no_toc }
@@ -785,6 +737,8 @@ where:
 
 The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account address, and return the signed messages to the dapp endpoint. The signatures should be appended to the message, in the same order as `addresses`.
 
+This method should not be used for transaction signing. The wallet endpoint should additionally check that the payloads to be signed are not a transaction message. If any payloads in the request can be successfully parsed as a Solana transaction message, the wallet should immediately reject the request and return `ERROR_INVALID_PAYLOADS` and appropriately indicate the invalid payloads as described above.
+
 #### clone_authorization
 
 ##### JSON-RPC method specification
@@ -880,7 +834,8 @@ const ERROR_ATTEST_ORIGIN_ANDROID = -100
 
 These methods have been deprecated in the current version of the specification, but should still be supported by wallet endpoints for backwards compatibility. These methods may be removed in a future version of the specification. 
 
-#### [reauthorize](spec1.0.md#reauthorize)
+#### [reauthorize](spec1.0.html#reauthorize)
+#### [sign_transactions](spec1.0.html#sign_transactions)
 
 ## Dapp identity verification
 

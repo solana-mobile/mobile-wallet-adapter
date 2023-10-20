@@ -39,6 +39,7 @@ public class ProtocolContract {
     @Deprecated
     public static final String RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS = "supports_sign_and_send_transactions"; // type: Boolean
 
+    @Deprecated(since = "2.0.0", forRemoval = true)
     public static final String METHOD_SIGN_TRANSACTIONS = "sign_transactions";
     // METHOD_SIGN_TRANSACTIONS takes a PARAMETER_PAYLOADS
     // METHOD_SIGN_TRANSACTIONS returns a RESULT_SIGNED_PAYLOADS
@@ -47,6 +48,10 @@ public class ProtocolContract {
     // METHOD_SIGN_AND_SEND_TRANSACTIONS takes a PARAMETER_PAYLOADS
     public static final String PARAMETER_OPTIONS = "options"; // type: JSON object
     public static final String PARAMETER_OPTIONS_MIN_CONTEXT_SLOT = "min_context_slot"; // type: Number
+    public static final String PARAMETER_OPTIONS_COMMITMENT = "commitment"; // type: String
+    public static final String PARAMETER_OPTIONS_SKIP_PREFLIGHT = "skip_preflight"; // type: String
+    public static final String PARAMETER_OPTIONS_MAX_RETRIES = "max_retries"; // type: Number
+    public static final String PARAMETER_OPTIONS_WAIT_FOR_COMMITMENT = "wait_for_commitment_to_send_next_transaction"; // type: Boolean
     public static final String RESULT_SIGNATURES = "signatures"; // type: JSON array of String (base64-encoded payload signatures)
 
     public static final String METHOD_SIGN_MESSAGES = "sign_messages";
@@ -109,13 +114,13 @@ public class ProtocolContract {
     public static final String NAMESPACE_SOLANA = "solana";
 
     // Mandatory Features
-    public static final String FEATURE_ID_SIGN_MESSAGES = "solana:signAndSendTransaction";
-    public static final String FEATURE_ID_SIGN_TRANSACTIONS = "solana:signTransactions";
+    public static final String FEATURE_ID_SIGN_MESSAGES = "solana:signMessages";
+    public static final String FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS = "solana:signAndSendTransaction";
 
     // Optional Features
-    public static final String FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS = "solana:signAndSendTransaction";
     public static final String FEATURE_ID_SIGN_IN_WITH_SOLANA = "solana:signInWithSolana";
     public static final String FEATURE_ID_CLONE_AUTHORIZATION = "solana:cloneAuthorization";
+    public static final String FEATURE_ID_SIGN_TRANSACTIONS = "solana:signTransactions";
 
     private ProtocolContract() {}
 }

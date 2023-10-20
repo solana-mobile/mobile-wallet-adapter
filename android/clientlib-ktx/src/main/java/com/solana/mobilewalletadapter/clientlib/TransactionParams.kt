@@ -29,10 +29,18 @@ sealed class Solana {
 }
 
 open class TransactionParams(
-    val minContextSlot: Int?
+    val minContextSlot: Int?,
+    val commitment: String?,
+    val skipPreflight: Boolean?,
+    val maxRetries: Int?,
+    val waitForCommitmentToSendNextTransaction: Boolean?
 )
 
 //TODO: We can add other defaults as they become relevant
 object DefaultTransactionParams : TransactionParams(
-    minContextSlot = null
+    minContextSlot = null,
+    commitment = null,
+    skipPreflight = null,
+    maxRetries = null,
+    waitForCommitmentToSendNextTransaction = null
 )
