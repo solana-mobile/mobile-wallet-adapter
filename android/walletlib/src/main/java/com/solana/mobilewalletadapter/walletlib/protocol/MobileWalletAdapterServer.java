@@ -76,19 +76,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     handleGetCapabilities(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_TRANSACTIONS:
-                    handleSignTransactions(id, params);
+                    if (Arrays.asList(mConfig.optionalFeatures).contains(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)) {
+                        handleSignTransactions(id, params);
+                    } else {
+                        handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
+                                ProtocolContract.METHOD_SIGN_TRANSACTIONS +
+                                "' not available", null);
+                    }
                     break;
                 case ProtocolContract.METHOD_SIGN_MESSAGES:
                     handleSignMessages(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS:
-                    if (mConfig.supportsSignAndSendTransactions) {
-                        handleSignAndSendTransactions(id, params);
-                    } else {
-                        handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
-                                ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS +
-                                "' not available", null);
-                    }
+                    handleSignAndSendTransactions(id, params);
                     break;
                 default:
                     handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
@@ -718,6 +718,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     // sign_transactions
     // =============================================================================================
 
+    @Deprecated(since = "2.0.0", forRemoval = true)
     private void handleSignTransactions(@Nullable Object id,
                                         @Nullable Object params)
             throws IOException {
