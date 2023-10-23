@@ -16,6 +16,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
+import com.solana.mobilewalletadapter.fakedapp.usecase.Base58EncodeUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionVersion
 import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity
 import kotlinx.coroutines.launch
@@ -54,11 +55,17 @@ class MainActivity : AppCompatActivity() {
                         if (spinnerPos > 0) viewBinding.spinnerTxnVer.setSelection(spinnerPos)
                     }
 
-                    viewBinding.tvAccountName.text =
-                        uiState.accountLabel ?: getString(R.string.string_no_account_name)
+                    viewBinding.spinnerAccounts.adapter =
+                        ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_item,
+                            uiState.accounts?.map { account ->
+                                account.accountLabel ?: Base58EncodeUseCase.invoke(account.publicKey)
+                            } ?: listOf()
+                        )
+
                     viewBinding.tvWalletUriPrefix.text =
-                        uiState.walletUriBase?.toString()
-                            ?: getString(R.string.string_no_wallet_uri_prefix)
+                        uiState.walletUriBase?.toString() ?: getString(R.string.string_no_wallet_uri_prefix)
+                    viewBinding.tvSessionVersion.text =
+                        uiState.sessionProtocolVersion?.toString() ?: getString(R.string.string_no_session_version)
 
                     if (uiState.messages.isNotEmpty()) {
                         val message = uiState.messages.first()

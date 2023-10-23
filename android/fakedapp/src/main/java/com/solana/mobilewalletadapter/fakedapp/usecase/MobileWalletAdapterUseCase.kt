@@ -21,6 +21,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -317,13 +318,13 @@ object MobileWalletAdapterUseCase {
     suspend fun <T> localAssociateAndExecute(
         intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         uriPrefix: Uri? = null,
-        action: suspend (Client) -> T
+        action: suspend (Client, SessionProperties) -> T
     ): T = localAssociateAndExecuteAsync(intentLauncher, uriPrefix, action).await()
 
     suspend fun <T> localAssociateAndExecuteAsync(
         intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         uriPrefix: Uri? = null,
-        action: suspend (Client) -> T
+        action: suspend (Client, SessionProperties) -> T
     ): Deferred<T> = coroutineScope {
         // Use async to launch in a new Job, for proper cancellation semantics
         async {
@@ -373,7 +374,8 @@ object MobileWalletAdapterUseCase {
 
                         contract.onMobileWalletAdapterClientConnected(this)
 
-                        action(Client(mobileWalletAdapterClient))
+                        action(Client(mobileWalletAdapterClient),
+                            localAssociation.session.sessionProperties)
                     } finally {
                         @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
                         localAssociation.close()
