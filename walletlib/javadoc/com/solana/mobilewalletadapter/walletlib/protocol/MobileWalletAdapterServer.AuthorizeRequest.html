@@ -73,9 +73,7 @@ loadScripts(document, 'script');</script>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
 <div class="inheritance">com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;T&gt;
-<div class="inheritance"><a href="MobileWalletAdapterServer.AuthorizationRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.AuthorizationRequest</a>
 <div class="inheritance">com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.AuthorizeRequest</div>
-</div>
 </div>
 </div>
 <section class="class-description" id="class-description">
@@ -89,7 +87,7 @@ loadScripts(document, 'script');</script>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public static class </span><span class="element-name type-name-label">MobileWalletAdapterServer.AuthorizeRequest</span>
-<span class="extends-implements">extends <a href="MobileWalletAdapterServer.AuthorizationRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationRequest</a></span></div>
+<span class="extends-implements">extends com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;T&gt;</span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -111,21 +109,31 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Field</div>
 <div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</code></div>
+<div class="col-second even-row-color"><code><a href="#addresses" class="member-name-link">addresses</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#authToken" class="member-name-link">authToken</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color"><code><a href="#chain" class="member-name-link">chain</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#cluster" class="member-name-link">cluster</a></code></div>
-<div class="col-last odd-row-color">
-<div class="block"><span class="deprecated-label">Deprecated.</span></div>
-</div>
-<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></code></div>
-<div class="col-second even-row-color"><code><a href="#id" class="member-name-link">id</a></code></div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</code></div>
+<div class="col-second odd-row-color"><code><a href="#features" class="member-name-link">features</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second even-row-color"><code><a href="#iconUri" class="member-name-link">iconUri</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#id" class="member-name-link">id</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#identityName" class="member-name-link">identityName</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#identityUri" class="member-name-link">identityUri</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
-<div class="inherited-list">
-<h3 id="fields-inherited-from-class-com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.AuthorizationRequest">Fields inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.protocol.<a href="MobileWalletAdapterServer.AuthorizationRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationRequest</a></h3>
-<code><a href="MobileWalletAdapterServer.AuthorizationRequest.html#authToken">authToken</a>, <a href="MobileWalletAdapterServer.AuthorizationRequest.html#iconUri">iconUri</a>, <a href="MobileWalletAdapterServer.AuthorizationRequest.html#identityName">identityName</a>, <a href="MobileWalletAdapterServer.AuthorizationRequest.html#identityUri">identityUri</a></code></div>
 </section>
 </li>
 <!-- ========== METHOD SUMMARY =========== -->
@@ -166,12 +174,31 @@ loadScripts(document, 'script');</script>
 <h2>Field Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="cluster">
-<h3>cluster</h3>
+<section class="detail" id="identityUri">
+<h3>identityUri</h3>
 <div class="member-signature"><span class="annotations">@Nullable
-<a href="https://d.android.com/reference/java/lang/Deprecated.html" title="class or interface in java.lang" class="external-link">@Deprecated</a>
-</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">cluster</span></div>
-<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></span>&nbsp;<span class="element-name">identityUri</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="iconUri">
+<h3>iconUri</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></span>&nbsp;<span class="element-name">iconUri</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="identityName">
+<h3>identityName</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">identityName</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="authToken">
+<h3>authToken</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">authToken</span></div>
 </section>
 </li>
 <li>
@@ -179,6 +206,20 @@ loadScripts(document, 'script');</script>
 <h3>chain</h3>
 <div class="member-signature"><span class="annotations">@Nullable
 </span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">chain</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="features">
+<h3>features</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</span>&nbsp;<span class="element-name">features</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="addresses">
+<h3>addresses</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</span>&nbsp;<span class="element-name">addresses</span></div>
 </section>
 </li>
 <li>
@@ -203,7 +244,7 @@ loadScripts(document, 'script');</script>
  <a href="MobileWalletAdapterServer.AuthorizationResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationResult</a>&nbsp;result)</span></div>
 <dl class="notes">
 <dt>Overrides:</dt>
-<dd><code><a href="MobileWalletAdapterServer.AuthorizationRequest.html#complete(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.AuthorizationResult)">complete</a></code>&nbsp;in class&nbsp;<code><a href="MobileWalletAdapterServer.AuthorizationRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationRequest</a></code></dd>
+<dd><code>complete</code>&nbsp;in class&nbsp;<code>com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;<a href="MobileWalletAdapterServer.AuthorizationResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationResult</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -214,7 +255,7 @@ loadScripts(document, 'script');</script>
 </span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">toString</span>()</div>
 <dl class="notes">
 <dt>Overrides:</dt>
-<dd><code><a href="MobileWalletAdapterServer.AuthorizationRequest.html#toString()">toString</a></code>&nbsp;in class&nbsp;<code><a href="MobileWalletAdapterServer.AuthorizationRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationRequest</a></code></dd>
+<dd><code>toString</code>&nbsp;in class&nbsp;<code>com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;<a href="MobileWalletAdapterServer.AuthorizationResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationResult</a>&gt;</code></dd>
 </dl>
 </section>
 </li>

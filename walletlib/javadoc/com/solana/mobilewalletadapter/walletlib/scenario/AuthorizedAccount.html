@@ -96,12 +96,21 @@ loadScripts(document, 'script');</script>
 <div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</code></div>
 <div class="col-second odd-row-color"><code><a href="#chains" class="member-name-link">chains</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#displayAddress" class="member-name-link">displayAddress</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#displayAddressFormat" class="member-name-link">displayAddressFormat</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]</code></div>
 <div class="col-second even-row-color"><code><a href="#features" class="member-name-link">features</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>final byte[]</code></div>
-<div class="col-second odd-row-color"><code><a href="#publicKey" class="member-name-link">publicKey</a></code></div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#icon" class="member-name-link">icon</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>final byte[]</code></div>
+<div class="col-second even-row-color"><code><a href="#publicKey" class="member-name-link">publicKey</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -113,11 +122,20 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(byte%5B%5D,java.lang.String,java.lang.String%5B%5D,java.lang.String%5B%5D)" class="member-name-link">AuthorizedAccount</a><wbr>(byte[]&nbsp;publicKey,
+<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(byte%5B%5D,java.lang.String,android.net.Uri,java.lang.String%5B%5D,java.lang.String%5B%5D)" class="member-name-link">AuthorizedAccount</a><wbr>(byte[]&nbsp;publicKey,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;icon,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;chains,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;features)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(byte%5B%5D,java.lang.String,java.lang.String,java.lang.String,android.net.Uri,java.lang.String%5B%5D,java.lang.String%5B%5D)" class="member-name-link">AuthorizedAccount</a><wbr>(byte[]&nbsp;publicKey,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;displayAddress,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;displayAddressFormat,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;icon,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;chains,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;features)</code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -160,10 +178,31 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
+<section class="detail" id="displayAddress">
+<h3>displayAddress</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">displayAddress</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="displayAddressFormat">
+<h3>displayAddressFormat</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">displayAddressFormat</span></div>
+</section>
+</li>
+<li>
 <section class="detail" id="accountLabel">
 <h3>accountLabel</h3>
 <div class="member-signature"><span class="annotations">@Nullable
 </span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">accountLabel</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="icon">
+<h3>icon</h3>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></span>&nbsp;<span class="element-name">icon</span></div>
 </section>
 </li>
 <li>
@@ -189,12 +228,33 @@ loadScripts(document, 'script');</script>
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(byte[],java.lang.String,java.lang.String[],java.lang.String[])">
+<section class="detail" id="&lt;init&gt;(byte[],java.lang.String,android.net.Uri,java.lang.String[],java.lang.String[])">
 <h3>AuthorizedAccount</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">AuthorizedAccount</span><wbr><span class="parameters">(@NonNull
  byte[]&nbsp;publicKey,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
+ @Nullable
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;icon,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;chains,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;features)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="&lt;init&gt;(byte[],java.lang.String,java.lang.String,java.lang.String,android.net.Uri,java.lang.String[],java.lang.String[])">
+<h3>AuthorizedAccount</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">AuthorizedAccount</span><wbr><span class="parameters">(@NonNull
+ byte[]&nbsp;publicKey,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;displayAddress,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;displayAddressFormat,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
+ @Nullable
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;icon,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;chains,
  @Nullable
