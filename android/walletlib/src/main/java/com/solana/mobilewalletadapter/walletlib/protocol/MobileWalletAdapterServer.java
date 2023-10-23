@@ -47,9 +47,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         void signTransactions(@NonNull SignTransactionsRequest request);
         void signMessages(@NonNull SignMessagesRequest request);
         void signAndSendTransactions(@NonNull SignAndSendTransactionsRequest request);
-
-        @Deprecated
-        void reauthorize(@NonNull ReauthorizeRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
@@ -123,12 +120,81 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     }
 
     // =============================================================================================
-    // authorize/reauthorize shared types and methods
+    // authorize
     // =============================================================================================
 
-    // NOTE: future may be either AuthorizeRequest or ReauthorizeRequest
+    private void handleAuthorize(@Nullable Object id, @Nullable Object params) throws IOException {
+        if (!(params instanceof JSONObject)) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
+            return;
+        }
+
+        final JSONObject o = (JSONObject) params;
+
+        final JSONObject ident = o.optJSONObject(ProtocolContract.PARAMETER_IDENTITY);
+        final Uri identityUri;
+        final Uri iconUri;
+        final String identityName;
+        if (ident != null) {
+            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
+                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
+            if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
+                return;
+            }
+            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
+                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
+            if (iconUri != null && !iconUri.isRelative()) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
+                return;
+            }
+            identityName = ident.has(ProtocolContract.PARAMETER_IDENTITY_NAME) ?
+                    ident.optString(ProtocolContract.PARAMETER_IDENTITY_NAME) : null;
+            if (identityName != null && identityName.isEmpty()) {
+                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.name must be a non-empty string", null);
+                return;
+            }
+        } else {
+            identityUri = null;
+            iconUri = null;
+            identityName = null;
+        }
+
+        final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
+        final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;
+
+        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
+        final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
+        final String chain = !chainParam.isEmpty() ? chainParam
+                : !cluster.isEmpty() ? Identifier.clusterToChainIdentifier(cluster)
+                : authToken == null ? ProtocolContract.CHAIN_SOLANA_MAINNET : null;
+
+        final String[] features;
+        try {
+            final JSONArray featuresArr = o.optJSONArray(ProtocolContract.PARAMETER_FEATURES);
+            features = featuresArr != null ? JsonPack.unpackStrings(featuresArr) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, features must be a JSONArray of strings", null);
+            return;
+        }
+
+        final String[] addresses;
+        try {
+            final JSONArray addressesArr = o.optJSONArray(ProtocolContract.PARAMETER_ADDRESSES);
+            addresses = addressesArr != null ? JsonPack.unpackStrings(addressesArr) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
+            return;
+        }
+
+        final AuthorizeRequest request =
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
+        mMethodHandlers.authorize(request);
+    }
+
     private void onAuthorizationComplete(@NonNull NotifyOnCompleteFuture<AuthorizationResult> future) {
-        final AuthorizationRequest request = (AuthorizationRequest) future;
+        final AuthorizeRequest request = (AuthorizeRequest) future;
 
         try {
             final AuthorizationResult result;
@@ -136,13 +202,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result = request.get();
             } catch (ExecutionException e) {
                 final Throwable cause = e.getCause();
-                if (cause instanceof AuthorizationNotValidException || // NOTE: AuthorizationNotValidException only expected for reauthorize requests
-                        cause instanceof RequestDeclinedException
-                ) {
-                    assert(!(cause instanceof AuthorizationNotValidException) || request instanceof ReauthorizeRequest);
+                if (cause instanceof AuthorizationNotValidException || cause instanceof RequestDeclinedException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request failed", null);
-                } else if (cause instanceof ClusterNotSupportedException) { // NOTE: ClusterNotSupportedException only expected for authorize requests
-                    assert(request instanceof AuthorizeRequest);
+                } else if (cause instanceof ClusterNotSupportedException) {
                     handleRpcError(request.id, ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED, "invalid or unsupported cluster for authorization request", null);
                 } else {
                     handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request: '" + safeGetMessage(cause) + '\'', null);
@@ -190,7 +252,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         }
     }
 
-    public static abstract class AuthorizationRequest extends RequestFuture<AuthorizationResult> {
+    public static class AuthorizeRequest extends RequestFuture<AuthorizationResult>  {
+
         @Nullable
         public final Uri identityUri;
         @Nullable
@@ -199,17 +262,31 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final String identityName;
         @Nullable
         public final String authToken;
+        @Nullable
+        public final String chain;
 
-        private AuthorizationRequest(@Nullable Object id,
-                                     @Nullable Uri identityUri,
-                                     @Nullable Uri iconUri,
-                                     @Nullable String identityName,
-                                     @Nullable String authToken) {
+        @Nullable
+        public final String[] features;
+
+        @Nullable
+        public final String[] addresses;
+
+        private AuthorizeRequest(@Nullable Object id,
+                                 @Nullable Uri identityUri,
+                                 @Nullable Uri iconUri,
+                                 @Nullable String identityName,
+                                 @Nullable String chain,
+                                 @Nullable String[] features,
+                                 @Nullable String[] addresses,
+                                 @Nullable String authToken) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
             this.identityName = identityName;
             this.authToken = authToken;
+            this.chain = chain;
+            this.features = features;
+            this.addresses = addresses;
         }
 
         @Override
@@ -223,16 +300,16 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         @Override
         public String toString() {
-            return "AuthorizationRequest{" +
+            return "AuthorizeRequest{" +
                     "id=" + id +
                     ", identityUri=" + identityUri +
                     ", iconUri=" + iconUri +
                     ", identityName='" + identityName + '\'' +
+                    ", chain='" + chain + '\'' +
                     '/' + super.toString() +
                     '}';
         }
     }
-
     public static class AuthorizationResult {
         @NonNull
         public final String authToken;
@@ -279,202 +356,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     "authToken=<REDACTED>" +
                     ", walletUriBase=" + walletUriBase +
                     ", accounts=" + Arrays.toString(accounts) +
-                    '}';
-        }
-    }
-
-    // =============================================================================================
-    // authorize
-    // =============================================================================================
-
-    private void handleAuthorize(@Nullable Object id, @Nullable Object params) throws IOException {
-        if (!(params instanceof JSONObject)) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
-            return;
-        }
-
-        final JSONObject o = (JSONObject) params;
-
-        final JSONObject ident = o.optJSONObject(ProtocolContract.PARAMETER_IDENTITY);
-        final Uri identityUri;
-        final Uri iconUri;
-        final String identityName;
-        if (ident != null) {
-            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
-                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
-            if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
-                return;
-            }
-            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
-                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
-            if (iconUri != null && !iconUri.isRelative()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
-                return;
-            }
-            identityName = ident.has(ProtocolContract.PARAMETER_IDENTITY_NAME) ?
-                    ident.optString(ProtocolContract.PARAMETER_IDENTITY_NAME) : null;
-            if (identityName != null && identityName.isEmpty()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.name must be a non-empty string", null);
-                return;
-            }
-        } else {
-            identityUri = null;
-            iconUri = null;
-            identityName = null;
-        }
-
-        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
-        final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
-        final String chain = !chainParam.isEmpty() ? chainParam
-                : !cluster.isEmpty() ? Identifier.clusterToChainIdentifier(cluster)
-                : ProtocolContract.CHAIN_SOLANA_MAINNET;
-
-        final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
-        final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;
-
-        final String[] features;
-        try {
-            final JSONArray featuresArr = o.optJSONArray(ProtocolContract.PARAMETER_FEATURES);
-            features = featuresArr != null ? JsonPack.unpackStrings(featuresArr) : null;
-        } catch (JSONException e) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, features must be a JSONArray of strings", null);
-            return;
-        }
-
-        final String[] addresses;
-        try {
-            final JSONArray addressesArr = o.optJSONArray(ProtocolContract.PARAMETER_ADDRESSES);
-            addresses = addressesArr != null ? JsonPack.unpackStrings(addressesArr) : null;
-        } catch (JSONException e) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
-            return;
-        }
-
-        final AuthorizeRequest request =
-                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken);
-        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
-        mMethodHandlers.authorize(request);
-    }
-
-    public static class AuthorizeRequest extends AuthorizationRequest {
-
-        @Nullable @Deprecated
-        public final String cluster;
-        @Nullable
-        public final String chain;
-
-        @Nullable
-        public final String[] features;
-
-        @Nullable
-        public final String[] addresses;
-
-        private AuthorizeRequest(@Nullable Object id,
-                                 @Nullable Uri identityUri,
-                                 @Nullable Uri iconUri,
-                                 @Nullable String identityName,
-                                 @Nullable String chain,
-                                 @Nullable String[] features,
-                                 @Nullable String[] addresses,
-                                 @Nullable String authToken) {
-            super(id, identityUri, iconUri, identityName, authToken);
-            this.chain = chain;
-            this.cluster = null;
-            this.features = features;
-            this.addresses = addresses;
-        }
-
-        @Override
-        public boolean complete(@Nullable AuthorizationResult result) {
-            if (result == null) {
-                throw new IllegalArgumentException("A non-null result must be provided");
-            }
-            return super.complete(result);
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "AuthorizeRequest{" +
-                    "chain='" + chain + '\'' +
-                    '/' + super.toString() +
-                    '}';
-        }
-    }
-
-    // =============================================================================================
-    // reauthorize
-    // =============================================================================================
-
-    @Deprecated
-    private void handleReauthorize(@Nullable Object id, @Nullable Object params) throws IOException {
-        if (!(params instanceof JSONObject)) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
-            return;
-        }
-
-        final JSONObject o = (JSONObject) params;
-
-        final JSONObject ident = o.optJSONObject(ProtocolContract.PARAMETER_IDENTITY);
-        final Uri identityUri;
-        final Uri iconUri;
-        final String identityName;
-        if (ident != null) {
-            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
-                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
-            if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
-                return;
-            }
-            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
-                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
-            if (iconUri != null && !iconUri.isRelative()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
-                return;
-            }
-            identityName = ident.has(ProtocolContract.PARAMETER_IDENTITY_NAME) ?
-                    ident.optString(ProtocolContract.PARAMETER_IDENTITY_NAME) : null;
-            if (identityName != null && identityName.isEmpty()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.name must be a non-empty string", null);
-                return;
-            }
-        } else {
-            identityUri = null;
-            iconUri = null;
-            identityName = null;
-        }
-
-        final String authToken = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
-        if (authToken.isEmpty()) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "auth_token must be a non-empty string", null);
-            return;
-        }
-
-        final ReauthorizeRequest request = new ReauthorizeRequest(id, identityUri, iconUri, identityName, authToken);
-        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
-        mMethodHandlers.reauthorize(request);
-    }
-
-    public static class ReauthorizeRequest extends AuthorizationRequest {
-        @NonNull
-        public final String authToken;
-
-        private ReauthorizeRequest(@Nullable Object id,
-                                   @Nullable Uri identityUri,
-                                   @Nullable Uri iconUri,
-                                   @Nullable String identityName,
-                                   @NonNull String authToken) {
-            super(id, identityUri, iconUri, identityName, authToken);
-            this.authToken = authToken;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "ReauthorizeRequest{" +
-                    "authToken=<REDACTED>" +
-                    '/' + super.toString() +
                     '}';
         }
     }
