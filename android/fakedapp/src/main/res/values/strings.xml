@@ -38,4 +38,6 @@
     <string name="string_no_wallet_uri_prefix">&lt;none&gt;</string>
     <string name="label_session_version">Protocol Version:</string>
     <string name="string_no_session_version">&lt;none&gt;</string>
+    <string name="string_session_version_legacy">Legacy</string>
+    <string name="string_session_version_v1">MWA 2.0</string>
 </resources>

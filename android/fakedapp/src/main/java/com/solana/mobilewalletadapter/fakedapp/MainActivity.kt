@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
 import com.solana.mobilewalletadapter.fakedapp.usecase.Base58EncodeUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionVersion
@@ -65,7 +66,12 @@ class MainActivity : AppCompatActivity() {
                     viewBinding.tvWalletUriPrefix.text =
                         uiState.walletUriBase?.toString() ?: getString(R.string.string_no_wallet_uri_prefix)
                     viewBinding.tvSessionVersion.text =
-                        uiState.sessionProtocolVersion?.toString() ?: getString(R.string.string_no_session_version)
+                        getString(uiState.sessionProtocolVersion?.let {
+                            when (it) {
+                                SessionProperties.ProtocolVersion.LEGACY -> R.string.string_session_version_legacy
+                                SessionProperties.ProtocolVersion.V1 -> R.string.string_session_version_v1
+                            }
+                        } ?: R.string.string_no_session_version)
 
                     if (uiState.messages.isNotEmpty()) {
                         val message = uiState.messages.first()
