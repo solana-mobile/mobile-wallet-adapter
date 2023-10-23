@@ -82,7 +82,7 @@ dependencies {
 
     implementation 'com.github.metaplex-foundation:SolanaKT:2.1.0'
     implementation 'org.bitcoinj:bitcoinj-core:0.16.2'
-    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
     testImplementation 'junit:junit:4.13.2'
 

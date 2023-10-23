@@ -42,7 +42,8 @@ public class LocalAssociationUri extends AssociationUri {
                                                        @NonNull Scenario.Callbacks callbacks) {
         if (callbacks instanceof LocalScenario.Callbacks) {
             return new LocalWebSocketServerScenario(context, mobileWalletAdapterConfig,
-                    authIssuerConfig, (LocalScenario.Callbacks) callbacks, associationPublicKey, port, supportedProtocolVersions);
+                    authIssuerConfig, (LocalScenario.Callbacks) callbacks,
+                    associationPublicKey, associationProtocolVersions, port);
         } else {
             throw new IllegalArgumentException("callbacks must implement " + LocalScenario.Callbacks.class.getName());
         }

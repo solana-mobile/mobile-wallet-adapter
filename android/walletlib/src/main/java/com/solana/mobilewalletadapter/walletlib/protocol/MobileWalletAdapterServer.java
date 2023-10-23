@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
@@ -46,9 +47,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         void signTransactions(@NonNull SignTransactionsRequest request);
         void signMessages(@NonNull SignMessagesRequest request);
         void signAndSendTransactions(@NonNull SignAndSendTransactionsRequest request);
-
-        @Deprecated
-        void reauthorize(@NonNull ReauthorizeRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
@@ -76,19 +74,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     handleGetCapabilities(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_TRANSACTIONS:
-                    handleSignTransactions(id, params);
+                    if (Arrays.asList(mConfig.optionalFeatures).contains(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)) {
+                        handleSignTransactions(id, params);
+                    } else {
+                        handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
+                                ProtocolContract.METHOD_SIGN_TRANSACTIONS +
+                                "' not available", null);
+                    }
                     break;
                 case ProtocolContract.METHOD_SIGN_MESSAGES:
                     handleSignMessages(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS:
-                    if (mConfig.supportsSignAndSendTransactions) {
-                        handleSignAndSendTransactions(id, params);
-                    } else {
-                        handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
-                                ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS +
-                                "' not available", null);
-                    }
+                    handleSignAndSendTransactions(id, params);
                     break;
                 default:
                     handleRpcError(id, JsonRpc20Server.ERROR_METHOD_NOT_FOUND, "method '" +
@@ -119,160 +117,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return "";
         }
         return tMessage;
-    }
-
-    // =============================================================================================
-    // authorize/reauthorize shared types and methods
-    // =============================================================================================
-
-    // NOTE: future may be either AuthorizeRequest or ReauthorizeRequest
-    private void onAuthorizationComplete(@NonNull NotifyOnCompleteFuture<AuthorizationResult> future) {
-        final AuthorizationRequest request = (AuthorizationRequest) future;
-
-        try {
-            final AuthorizationResult result;
-            try {
-                result = request.get();
-            } catch (ExecutionException e) {
-                final Throwable cause = e.getCause();
-                if (cause instanceof AuthorizationNotValidException || // NOTE: AuthorizationNotValidException only expected for reauthorize requests
-                        cause instanceof RequestDeclinedException
-                ) {
-                    assert(!(cause instanceof AuthorizationNotValidException) || request instanceof ReauthorizeRequest);
-                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request failed", null);
-                } else if (cause instanceof ClusterNotSupportedException) { // NOTE: ClusterNotSupportedException only expected for authorize requests
-                    assert(request instanceof AuthorizeRequest);
-                    handleRpcError(request.id, ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED, "invalid or unsupported cluster for authorization request", null);
-                } else {
-                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request: '" + safeGetMessage(cause) + '\'', null);
-                }
-                return;
-            } catch (CancellationException e) {
-                // Treat cancellation as a declined request
-                handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request declined", null);
-                return;
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Should never occur!");
-            }
-
-            assert(result != null); // checked in AuthorizeRequest.complete()
-
-            final JSONObject o = new JSONObject();
-            try {
-                o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                final JSONArray accounts = new JSONArray();
-                for (AuthorizedAccount aa : result.accounts) {
-                    final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
-                    final JSONObject account = new JSONObject();
-                    account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
-                    if (aa.accountLabel != null) {
-                        account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
-                    }
-                    accounts.put(account);
-                }
-                o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
-                o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
-            } catch (JSONException e) {
-                throw new RuntimeException("Failed preparing authorization response", e);
-            }
-
-            handleRpcResult(request.id, o);
-        } catch (IOException e) {
-            Log.e(TAG, "Failed sending response for id=" + request.id, e);
-        }
-    }
-
-    public static abstract class AuthorizationRequest extends RequestFuture<AuthorizationResult> {
-        @Nullable
-        public final Uri identityUri;
-        @Nullable
-        public final Uri iconUri;
-        @Nullable
-        public final String identityName;
-        @Nullable
-        public final String authToken;
-
-        private AuthorizationRequest(@Nullable Object id,
-                                     @Nullable Uri identityUri,
-                                     @Nullable Uri iconUri,
-                                     @Nullable String identityName,
-                                     @Nullable String authToken) {
-            super(id);
-            this.identityUri = identityUri;
-            this.iconUri = iconUri;
-            this.identityName = identityName;
-            this.authToken = authToken;
-        }
-
-        @Override
-        public boolean complete(@Nullable AuthorizationResult result) {
-            if (result == null) {
-                throw new IllegalArgumentException("A non-null result must be provided");
-            }
-            return super.complete(result);
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "AuthorizationRequest{" +
-                    "id=" + id +
-                    ", identityUri=" + identityUri +
-                    ", iconUri=" + iconUri +
-                    ", identityName='" + identityName + '\'' +
-                    '/' + super.toString() +
-                    '}';
-        }
-    }
-
-    public static class AuthorizationResult {
-        @NonNull
-        public final String authToken;
-
-        @Deprecated @NonNull
-        public final byte[] publicKey;
-
-        @Deprecated @Nullable
-        public final String accountLabel;
-
-        @Nullable
-        public final Uri walletUriBase;
-
-        @NonNull @Size(min = 1)
-        public final AuthorizedAccount[] accounts;
-
-        @Deprecated
-        public AuthorizationResult(@NonNull String authToken,
-                                   @NonNull byte[] publicKey,
-                                   @Nullable String accountLabel,
-                                   @Nullable Uri walletUriBase) {
-            this.authToken = authToken;
-            this.publicKey = publicKey;
-            this.accountLabel = accountLabel;
-            this.walletUriBase = walletUriBase;
-            this.accounts = new AuthorizedAccount[] {
-                    new AuthorizedAccount(publicKey, accountLabel, null, null) };
-        }
-
-        public AuthorizationResult(@NonNull String authToken,
-                                   @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
-                                   @Nullable Uri walletUriBase) {
-            this.authToken = authToken;
-            this.walletUriBase = walletUriBase;
-            this.accounts = accounts;
-            this.publicKey = accounts[0].publicKey;
-            this.accountLabel = accounts[0].accountLabel;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "AuthorizeResult{" +
-                    "authToken=<REDACTED>" +
-                    ", walletUriBase=" + walletUriBase +
-                    ", accounts=" + Arrays.toString(accounts) +
-                    '}';
-        }
     }
 
     // =============================================================================================
@@ -316,35 +160,133 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             identityName = null;
         }
 
-        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
-        final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
-        final String chain = !chainParam.isEmpty() ? chainParam : !cluster.isEmpty() ? cluster : null;
-
         final String authTokenParam = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
         final String authToken = authTokenParam.isEmpty() ? null : authTokenParam;
 
+        final String cluster = o.optString(ProtocolContract.PARAMETER_CLUSTER);
+        final String chainParam = o.optString(ProtocolContract.PARAMETER_CHAIN);
+        final String chain = !chainParam.isEmpty() ? chainParam
+                : !cluster.isEmpty() ? Identifier.clusterToChainIdentifier(cluster)
+                : authToken == null ? ProtocolContract.CHAIN_SOLANA_MAINNET : null;
+
+        final String[] features;
+        try {
+            final JSONArray featuresArr = o.optJSONArray(ProtocolContract.PARAMETER_FEATURES);
+            features = featuresArr != null ? JsonPack.unpackStrings(featuresArr) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, features must be a JSONArray of strings", null);
+            return;
+        }
+
+        final String[] addresses;
+        try {
+            final JSONArray addressesArr = o.optJSONArray(ProtocolContract.PARAMETER_ADDRESSES);
+            addresses = addressesArr != null ? JsonPack.unpackStrings(addressesArr) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
+            return;
+        }
+
         final AuthorizeRequest request =
-                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, authToken);
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
 
-    public static class AuthorizeRequest extends AuthorizationRequest {
+    private void onAuthorizationComplete(@NonNull NotifyOnCompleteFuture<AuthorizationResult> future) {
+        final AuthorizeRequest request = (AuthorizeRequest) future;
 
-        @Nullable @Deprecated
-        public final String cluster;
+        try {
+            final AuthorizationResult result;
+            try {
+                result = request.get();
+            } catch (ExecutionException e) {
+                final Throwable cause = e.getCause();
+                if (cause instanceof AuthorizationNotValidException || cause instanceof RequestDeclinedException) {
+                    handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request failed", null);
+                } else if (cause instanceof ClusterNotSupportedException) {
+                    handleRpcError(request.id, ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED, "invalid or unsupported cluster for authorization request", null);
+                } else {
+                    handleRpcError(request.id, ERROR_INTERNAL, "Error while processing authorization request: '" + safeGetMessage(cause) + '\'', null);
+                }
+                return;
+            } catch (CancellationException e) {
+                // Treat cancellation as a declined request
+                handleRpcError(request.id, ProtocolContract.ERROR_AUTHORIZATION_FAILED, "authorization request declined", null);
+                return;
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Should never occur!");
+            }
+
+            assert(result != null); // checked in AuthorizeRequest.complete()
+
+            final JSONObject o = new JSONObject();
+            try {
+                o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
+                final JSONArray accounts = new JSONArray();
+                for (AuthorizedAccount aa : result.accounts) {
+                    final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
+                    final JSONObject account = new JSONObject();
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
+                    if (aa.displayAddress != null && aa.displayAddressFormat != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS, aa.displayAddress);
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS_FORMAT, aa.displayAddressFormat);
+                    }
+                    if (aa.accountLabel != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
+                    }
+                    if (aa.icon != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_ICON, aa.icon);
+                    }
+                    accounts.put(account);
+                }
+                o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
+                o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
+            } catch (JSONException e) {
+                throw new RuntimeException("Failed preparing authorization response", e);
+            }
+
+            handleRpcResult(request.id, o);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed sending response for id=" + request.id, e);
+        }
+    }
+
+    public static class AuthorizeRequest extends RequestFuture<AuthorizationResult>  {
+
+        @Nullable
+        public final Uri identityUri;
+        @Nullable
+        public final Uri iconUri;
+        @Nullable
+        public final String identityName;
+        @Nullable
+        public final String authToken;
         @Nullable
         public final String chain;
+
+        @Nullable
+        public final String[] features;
+
+        @Nullable
+        public final String[] addresses;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @Nullable String identityName,
                                  @Nullable String chain,
+                                 @Nullable String[] features,
+                                 @Nullable String[] addresses,
                                  @Nullable String authToken) {
-            super(id, identityUri, iconUri, identityName, authToken);
+            super(id);
+            this.identityUri = identityUri;
+            this.iconUri = iconUri;
+            this.identityName = identityName;
+            this.authToken = authToken;
             this.chain = chain;
-            this.cluster = chain;
+            this.features = features;
+            this.addresses = addresses;
         }
 
         @Override
@@ -359,84 +301,61 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Override
         public String toString() {
             return "AuthorizeRequest{" +
-                    "chain='" + chain + '\'' +
+                    "id=" + id +
+                    ", identityUri=" + identityUri +
+                    ", iconUri=" + iconUri +
+                    ", identityName='" + identityName + '\'' +
+                    ", chain='" + chain + '\'' +
                     '/' + super.toString() +
                     '}';
         }
     }
-
-    // =============================================================================================
-    // reauthorize
-    // =============================================================================================
-
-    @Deprecated
-    private void handleReauthorize(@Nullable Object id, @Nullable Object params) throws IOException {
-        if (!(params instanceof JSONObject)) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be either a JSONObject", null);
-            return;
-        }
-
-        final JSONObject o = (JSONObject) params;
-
-        final JSONObject ident = o.optJSONObject(ProtocolContract.PARAMETER_IDENTITY);
-        final Uri identityUri;
-        final Uri iconUri;
-        final String identityName;
-        if (ident != null) {
-            identityUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_URI) ?
-                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_URI)) : null;
-            if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.uri must be an absolute, hierarchical URI", null);
-                return;
-            }
-            iconUri = ident.has(ProtocolContract.PARAMETER_IDENTITY_ICON) ?
-                    Uri.parse(ident.optString(ProtocolContract.PARAMETER_IDENTITY_ICON)) : null;
-            if (iconUri != null && !iconUri.isRelative()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.icon must be a relative URI", null);
-                return;
-            }
-            identityName = ident.has(ProtocolContract.PARAMETER_IDENTITY_NAME) ?
-                    ident.optString(ProtocolContract.PARAMETER_IDENTITY_NAME) : null;
-            if (identityName != null && identityName.isEmpty()) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, identity.name must be a non-empty string", null);
-                return;
-            }
-        } else {
-            identityUri = null;
-            iconUri = null;
-            identityName = null;
-        }
-
-        final String authToken = o.optString(ProtocolContract.PARAMETER_AUTH_TOKEN);
-        if (authToken.isEmpty()) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "auth_token must be a non-empty string", null);
-            return;
-        }
-
-        final ReauthorizeRequest request = new ReauthorizeRequest(id, identityUri, iconUri, identityName, authToken);
-        request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
-        mMethodHandlers.reauthorize(request);
-    }
-
-    public static class ReauthorizeRequest extends AuthorizationRequest {
+    public static class AuthorizationResult {
         @NonNull
         public final String authToken;
 
-        private ReauthorizeRequest(@Nullable Object id,
-                                   @Nullable Uri identityUri,
-                                   @Nullable Uri iconUri,
-                                   @Nullable String identityName,
-                                   @NonNull String authToken) {
-            super(id, identityUri, iconUri, identityName, authToken);
+        @Deprecated @NonNull
+        public final byte[] publicKey;
+
+        @Deprecated @Nullable
+        public final String accountLabel;
+
+        @Nullable
+        public final Uri walletUriBase;
+
+        @NonNull @Size(min = 1)
+        public final AuthorizedAccount[] accounts;
+
+        @Deprecated
+        public AuthorizationResult(@NonNull String authToken,
+                                   @NonNull byte[] publicKey,
+                                   @Nullable String accountLabel,
+                                   @Nullable Uri walletUriBase) {
             this.authToken = authToken;
+            this.publicKey = publicKey;
+            this.accountLabel = accountLabel;
+            this.walletUriBase = walletUriBase;
+            this.accounts = new AuthorizedAccount[] {
+                    new AuthorizedAccount(publicKey, accountLabel, null, null, null) };
+        }
+
+        public AuthorizationResult(@NonNull String authToken,
+                                   @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
+                                   @Nullable Uri walletUriBase) {
+            this.authToken = authToken;
+            this.walletUriBase = walletUriBase;
+            this.accounts = accounts;
+            this.publicKey = accounts[0].publicKey;
+            this.accountLabel = accounts[0].accountLabel;
         }
 
         @NonNull
         @Override
         public String toString() {
-            return "ReauthorizeRequest{" +
+            return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
-                    '/' + super.toString() +
+                    ", walletUriBase=" + walletUriBase +
+                    ", accounts=" + Arrays.toString(accounts) +
                     '}';
         }
     }
@@ -718,6 +637,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     // sign_transactions
     // =============================================================================================
 
+    @Deprecated(since = "2.0.0", forRemoval = true)
     private void handleSignTransactions(@Nullable Object id,
                                         @Nullable Object params)
             throws IOException {

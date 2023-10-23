@@ -15,14 +15,12 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSess
 import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
-import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,13 +55,7 @@ public class LocalAssociationScenario extends Scenario {
         return mMobileWalletAdapterSession;
     }
 
-    @Deprecated
     public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs) {
-        this(clientTimeoutMs, List.of(SessionProperties.ProtocolVersion.LEGACY));
-    }
-
-    public LocalAssociationScenario(@IntRange(from = 0) int clientTimeoutMs,
-                                    @NonNull List<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         super(clientTimeoutMs);
 
         mPort = new Random().nextInt(WebSocketsTransportContract.WEBSOCKETS_LOCAL_PORT_MAX -
@@ -79,8 +71,7 @@ public class LocalAssociationScenario extends Scenario {
 
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
-                mSessionStateCallbacks,
-                supportedProtocolVersions);
+                mSessionStateCallbacks);
 
         Log.v(TAG, "Creating local association scenario for " + mWebSocketUri);
     }

@@ -23,8 +23,8 @@ public abstract class SignPayloadsRequest
                                   @Nullable Uri iconUri,
                                   @NonNull byte[] authorizationScope,
                                   @NonNull byte[] authorizedPublicKey,
-                                  @NonNull String cluster) {
-        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
+                                  @NonNull String chain) {
+        super(request, identityName, identityUri, iconUri, chain, authorizationScope);
         mAuthorizedPublicKey = authorizedPublicKey;
     }
 

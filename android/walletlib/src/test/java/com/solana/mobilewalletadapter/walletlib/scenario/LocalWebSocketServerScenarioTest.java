@@ -43,8 +43,7 @@ public class LocalWebSocketServerScenarioTest {
                 1,
                 new Object[] { "legacy" },
                 noConnectionTimeout,
-                new String[] {},
-                List.of(SessionProperties.ProtocolVersion.LEGACY)
+                new String[] {}
         );
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -62,8 +61,8 @@ public class LocalWebSocketServerScenarioTest {
                 List.of(SessionProperties.ProtocolVersion.LEGACY);
 
         // when
-        new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port, powerConfig, supportedVersions).start();
+        new LocalWebSocketServerScenario(context, config, authConfig, lowPowerNoConnectionCallback,
+                publicKey, port, powerConfig, supportedVersions).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
@@ -86,8 +85,7 @@ public class LocalWebSocketServerScenarioTest {
                 1,
                 new Object[] { "legacy" },
                 noConnectionTimeout,
-                new String[] {},
-                List.of(SessionProperties.ProtocolVersion.LEGACY)
+                new String[] {}
         );
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -105,8 +103,8 @@ public class LocalWebSocketServerScenarioTest {
                 List.of(SessionProperties.ProtocolVersion.LEGACY);
 
         // when
-        new LocalWebSocketServerScenario(context, config, authConfig,
-                lowPowerNoConnectionCallback, publicKey, port, powerConfig, supportedVersions).start();
+        new LocalWebSocketServerScenario(context, config, authConfig, lowPowerNoConnectionCallback,
+                publicKey, port, powerConfig, supportedVersions).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
