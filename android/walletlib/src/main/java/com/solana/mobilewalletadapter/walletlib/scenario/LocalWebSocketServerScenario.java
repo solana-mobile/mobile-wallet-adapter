@@ -32,7 +32,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                         @NonNull byte[] associationPublicKey,
                                         @WebSocketsTransportContract.LocalPortRange int port) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, port, new DevicePowerConfigProvider(context), new ArrayList<>());
+                associationPublicKey, List.of(), port);
     }
 
     public LocalWebSocketServerScenario(@NonNull Context context,
@@ -40,10 +40,11 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                         @NonNull AuthIssuerConfig authIssuerConfig,
                                         @NonNull LocalScenario.Callbacks callbacks,
                                         @NonNull byte[] associationPublicKey,
-                                        @WebSocketsTransportContract.LocalPortRange int port,
-                                        @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
+                                        @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                                        @WebSocketsTransportContract.LocalPortRange int port) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, port, new DevicePowerConfigProvider(context), requestedProtocolVersions);
+                associationPublicKey, port, new DevicePowerConfigProvider(context),
+                associationProtocolVersions);
     }
 
     /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
@@ -53,8 +54,9 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                              @NonNull byte[] associationPublicKey,
                                              @WebSocketsTransportContract.LocalPortRange int port,
                                              PowerConfigProvider powerConfigProvider,
-                                             @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
-        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, powerConfigProvider, requestedProtocolVersions);
+                                             @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
+                powerConfigProvider, associationProtocolVersions);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }

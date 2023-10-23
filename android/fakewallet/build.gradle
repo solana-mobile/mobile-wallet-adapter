@@ -55,6 +55,24 @@ android {
         }
     }
 
+    flavorDimensions = ["protocol_version"]
+
+    productFlavors {
+        v1 {
+            dimension "protocol_version"
+            applicationId "com.solana.mobilewalletadapter.fakewallet"
+            buildConfigField "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion",
+                    "PROTOCOL_VERSION", "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion.V1"
+        }
+        legacy {
+            dimension "protocol_version"
+            applicationId "com.solana.mobilewalletadapter.fakewallet.legacy"
+            resValue "string", "app_name", "Fake Wallet App (Legacy)"
+            buildConfigField "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion",
+                    "PROTOCOL_VERSION", "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion.LEGACY"
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -66,6 +84,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 
@@ -100,6 +119,7 @@ dependencies {
     implementation 'io.coil-kt:coil-svg:2.4.0'
     implementation 'org.bouncycastle:bcprov-jdk18on:1.76'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'io.github.funkatronics:multimult:0.2.0'
     implementation project(path: ':walletlib')
     kapt 'androidx.room:room-compiler:2.4.3'
 }

@@ -16,9 +16,9 @@ public class DeauthorizedEvent extends BaseVerifiableIdentityRequest<MobileWalle
                                   @Nullable String identityName,
                                   @Nullable Uri identityUri,
                                   @Nullable Uri iconUri,
-                                  @NonNull String cluster,
+                                  @NonNull String chain,
                                   @NonNull byte[] authorizationScope) {
-        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
+        super(request, identityName, identityUri, iconUri, chain, authorizationScope);
     }
 
     public void complete() {

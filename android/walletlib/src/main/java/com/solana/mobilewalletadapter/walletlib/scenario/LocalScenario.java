@@ -28,7 +28,6 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -42,10 +41,9 @@ public abstract class LocalScenario implements Scenario {
     private static final String TAG = LocalScenario.class.getSimpleName();
 
     @NonNull
-    final public SessionProperties sessionProperties;
-
-    @NonNull
     final public byte[] associationPublicKey;
+    @NonNull
+    final public List<SessionProperties.ProtocolVersion> associationProtocolVersions;
 
     @NonNull
     protected final MobileWalletAdapterConfig mMobileWalletAdapterConfig;
@@ -76,7 +74,7 @@ public abstract class LocalScenario implements Scenario {
                             @NonNull Callbacks callbacks,
                             @NonNull byte[] associationPublicKey) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
-                associationPublicKey, new DevicePowerConfigProvider(context), new ArrayList<>());
+                associationPublicKey, new DevicePowerConfigProvider(context), List.of());
     }
 
     /*package*/ LocalScenario(@NonNull Context context,
@@ -85,20 +83,11 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider,
-                              @NonNull List<SessionProperties.ProtocolVersion> requestedProtocolVersions) {
+                              @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
+        this.associationProtocolVersions = associationProtocolVersions;
         this.associationPublicKey = associationPublicKey;
-
-        SessionProperties.ProtocolVersion maxSupportedProtocolVersion =
-                SessionProperties.ProtocolVersion.LEGACY;
-        for (SessionProperties.ProtocolVersion version : requestedProtocolVersions) {
-            if (version.ordinal() > maxSupportedProtocolVersion.ordinal()
-                    && mobileWalletAdapterConfig.supportedProtocolVersions.contains(version)) {
-                maxSupportedProtocolVersion = version;
-            }
-        }
-        this.sessionProperties = new SessionProperties(maxSupportedProtocolVersion);
 
         final LooperThread t = new LooperThread();
         t.start();
@@ -115,9 +104,11 @@ public abstract class LocalScenario implements Scenario {
         return associationPublicKey;
     }
 
-    @Nullable
     @Override
-    public SessionProperties getSessionProperties() { return sessionProperties; }
+    @NonNull
+    public List<SessionProperties.ProtocolVersion> getAssociationProtocolVersions() {
+        return associationProtocolVersions;
+    }
 
     @Override
     protected void finalize() {
@@ -260,7 +251,8 @@ public abstract class LocalScenario implements Scenario {
             }));
 
             mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
-                    future, request.identityName, request.identityUri, request.iconUri, chain)));
+                    future, request.identityName, request.identityUri, request.iconUri, chain,
+                    request.features, request.addresses)));
         }
 
         private void doReauthorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {
@@ -334,75 +326,6 @@ public abstract class LocalScenario implements Scenario {
         }
 
         @Override
-        public void reauthorize(@NonNull MobileWalletAdapterServer.ReauthorizeRequest request) {
-            // Clear the active auth token immediately upon beginning reauthorization; it will be
-            // set to valid only on successful completion
-            synchronized (mLock) {
-                mActiveAuthorization = null;
-            }
-
-            final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
-            if (authRecord == null) {
-                mIoHandler.post(() -> request.completeExceptionally(
-                        new MobileWalletAdapterServer.AuthorizationNotValidException(
-                                "auth_token not valid for this request")));
-                return;
-            }
-
-            final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
-            future.notifyOnComplete(f -> mIoHandler.post(() -> { // Note: run in IO thread context
-                try {
-                    final Boolean reauthorize = f.get(); // won't block
-                    if (!reauthorize) {
-                        mIoHandler.post(() -> request.completeExceptionally(
-                                new MobileWalletAdapterServer.RequestDeclinedException(
-                                        "app declined reauthorization request")));
-                        mAuthRepository.revoke(authRecord);
-                        return;
-                    }
-
-                    final AuthRecord reissuedAuthRecord = mAuthRepository.reissue(authRecord);
-                    if (reissuedAuthRecord == null) {
-                        // No need to explicitly revoke the old auth token; that is part of the
-                        // reissue method contract
-                        mIoHandler.post(() -> request.completeExceptionally(
-                                new MobileWalletAdapterServer.RequestDeclinedException(
-                                        "auth_token not valid for reissue")));
-                        return;
-                    }
-                    synchronized (mLock) {
-                        mActiveAuthorization = reissuedAuthRecord;
-                    }
-
-                    final String authToken;
-                    if (reissuedAuthRecord == authRecord) {
-                        // Reissued same auth record; don't regenerate the token
-                        authToken = request.authToken;
-                    } else {
-                        authToken = mAuthRepository.toAuthToken(reissuedAuthRecord);
-                    }
-
-                    mIoHandler.post(() -> request.complete(
-                            new MobileWalletAdapterServer.AuthorizationResult(
-                                    authToken, authRecord.publicKey, authRecord.accountLabel,
-                                    authRecord.walletUriBase)));
-                } catch (ExecutionException e) {
-                    final Throwable cause = e.getCause();
-                    assert(cause instanceof Exception); // expected to always be an Exception
-                    request.completeExceptionally((Exception)cause);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException("Unexpected interruption while waiting for reauthorization", e);
-                } catch (CancellationException e) {
-                    request.cancel(true);
-                }
-            }));
-
-            mIoHandler.post(() -> mCallbacks.onReauthorizeRequest(new ReauthorizeRequest(
-                    future, request.identityName, request.identityUri, request.iconUri,
-                    authRecord.chain, authRecord.scope)));
-        }
-
-        @Override
         public void deauthorize(@NonNull MobileWalletAdapterServer.DeauthorizeRequest request) {
             final AuthRecord authRecord = mAuthRepository.fromAuthToken(request.authToken);
             if (authRecord != null) {
@@ -417,7 +340,7 @@ public abstract class LocalScenario implements Scenario {
             if (authRecord != null) {
                 mIoHandler.post(() -> mCallbacks.onDeauthorizedEvent(new DeauthorizedEvent(
                         request, authRecord.identity.getName(), authRecord.identity.getUri(),
-                        authRecord.identity.getRelativeIconUri(), authRecord.cluster,
+                        authRecord.identity.getRelativeIconUri(), authRecord.chain,
                         authRecord.scope)));
             } else {
                 // No auth token was found. Just complete successfully, to avoid disclosing whether
@@ -441,7 +364,7 @@ public abstract class LocalScenario implements Scenario {
             mIoHandler.post(() -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
                     request, authRecord.identity.getName(), authRecord.identity.getUri(),
                     authRecord.identity.getRelativeIconUri(), authRecord.scope,
-                    authRecord.publicKey, authRecord.cluster)));
+                    authRecord.publicKey, authRecord.chain)));
         }
 
         @Override
@@ -460,7 +383,7 @@ public abstract class LocalScenario implements Scenario {
                 final SignMessagesRequest smr = new SignMessagesRequest(request,
                         authRecord.identity.getName(), authRecord.identity.getUri(),
                         authRecord.identity.getRelativeIconUri(), authRecord.scope,
-                        authRecord.publicKey, authRecord.cluster);
+                        authRecord.publicKey, authRecord.chain);
                 mIoHandler.post(() -> mCallbacks.onSignMessagesRequest(smr));
             } catch (IllegalArgumentException e) {
                 mIoHandler.post(() -> request.completeExceptionally(
@@ -484,7 +407,7 @@ public abstract class LocalScenario implements Scenario {
             mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionsRequest(
                     new SignAndSendTransactionsRequest(request, authRecord.identity.getName(),
                             authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
-                            authRecord.scope, authRecord.publicKey, authRecord.cluster)));
+                            authRecord.scope, authRecord.publicKey, authRecord.chain)));
         }
     };
 
