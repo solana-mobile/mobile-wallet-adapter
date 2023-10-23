@@ -60,13 +60,11 @@ android {
     productFlavors {
         v1 {
             dimension "protocol_version"
-            applicationId "com.solana.mobilewalletadapter.fakewallet"
             buildConfigField "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion",
                     "PROTOCOL_VERSION", "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion.V1"
         }
         legacy {
             dimension "protocol_version"
-            applicationId "com.solana.mobilewalletadapter.fakewallet.legacy"
             resValue "string", "app_name", "Fake Wallet App (Legacy)"
             buildConfigField "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion",
                     "PROTOCOL_VERSION", "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion.LEGACY"
