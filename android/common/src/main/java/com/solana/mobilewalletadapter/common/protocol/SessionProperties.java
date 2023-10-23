@@ -50,13 +50,15 @@ public class SessionProperties {
             }
         }
 
-        public static ProtocolVersion from(String versionString) {
+        public static ProtocolVersion from(String versionString) throws IllegalArgumentException {
             switch (versionString.toLowerCase()) {
                 case "v1":
                 case "1":
                     return V1;
-                default:
+                case "legacy":
                     return LEGACY;
+                default:
+                    throw new IllegalArgumentException("Unknown/unsupported version: " + versionString);
             }
         }
     }
