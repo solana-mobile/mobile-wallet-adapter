@@ -11,8 +11,6 @@ import org.robolectric.RobolectricTestRunner;
 @RunWith(RobolectricTestRunner.class)
 public class ParserTest {
 
-
-
     @Test
     public void testParseSIWSMessageWithOptionalFields() {
         // given

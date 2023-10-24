@@ -25,7 +25,7 @@ public class Iso8601DateTime {
                 // SimpleDateFormat does not comprehend "Z" (UTC), so replace it
                 formattedDate = formattedDate.replace("Z", "+0000");
             } else {
-                // SimpleDateFormat drequires zone to be in +/-hhmm, so remove ":"
+                // SimpleDateFormat requires zone to be in +/-hhmm, so remove ":"
                 formattedDate = formattedDate.replaceAll("([+-]\\d\\d):(\\d\\d)\\s*$", "$1$2");
             }
             // add microseconds field if missing
