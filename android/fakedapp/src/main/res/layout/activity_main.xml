@@ -187,26 +187,25 @@
         android:enabled="false" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/label_account_name"
+        android:id="@+id/label_accounts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:layout_constraintTop_toTopOf="@id/tv_account_name"
-        app:layout_constraintBottom_toBottomOf="@id/tv_account_name"
+        app:layout_constraintTop_toTopOf="@id/spinner_accounts"
+        app:layout_constraintBottom_toBottomOf="@id/spinner_accounts"
         app:layout_constraintStart_toStartOf="parent"
-        android:text="@string/label_account_name"
+        android:text="@string/label_accounts"
         android:textAppearance="?textAppearanceBody1"
         android:textStyle="bold" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_account_name"
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/spinner_accounts"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/label_has_auth_token"
-        app:layout_constraintStart_toEndOf="@id/label_account_name"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:textAppearance="?textAppearanceBody1" />
+        app:layout_constraintStart_toEndOf="@id/label_accounts"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/label_wallet_uri_prefix"
@@ -225,7 +224,29 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:layout_constraintTop_toBottomOf="@id/label_account_name"
+        app:layout_constraintTop_toBottomOf="@id/spinner_accounts"
+        app:layout_constraintStart_toEndOf="@id/label_wallet_uri_prefix"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textAppearance="?textAppearanceBody1" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_session_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toTopOf="@id/tv_session_version"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_session_version"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="@string/label_session_version"
+        android:textAppearance="?textAppearanceBody1"
+        android:textStyle="bold" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_session_version"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toBottomOf="@id/label_wallet_uri_prefix"
         app:layout_constraintStart_toEndOf="@id/label_wallet_uri_prefix"
         app:layout_constraintEnd_toEndOf="parent"
         android:textAppearance="?textAppearanceBody1" />
