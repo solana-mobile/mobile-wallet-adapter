@@ -18,6 +18,8 @@ import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAssociateBinding
+import com.solana.mobilewalletadapter.fakewallet.ui.authorizedapp.SignInFragment
+import com.solana.mobilewalletadapter.fakewallet.ui.authorizedapp.SignInFragmentDirections
 import kotlinx.coroutines.launch
 
 class AssociateFragment : Fragment() {
@@ -51,6 +53,8 @@ class AssociateFragment : Fragment() {
                             Unit
                         is MobileWalletAdapterServiceRequest.AuthorizeDapp ->
                             navController.navigate(AssociateFragmentDirections.actionAuthorizeDapp())
+                        is MobileWalletAdapterServiceRequest.SignIn ->
+                            navController.navigate(AssociateFragmentDirections.actionSignIn())
                         is MobileWalletAdapterServiceRequest.SignPayloads,
                         is MobileWalletAdapterServiceRequest.SignAndSendTransactions ->
                             navController.navigate(AssociateFragmentDirections.actionSignPayload())

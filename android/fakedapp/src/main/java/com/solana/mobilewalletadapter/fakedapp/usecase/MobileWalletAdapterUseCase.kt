@@ -17,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.whenResumed
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignInPayload
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
@@ -48,12 +49,14 @@ object MobileWalletAdapterUseCase {
     class Client(private val client: MobileWalletAdapterClient) {
         suspend fun authorize(
             identity: DappIdentity,
-            cluster: String?
+            chain: String?,
+            signInPayload: SignInPayload?
         ): MobileWalletAdapterClient.AuthorizationResult = coroutineScope {
             try {
                 runInterruptible(Dispatchers.IO) {
                     client.authorize(
-                        identity.uri, identity.iconRelativeUri, identity.name, cluster
+                        identity.uri, identity.iconRelativeUri, identity.name, chain,
+                        null, null, null, signInPayload
                     ).get()!!
                 }
             } catch (e: ExecutionException) {

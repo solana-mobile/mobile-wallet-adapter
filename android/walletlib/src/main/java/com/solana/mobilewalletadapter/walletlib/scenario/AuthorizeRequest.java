@@ -113,6 +113,9 @@ public class AuthorizeRequest
     @Nullable
     public String[] getAddresses() { return  mAddresses; }
 
+    @Nullable
+    public SignInPayload getSignInPayload() { return  mSignInPayload; }
+
     @Deprecated
     public void completeWithAuthorize(@NonNull byte[] publicKey,
                                       @Nullable String accountLabel,

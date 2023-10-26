@@ -2,6 +2,7 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Arrays;
 
@@ -12,11 +13,11 @@ public class SignInResult {
     public final byte[] signedMessage;
     @NonNull
     public final byte[] signature;
-    @NonNull
+    @Nullable
     public final String signatureType;
 
     public SignInResult(@NonNull byte[] publicKey, @NonNull byte[] signedMessage,
-                        @NonNull byte[] signature, @NonNull String signatureType) {
+                        @NonNull byte[] signature, @Nullable String signatureType) {
         this.publicKey = publicKey;
         this.signedMessage = signedMessage;
         this.signature = signature;

@@ -234,7 +234,7 @@ public abstract class LocalScenario implements Scenario {
                         final String authToken = mAuthRepository.toAuthToken(authRecord);
                         request.complete(new MobileWalletAdapterServer.AuthorizationResult(
                                 authToken, authorize.accounts,
-                                authorize.walletUriBase));
+                                authorize.walletUriBase, authorize.signInResult));
                     } else {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
                                 "authorize request declined"));

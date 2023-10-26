@@ -14,6 +14,14 @@
     <string name="label_verification_scope">Scope:</string>
     <string name="label_simulate_cluster_not_supported">Simulate cluster not supported</string>
 
+    <!-- Sign In fragment strings -->
+    <string name="label_sign_in_with_solana">Sign In With Solana</string>
+    <string name="label_sign_in_payload">Sign In Payload:</string>
+    <string name="label_domain">Domain:</string>
+    <string name="label_siws_uri">URI:</string>
+    <string name="label_issued_at">Issued At:</string>
+    <string name="label_sign_in">Sign In</string>
+
     <!-- Sign Payload fragment strings -->
     <string name="label_sign_transactions">Sign transaction(s)</string>
     <string name="label_sign_messages">Sign message(s)</string>

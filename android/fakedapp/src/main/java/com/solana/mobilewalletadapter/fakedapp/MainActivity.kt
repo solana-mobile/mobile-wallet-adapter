@@ -97,6 +97,10 @@ class MainActivity : AppCompatActivity() {
             viewModel.authorize(mwaLauncher)
         }
 
+        viewBinding.btnSignIn.setOnClickListener {
+            viewModel.signInWithSolana(mwaLauncher)
+        }
+
         viewBinding.btnReauthorize.setOnClickListener {
             viewModel.reauthorize(mwaLauncher)
         }

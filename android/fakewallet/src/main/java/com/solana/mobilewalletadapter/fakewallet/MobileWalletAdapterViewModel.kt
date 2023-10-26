@@ -7,12 +7,14 @@ package com.solana.mobilewalletadapter.fakewallet
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.fakewallet.usecase.*
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -131,14 +133,66 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         request.request.completeWithClusterNotSupported()
     }
 
-    fun authorizeDappSimulateInternalError(
-        request: MobileWalletAdapterServiceRequest.AuthorizeDapp
+    fun authorizationSimulateInternalError(
+        request: MobileWalletAdapterServiceRequest.AuthorizationRequest
     ) {
         if (rejectStaleRequest(request)) {
             return
         }
 
         request.request.completeWithInternalError(RuntimeException("Internal error during authorize: -1234"))
+    }
+
+    fun signIn(
+        request: MobileWalletAdapterServiceRequest.SignIn,
+        authorizeSignIn: Boolean
+    ) {
+        if (rejectStaleRequest(request)) {
+            return
+        }
+
+        viewModelScope.launch {
+            if (authorizeSignIn) {
+                val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
+                val publicKey = keypair.public as Ed25519PublicKeyParameters
+                Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+
+                val requestPayload = request.signInPayload
+                val address = Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)
+                val siwsMessage = SignInWithSolana.Payload(
+                    requestPayload.domain,
+                    address,
+                    requestPayload.statement,
+                    requestPayload.uri,
+                    requestPayload.version,
+                    requestPayload.chainId,
+                    requestPayload.nonce,
+                    requestPayload.issuedAt,
+                    requestPayload.expirationTime,
+                    requestPayload.notBefore,
+                    requestPayload.requestId,
+                    requestPayload.resources
+                ).prepareMessage()
+
+                val signResult = try {
+                    val messageBytes = siwsMessage.encodeToByteArray()
+                    SolanaSigningUseCase.signMessage(messageBytes, keypair)
+                } catch (e: IllegalArgumentException) {
+                    Log.w(TAG, "failed to sign SIWS payload", e)
+                    request.request.completeWithInternalError(e)
+                    return@launch
+                }
+
+                val signInResult = SignInResult(publicKey.encoded,
+                    siwsMessage.encodeToByteArray(), signResult.signature, "ed25519")
+
+                val accounts = arrayOf(buildAccount(publicKey.encoded, "fakewallet"))
+                request.request.completeWithAuthorize(accounts, null,
+                    request.sourceVerificationState.authorizationScope.encodeToByteArray(), signInResult)
+            } else {
+                request.request.completeWithDecline()
+            }
+        }
     }
 
     fun signPayloadsSimulateSign(request: MobileWalletAdapterServiceRequest.SignPayloads) {
@@ -416,11 +470,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         override fun onAuthorizeRequest(request: AuthorizeRequest) {
             val clientTrustUseCase = clientTrustUseCase!! // should never be null if we get here
 
-            val authorizeDappRequest = MobileWalletAdapterServiceRequest.AuthorizeDapp(
-                request,
-                clientTrustUseCase.verificationInProgress
-            )
-            cancelAndReplaceRequest(authorizeDappRequest)
+            val authorizationRequest = request.signInPayload?.let { signInPayload ->
+                MobileWalletAdapterServiceRequest.SignIn(request, signInPayload,
+                    clientTrustUseCase.verificationInProgress)
+            } ?: MobileWalletAdapterServiceRequest.AuthorizeDapp(request,
+                clientTrustUseCase.verificationInProgress)
+            cancelAndReplaceRequest(authorizationRequest)
 
             val verify = clientTrustUseCase.verifyAuthorizationSourceAsync(request.identityUri)
             viewModelScope.launch {
@@ -429,8 +484,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 } ?: clientTrustUseCase.verificationTimedOut
 
                 if (!updateExistingRequest(
-                        authorizeDappRequest,
-                        authorizeDappRequest.copy(sourceVerificationState = verificationState)
+                        authorizationRequest,
+                        when (authorizationRequest) {
+                            is MobileWalletAdapterServiceRequest.AuthorizeDapp ->
+                                authorizationRequest.copy(sourceVerificationState = verificationState)
+                            is MobileWalletAdapterServiceRequest.SignIn ->
+                                authorizationRequest.copy(sourceVerificationState = verificationState)
+                        }
                     )
                 ) {
                     return@launch
@@ -520,10 +580,19 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         object LowPowerNoConnection : MobileWalletAdapterServiceRequest
 
         sealed class MobileWalletAdapterRemoteRequest(open val request: ScenarioRequest) : MobileWalletAdapterServiceRequest
+        sealed class AuthorizationRequest(
+            override val request: AuthorizeRequest,
+            open val sourceVerificationState: ClientTrustUseCase.VerificationState
+        ) : MobileWalletAdapterRemoteRequest(request)
         data class AuthorizeDapp(
             override val request: AuthorizeRequest,
-            val sourceVerificationState: ClientTrustUseCase.VerificationState
-        ) : MobileWalletAdapterRemoteRequest(request)
+            override val sourceVerificationState: ClientTrustUseCase.VerificationState
+        ) : AuthorizationRequest(request, sourceVerificationState)
+        data class SignIn(
+            override val request: AuthorizeRequest,
+            val signInPayload: SignInPayload,
+            override val sourceVerificationState: ClientTrustUseCase.VerificationState
+        ) : AuthorizationRequest(request, sourceVerificationState)
         sealed class SignPayloads(override val request: SignPayloadsRequest) : MobileWalletAdapterRemoteRequest(request)
         data class SignTransactions(override val request: SignTransactionsRequest) : SignPayloads(request)
         data class SignMessages(override val request: SignMessagesRequest) : SignPayloads(request)
