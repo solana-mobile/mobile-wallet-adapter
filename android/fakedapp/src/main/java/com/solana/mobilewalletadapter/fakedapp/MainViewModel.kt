@@ -14,7 +14,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.AuthorizedAccount
-import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.SignInPayload
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
@@ -72,7 +71,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
     ) = viewModelScope.launch {
         try {
-            val signInPayload = SignInPayload(
+            val signInPayload = SignInWithSolana.Payload(
                 "solanamobile.com",
                 "Sign into Fake dApp to do fake things!",
                 IDENTITY.uri!!,
@@ -462,7 +461,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         client: MobileWalletAdapterUseCase.Client,
         identity: MobileWalletAdapterUseCase.DappIdentity,
         cluster: String?,
-        signInPayload: SignInPayload? = null
+        signInPayload: SignInWithSolana.Payload? = null
     ): MobileWalletAdapterClient.AuthorizationResult {
         val result = try {
             client.authorize(identity, cluster, signInPayload)

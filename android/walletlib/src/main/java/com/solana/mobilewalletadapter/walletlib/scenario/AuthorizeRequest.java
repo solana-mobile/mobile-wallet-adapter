@@ -11,19 +11,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
-import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime;
-import com.solana.mobilewalletadapter.common.signin.SignInWithSolanaContract;
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
-import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.security.SecureRandom;
-import java.text.ParseException;
 
 public class AuthorizeRequest
         extends BaseScenarioRequest<NotifyingCompletableFuture<AuthorizeRequest.Result>> {
@@ -48,7 +39,7 @@ public class AuthorizeRequest
     protected final String[] mAddresses;
 
     @Nullable
-    protected final SignInPayload mSignInPayload;
+    protected final SignInWithSolana.Payload mSignInPayload;
 
     /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
                                  @Nullable String identityName,
@@ -57,7 +48,7 @@ public class AuthorizeRequest
                                  @NonNull String chain,
                                  @Nullable String[] features,
                                  @Nullable String[] addresses,
-                                 @Nullable SignInPayload signInPayload) {
+                                 @Nullable SignInWithSolana.Payload signInPayload) {
         super(request);
         mIdentityName = identityName;
         mIdentityUri = identityUri;
@@ -114,7 +105,7 @@ public class AuthorizeRequest
     public String[] getAddresses() { return  mAddresses; }
 
     @Nullable
-    public SignInPayload getSignInPayload() { return  mSignInPayload; }
+    public SignInWithSolana.Payload getSignInPayload() { return  mSignInPayload; }
 
     @Deprecated
     public void completeWithAuthorize(@NonNull byte[] publicKey,

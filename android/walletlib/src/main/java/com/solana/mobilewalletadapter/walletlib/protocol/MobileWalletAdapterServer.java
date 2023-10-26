@@ -16,12 +16,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
-import com.solana.mobilewalletadapter.walletlib.scenario.SignInPayload;
 import com.solana.mobilewalletadapter.walletlib.scenario.SignInResult;
 
 import org.json.JSONArray;
@@ -189,10 +189,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
-        final SignInPayload signInPayload;
+        final SignInWithSolana.Payload signInPayload;
         try {
             final JSONObject signInJson = o.optJSONObject(ProtocolContract.PARAMETER_SIGN_IN_PAYLOAD);
-            signInPayload = signInJson != null ? SignInPayload.fromJson(signInJson) : null;
+            signInPayload = signInJson != null ? SignInWithSolana.Payload.fromJson(signInJson) : null;
         } catch (JSONException e) {
             handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
             return;
@@ -292,7 +292,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Nullable
         public final String[] addresses;
         @Nullable
-        public final SignInPayload signInPayload;
+        public final SignInWithSolana.Payload signInPayload;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
@@ -302,7 +302,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                  @Nullable String[] features,
                                  @Nullable String[] addresses,
                                  @Nullable String authToken,
-                                 @Nullable SignInPayload signInPayload) {
+                                 @Nullable SignInWithSolana.Payload signInPayload) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;

@@ -157,23 +157,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
                 Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
 
-                val requestPayload = request.signInPayload
                 val address = Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)
-                val siwsMessage = SignInWithSolana.Payload(
-                    requestPayload.domain,
-                    address,
-                    requestPayload.statement,
-                    requestPayload.uri,
-                    requestPayload.version,
-                    requestPayload.chainId,
-                    requestPayload.nonce,
-                    requestPayload.issuedAt,
-                    requestPayload.expirationTime,
-                    requestPayload.notBefore,
-                    requestPayload.requestId,
-                    requestPayload.resources
-                ).prepareMessage()
-
+                val siwsMessage = request.signInPayload.prepareMessage(address)
                 val signResult = try {
                     val messageBytes = siwsMessage.encodeToByteArray()
                     SolanaSigningUseCase.signMessage(messageBytes, keypair)
@@ -590,7 +575,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         ) : AuthorizationRequest(request, sourceVerificationState)
         data class SignIn(
             override val request: AuthorizeRequest,
-            val signInPayload: SignInPayload,
+            val signInPayload: SignInWithSolana.Payload,
             override val sourceVerificationState: ClientTrustUseCase.VerificationState
         ) : AuthorizationRequest(request, sourceVerificationState)
         sealed class SignPayloads(override val request: SignPayloadsRequest) : MobileWalletAdapterRemoteRequest(request)

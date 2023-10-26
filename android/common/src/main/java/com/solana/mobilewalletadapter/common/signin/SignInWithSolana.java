@@ -9,9 +9,11 @@ import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.SecureRandom;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,24 +29,14 @@ public class SignInWithSolana {
 
     public static final String HEADER_TYPE = "sip99";
 
-    @NonNull final Payload payload;
-
-    public SignInWithSolana(Payload payload) {
-        this.payload = payload;
-    }
-
-    public String prepareMessage() {
-        return payload.prepareMessage();
-    }
-
     public static class Payload {
         /* RFC 4501 dns authority that is requesting the signing. */
         @NonNull
         public final String domain;
 
         /* Solana address performing the signing */
-        @NonNull
-        public final String address;
+        @Nullable
+        public String address;
 
         /* Human-readable ASCII assertion that the user will sign, and it must not contain newline characters. */
         @Nullable
@@ -95,13 +87,21 @@ public class SignInWithSolana {
         public final Uri[] resources;
 
         public Payload(@NonNull String domain,
-                       @NonNull String address,
+                       @Nullable String statement,
+                       @NonNull Uri uri,
+                       @Nullable String issuedAt) {
+            this(domain, null, statement, uri, "1", 1, null,
+                    issuedAt, null, null, null, null);
+        }
+
+        public Payload(@NonNull String domain,
+                       @Nullable String address,
                        @Nullable String statement,
                        @NonNull Uri uri,
                        @NonNull String version,
                        int chainId,
-                       @NonNull String nonce,
-                       @NonNull String issuedAt,
+                       @Nullable String nonce,
+                       @Nullable String issuedAt,
                        @Nullable String expirationTime,
                        @Nullable String notBefore,
                        @Nullable String requestId,
@@ -115,23 +115,31 @@ public class SignInWithSolana {
             this.requestId = requestId;
             this.resources = resources;
 
-            if (nonce.length() < 8) {
-                throw new IllegalArgumentException("nonce must be at least 8 alphanumeric characters");
+            if (nonce != null) {
+                if (nonce.length() < 8 || !nonce.matches("[A-Za-z0-9]+")) {
+                    throw new IllegalArgumentException("nonce must be at least 8 alphanumeric characters");
+                }
+                this.nonce = nonce;
+            } else {
+                this.nonce = generateNonce();
             }
-            this.nonce = nonce;
 
-            try {
-                Iso8601DateTime.parse(issuedAt);
-            } catch (ParseException e) {
-                throw new IllegalArgumentException("'Issued at' time must be an ISO 8601 formatted string");
+            if (issuedAt != null) {
+                try {
+                    Iso8601DateTime.parse(issuedAt);
+                } catch (ParseException e) {
+                    throw new IllegalArgumentException("issuedAt must be a valid ISO 8601 date time string");
+                }
+                this.issuedAt = issuedAt;
+            } else {
+                this.issuedAt = Iso8601DateTime.now();
             }
-            this.issuedAt = issuedAt;
 
             if (expirationTime != null) {
                 try {
                     Iso8601DateTime.parse(expirationTime);
                 } catch (ParseException e) {
-                    throw new IllegalArgumentException("Expiration time date must be an ISO 8601 formatted string");
+                    throw new IllegalArgumentException("expirationTime must be a valid ISO 8601 date time string");
                 }
             }
             this.expirationTime = expirationTime;
@@ -140,13 +148,21 @@ public class SignInWithSolana {
                 try {
                     Iso8601DateTime.parse(notBefore);
                 } catch (ParseException e) {
-                    throw new IllegalArgumentException("'Not before' time must be an ISO 8601 formatted string");
+                    throw new IllegalArgumentException("notBefore must be a valid ISO 8601 date time string");
                 }
             }
             this.notBefore = notBefore;
         }
 
+        public String prepareMessage(String address) {
+            this.address = address;
+            return prepareMessage();
+        }
+
         public String prepareMessage() {
+            if (address == null) {
+                throw new IllegalStateException("cannot prepare sign in message, no address provided");
+            }
             switch (version) {
                 case "1":
                     return toV1Message();
@@ -213,8 +229,8 @@ public class SignInWithSolana {
             final String domain = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN);
             if (domain.isEmpty()) throw new IllegalArgumentException("domain is required");
 
-            final String address = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS);
-            if (address.isEmpty()) throw new IllegalArgumentException("address is required");
+            final String address = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS) ?
+                    jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS) : null;
 
             final String uriString = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI);
             if (uriString.isEmpty()) throw new IllegalArgumentException("uri is required");
@@ -255,6 +271,37 @@ public class SignInWithSolana {
 
             return new Payload(domain, address, statement, uri, version, chainId, nonce,
                     issuedAt, expirationTime, notBefore, requestId, resources);
+        }
+
+        public JSONObject toJson() throws JSONException {
+            JSONObject json = new JSONObject();
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN, domain);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, address);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT, statement);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI, uri.toString());
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION, version);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_CHAIN_ID, chainId);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_NONCE, nonce);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ISSUED_AT, issuedAt);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_EXPIRATION_TIME, expirationTime);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_NOT_BEFORE, notBefore);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_REQUEST_ID, requestId);
+            if (resources != null) {
+                JSONArray jsonArray = new JSONArray();
+                for (Uri resource : resources) {
+                    jsonArray.put(resource.toString());
+                }
+                json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_RESOURCES, jsonArray);
+            }
+
+            return json;
+        }
+
+        private String generateNonce() {
+            int min = 10000000;
+            int max = Integer.MAX_VALUE;
+            int value = new SecureRandom().nextInt(max - min) + min;
+            return String.valueOf(value);
         }
 
         @Override
@@ -385,4 +432,6 @@ public class SignInWithSolana {
 
         private Parser() {}
     }
+
+    private SignInWithSolana() {}
 }
