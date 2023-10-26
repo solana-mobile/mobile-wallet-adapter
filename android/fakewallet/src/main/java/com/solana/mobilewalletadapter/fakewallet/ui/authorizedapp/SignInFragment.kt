@@ -107,6 +107,13 @@ class SignInFragment : Fragment() {
             }
         }
 
+        viewBinding.btnSimulateSignInNotSupported.setOnClickListener {
+            request?.let {
+                Log.w(TAG, "Simulating sign in not supported")
+                activityViewModel.signInSimulateSignInNotSupported(it)
+            }
+        }
+
         viewBinding.btnSimulateInternalError.setOnClickListener {
             request?.let {
                 Log.w(TAG, "Simulating internal error")

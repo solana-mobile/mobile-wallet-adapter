@@ -14,6 +14,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.AuthorizedAccount
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.SignInResult
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
@@ -77,43 +78,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 IDENTITY.uri!!,
                 null
             )
-            doLocalAssociateAndExecute(intentLauncher) { client ->
-                doAuthorize(client, IDENTITY, CHAIN_ID, signInPayload)
-            }.also {
-                Log.d(TAG, "Authorized: $it")
-                it.signInResult?.let { signInResult ->
-                    try {
-                        Log.d(TAG, "Verifying signature of $signInResult")
-                        val address = Base64.encodeToString(signInResult.publicKey, Base64.NO_WRAP)
-                        val originalMessage = SignInWithSolana.Payload(
-                            signInPayload.domain,
-                            address,
-                            signInPayload.statement,
-                            signInPayload.uri,
-                            signInPayload.version,
-                            signInPayload.chainId,
-                            signInPayload.nonce,
-                            signInPayload.issuedAt,
-                            signInPayload.expirationTime,
-                            signInPayload.notBefore,
-                            signInPayload.requestId,
-                            signInPayload.resources
-                        ).prepareMessage()
-                        OffChainMessageSigningUseCase.verify(
-                            signInResult.signedMessage,
-                            signInResult.signature,
-                            signInResult.publicKey,
-                            originalMessage.encodeToByteArray()
-                        )
-                        showMessage(R.string.msg_request_succeeded)
-                    } catch (e: IllegalArgumentException) {
-                        Log.e(TAG, "Failed verifying signature on message", e)
-                        showMessage(R.string.msg_request_failed)
+
+            val signInResult = doLocalAssociateAndExecute(intentLauncher) { client ->
+                doAuthorize(client, IDENTITY, CHAIN_ID, signInPayload).let { authResult ->
+                    Log.d(TAG, "Authorized: $authResult")
+                    authResult.signInResult ?: run {
+                        Log.i(TAG, "Sign in failed, no sign in result returned from wallet, falling back on sign message")
+                        val publicKey = authResult.accounts.first().publicKey
+                        val address = Base64.encodeToString(publicKey, Base64.NO_WRAP)
+                        val signInMessage = signInPayload.prepareMessage(address)
+                        client.signMessagesDetached(
+                            arrayOf(signInMessage.encodeToByteArray()),
+                            arrayOf(publicKey)
+                        ).first().let {
+                            SignInResult(it.addresses.first(), it.message,
+                                it.signatures.first(), "ed25519")
+                        }
                     }
-                } ?: run {
-                    Log.e(TAG, "Sign in failed, no sign in result returned from wallet")
-                    showMessage(R.string.msg_request_failed)
                 }
+            }
+
+            try {
+                Log.d(TAG, "Verifying signature of $signInResult")
+                val address = Base64.encodeToString(signInResult.publicKey, Base64.NO_WRAP)
+                val originalMessage = signInPayload.prepareMessage(address)
+                OffChainMessageSigningUseCase.verify(
+                    signInResult.signedMessage,
+                    signInResult.signature,
+                    signInResult.publicKey,
+                    originalMessage.encodeToByteArray()
+                )
+                showMessage(R.string.msg_request_succeeded)
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Failed verifying signature on message", e)
+                showMessage(R.string.msg_request_failed)
             }
         } catch (e: MobileWalletAdapterUseCase.LocalAssociationFailedException) {
             Log.e(TAG, "Error associating", e)

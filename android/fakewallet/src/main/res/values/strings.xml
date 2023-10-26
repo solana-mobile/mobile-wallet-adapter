@@ -21,6 +21,7 @@
     <string name="label_siws_uri">URI:</string>
     <string name="label_issued_at">Issued At:</string>
     <string name="label_sign_in">Sign In</string>
+    <string name="label_simulate_sign_in_not_supported">Simulate sign in not supported</string>
 
     <!-- Sign Payload fragment strings -->
     <string name="label_sign_transactions">Sign transaction(s)</string>

@@ -86,7 +86,10 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                     10,
                     arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
                     LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
-                    arrayOf(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)
+                    arrayOf(
+                        ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS,
+                        ProtocolContract.FEATURE_ID_SIGN_IN_WITH_SOLANA
+                    )
                 ),
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks()
@@ -102,7 +105,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     }
 
     fun authorizeDapp(
-        request: MobileWalletAdapterServiceRequest.AuthorizeDapp,
+        request: MobileWalletAdapterServiceRequest.AuthorizationRequest,
         authorized: Boolean
     ) {
         if (rejectStaleRequest(request)) {
@@ -178,6 +181,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 request.request.completeWithDecline()
             }
         }
+    }
+
+    fun signInSimulateSignInNotSupported(
+        request: MobileWalletAdapterServiceRequest.SignIn
+    ) {
+        authorizeDapp(request, true)
     }
 
     fun signPayloadsSimulateSign(request: MobileWalletAdapterServiceRequest.SignPayloads) {
