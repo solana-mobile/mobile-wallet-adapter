@@ -25,6 +25,8 @@ import kotlin.text.RegexOption;
 
 public class SignInWithSolana {
 
+    public static final String HEADER_TYPE = "sip99";
+
     @NonNull final Payload payload;
 
     public SignInWithSolana(Payload payload) {

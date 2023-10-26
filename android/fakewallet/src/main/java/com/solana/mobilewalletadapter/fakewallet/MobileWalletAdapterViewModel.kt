@@ -114,7 +114,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
                 val accounts = arrayOf(buildAccount(publicKey.encoded, "fakewallet"))
                 request.request.completeWithAuthorize(accounts, null,
-                    request.sourceVerificationState.authorizationScope.encodeToByteArray())
+                    request.sourceVerificationState.authorizationScope.encodeToByteArray(), null)
             } else {
                 request.request.completeWithDecline()
             }

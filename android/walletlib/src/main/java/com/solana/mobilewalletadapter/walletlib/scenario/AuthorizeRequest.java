@@ -11,9 +11,19 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime;
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolanaContract;
 import com.solana.mobilewalletadapter.common.util.Identifier;
+import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.security.SecureRandom;
+import java.text.ParseException;
 
 public class AuthorizeRequest
         extends BaseScenarioRequest<NotifyingCompletableFuture<AuthorizeRequest.Result>> {
@@ -37,19 +47,24 @@ public class AuthorizeRequest
     @Nullable
     protected final String[] mAddresses;
 
+    @Nullable
+    protected final SignInPayload mSignInPayload;
+
     /*package*/ AuthorizeRequest(@NonNull NotifyingCompletableFuture<Result> request,
                                  @Nullable String identityName,
                                  @Nullable Uri identityUri,
                                  @Nullable Uri iconUri,
                                  @NonNull String chain,
                                  @Nullable String[] features,
-                                 @Nullable String[] addresses) {
+                                 @Nullable String[] addresses,
+                                 @Nullable SignInPayload signInPayload) {
         super(request);
         mIdentityName = identityName;
         mIdentityUri = identityUri;
         mIconUri = iconUri;
         mFeatures = features;
         mAddresses = addresses;
+        mSignInPayload = signInPayload;
 
         if (Identifier.isValidIdentifier(chain)) {
             mChain = chain;
@@ -105,13 +120,14 @@ public class AuthorizeRequest
                                       @Nullable byte[] scope) {
         AuthorizedAccount[] accounts = new AuthorizedAccount[] {
                 new AuthorizedAccount(publicKey, accountLabel, null, null, null)};
-        mRequest.complete(new Result(accounts, walletUriBase, scope));
+        mRequest.complete(new Result(accounts, walletUriBase, scope, null));
     }
 
     public void completeWithAuthorize(@NonNull AuthorizedAccount[] accounts,
                                       @Nullable Uri walletUriBase,
-                                      @Nullable byte[] scope) {
-        mRequest.complete(new Result(accounts, walletUriBase, scope));
+                                      @Nullable byte[] scope,
+                                      @Nullable SignInResult signInResult) {
+        mRequest.complete(new Result(accounts, walletUriBase, scope, signInResult));
     }
 
     public void completeWithDecline() {
@@ -130,13 +146,17 @@ public class AuthorizeRequest
         /*package*/ final Uri walletUriBase;
         @Nullable
         /*package*/ final byte[] scope;
+        @Nullable
+        /*package*/ final SignInResult signInResult;
 
         private Result(@NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                        @Nullable Uri walletUriBase,
-                       @Nullable byte[] scope) {
+                       @Nullable byte[] scope,
+                       @Nullable SignInResult signInResult) {
             this.accounts = accounts;
             this.walletUriBase = walletUriBase;
             this.scope = scope;
+            this.signInResult = signInResult;
         }
     }
 }

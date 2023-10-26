@@ -15,6 +15,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime;
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolanaContract;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -25,6 +27,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -145,13 +149,17 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public final Uri walletUriBase;
         @NonNull @Size(min = 1)
         public final AuthorizedAccount[] accounts;
+        @Nullable
+        public final SignInResult signInResult;
 
         private AuthorizationResult(@NonNull String authToken,
                                     @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
-                                    @Nullable Uri walletUriBase) {
+                                    @Nullable Uri walletUriBase,
+                                    @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
             this.accounts = accounts;
+            this.signInResult = signInResult;
             this.publicKey = accounts[0].publicKey;
             this.accountLabel = accounts[0].accountLabel;
         }
@@ -198,6 +206,36 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
+        public static class SignInResult {
+            @NonNull
+            public final byte[] publicKey;
+            @NonNull
+            public final byte[] signedMessage;
+            @NonNull
+            public final byte[] signature;
+            @NonNull
+            public final String signatureType;
+
+            public SignInResult(@NonNull byte[] publicKey, @NonNull byte[] signedMessage,
+                                @NonNull byte[] signature, @NonNull String signatureType) {
+                this.publicKey = publicKey;
+                this.signedMessage = signedMessage;
+                this.signature = signature;
+                this.signatureType = signatureType;
+            }
+
+            @NonNull
+            @Override
+            public String toString() {
+                return "SignInResult{" +
+                        "publicKey=" + Arrays.toString(publicKey) +
+                        ", signedMessage=" + Arrays.toString(signedMessage) +
+                        ", signature=" + Arrays.toString(signature) +
+                        ", signatureType='" + signatureType + '\'' +
+                        '}';
+            }
+        }
+
         @Deprecated @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
         public static AuthorizationResult create(
                 String authToken,
@@ -206,7 +244,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 Uri walletUriBase
         ) {
             AuthorizedAccount[] accounts = new AuthorizedAccount[] { new AuthorizedAccount(publicKey, accountLabel, null, null) };
-            return new AuthorizationResult(authToken, accounts, walletUriBase);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, null);
         }
 
         @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
@@ -215,7 +253,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 AuthorizedAccount[] accounts,
                 Uri walletUriBase
         ) {
-            return new AuthorizationResult(authToken, accounts, walletUriBase);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, null);
         }
     }
 
@@ -290,7 +328,36 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                         walletUriBaseStr + "'; expected a 'https' URI");
             }
 
-            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase);
+            final JSONObject signInResultJson = jo.has(ProtocolContract.RESULT_SIGN_IN) ?
+                    jo.optJSONObject(ProtocolContract.RESULT_SIGN_IN) : null;
+            final AuthorizationResult.SignInResult signInResult;
+            if (signInResultJson != null) {
+                final String address = signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_ADDRESS);
+                if (address.isEmpty()) {
+                    throw new JsonRpc20InvalidResponseException("expected an address in sign_in_result");
+                }
+                final byte[] publicKey = JsonPack.unpackBase64PayloadToByteArray(address);
+
+                final String signedMessageStr = signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_SIGNED_MESSAGE);
+                if (signedMessageStr.isEmpty()) {
+                    throw new JsonRpc20InvalidResponseException("expected an address in sign_in_result");
+                }
+                final byte[] signedMessage = JsonPack.unpackBase64PayloadToByteArray(signedMessageStr);
+
+                final String signatureStr = signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_SIGNATURE);
+                if (signatureStr.isEmpty()) {
+                    throw new JsonRpc20InvalidResponseException("expected an address in sign_in_result");
+                }
+                final byte[] signature = JsonPack.unpackBase64PayloadToByteArray(signatureStr);
+
+                final String signatureType = signInResultJson.has(ProtocolContract.RESULT_SIGN_IN_SIGNATURE_TYPE) ?
+                        signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_SIGNATURE_TYPE) : "ed25519";
+                signInResult = new AuthorizationResult.SignInResult(publicKey, signedMessage, signature, signatureType);
+            } else {
+                signInResult = null;
+            }
+
+            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase, signInResult);
         }
 
         @Override
@@ -343,8 +410,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                          @Nullable String chain,
                                          @Nullable String authToken,
                                          @Nullable String[] features,
-                                         @Nullable byte[][] addresses
-                                         /* TODO: sign in payload */)
+                                         @Nullable byte[][] addresses,
+                                         @Nullable SignInPayload signInPayload)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -371,11 +438,140 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             authorize.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken); // null is OK
             authorize.put(ProtocolContract.PARAMETER_FEATURES, featuresArr); // null is OK
             authorize.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr); // null is OK
+            if (signInPayload != null ) {
+                authorize.put(ProtocolContract.PARAMETER_SIGN_IN_PAYLOAD, signInPayload.toJson());
+            }
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
 
         return new AuthorizationFuture(methodCall(ProtocolContract.METHOD_AUTHORIZE, authorize, mClientTimeoutMs));
+    }
+
+    public static class SignInPayload {
+        @NonNull
+        public final String domain;
+        @Nullable
+        public final String address;
+        @Nullable
+        public final String statement;
+        @NonNull
+        public final Uri uri;
+        @NonNull
+        public final String version;
+        public final int chainId;
+        @NonNull
+        public final String nonce;
+        @NonNull
+        public final String issuedAt;
+        @Nullable
+        public final String expirationTime;
+        @Nullable
+        public final String notBefore;
+        @Nullable
+        public final String requestId;
+        @Nullable
+        @Size(min = 1)
+        public final Uri[] resources;
+
+        public SignInPayload(@NonNull String domain,
+                             @Nullable String statement,
+                             @NonNull Uri uri,
+                             @Nullable String issuedAt) {
+            this(domain, null, statement, uri, "1", 1, null,
+                    issuedAt, null, null, null, null);
+        }
+
+        public SignInPayload(@NonNull String domain,
+                             @Nullable String address,
+                             @Nullable String statement,
+                             @NonNull Uri uri,
+                             @NonNull String version,
+                             int chainId,
+                             @Nullable String nonce,
+                             @Nullable String issuedAt,
+                             @Nullable String expirationTime,
+                             @Nullable String notBefore,
+                             @Nullable String requestId,
+                             @Nullable Uri[] resources) {
+            this.domain = domain;
+            this.address = address;
+            this.statement = statement;
+            this.uri = uri;
+            this.version = version;
+            this.chainId = chainId;
+            this.requestId = requestId;
+            this.resources = resources;
+
+            if (nonce != null) {
+                if (nonce.length() < 8 || !nonce.matches("[A-Za-z0-9]+")) {
+                    throw new IllegalArgumentException("nonce must be at least 8 alphanumeric characters");
+                }
+                this.nonce = nonce;
+            } else {
+                this.nonce = generateNonce();
+            }
+
+            if (issuedAt != null) {
+                try {
+                    Iso8601DateTime.parse(issuedAt);
+                } catch (ParseException e) {
+                    throw new IllegalArgumentException("issuedAt must be a valid ISO 8601 date time string");
+                }
+                this.issuedAt = issuedAt;
+            } else {
+                this.issuedAt = Iso8601DateTime.now();
+            }
+
+            if (expirationTime != null) {
+                try {
+                    Iso8601DateTime.parse(expirationTime);
+                } catch (ParseException e) {
+                    throw new IllegalArgumentException("expirationTime must be a valid ISO 8601 date time string");
+                }
+            }
+            this.expirationTime = expirationTime;
+
+            if (notBefore != null) {
+                try {
+                    Iso8601DateTime.parse(notBefore);
+                } catch (ParseException e) {
+                    throw new IllegalArgumentException("notBefore must be a valid ISO 8601 date time string");
+                }
+            }
+            this.notBefore = notBefore;
+        }
+
+        public JSONObject toJson() throws JSONException {
+            JSONObject json = new JSONObject();
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN, domain);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, address);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT, statement);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI, uri.toString());
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION, version);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_CHAIN_ID, chainId);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_NONCE, nonce);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ISSUED_AT, issuedAt);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_EXPIRATION_TIME, expirationTime);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_NOT_BEFORE, notBefore);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_REQUEST_ID, requestId);
+            if (resources != null) {
+                JSONArray jsonArray = new JSONArray();
+                for (Uri resource : resources) {
+                    jsonArray.put(resource.toString());
+                }
+                json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_RESOURCES, jsonArray);
+            }
+
+            return json;
+        }
+
+        private String generateNonce() {
+            int min = 10000000;
+            int max = Integer.MAX_VALUE;
+            int value = new SecureRandom().nextInt(max - min) + min;
+            return String.valueOf(value);
+        }
     }
 
     // =============================================================================================

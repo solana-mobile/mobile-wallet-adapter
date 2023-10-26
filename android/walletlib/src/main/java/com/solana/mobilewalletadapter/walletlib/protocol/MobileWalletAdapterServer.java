@@ -21,6 +21,7 @@ import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
+import com.solana.mobilewalletadapter.walletlib.scenario.SignInPayload;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -187,8 +188,17 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
+        final SignInPayload signInPayload;
+        try {
+            final JSONObject signInJson = o.optJSONObject(ProtocolContract.PARAMETER_SIGN_IN_PAYLOAD);
+            signInPayload = signInJson != null ? SignInPayload.fromJson(signInJson) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
+            return;
+        }
+
         final AuthorizeRequest request =
-                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken);
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken, signInPayload);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
@@ -264,12 +274,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final String authToken;
         @Nullable
         public final String chain;
-
         @Nullable
         public final String[] features;
-
         @Nullable
         public final String[] addresses;
+        @Nullable
+        public final SignInPayload signInPayload;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
@@ -278,7 +288,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                  @Nullable String chain,
                                  @Nullable String[] features,
                                  @Nullable String[] addresses,
-                                 @Nullable String authToken) {
+                                 @Nullable String authToken,
+                                 @Nullable SignInPayload signInPayload) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
@@ -287,6 +298,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.chain = chain;
             this.features = features;
             this.addresses = addresses;
+            this.signInPayload = signInPayload;
         }
 
         @Override
