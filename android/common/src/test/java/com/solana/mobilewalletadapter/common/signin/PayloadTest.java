@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -49,5 +51,89 @@ public class PayloadTest {
 
         // then
         assertEquals(expectedMessage, message);
+    }
+
+    @Test
+    public void testPayloadFromJson() throws JSONException {
+        // given
+        JSONObject payloadJson = new JSONObject(
+                "{" +
+                    "\"domain\": \"service.org\"," +
+                    "\"address\": \"43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj\"," +
+                    "\"statement\": \"I accept the ServiceOrg Terms of Service: https://service.org/tos\"," +
+                    "\"uri\": \"https://service.org/login\"," +
+                    "\"version\": \"1\"," +
+                    "\"chainId\": 1," +
+                    "\"nonce\": \"32832457\"," +
+                    "\"issuedAt\": \"2021-01-11T11:15:23.000Z\"," +
+                    "\"resources\": [\"ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu\", \"https://example.com/my-web2-claim.json\"]" +
+                "}"
+        );
+
+        SignInWithSolana.Payload expectedPayload = new SignInWithSolana.Payload(
+                "service.org",
+                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                "I accept the ServiceOrg Terms of Service: https://service.org/tos",
+                Uri.parse("https://service.org/login"),
+                "1",
+                1,
+                "32832457",
+                "2021-01-11T11:15:23.000Z",
+                null,
+                null,
+                null,
+                new Uri[] {
+                        Uri.parse("ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu"),
+                        Uri.parse("https://example.com/my-web2-claim.json")
+                }
+        );
+
+        // when
+        SignInWithSolana.Payload payload = SignInWithSolana.Payload.fromJson(payloadJson);
+
+        // then
+        assertEquals(expectedPayload, payload);
+    }
+
+    @Test
+    public void testPayloadToJson() throws JSONException {
+        // given
+        SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
+                "service.org",
+                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                "I accept the ServiceOrg Terms of Service: https://service.org/tos",
+                Uri.parse("https://service.org/login"),
+                "1",
+                1,
+                "32832457",
+                "2021-01-11T11:15:23.000Z",
+                null,
+                null,
+                null,
+                new Uri[] {
+                        Uri.parse("ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu"),
+                        Uri.parse("https://example.com/my-web2-claim.json")
+                }
+        );
+
+        JSONObject expectedJson = new JSONObject(
+                "{" +
+                        "\"domain\": \"service.org\"," +
+                        "\"address\": \"43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj\"," +
+                        "\"statement\": \"I accept the ServiceOrg Terms of Service: https://service.org/tos\"," +
+                        "\"uri\": \"https://service.org/login\"," +
+                        "\"version\": \"1\"," +
+                        "\"chainId\": 1," +
+                        "\"nonce\": \"32832457\"," +
+                        "\"issuedAt\": \"2021-01-11T11:15:23.000Z\"," +
+                        "\"resources\": [\"ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu\", \"https://example.com/my-web2-claim.json\"]" +
+                        "}"
+        );
+
+        // when
+        JSONObject payloadJson = payload.toJson();
+
+        // then
+        assertEquals(expectedJson.toString(), payloadJson.toString());
     }
 }

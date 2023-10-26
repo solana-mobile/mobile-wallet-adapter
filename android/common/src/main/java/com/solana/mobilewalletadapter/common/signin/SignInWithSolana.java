@@ -257,16 +257,15 @@ public class SignInWithSolana {
             final String requestId = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_REQUEST_ID)
                     ? jsonObject.getString(SignInWithSolanaContract.PAYLOAD_PARAMETER_REQUEST_ID) : null;
 
-            final String resourcesString = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_RESOURCES);
+            JSONArray resourcesArr = jsonObject.optJSONArray("resources");
             final Uri[] resources;
-            if (resourcesString.isEmpty()) {
-                resources = null;
-            } else {
-                final String[] resourcesArr = resourcesString.split("\n- ");
-                resources = new Uri[resourcesArr.length];
-                for (int i = 0; i < resourcesArr.length; i++) {
-                    resources[i] = Uri.parse(resourcesArr[i]);
+            if (resourcesArr != null) {
+                resources = new Uri[resourcesArr .length()];
+                for (int i = 0; i < resourcesArr .length(); i++) {
+                    resources[i] = Uri.parse(resourcesArr.getString(i));
                 }
+            } else {
+                resources = null;
             }
 
             return new Payload(domain, address, statement, uri, version, chainId, nonce,
@@ -310,7 +309,7 @@ public class SignInWithSolana {
             if (o == null || getClass() != o.getClass()) return false;
             Payload payload = (Payload) o;
             return domain.equals(payload.domain)
-                    && address.equals(payload.address)
+                    && Objects.equals(address, payload.address)
                     && Objects.equals(statement, payload.statement)
                     && uri.equals(payload.uri)
                     && version.equals(payload.version)
