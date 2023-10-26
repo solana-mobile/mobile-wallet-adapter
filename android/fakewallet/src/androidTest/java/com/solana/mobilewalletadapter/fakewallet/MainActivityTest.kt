@@ -125,7 +125,7 @@ class MainActivityTest {
         uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
 
         // then
-        onView(withId(R.id.btn_sign_in))
+        onView(withId(R.id.btn_authorize))
             .check(matches(isDisplayed())).perform(click())
 
         val authResult = authorization.get()
