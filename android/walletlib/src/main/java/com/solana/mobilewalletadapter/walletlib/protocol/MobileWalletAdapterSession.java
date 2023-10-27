@@ -34,12 +34,23 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
     @NonNull
     private final ECPublicKey mAssociationPublicKey;
 
+    @NonNull
+    private final SessionProperties mSessionProperties;
+
     public MobileWalletAdapterSession(@NonNull Scenario scenario,
                                       @NonNull MessageReceiver decryptedPayloadReceiver,
                                       @Nullable StateCallbacks stateCallbacks) {
         super(decryptedPayloadReceiver, stateCallbacks);
         mScenario = scenario;
         mAssociationPublicKey = ECDSAKeys.decodeP256PublicKey(scenario.getAssociationPublicKey());
+
+        SessionProperties.ProtocolVersion maxSupportedProtocolVersion = SessionProperties.ProtocolVersion.LEGACY;
+        for (SessionProperties.ProtocolVersion version : scenario.getAssociationProtocolVersions()) {
+            if (version.ordinal() > maxSupportedProtocolVersion.ordinal()) {
+                maxSupportedProtocolVersion = version;
+            }
+        }
+        mSessionProperties = new SessionProperties(maxSupportedProtocolVersion);
     }
 
     @NonNull
@@ -50,7 +61,7 @@ public class MobileWalletAdapterSession extends MobileWalletAdapterSessionCommon
 
     @NonNull
     @Override
-    protected SessionProperties getSessionProperties() { return mScenario.getSessionProperties(); }
+    protected SessionProperties getSessionProperties() { return mSessionProperties; }
 
     @Override
     protected void handleSessionEstablishmentMessage(@NonNull byte[] payload)

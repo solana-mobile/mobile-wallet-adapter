@@ -12,9 +12,11 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.AuthorizedAccount
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
 import com.solana.mobilewalletadapter.fakedapp.usecase.*
 import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity
 import kotlinx.coroutines.*
@@ -111,6 +113,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d(TAG, "Capabilities: $it")
                 Log.d(TAG, "Supports legacy transactions: ${TransactionVersion.supportsLegacy(it.supportedTransactionVersions)}")
                 Log.d(TAG, "Supports v0 transactions: ${TransactionVersion.supportsVersion(it.supportedTransactionVersions, 0)}")
+                Log.d(TAG, "Supported features: ${it.supportedOptionalFeatures.contentToString()}")
                 showMessage(R.string.msg_request_succeeded)
             }
         } catch (e: MobileWalletAdapterUseCase.LocalAssociationFailedException) {
@@ -124,7 +127,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun requestAirdrop() = viewModelScope.launch {
         try {
-            RequestAirdropUseCase(CLUSTER_RPC_URI, _uiState.value.publicKey!!)
+            RequestAirdropUseCase(CLUSTER_RPC_URI, _uiState.value.primaryPublicKey!!)
             Log.d(TAG, "Airdrop request sent")
             showMessage(R.string.msg_airdrop_request_sent)
         } catch (e: RequestAirdropUseCase.AirdropFailedException) {
@@ -152,7 +155,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val (blockhash, _) = latestBlockhash.await()
                 val transactions = Array(numTransactions) {
-                    transactionUseCase.create(uiState.value.publicKey!!, blockhash)
+                    transactionUseCase.create(uiState.value.primaryPublicKey!!, blockhash)
                 }
                 client.signTransactions(transactions).also {
                     Log.d(TAG, "Signed transaction(s): $it")
@@ -174,7 +177,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val verified = signedTransactions.map { txn ->
             try {
-                transactionUseCase.verify(uiState.value.publicKey!!, txn)
+                transactionUseCase.verify(uiState.value.primaryPublicKey!!, txn)
                 true
             } catch (e: IllegalArgumentException) {
                 Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -198,7 +201,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val (blockhash, _) = latestBlockhash.await()
                 val transactions = arrayOf(
-                    transactionUseCase.create(uiState.value.publicKey!!, blockhash)
+                    transactionUseCase.create(uiState.value.primaryPublicKey!!, blockhash)
                 )
                 client.signTransactions(transactions).also {
                     Log.d(TAG, "Signed transaction(s): $it")
@@ -220,7 +223,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val verified = signedTransactions.map { txn ->
             try {
-                transactionUseCase.verify(uiState.value.publicKey!!, txn)
+                transactionUseCase.verify(uiState.value.primaryPublicKey!!, txn)
                 true
             } catch (e: IllegalArgumentException) {
                 Log.e(TAG, "Memo transaction signature verification failed", e)
@@ -247,10 +250,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 doAuthorize(client, IDENTITY, CLUSTER_NAME)
 
                 message =
-                    "Sign this message to prove you own account ${Base58EncodeUseCase(uiState.value.publicKey!!)}".encodeToByteArray()
+                    "Sign this message to prove you own account ${Base58EncodeUseCase(uiState.value.primaryPublicKey!!)}".encodeToByteArray()
                 val signMessagesResult = client.signMessagesDetached(
                     arrayOf(message),
-                    arrayOf(uiState.value.publicKey!!)
+                    arrayOf(uiState.value.primaryPublicKey!!)
                 )
 
                 Log.d(TAG, "Simulating a short delay while we do something with the message the user just signed...")
@@ -259,7 +262,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val (blockhash, slot) = latestBlockhash.await()
                 val transaction =
-                    arrayOf(transactionUseCase.create(uiState.value.publicKey!!, blockhash))
+                    arrayOf(transactionUseCase.create(uiState.value.primaryPublicKey!!, blockhash))
                 val signAndSendTransactionsResult = client.signAndSendTransactions(transaction, slot)
 
                 signMessagesResult[0] to signAndSendTransactionsResult[0]
@@ -282,7 +285,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             OffChainMessageSigningUseCase.verify(
                 signedMessage.message,
                 signedMessage.signatures[0],
-                uiState.value.publicKey!!,
+                uiState.value.primaryPublicKey!!,
                 message
             )
             true
@@ -315,7 +318,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 doReauthorize(client, IDENTITY, _uiState.value.authToken!!).also {
                     Log.d(TAG, "Reauthorized: $it")
                 }
-                client.signMessagesDetached(messages, arrayOf(_uiState.value.publicKey!!)).also {
+                client.signMessagesDetached(messages, arrayOf(_uiState.value.primaryPublicKey!!)).also {
                     Log.d(TAG, "Signed message(s): $it")
                 }
             }
@@ -335,7 +338,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 OffChainMessageSigningUseCase.verify(
                     sm.first.message,
                     sm.first.signatures[0],
-                    _uiState.value.publicKey!!,
+                    _uiState.value.primaryPublicKey!!,
                     sm.second
                 )
             }
@@ -361,7 +364,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val (blockhash, slot) = latestBlockhash.await()
                 val transactions = Array(numTransactions) {
-                    transactionUseCase.create(uiState.value.publicKey!!, blockhash)
+                    transactionUseCase.create(uiState.value.primaryPublicKey!!, blockhash)
                 }
                 client.signAndSendTransactions(transactions, slot).also {
                     Log.d(TAG, "Transaction signature(s): $it")
@@ -406,8 +409,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     authToken = null,
-                    publicKey = null,
-                    accountLabel = null,
+                    accounts = null,
                     walletUriBase = null
                 )
             }
@@ -417,8 +419,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update {
             it.copy(
                 authToken = result.authToken,
-                publicKey = result.publicKey,
-                accountLabel = result.accountLabel,
+                accounts = result.accounts.asList(),
                 walletUriBase = result.walletUriBase
             )
         }
@@ -437,8 +438,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     authToken = null,
-                    publicKey = null,
-                    accountLabel = null,
+                    accounts = null,
                     walletUriBase = null
                 )
             }
@@ -448,8 +448,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update {
             it.copy(
                 authToken = result.authToken,
-                publicKey = result.publicKey,
-                accountLabel = result.accountLabel,
+                accounts = result.accounts.asList(),
                 walletUriBase = result.walletUriBase
             )
         }
@@ -467,8 +466,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update {
                 it.copy(
                     authToken = null,
-                    publicKey = null,
-                    accountLabel = null,
+                    accounts = null,
                     walletUriBase = null
                 )
             }
@@ -481,7 +479,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         action: suspend (MobileWalletAdapterUseCase.Client) -> T
     ): T {
         return try {
-            MobileWalletAdapterUseCase.localAssociateAndExecute(intentLauncher, uriPrefix, action)
+            MobileWalletAdapterUseCase.localAssociateAndExecute(intentLauncher, uriPrefix) { client, sessionProperties ->
+                _uiState.update {
+                    it.copy(sessionProtocolVersion = sessionProperties.protocolVersion)
+                }
+                action(client)
+            }
         } catch (e: MobileWalletAdapterUseCase.NoWalletAvailableException) {
             showMessage(R.string.msg_no_wallet_found)
             throw e
@@ -490,13 +493,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     data class UiState(
         val authToken: String? = null,
-        val publicKey: ByteArray? = null, // TODO(#44): support multiple addresses
-        val accountLabel: String? = null,
+        val accounts: List<AuthorizedAccount>? = null,
         val walletUriBase: Uri? = null,
         val messages: List<String> = emptyList(),
-        val txnVersion: MemoTransactionVersion = MemoTransactionVersion.Legacy
+        val txnVersion: MemoTransactionVersion = MemoTransactionVersion.Legacy,
+        val sessionProtocolVersion: ProtocolVersion? = null
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
+        val primaryPublicKey: ByteArray? get() = (accounts?.first()?.publicKey)
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -505,23 +509,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             other as UiState
 
             if (authToken != other.authToken) return false
-            if (publicKey != null) {
-                if (other.publicKey == null) return false
-                if (!publicKey.contentEquals(other.publicKey)) return false
-            } else if (other.publicKey != null) return false
+            if (accounts != null && accounts.size == other.accounts?.size) {
+                accounts.zip(other.accounts).all { (a1, a2) -> a1.publicKey.contentEquals(a2.publicKey) }
+            } else if (other.accounts != null) return false
             if (walletUriBase != other.walletUriBase) return false
             if (messages != other.messages) return false
             if (txnVersion != other.txnVersion) return false
+            if (sessionProtocolVersion != other.sessionProtocolVersion) return false
 
             return true
         }
 
         override fun hashCode(): Int {
             var result = authToken?.hashCode() ?: 0
-            result = 31 * result + (publicKey?.contentHashCode() ?: 0)
+            result = 31 * result + (accounts?.hashCode() ?: 0)
             result = 31 * result + (walletUriBase?.hashCode() ?: 0)
             result = 31 * result + messages.hashCode()
             result = 31 * result + txnVersion.hashCode()
+            result = 31 * result + (sessionProtocolVersion?.hashCode() ?: 0)
             return result
         }
     }

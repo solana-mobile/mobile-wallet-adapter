@@ -24,8 +24,8 @@ public class SignAndSendTransactionsRequest
             @Nullable Uri iconUri,
             @NonNull byte[] authorizationScope,
             @NonNull byte[] publicKey,
-            @NonNull String cluster) {
-        super(request, identityName, identityUri, iconUri, cluster, authorizationScope);
+            @NonNull String chain) {
+        super(request, identityName, identityUri, iconUri, chain, authorizationScope);
         mPublicKey = publicKey;
     }
 

@@ -10,7 +10,9 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.fakewallet.usecase.*
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
@@ -56,18 +58,38 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             associationUri
         )
 
-        scenario = associationUri.createScenario(
-            getApplication<FakeWalletApplication>().applicationContext,
-            MobileWalletAdapterConfig(
-                true,
-                10,
-                10,
-                arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
-            ),
-            AuthIssuerConfig("fakewallet"),
-            MobileWalletAdapterScenarioCallbacks()
-        ).also { it.start() }
+        scenario = if (BuildConfig.PROTOCOL_VERSION == SessionProperties.ProtocolVersion.LEGACY) {
+            // manually create the scenario here so we can override the association protocol version
+            // this forces ProtocolVersion.LEGACY to simulate a wallet using walletlib 1.x (for testing)
+            LocalWebSocketServerScenario(
+                getApplication<FakeWalletApplication>().applicationContext,
+                MobileWalletAdapterConfig(
+                    true,
+                    10,
+                    10,
+                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS
+                ),
+                AuthIssuerConfig("fakewallet"),
+                MobileWalletAdapterScenarioCallbacks(),
+                associationUri.associationPublicKey,
+                listOf(),
+                associationUri.port,
+            )
+        } else {
+            associationUri.createScenario(
+                getApplication<FakeWalletApplication>().applicationContext,
+                MobileWalletAdapterConfig(
+                    10,
+                    10,
+                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
+                    arrayOf(ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS)
+                ),
+                AuthIssuerConfig("fakewallet"),
+                MobileWalletAdapterScenarioCallbacks()
+            )
+        }.also { it.start() }
 
         return true
     }
@@ -90,12 +112,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
                 Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
-                request.request.completeWithAuthorize(
-                    publicKey.encoded,
-                    "fakewallet",
-                    null,
-                    request.sourceVerificationState.authorizationScope.encodeToByteArray()
-                )
+                val accounts = arrayOf(buildAccount(publicKey.encoded, "fakewallet"))
+                request.request.completeWithAuthorize(accounts, null,
+                    request.sourceVerificationState.authorizationScope.encodeToByteArray())
             } else {
                 request.request.completeWithDecline()
             }
@@ -258,7 +277,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.cluster}")
+        Log.d(TAG, "Simulating transactions submitted on cluster=${request.request.chain}")
 
         request.request.completeWithSignatures(request.signatures!!)
     }
@@ -268,7 +287,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             return
         }
 
-        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.cluster}")
+        Log.d(TAG, "Simulating transactions NOT submitted on cluster=${request.request.chain}")
 
         val signatures = request.signatures!!
         val notSubmittedSignatures = Array(signatures.size) { i ->
@@ -353,14 +372,25 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    private fun clusterToRpcUri(cluster: String?): Uri {
-        return when (cluster) {
+    private fun buildAccount(publicKey: ByteArray, label: String, icon: Uri? = null,
+                             chains: Array<String>? = null, features: Array<String>? = null ) =
+        AuthorizedAccount(
+            publicKey, Base58.encodeToString(publicKey), "base58",
+            label, icon, chains, features
+        )
+
+    private fun chainOrClusterToRpcUri(chainOrCluster: String?): Uri {
+        return when (chainOrCluster) {
+            ProtocolContract.CHAIN_SOLANA_MAINNET,
             ProtocolContract.CLUSTER_MAINNET_BETA ->
                 Uri.parse("https://api.mainnet-beta.solana.com")
+            ProtocolContract.CHAIN_SOLANA_DEVNET,
             ProtocolContract.CLUSTER_DEVNET ->
                 Uri.parse("https://api.devnet.solana.com")
-            else ->
+            ProtocolContract.CHAIN_SOLANA_TESTNET,
+            ProtocolContract.CLUSTER_TESTNET ->
                 Uri.parse("https://api.testnet.solana.com")
+            else -> throw IllegalArgumentException("Unsupported chain/cluster: $chainOrCluster")
         }
     }
 
@@ -457,7 +487,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         override fun onSignAndSendTransactionsRequest(request: SignAndSendTransactionsRequest) {
             if (verifyPrivilegedMethodSource(request)) {
-                val endpointUri = clusterToRpcUri(request.cluster)
+                val endpointUri = chainOrClusterToRpcUri(request.chain)
                 cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignAndSendTransactions(request, endpointUri))
             } else {
                 request.completeWithDecline()

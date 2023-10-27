@@ -28,13 +28,13 @@ public abstract class AssociationUri {
     public final byte[] associationPublicKey;
 
     @NonNull
-    public final List<SessionProperties.ProtocolVersion> supportedProtocolVersions;
+    public final List<SessionProperties.ProtocolVersion> associationProtocolVersions;
 
     protected AssociationUri(@NonNull Uri uri) {
         this.uri = uri;
         validate(uri);
         associationPublicKey = parseAssociationToken(uri);
-        supportedProtocolVersions = parseSupportedProtocolVersions(uri);
+        associationProtocolVersions = parseSupportedProtocolVersions(uri);
     }
 
     private static void validate(@NonNull Uri uri) {
@@ -68,9 +68,11 @@ public abstract class AssociationUri {
                 AssociationContract.PARAMETER_PROTOCOL_VERSION)) {
             try {
                 supportedVersions.add(SessionProperties.ProtocolVersion.from(supportVersionStr));
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("port parameter must be a number", e);
-            }
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        if (supportedVersions.isEmpty()) {
+            supportedVersions.add(SessionProperties.ProtocolVersion.LEGACY);
         }
 
         return supportedVersions;
