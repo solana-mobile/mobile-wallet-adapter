@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -976,9 +977,25 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // sign_and_send_transactions
     // =============================================================================================
 
+    /**
+     * @deprecated Consumers of {@link #signAndSendTransactions(byte[][], Integer)} should migrate to
+     *             {@link #signAndSendTransactions(byte[][], Integer, String, Boolean, Integer, Boolean)}
+     *             which exposes more transactions options according to the latest protocol specification.
+     */
+    @Deprecated
     @NonNull
     public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
-                                                                 @Nullable Integer minContextSlot)
+                                                                 @Nullable Integer minContextSlot) throws IOException {
+        return signAndSendTransactions(transactions, minContextSlot, null, null, null, null);
+    }
+
+    @NonNull
+    public SignAndSendTransactionsFuture signAndSendTransactions(@NonNull @Size(min = 1) byte[][] transactions,
+                                                                 @Nullable Integer minContextSlot,
+                                                                 @Nullable String commitment,
+                                                                 @Nullable Boolean skipPreflight,
+                                                                 @Nullable Integer maxRetries,
+                                                                 @Nullable Boolean waitForCommitmentToSendNextTransaction)
             throws IOException {
         for (byte[] t : transactions) {
             if (t == null || t.length == 0) {
@@ -990,9 +1007,21 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         final JSONObject signAndSendTransactions = new JSONObject();
         try {
             signAndSendTransactions.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
+            final JSONObject options = new JSONObject();
+            options.putOpt(ProtocolContract.PARAMETER_OPTIONS_COMMITMENT, commitment);
             if (minContextSlot != null) {
-                final JSONObject options = new JSONObject();
-                options.put(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT, (int)minContextSlot);
+                options.put(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT, (int) minContextSlot);
+            }
+            if (skipPreflight != null) {
+                options.put(ProtocolContract.PARAMETER_OPTIONS_SKIP_PREFLIGHT, (boolean) skipPreflight);
+            }
+            if (maxRetries != null) {
+                options.put(ProtocolContract.PARAMETER_OPTIONS_MAX_RETRIES, (int) maxRetries);
+            }
+            if (waitForCommitmentToSendNextTransaction != null) {
+                options.put(ProtocolContract.PARAMETER_OPTIONS_WAIT_FOR_COMMITMENT, (boolean) waitForCommitmentToSendNextTransaction);
+            }
+            if (options.length() > 0) {
                 signAndSendTransactions.put(ProtocolContract.PARAMETER_OPTIONS, options);
             }
         } catch (JSONException e) {

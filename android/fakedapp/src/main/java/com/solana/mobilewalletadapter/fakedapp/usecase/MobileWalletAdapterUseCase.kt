@@ -268,11 +268,16 @@ object MobileWalletAdapterUseCase {
 
         suspend fun signAndSendTransactions(
             transactions: Array<ByteArray>,
-            minContextSlot: Int? = null
+            minContextSlot: Int? = null,
+            commitment: String? = null,
+            skipPreflight: Boolean? = null,
+            maxRetries: Int? = null,
+            waitForCommitmentToSendNextTransaction: Boolean? = null
         ): Array<ByteArray> = coroutineScope {
             try {
                 runInterruptible(Dispatchers.IO) {
-                    client.signAndSendTransactions(transactions, minContextSlot).get()!!
+                    client.signAndSendTransactions(transactions, minContextSlot, commitment,
+                        skipPreflight, maxRetries, waitForCommitmentToSendNextTransaction).get()!!
                 }.signatures
             } catch (e: ExecutionException) {
                 when (val cause = e.cause) {
