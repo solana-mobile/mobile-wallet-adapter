@@ -19,7 +19,7 @@ Join us on [Discord](https://discord.gg/solanamobile)
     - [Setup](https://docs.solanamobile.com/android-native/setup)
     - [Quickstart](https://docs.solanamobile.com/android-native/quickstart)
 - Unity
-    - [Overview](https://docs.solanamobile.com/additional-sdks/unity_intro#solana-unity-sdk-setup)
+    - [Overview](https://docs.solanamobile.com/unity/unity_sdk)
 - [Sample Apps](https://docs.solanamobile.com/sample-apps/sample_app_overview)
 
 
