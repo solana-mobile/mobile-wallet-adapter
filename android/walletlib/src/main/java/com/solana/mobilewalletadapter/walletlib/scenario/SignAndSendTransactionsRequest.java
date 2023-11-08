@@ -45,6 +45,26 @@ public class SignAndSendTransactionsRequest
         return mRequest.minContextSlot;
     }
 
+    @Nullable
+    public String getCommitment() {
+        return mRequest.commitment;
+    }
+
+    @Nullable
+    public Boolean getSkipPreflight() {
+        return mRequest.skipPreflight;
+    }
+
+    @Nullable
+    public Integer getMaxRetries() {
+        return mRequest.maxRetries;
+    }
+
+    @Nullable
+    public Boolean getWaitForCommitmentYoSendNExtTransaction() {
+        return mRequest.waitForCommitmentToSendNextTransaction;
+    }
+
     public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
         mRequest.complete(new MobileWalletAdapterServer.SignaturesResult(signatures));
     }

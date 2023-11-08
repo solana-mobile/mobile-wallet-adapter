@@ -311,7 +311,10 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 SendTransactionsUseCase(
                     request.endpointUri,
                     request.signedTransactions,
-                    request.request.minContextSlot
+                    request.request.minContextSlot,
+                    request.request.commitment,
+                    request.request.skipPreflight,
+                    request.request.maxRetries
                 )
                 Log.d(TAG, "All transactions submitted via RPC")
                 request.request.completeWithSignatures(request.signatures)
