@@ -197,27 +197,41 @@ loadScripts(document, 'script');</script>
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;identityName,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer)" class="member-name-link">signAndSendTransactions</a><wbr>(byte[][]&nbsp;transactions,
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer)" class="member-name-link">signAndSendTransactions</a><wbr>(byte[][]&nbsp;transactions,
  <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;minContextSlot)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessages</a><wbr>(byte[][]&nbsp;messages,
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
+<div class="block"><span class="deprecated-label">Deprecated.</span>
+<div class="deprecation-comment">Consumers of <a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer)"><code>signAndSendTransactions(byte[][], Integer)</code></a> should migrate to
+             <a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer,java.lang.String,java.lang.Boolean,java.lang.Integer,java.lang.Boolean)"><code>signAndSendTransactions(byte[][], Integer, String, Boolean, Integer, Boolean)</code></a>
+             which exposes more transactions options according to the latest protocol specification.</div>
+</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer,java.lang.String,java.lang.Boolean,java.lang.Integer,java.lang.Boolean)" class="member-name-link">signAndSendTransactions</a><wbr>(byte[][]&nbsp;transactions,
+ <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;minContextSlot,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;commitment,
+ <a href="https://d.android.com/reference/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;skipPreflight,
+ <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;maxRetries,
+ <a href="https://d.android.com/reference/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;waitForCommitmentToSendNextTransaction)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessages</a><wbr>(byte[][]&nbsp;messages,
  byte[][]&nbsp;addresses)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
 <div class="block"><span class="deprecated-label">Deprecated.</span>
 <div class="deprecation-comment">Consumers of <a href="#signMessages(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessages(byte[][], byte[][])</code></a> should migrate to
              <a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)"><code>signMessagesDetached(byte[][], byte[][])</code></a>, which offers an improved
              return type, separating the message from the signatures</div>
 </div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessagesDetached</a><wbr>(byte[][]&nbsp;messages,
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MobileWalletAdapterClient.SignMessagesFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignMessagesFuture</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#signMessagesDetached(byte%5B%5D%5B%5D,byte%5B%5D%5B%5D)" class="member-name-link">signMessagesDetached</a><wbr>(byte[][]&nbsp;messages,
  byte[][]&nbsp;addresses)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signTransactions(byte%5B%5D%5B%5D)" class="member-name-link">signTransactions</a><wbr>(byte[][]&nbsp;transactions)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="MobileWalletAdapterClient.SignPayloadsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignPayloadsFuture</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#signTransactions(byte%5B%5D%5B%5D)" class="member-name-link">signTransactions</a><wbr>(byte[][]&nbsp;transactions)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
 <div class="block"><span class="deprecated-label">Deprecated, for removal: This API element is subject to removal in a future version.</span></div>
 </div>
 </div>
@@ -400,11 +414,40 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="signAndSendTransactions(byte[][],java.lang.Integer)">
 <h3>signAndSendTransactions</h3>
-<div class="member-signature"><span class="annotations">@NonNull
+<div class="member-signature"><span class="annotations"><a href="https://d.android.com/reference/java/lang/Deprecated.html" title="class or interface in java.lang" class="external-link">@Deprecated</a>
+@NonNull
 </span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></span>&nbsp;<span class="element-name">signAndSendTransactions</span><wbr><span class="parameters">(@NonNull @Size(min=1L)
  byte[][]&nbsp;transactions,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;minContextSlot)</span>
+                                                                                throws <span class="exceptions"><a href="https://d.android.com/reference/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></span></div>
+<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span>
+<div class="deprecation-comment">Consumers of <a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer)"><code>signAndSendTransactions(byte[][], Integer)</code></a> should migrate to
+             <a href="#signAndSendTransactions(byte%5B%5D%5B%5D,java.lang.Integer,java.lang.String,java.lang.Boolean,java.lang.Integer,java.lang.Boolean)"><code>signAndSendTransactions(byte[][], Integer, String, Boolean, Integer, Boolean)</code></a>
+             which exposes more transactions options according to the latest protocol specification.</div>
+</div>
+<dl class="notes">
+<dt>Throws:</dt>
+<dd><code><a href="https://d.android.com/reference/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></code></dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="signAndSendTransactions(byte[][],java.lang.Integer,java.lang.String,java.lang.Boolean,java.lang.Integer,java.lang.Boolean)">
+<h3>signAndSendTransactions</h3>
+<div class="member-signature"><span class="annotations">@NonNull
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="MobileWalletAdapterClient.SignAndSendTransactionsFuture.html" title="class in com.solana.mobilewalletadapter.clientlib.protocol">MobileWalletAdapterClient.SignAndSendTransactionsFuture</a></span>&nbsp;<span class="element-name">signAndSendTransactions</span><wbr><span class="parameters">(@NonNull @Size(min=1L)
+ byte[][]&nbsp;transactions,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;minContextSlot,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;commitment,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;skipPreflight,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/Integer.html" title="class or interface in java.lang" class="external-link">Integer</a>&nbsp;maxRetries,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/Boolean.html" title="class or interface in java.lang" class="external-link">Boolean</a>&nbsp;waitForCommitmentToSendNextTransaction)</span>
                                                                                 throws <span class="exceptions"><a href="https://d.android.com/reference/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></span></div>
 <dl class="notes">
 <dt>Throws:</dt>
