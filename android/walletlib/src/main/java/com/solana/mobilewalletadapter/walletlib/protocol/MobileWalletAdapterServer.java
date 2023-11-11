@@ -758,12 +758,28 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     public static class SignAndSendTransactionsRequest extends SignRequest<SignaturesResult> {
         @Nullable
         public final Integer minContextSlot;
+        @Nullable
+        public final String commitment;
+        @Nullable
+        public final Boolean skipPreflight;
+        @Nullable
+        public final Integer maxRetries;
+        @Nullable
+        public final Boolean waitForCommitmentToSendNextTransaction;
 
         private SignAndSendTransactionsRequest(@Nullable Object id,
                                                @NonNull @Size(min = 1) byte[][] transactions,
-                                               @Nullable Integer minContextSlot) {
+                                               @Nullable Integer minContextSlot,
+                                               @Nullable String commitment,
+                                               @Nullable Boolean skipPreflight,
+                                               @Nullable Integer maxRetries,
+                                               @Nullable Boolean waitForCommitmentToSendNextTransaction) {
             super(id, transactions);
             this.minContextSlot = minContextSlot;
+            this.commitment = commitment;
+            this.skipPreflight = skipPreflight;
+            this.maxRetries = maxRetries;
+            this.waitForCommitmentToSendNextTransaction = waitForCommitmentToSendNextTransaction;
         }
 
         @Override
@@ -782,6 +798,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public String toString() {
             return "SignAndSendTransactionsRequest{" +
                     "minContextSlot=" + minContextSlot +
+                    ", commitment='" + commitment + "'" +
+                    ", skipPreflight=" + skipPreflight +
+                    ", maxRetries=" + maxRetries +
+                    ", waitForCommitmentToSendNextTransaction=" + waitForCommitmentToSendNextTransaction +
                     ", super=" + super.toString() +
                     '}';
         }
@@ -833,19 +853,71 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         final JSONObject options = o.optJSONObject(ProtocolContract.PARAMETER_OPTIONS);
 
         final Integer minContextSlot;
-        if (options != null && options.has(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT)) {
-            try {
-                minContextSlot = options.getInt(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT);
-            } catch (JSONException e) {
-                handleRpcError(id, ERROR_INVALID_PARAMS, "min_context_slot must be an integer", null);
-                return;
+        final String commitment;
+        final Boolean skipPreflight;
+        final Integer maxRetries;
+        final Boolean waitForCommitmentToSendNextTransaction;
+        if (options != null) {
+            if (options.has(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT)) {
+                try {
+                    minContextSlot = options.getInt(ProtocolContract.PARAMETER_OPTIONS_MIN_CONTEXT_SLOT);
+                } catch (JSONException e) {
+                    handleRpcError(id, ERROR_INVALID_PARAMS, "min_context_slot must be an integer", null);
+                    return;
+                }
+            } else {
+                minContextSlot = null;
+            }
+            if (options.has(ProtocolContract.PARAMETER_OPTIONS_COMMITMENT)) {
+                try {
+                    commitment = options.getString(ProtocolContract.PARAMETER_OPTIONS_COMMITMENT);
+                } catch (JSONException e) {
+                    handleRpcError(id, ERROR_INVALID_PARAMS, "commitment must be a string", null);
+                    return;
+                }
+            } else {
+                commitment = null;
+            }
+            if (options.has(ProtocolContract.PARAMETER_OPTIONS_SKIP_PREFLIGHT)) {
+                try {
+                    skipPreflight = options.getBoolean(ProtocolContract.PARAMETER_OPTIONS_SKIP_PREFLIGHT);
+                } catch (JSONException e) {
+                    handleRpcError(id, ERROR_INVALID_PARAMS, "skip_preflight must be a boolean", null);
+                    return;
+                }
+            } else {
+                skipPreflight = null;
+            }
+            if (options.has(ProtocolContract.PARAMETER_OPTIONS_MAX_RETRIES)) {
+                try {
+                    maxRetries = options.getInt(ProtocolContract.PARAMETER_OPTIONS_MAX_RETRIES);
+                } catch (JSONException e) {
+                    handleRpcError(id, ERROR_INVALID_PARAMS, "max_retries must be an integer", null);
+                    return;
+                }
+            } else {
+                maxRetries = null;
+            }
+            if (options.has(ProtocolContract.PARAMETER_OPTIONS_WAIT_FOR_COMMITMENT)) {
+                try {
+                    waitForCommitmentToSendNextTransaction = options.getBoolean(ProtocolContract.PARAMETER_OPTIONS_WAIT_FOR_COMMITMENT);
+                } catch (JSONException e) {
+                    handleRpcError(id, ERROR_INVALID_PARAMS, "wait_for_commitment_to_send_next_transaction must be a boolean", null);
+                    return;
+                }
+            } else {
+                waitForCommitmentToSendNextTransaction = null;
             }
         } else {
             minContextSlot = null;
+            commitment = null;
+            skipPreflight = null;
+            maxRetries = null;
+            waitForCommitmentToSendNextTransaction = null;
         }
 
         final SignAndSendTransactionsRequest request = new SignAndSendTransactionsRequest(
-                id, payloads, minContextSlot);
+                id, payloads, minContextSlot, commitment, skipPreflight, maxRetries, waitForCommitmentToSendNextTransaction);
         request.notifyOnComplete((f) -> mHandler.post(() -> onSignAndSendTransactionsComplete(f)));
         mMethodHandlers.signAndSendTransactions(request);
     }

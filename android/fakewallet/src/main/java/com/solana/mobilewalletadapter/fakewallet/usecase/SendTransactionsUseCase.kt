@@ -22,11 +22,16 @@ object SendTransactionsUseCase {
     suspend operator fun invoke(
         rpcUri: Uri,
         transactions: Array<ByteArray>,
-        minContextSlot: Int?
+        minContextSlot: Int?,
+        commitment: String?,
+        skipPreflight: Boolean?,
+        maxRetries: Int?,
+        // TODO: wait for commitment to send next transaction
     ) {
         withContext(Dispatchers.IO) {
             // Send all transactions and accumulate transaction signatures
             val signatures = Array<String?>(transactions.size) { null }
+            // TODO: wait for commitment to send next transaction
             transactions.forEachIndexed { i, transaction ->
                 val transactionBase64 = Base64.encodeToString(transaction, Base64.NO_WRAP)
                 Log.d(TAG, "Sending transaction: '$transactionBase64' with minContextSlot=$minContextSlot")
@@ -41,7 +46,10 @@ object SendTransactionsUseCase {
                     outputStream.write(
                         createSendTransactionRequest(
                             transactionBase64,
-                            minContextSlot
+                            minContextSlot,
+                            commitment,
+                            skipPreflight,
+                            maxRetries
                         ).encodeToByteArray()
                     )
                 }
@@ -72,7 +80,10 @@ object SendTransactionsUseCase {
 
     private fun createSendTransactionRequest(
         transactionBase64: String,
-        minContextSlot: Int?
+        minContextSlot: Int?,
+        commitment: String?,
+        skipPreflight: Boolean?,
+        maxRetries: Int?
     ): String {
         val jo = JSONObject()
         jo.put("jsonrpc", "2.0")
@@ -87,9 +98,15 @@ object SendTransactionsUseCase {
         // Parameter 1 - options
         val opt = JSONObject()
         opt.put("encoding", "base64")
-        opt.put("preflightCommitment", "processed")
+        opt.put("preflightCommitment", commitment ?: "processed")
         if (minContextSlot != null) {
             opt.put("minContextSlot", minContextSlot)
+        }
+        if (skipPreflight != null) {
+            opt.put("skipPreflight", skipPreflight)
+        }
+        if (maxRetries != null) {
+            opt.put("maxRetries", maxRetries)
         }
         arr.put(opt)
 
