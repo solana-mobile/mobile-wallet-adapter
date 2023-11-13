@@ -1,4 +1,6 @@
 com.solana.mobilewalletadapter.common
 com.solana.mobilewalletadapter.common.crypto
+com.solana.mobilewalletadapter.common.datetime
 com.solana.mobilewalletadapter.common.protocol
+com.solana.mobilewalletadapter.common.signin
 com.solana.mobilewalletadapter.common.util
