@@ -22,7 +22,6 @@ rootProject.name = "mobile-wallet-adapter"
 
 include ':clientlib'
 include ':clientlib-ktx'
-include ':clientlib-rxjava'
 include ':common'
 include ':fakewallet'
 include ':fakedapp'
