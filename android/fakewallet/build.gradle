@@ -12,12 +12,12 @@ plugins {
 android {
     namespace = "com.solana.mobilewalletadapter.fakewallet"
 
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.solana.mobilewalletadapter.fakewallet"
         minSdk 23
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -113,8 +113,8 @@ dependencies {
     implementation 'androidx.room:room-ktx:2.4.3'
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'com.solanamobile:digital-asset-links-android:1.0.2'
-    implementation 'io.coil-kt:coil:2.4.0'
-    implementation 'io.coil-kt:coil-svg:2.4.0'
+    implementation 'io.coil-kt:coil:2.5.0'
+    implementation 'io.coil-kt:coil-svg:2.5.0'
     implementation 'org.bouncycastle:bcprov-jdk18on:1.76'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
     implementation 'io.github.funkatronics:multimult:0.2.0'
