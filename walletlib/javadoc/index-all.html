@@ -91,7 +91,7 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
 </dd>
-<dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizationResult.html#%3Cinit%3E(java.lang.String,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount%5B%5D,android.net.Uri)" class="member-name-link">AuthorizationResult(String, AuthorizedAccount[], Uri)</a> - Constructor for class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizationResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationResult</a></dt>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizationResult.html#%3Cinit%3E(java.lang.String,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount%5B%5D,android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.SignInResult)" class="member-name-link">AuthorizationResult(String, AuthorizedAccount[], Uri, SignInResult)</a> - Constructor for class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizationResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationResult</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/authorization/AuthIssuerConfig.html#authorizationValidityMs" class="member-name-link">authorizationValidityMs</a> - Variable in class com.solana.mobilewalletadapter.walletlib.authorization.<a href="com/solana/mobilewalletadapter/walletlib/authorization/AuthIssuerConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthIssuerConfig</a></dt>
 <dd>&nbsp;</dd>
@@ -186,7 +186,7 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
 </dd>
-<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html#completeWithAuthorize(com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount%5B%5D,android.net.Uri,byte%5B%5D)" class="member-name-link">completeWithAuthorize(AuthorizedAccount[], Uri, byte[])</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizeRequest</a></dt>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html#completeWithAuthorize(com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount%5B%5D,android.net.Uri,byte%5B%5D,com.solana.mobilewalletadapter.walletlib.scenario.SignInResult)" class="member-name-link">completeWithAuthorize(AuthorizedAccount[], Uri, byte[], SignInResult)</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizeRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html#completeWithClusterNotSupported()" class="member-name-link">completeWithClusterNotSupported()</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizeRequest</a></dt>
 <dd>&nbsp;</dd>
@@ -381,6 +381,8 @@ loadScripts(document, 'script');</script>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/authorization/IdentityRecord.html#getRelativeIconUri()" class="member-name-link">getRelativeIconUri()</a> - Method in class com.solana.mobilewalletadapter.walletlib.authorization.<a href="com/solana/mobilewalletadapter/walletlib/authorization/IdentityRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">IdentityRecord</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterSession.html#getSessionProperties()" class="member-name-link">getSessionProperties()</a> - Method in class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterSession.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterSession</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html#getSignInPayload()" class="member-name-link">getSignInPayload()</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizeRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignAndSendTransactionsRequest.html#getSkipPreflight()" class="member-name-link">getSkipPreflight()</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignAndSendTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignAndSendTransactionsRequest</a></dt>
 <dd>&nbsp;</dd>
@@ -583,6 +585,8 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignPayloadsRequest.html#mRequest" class="member-name-link">mRequest</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignPayloadsRequest</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html#mSignInPayload" class="member-name-link">mSignInPayload</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizeRequest</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:N">N</h2>
 <dl class="index">
@@ -660,6 +664,8 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizedAccount.html#publicKey" class="member-name-link">publicKey</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html#publicKey" class="member-name-link">publicKey</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/authorization/PublicKeysDao.html" class="type-name-link" title="class in com.solana.mobilewalletadapter.walletlib.authorization">PublicKeysDao</a> - Class in <a href="com/solana/mobilewalletadapter/walletlib/authorization/package-summary.html">com.solana.mobilewalletadapter.walletlib.authorization</a></dt>
 <dd>&nbsp;</dd>
 </dl>
@@ -731,15 +737,29 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignAndSendTransactionsRequest.html" class="type-name-link" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignAndSendTransactionsRequest</a> - Class in <a href="com/solana/mobilewalletadapter/walletlib/scenario/package-summary.html">com.solana.mobilewalletadapter.walletlib.scenario</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html#signature" class="member-name-link">signature</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.NotSubmittedException.html#signatures" class="member-name-link">signatures</a> - Variable in exception com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.NotSubmittedException.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.NotSubmittedException</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignaturesResult.html#signatures" class="member-name-link">signatures</a> - Variable in class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignaturesResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignaturesResult</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignaturesResult.html#%3Cinit%3E(byte%5B%5D%5B%5D)" class="member-name-link">SignaturesResult(byte[][])</a> - Constructor for class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignaturesResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignaturesResult</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html#signatureType" class="member-name-link">signatureType</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html#signedMessage" class="member-name-link">signedMessage</a> - Variable in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignedPayloadsResult.html#signedPayloads" class="member-name-link">signedPayloads</a> - Variable in class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignedPayloadsResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignedPayloadsResult</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignedPayloadsResult.html#%3Cinit%3E(byte%5B%5D%5B%5D)" class="member-name-link">SignedPayloadsResult(byte[][])</a> - Constructor for class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignedPayloadsResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignedPayloadsResult</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizeRequest.html#signInPayload" class="member-name-link">signInPayload</a> - Variable in class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizeRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizeRequest</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizationResult.html#signInResult" class="member-name-link">signInResult</a> - Variable in class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.AuthorizationResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.AuthorizationResult</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" class="type-name-link" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a> - Class in <a href="com/solana/mobilewalletadapter/walletlib/scenario/package-summary.html">com.solana.mobilewalletadapter.walletlib.scenario</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html#%3Cinit%3E(byte%5B%5D,byte%5B%5D,byte%5B%5D,java.lang.String)" class="member-name-link">SignInResult(byte[], byte[], byte[], String)</a> - Constructor for class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.MethodHandlers.html#signMessages(com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer.SignMessagesRequest)" class="member-name-link">signMessages(MobileWalletAdapterServer.SignMessagesRequest)</a> - Method in interface com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.MethodHandlers.html" title="interface in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.MethodHandlers</a></dt>
 <dd>&nbsp;</dd>
@@ -813,6 +833,8 @@ loadScripts(document, 'script');</script>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignTransactionsRequest.html#toString()" class="member-name-link">toString()</a> - Method in class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SignTransactionsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignTransactionsRequest</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizedAccount.html#toString()" class="member-name-link">toString()</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html#toString()" class="member-name-link">toString()</a> - Method in class com.solana.mobilewalletadapter.walletlib.scenario.<a href="com/solana/mobilewalletadapter/walletlib/scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SigningType.html#Transaction" class="member-name-link">Transaction</a> - Enum constant in enum class com.solana.mobilewalletadapter.walletlib.protocol.<a href="com/solana/mobilewalletadapter/walletlib/protocol/MobileWalletAdapterServer.SigningType.html" title="enum class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SigningType</a></dt>
 <dd>&nbsp;</dd>
