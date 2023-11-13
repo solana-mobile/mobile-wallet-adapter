@@ -234,23 +234,21 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             final JSONObject o = new JSONObject();
             try {
                 o.put(ProtocolContract.RESULT_AUTH_TOKEN, result.authToken);
-                final JSONArray accounts = new JSONArray();
-                for (AuthorizedAccount aa : result.accounts) {
-                    final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
-                    final JSONObject account = new JSONObject();
-                    account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
-                    if (aa.displayAddress != null && aa.displayAddressFormat != null) {
-                        account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS, aa.displayAddress);
-                        account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS_FORMAT, aa.displayAddressFormat);
-                    }
-                    if (aa.accountLabel != null) {
-                        account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
-                    }
-                    if (aa.icon != null) {
-                        account.put(ProtocolContract.RESULT_ACCOUNTS_ICON, aa.icon);
-                    }
-                    accounts.put(account);
+                final AuthorizedAccount aa = result.account;
+                final String publicKeyBase64 = Base64.encodeToString(aa.publicKey, Base64.NO_WRAP);
+                final JSONObject account = new JSONObject();
+                account.put(ProtocolContract.RESULT_ACCOUNTS_ADDRESS, publicKeyBase64);
+                if (aa.displayAddress != null && aa.displayAddressFormat != null) {
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS, aa.displayAddress);
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_DISPLAY_ADDRESS_FORMAT, aa.displayAddressFormat);
                 }
+                if (aa.accountLabel != null) {
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
+                }
+                if (aa.icon != null) {
+                    account.put(ProtocolContract.RESULT_ACCOUNTS_ICON, aa.icon);
+                }
+                final JSONArray accounts = new JSONArray().put(account); // TODO(#44): support multiple accounts
                 o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
                 if (result.signInResult != null) {
@@ -348,8 +346,10 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Nullable
         public final Uri walletUriBase;
 
-        @NonNull @Size(min = 1)
-        public final AuthorizedAccount[] accounts;
+//        @NonNull @Size(min = 1)
+//        public final AuthorizedAccount[] accounts;
+        @NonNull
+        public final AuthorizedAccount account;
 
         @Nullable
         public final SignInResult signInResult;
@@ -364,20 +364,22 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
             this.signInResult = null;
-            this.accounts = new AuthorizedAccount[] {
-                    new AuthorizedAccount(publicKey, accountLabel, null, null, null) };
+//            this.accounts = new AuthorizedAccount[] {
+//                    new AuthorizedAccount(publicKey, accountLabel, null, null, null) };
+            this.account = new AuthorizedAccount(publicKey, accountLabel, null, null, null);
         }
 
         public AuthorizationResult(@NonNull String authToken,
-                                   @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
+                                   @NonNull @Size(min = 1) AuthorizedAccount account,
                                    @Nullable Uri walletUriBase,
                                    @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
-            this.accounts = accounts;
+//            this.accounts = accounts;
+            this.account = account;
             this.signInResult = signInResult;
-            this.publicKey = accounts[0].publicKey;
-            this.accountLabel = accounts[0].accountLabel;
+            this.publicKey = account.publicKey;
+            this.accountLabel = account.accountLabel;
         }
 
         @NonNull
@@ -386,7 +388,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
                     ", walletUriBase=" + walletUriBase +
-                    ", accounts=" + Arrays.toString(accounts) +
+//                    ", accounts=" + Arrays.toString(accounts) +
+                    ", account=" + account +
                     '}';
         }
     }
