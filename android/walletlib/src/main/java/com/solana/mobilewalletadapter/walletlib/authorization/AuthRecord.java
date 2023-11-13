@@ -26,16 +26,22 @@ public class AuthRecord {
     @IntRange(from = 0)
     public final long expires;
 
+    @Deprecated
     @NonNull
     public final byte[] publicKey;
 
+    @Deprecated
     @Nullable
     public final String accountLabel;
 
     @NonNull
+    public final AccountRecord account;
+
+    @NonNull
     public final String chain;
 
-    @NonNull @Deprecated
+    @Deprecated
+    @NonNull
     public final String cluster;
 
     @NonNull
@@ -45,21 +51,47 @@ public class AuthRecord {
     public final Uri walletUriBase;
 
     @IntRange(from = 1)
-    /*package*/ final int publicKeyId;
+    /*package*/ final int accountId;
 
     @IntRange(from = 1)
     /*package*/ final int walletUriBaseId;
 
     private boolean mRevoked;
 
+//    /*package*/ AuthRecord(@IntRange(from = 1) int id,
+//                           @NonNull IdentityRecord identity,
+//                           @NonNull byte[] publicKey,
+//                           @Nullable String accountLabel,
+//                           @NonNull String chain,
+//                           @NonNull byte[] scope,
+//                           @Nullable Uri walletUriBase,
+//                           @IntRange(from = 1) int publicKeyId,
+//                           @IntRange(from = 1) int walletUriBaseId,
+//                           @IntRange(from = 0) long issued,
+//                           @IntRange(from = 0) long expires) {
+//        // N.B. This is a package-visibility constructor; these values will all be validated by
+//        // other components within this package.
+//        this.id = id;
+//        this.identity = identity;
+//        this.publicKey = publicKey;
+//        this.accountLabel = accountLabel;
+//        this.chain = chain;
+//        this.cluster = chain;
+//        this.scope = scope;
+//        this.walletUriBase = walletUriBase;
+//        this.publicKeyId = publicKeyId;
+//        this.walletUriBaseId = walletUriBaseId;
+//        this.issued = issued;
+//        this.expires = expires;
+//    }
+
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
-                           @NonNull byte[] publicKey,
-                           @Nullable String accountLabel,
+                           @NonNull AccountRecord account,
                            @NonNull String chain,
                            @NonNull byte[] scope,
                            @Nullable Uri walletUriBase,
-                           @IntRange(from = 1) int publicKeyId,
+                           @IntRange(from = 1) int accountId,
                            @IntRange(from = 1) int walletUriBaseId,
                            @IntRange(from = 0) long issued,
                            @IntRange(from = 0) long expires) {
@@ -67,16 +99,18 @@ public class AuthRecord {
         // other components within this package.
         this.id = id;
         this.identity = identity;
-        this.publicKey = publicKey;
-        this.accountLabel = accountLabel;
+        this.account = account;
         this.chain = chain;
         this.cluster = chain;
         this.scope = scope;
         this.walletUriBase = walletUriBase;
-        this.publicKeyId = publicKeyId;
+        this.accountId = accountId;
         this.walletUriBaseId = walletUriBaseId;
         this.issued = issued;
         this.expires = expires;
+
+        this.publicKey = account.publicKeyRaw;
+        this.accountLabel = account.accountLabel;
     }
 
     public boolean isExpired() {

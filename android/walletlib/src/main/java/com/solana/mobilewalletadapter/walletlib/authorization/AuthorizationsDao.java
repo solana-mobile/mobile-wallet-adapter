@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*package*/ class AuthorizationsDao extends DbContentProvider<AuthRecord>
-        implements AuthorizationsSchema, PublicKeysSchema,
+        implements AuthorizationsSchema, AccountRecordsSchema,
         WalletUriBaseSchema, AuthorizationsDaoInterface {
 
     @NonNull
@@ -39,25 +39,29 @@ import java.util.List;
     private AuthRecord cursorToEntity(@NonNull Cursor cursor, @NonNull IdentityRecord identityRecord) {
         final int id = cursor.getInt(0);
         final long issued = cursor.getLong(1);
-        final int publicKeyId = cursor.getInt(2);
+        final int accountId = cursor.getInt(2);
         final int walletUriBaseId = cursor.getInt(3);
         final byte[] scope = cursor.getBlob(4);
         final String cluster = cursor.getString(5);
         final byte[] publicKey = cursor.getBlob(6);
         final String accountLabel = cursor.isNull(7) ? null : cursor.getString(7);
-        final Uri walletUriBase = cursor.isNull(8) ? null : Uri.parse(cursor.getString(8));
-        return new AuthRecord(id, identityRecord, publicKey,
-                accountLabel, cluster, scope, walletUriBase, publicKeyId, walletUriBaseId,
-                issued, issued + authIssuerConfig.authorizationValidityMs);
+        final String accountIconStr = cursor.isNull(8) ? null : cursor.getString(8);
+        final String chainsStr = cursor.isNull(9) ? null : cursor.getString(9);
+        final String featuresStr = cursor.isNull(10) ? null : cursor.getString(10);
+        final Uri walletUriBase = cursor.isNull(11) ? null : Uri.parse(cursor.getString(11));
+        final AccountRecord account = AccountRecordsDao.buildAccountRecordFromRaw(accountId,
+                publicKey, accountLabel, accountIconStr, chainsStr, featuresStr);
+        return new AuthRecord(id, identityRecord, account, cluster, scope, walletUriBase, accountId,
+                walletUriBaseId, issued, issued + authIssuerConfig.authorizationValidityMs);
     }
 
     @IntRange(from = -1)
     @Override
-    public long insert(@IntRange(from = 1) int id, long timeStamp, @IntRange(from = 1) int publicKeyId, @NonNull String cluster, @IntRange(from = 1) int walletUriBaseId, @Nullable byte[] scope) {
+    public long insert(@IntRange(from = 1) int id, long timeStamp, @IntRange(from = 1) int accountId, @NonNull String cluster, @IntRange(from = 1) int walletUriBaseId, @Nullable byte[] scope) {
         final ContentValues contentValues = new ContentValues(6);
         contentValues.put(COLUMN_AUTHORIZATIONS_IDENTITY_ID, id);
         contentValues.put(COLUMN_AUTHORIZATIONS_ISSUED, timeStamp);
-        contentValues.put(COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID, publicKeyId);
+        contentValues.put(COLUMN_AUTHORIZATIONS_ACCOUNT_ID, accountId);
         contentValues.put(COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
         contentValues.put(COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
         contentValues.put(COLUMN_AUTHORIZATIONS_SCOPE, scope);
@@ -89,17 +93,20 @@ import java.util.List;
         try (final Cursor cursor = super.rawQuery("SELECT " +
                         TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ISSUED +
-                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_SCOPE +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CLUSTER +
-                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_RAW +
-                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_LABEL +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_PUBLIC_KEY_RAW +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_LABEL +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_ICON +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_CHAINS +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_FEATURES +
                         ", " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_URI +
                         " FROM " + TABLE_AUTHORIZATIONS +
-                        " INNER JOIN " + TABLE_PUBLIC_KEYS +
-                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        " = " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_ID +
+                        " INNER JOIN " + TABLE_ACCOUNTS +
+                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
+                        " = " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_ID +
                         " INNER JOIN " + TABLE_WALLET_URI_BASE +
                         " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                         " = " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_ID +
@@ -114,21 +121,25 @@ import java.util.List;
 
     @Nullable
     @Override
-    public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord, @NonNull String tokenIdStr) {
+    public AuthRecord getAuthorization(@NonNull IdentityRecord identityRecord,
+                                       @NonNull String tokenIdStr) {
         try (final Cursor cursor = super.rawQuery("SELECT " +
                         TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ISSUED +
-                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_SCOPE +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CLUSTER +
-                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_RAW +
-                        ", " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_LABEL +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_PUBLIC_KEY_RAW +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_LABEL +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_ICON +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_CHAINS +
+                        ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_FEATURES +
                         ", " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_URI +
                         " FROM " + TABLE_AUTHORIZATIONS +
-                        " INNER JOIN " + TABLE_PUBLIC_KEYS +
-                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                        " = " + TABLE_PUBLIC_KEYS + '.' + COLUMN_PUBLIC_KEYS_ID +
+                        " INNER JOIN " + TABLE_ACCOUNTS +
+                        " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
+                        " = " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_ID +
                         " INNER JOIN " + TABLE_WALLET_URI_BASE +
                         " ON " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                         " = " + TABLE_WALLET_URI_BASE + '.' + COLUMN_WALLET_URI_BASE_ID +

@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
+@Deprecated
 /*package*/ interface PublicKeysSchema {
 
     String TABLE_PUBLIC_KEYS = "public_keys";

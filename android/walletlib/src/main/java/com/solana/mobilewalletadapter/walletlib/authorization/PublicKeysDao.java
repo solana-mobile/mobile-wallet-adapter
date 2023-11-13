@@ -14,6 +14,10 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Deprecated
 public class PublicKeysDao extends DbContentProvider<PublicKey> implements PublicKeysDaoInterface, PublicKeysSchema {
 
     PublicKeysDao(SQLiteDatabase db) {
@@ -62,8 +66,23 @@ public class PublicKeysDao extends DbContentProvider<PublicKey> implements Publi
         final SQLiteStatement deleteUnreferencedPublicKeys = super.compileStatement(
                 "DELETE FROM " + TABLE_PUBLIC_KEYS +
                         " WHERE " + COLUMN_PUBLIC_KEYS_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
                         " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedPublicKeys.executeUpdateDelete();
+    }
+
+    @NonNull
+    public List<PublicKey> getAuthorizedPublicKeys() {
+        final ArrayList<PublicKey> publicKeys = new ArrayList<>();
+        try (final Cursor c = super.query(TABLE_PUBLIC_KEYS,
+                PUBLIC_KEYS_COLUMNS,
+                null,
+                null,
+                COLUMN_PUBLIC_KEYS_RAW)) {
+            while (c.moveToNext()) {
+                publicKeys.add(cursorToEntity(c));
+            }
+        }
+        return publicKeys;
     }
 }

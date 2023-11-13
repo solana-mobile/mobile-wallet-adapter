@@ -13,7 +13,7 @@ import java.util.List;
 /*package*/ interface AuthorizationsDaoInterface {
 
     @IntRange(from = -1)
-    long insert(@IntRange(from = 1) int id, long timeStamp, @IntRange(from = 1) int publicKeyId, @NonNull String cluster, @IntRange(from = 1) int walletUriBaseId, @Nullable byte[] scope);
+    long insert(@IntRange(from = 1) int id, long timeStamp, @IntRange(from = 1) int accountId, @NonNull String cluster, @IntRange(from = 1) int walletUriBaseId, @Nullable byte[] scope);
 
     @IntRange(from = 0)
     int deleteByAuthRecordId(@IntRange(from = 1) int authRecordId);
