@@ -27,6 +27,7 @@ class MainActivityTest {
     @get:Rule var activityScenarioRule = activityScenarioRule<MainActivity>()
 
     val walletAuthorizeButton = "btn_authorize"
+    val walletSignInButton = "btn_sign_in"
     val walletSendTransactionButton = "btn_send_transaction_to_cluster"
     val walletSimulateSendButton = "btn_simulate_transactions_submitted"
 
@@ -46,6 +47,26 @@ class MainActivityTest {
         handleWalletDisambiguationIfNecessary(uiDevice)
 
         waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
+
+        // then
+        onView(withId(R.id.btn_deauthorize)).check(matches(isClickable()))
+        onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun signInWithSolana_isSuccessful() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        // when
+        onView(withId(R.id.btn_sign_in)).perform(click())
+
+        handleWalletDisambiguationIfNecessary(uiDevice)
+
+        waitForWalletButton(uiDevice, walletSignInButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
         waitForWalletComplete(uiDevice)

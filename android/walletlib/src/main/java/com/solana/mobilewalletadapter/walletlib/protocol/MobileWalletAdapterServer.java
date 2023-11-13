@@ -16,11 +16,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
+import com.solana.mobilewalletadapter.walletlib.scenario.SignInResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -187,8 +189,17 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return;
         }
 
+        final SignInWithSolana.Payload signInPayload;
+        try {
+            final JSONObject signInJson = o.optJSONObject(ProtocolContract.PARAMETER_SIGN_IN_PAYLOAD);
+            signInPayload = signInJson != null ? SignInWithSolana.Payload.fromJson(signInJson) : null;
+        } catch (JSONException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
+            return;
+        }
+
         final AuthorizeRequest request =
-                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken);
+                new AuthorizeRequest(id, identityUri, iconUri, identityName, chain, features, addresses, authToken, signInPayload);
         request.notifyOnComplete((f) -> mHandler.post(() -> onAuthorizationComplete(f)));
         mMethodHandlers.authorize(request);
     }
@@ -242,6 +253,18 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 }
                 o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
+                if (result.signInResult != null) {
+                    final JSONObject signInResultJson = new JSONObject();
+                    final String address = Base64.encodeToString(result.signInResult.publicKey, Base64.NO_WRAP);
+                    final String signedMessage = Base64.encodeToString(result.signInResult.signedMessage, Base64.NO_WRAP);
+                    final String signature = Base64.encodeToString(result.signInResult.signature, Base64.NO_WRAP);
+                    final String signatureType = result.signInResult.signatureType;
+                    signInResultJson.put(ProtocolContract.RESULT_SIGN_IN_ADDRESS, address);
+                    signInResultJson.put(ProtocolContract.RESULT_SIGN_IN_SIGNED_MESSAGE, signedMessage);
+                    signInResultJson.put(ProtocolContract.RESULT_SIGN_IN_SIGNATURE, signature);
+                    signInResultJson.put(ProtocolContract.RESULT_SIGN_IN_SIGNATURE_TYPE, signatureType);
+                    o.put(ProtocolContract.RESULT_SIGN_IN, signInResultJson);
+                }
             } catch (JSONException e) {
                 throw new RuntimeException("Failed preparing authorization response", e);
             }
@@ -264,12 +287,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final String authToken;
         @Nullable
         public final String chain;
-
         @Nullable
         public final String[] features;
-
         @Nullable
         public final String[] addresses;
+        @Nullable
+        public final SignInWithSolana.Payload signInPayload;
 
         private AuthorizeRequest(@Nullable Object id,
                                  @Nullable Uri identityUri,
@@ -278,7 +301,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                  @Nullable String chain,
                                  @Nullable String[] features,
                                  @Nullable String[] addresses,
-                                 @Nullable String authToken) {
+                                 @Nullable String authToken,
+                                 @Nullable SignInWithSolana.Payload signInPayload) {
             super(id);
             this.identityUri = identityUri;
             this.iconUri = iconUri;
@@ -287,6 +311,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.chain = chain;
             this.features = features;
             this.addresses = addresses;
+            this.signInPayload = signInPayload;
         }
 
         @Override
@@ -326,6 +351,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull @Size(min = 1)
         public final AuthorizedAccount[] accounts;
 
+        @Nullable
+        public final SignInResult signInResult;
+
         @Deprecated
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull byte[] publicKey,
@@ -335,16 +363,19 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.publicKey = publicKey;
             this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
+            this.signInResult = null;
             this.accounts = new AuthorizedAccount[] {
                     new AuthorizedAccount(publicKey, accountLabel, null, null, null) };
         }
 
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
-                                   @Nullable Uri walletUriBase) {
+                                   @Nullable Uri walletUriBase,
+                                   @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
             this.accounts = accounts;
+            this.signInResult = signInResult;
             this.publicKey = accounts[0].publicKey;
             this.accountLabel = accounts[0].accountLabel;
         }

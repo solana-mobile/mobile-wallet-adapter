@@ -86,7 +86,7 @@ class MobileWalletAdapterTest {
         sample20AuthResult = AuthorizationResult.create("20AUTHTOKENRESULT", byteArrayOf(), "Some Label", Uri.EMPTY)
 
         mockClient = mock {
-            on { authorize(any(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()) } doAnswer {
+            on { authorize(any(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()) } doAnswer {
                 mock {
                     on { get() } doReturn sample20AuthResult
                 }
@@ -151,7 +151,7 @@ class MobileWalletAdapterTest {
             refString
         }
 
-        verify(mockClient, times(1)).authorize(any(), any(), any(), any(), anyOrNull(), anyOrNull(),anyOrNull())
+        verify(mockClient, times(1)).authorize(any(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
         assertTrue { result is TransactionResult.Success<String> }
         assertTrue { result.successPayload == refString }
         assertTrue { (result as TransactionResult.Success<String>).authResult == sample20AuthResult }
@@ -200,7 +200,7 @@ class MobileWalletAdapterTest {
             refString
         }
 
-        verify(mockClient, times(1)).authorize(any(), any(), any(), any(), any(), anyOrNull(),anyOrNull())
+        verify(mockClient, times(1)).authorize(any(), any(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())
 
         assertTrue { result is TransactionResult.Success<String> }
         assertTrue { result.successPayload == refString }

@@ -40,7 +40,7 @@ class LocalAdapterOperations(
     ): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses)?.get()
+            client?.authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses, null)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }

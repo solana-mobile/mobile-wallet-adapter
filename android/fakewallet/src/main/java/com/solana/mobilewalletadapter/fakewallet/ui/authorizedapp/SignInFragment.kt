@@ -23,21 +23,21 @@ import coil.request.ImageRequest
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
-import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAuthorizeDappBinding
+import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentSignInBinding
 import com.solana.mobilewalletadapter.fakewallet.usecase.ClientTrustUseCase
 import kotlinx.coroutines.launch
 
-class AuthorizeDappFragment : Fragment() {
+class SignInFragment : Fragment() {
     private val activityViewModel: MobileWalletAdapterViewModel by activityViewModels()
-    private lateinit var viewBinding: FragmentAuthorizeDappBinding
+    private lateinit var viewBinding: FragmentSignInBinding
 
-    private var request: MobileWalletAdapterServiceRequest.AuthorizeDapp? = null
+    private var request: MobileWalletAdapterServiceRequest.SignIn? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewBinding = FragmentAuthorizeDappBinding.inflate(layoutInflater, container, false)
+        viewBinding = FragmentSignInBinding.inflate(layoutInflater, container, false)
         return viewBinding.root
     }
 
@@ -48,8 +48,8 @@ class AuthorizeDappFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 activityViewModel.mobileWalletAdapterServiceEvents.collect { request ->
                     when (request) {
-                        is MobileWalletAdapterServiceRequest.AuthorizeDapp -> {
-                            this@AuthorizeDappFragment.request = request
+                        is MobileWalletAdapterServiceRequest.SignIn -> {
+                            this@SignInFragment.request = request
 
                             if (request.request.identityUri?.isAbsolute == true &&
                                 request.request.iconRelativeUri?.isHierarchical == true
@@ -61,9 +61,11 @@ class AuthorizeDappFragment : Fragment() {
                                 viewBinding.imageIcon.loadImage(uri.toString())
                             }
                             viewBinding.textName.text = request.request.identityName ?: "<no name>"
-                            viewBinding.textUri.text =
-                                request.request.identityUri?.toString() ?: "<no URI>"
-                            viewBinding.textCluster.text = request.request.cluster
+                            viewBinding.textUri.text = request.request.identityUri?.toString() ?: "<no URI>"
+                            viewBinding.textStatement.text = request.signInPayload.statement ?: "<no statement>"
+                            viewBinding.textDomain.text = request.signInPayload.domain
+                            viewBinding.textSiwsUri.text = request.signInPayload.uri.toString()
+                            viewBinding.textIssuedAt.text = request.signInPayload.issuedAt
                             viewBinding.textVerificationState.setText(
                                 when (request.sourceVerificationState) {
                                     is ClientTrustUseCase.VerificationInProgress -> R.string.str_verification_in_progress
@@ -76,13 +78,13 @@ class AuthorizeDappFragment : Fragment() {
                                 request.sourceVerificationState.authorizationScope
                         }
                         else -> {
-                            this@AuthorizeDappFragment.request = null
+                            this@SignInFragment.request = null
                             // If several events are emitted back-to-back (e.g. during session
                             // teardown), this fragment may not have had a chance to transition
                             // lifecycle states. Only navigate if we believe we are still here.
                             findNavController().let { nc ->
-                                if (nc.currentDestination?.id == R.id.fragment_authorize_dapp) {
-                                    nc.navigate(AuthorizeDappFragmentDirections.actionAuthorizeDappComplete())
+                                if (nc.currentDestination?.id == R.id.fragment_sign_in) {
+                                    nc.navigate(SignInFragmentDirections.actionSignInComplete())
                                 }
                             }
                         }
@@ -91,24 +93,24 @@ class AuthorizeDappFragment : Fragment() {
             }
         }
 
-        viewBinding.btnAuthorize.setOnClickListener {
+        viewBinding.btnSignIn.setOnClickListener {
             request?.let {
-                Log.i(TAG, "Authorizing dapp")
-                activityViewModel.authorizeDapp(it, true)
+                Log.i(TAG, "signing in")
+                activityViewModel.signIn(it, true)
             }
         }
 
         viewBinding.btnDecline.setOnClickListener {
             request?.let {
-                Log.w(TAG, "Not authorizing dapp")
-                activityViewModel.authorizeDapp(it, false)
+                Log.w(TAG, "Rejecting sign in")
+                activityViewModel.signIn(it, false)
             }
         }
 
-        viewBinding.btnSimulateClusterNotSupported.setOnClickListener {
+        viewBinding.btnSimulateSignInNotSupported.setOnClickListener {
             request?.let {
-                Log.w(TAG, "Simulating cluster not supported")
-                activityViewModel.authorizeDappSimulateClusterNotSupported(it)
+                Log.w(TAG, "Simulating sign in not supported")
+                activityViewModel.signInSimulateSignInNotSupported(it)
             }
         }
 

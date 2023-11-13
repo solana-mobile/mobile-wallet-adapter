@@ -234,7 +234,7 @@ public abstract class LocalScenario implements Scenario {
                         final String authToken = mAuthRepository.toAuthToken(authRecord);
                         request.complete(new MobileWalletAdapterServer.AuthorizationResult(
                                 authToken, authorize.accounts,
-                                authorize.walletUriBase));
+                                authorize.walletUriBase, authorize.signInResult));
                     } else {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
                                 "authorize request declined"));
@@ -252,7 +252,7 @@ public abstract class LocalScenario implements Scenario {
 
             mIoHandler.post(() -> mCallbacks.onAuthorizeRequest(new AuthorizeRequest(
                     future, request.identityName, request.identityUri, request.iconUri, chain,
-                    request.features, request.addresses)));
+                    request.features, request.addresses, request.signInPayload)));
         }
 
         private void doReauthorize(@NonNull MobileWalletAdapterServer.AuthorizeRequest request) {

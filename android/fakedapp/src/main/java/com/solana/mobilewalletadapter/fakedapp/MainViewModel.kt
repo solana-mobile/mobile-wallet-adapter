@@ -6,6 +6,7 @@ package com.solana.mobilewalletadapter.fakedapp
 
 import android.app.Application
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.StringRes
@@ -13,10 +14,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.AuthorizedAccount
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.SignInResult
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.fakedapp.usecase.*
 import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity
 import kotlinx.coroutines.*
@@ -51,10 +54,64 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) = viewModelScope.launch {
         try {
             doLocalAssociateAndExecute(intentLauncher) { client ->
-                doAuthorize(client, IDENTITY, CLUSTER_NAME)
+                doAuthorize(client, IDENTITY, CHAIN_ID)
             }.also {
                 Log.d(TAG, "Authorized: $it")
                 showMessage(R.string.msg_request_succeeded)
+            }
+        } catch (e: MobileWalletAdapterUseCase.LocalAssociationFailedException) {
+            Log.e(TAG, "Error associating", e)
+            showMessage(R.string.msg_association_failed)
+        } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
+            Log.e(TAG, "Failed invoking authorize", e)
+            showMessage(R.string.msg_request_failed)
+        }
+    }
+
+    fun signInWithSolana(
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>
+    ) = viewModelScope.launch {
+        try {
+            val signInPayload = SignInWithSolana.Payload(
+                "solanamobile.com",
+                "Sign into Fake dApp to do fake things!",
+                IDENTITY.uri!!,
+                null
+            )
+
+            val signInResult = doLocalAssociateAndExecute(intentLauncher) { client ->
+                doAuthorize(client, IDENTITY, CHAIN_ID, signInPayload).let { authResult ->
+                    Log.d(TAG, "Authorized: $authResult")
+                    authResult.signInResult ?: run {
+                        Log.i(TAG, "Sign in failed, no sign in result returned from wallet, falling back on sign message")
+                        val publicKey = authResult.accounts.first().publicKey
+                        val address = Base64.encodeToString(publicKey, Base64.NO_WRAP)
+                        val signInMessage = signInPayload.prepareMessage(address)
+                        client.signMessagesDetached(
+                            arrayOf(signInMessage.encodeToByteArray()),
+                            arrayOf(publicKey)
+                        ).first().let {
+                            SignInResult(it.addresses.first(), it.message,
+                                it.signatures.first(), "ed25519")
+                        }
+                    }
+                }
+            }
+
+            try {
+                Log.d(TAG, "Verifying signature of $signInResult")
+                val address = Base64.encodeToString(signInResult.publicKey, Base64.NO_WRAP)
+                val originalMessage = signInPayload.prepareMessage(address)
+                OffChainMessageSigningUseCase.verify(
+                    signInResult.signedMessage,
+                    signInResult.signature,
+                    signInResult.publicKey,
+                    originalMessage.encodeToByteArray()
+                )
+                showMessage(R.string.msg_request_succeeded)
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Failed verifying signature on message", e)
+                showMessage(R.string.msg_request_failed)
             }
         } catch (e: MobileWalletAdapterUseCase.LocalAssociationFailedException) {
             Log.e(TAG, "Error associating", e)
@@ -196,7 +253,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val signedTransactions = try {
             doLocalAssociateAndExecute(intentLauncher) { client ->
-                doAuthorize(client, IDENTITY, CLUSTER_NAME).also {
+                doAuthorize(client, IDENTITY, CHAIN_ID).also {
                     Log.d(TAG, "Authorized: $it")
                 }
                 val (blockhash, _) = latestBlockhash.await()
@@ -247,7 +304,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             transactionSignature: ByteArray
         ) = try {
             doLocalAssociateAndExecute(intentLauncher) { client ->
-                doAuthorize(client, IDENTITY, CLUSTER_NAME)
+                doAuthorize(client, IDENTITY, CHAIN_ID)
 
                 message =
                     "Sign this message to prove you own account ${Base58EncodeUseCase(uiState.value.primaryPublicKey!!)}".encodeToByteArray()
@@ -401,10 +458,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doAuthorize(
         client: MobileWalletAdapterUseCase.Client,
         identity: MobileWalletAdapterUseCase.DappIdentity,
-        cluster: String?
+        cluster: String?,
+        signInPayload: SignInWithSolana.Payload? = null
     ): MobileWalletAdapterClient.AuthorizationResult {
         val result = try {
-            client.authorize(identity, cluster)
+            client.authorize(identity, cluster, signInPayload)
         } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
             _uiState.update {
                 it.copy(
@@ -534,7 +592,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private val TAG = MainViewModel::class.simpleName
         private val CLUSTER_RPC_URI = Uri.parse("https://api.testnet.solana.com")
-        private const val CLUSTER_NAME = ProtocolContract.CLUSTER_TESTNET
+        private const val CHAIN_ID = ProtocolContract.CHAIN_SOLANA_TESTNET
         private val IDENTITY = MobileWalletAdapterUseCase.DappIdentity(
             uri = Uri.parse("https://solanamobile.com"),
             iconRelativeUri = Uri.parse("favicon.ico"),

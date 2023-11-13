@@ -73,6 +73,8 @@ public class ProtocolContract {
 
     public static final String PARAMETER_AUTH_TOKEN = "auth_token"; // type: String
 
+    public static final String PARAMETER_SIGN_IN_PAYLOAD = "sign_in_payload"; // type: String
+
     public static final String PARAMETER_PAYLOADS = "payloads"; // type: JSON array of String (base64-encoded payloads)
 
     public static final String RESULT_AUTH_TOKEN = "auth_token"; // type: String
@@ -86,6 +88,12 @@ public class ProtocolContract {
     // RESULT_ACCOUNTS optionally includes a RESULT_SUPPORTED_FEATURES
 
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
+
+    public static final String RESULT_SIGN_IN = "sign_in_result"; // type JSON object
+    public static final String RESULT_SIGN_IN_ADDRESS = "address"; // type: String (address)
+    public static final String RESULT_SIGN_IN_SIGNED_MESSAGE = "signed_message"; // type: String (base64-encoded signed message)
+    public static final String RESULT_SIGN_IN_SIGNATURE = "signature"; // type: String (base64-encoded signature)
+    public static final String RESULT_SIGN_IN_SIGNATURE_TYPE = "signature_type"; // type: String
 
     public static final String RESULT_SIGNED_PAYLOADS = "signed_payloads"; // type: JSON array of String (base64-encoded signed payloads)
 

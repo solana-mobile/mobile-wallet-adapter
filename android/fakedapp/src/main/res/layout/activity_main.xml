@@ -25,10 +25,17 @@
         android:text="@string/label_authorize" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_reauthorize"
+        android:id="@+id/btn_sign_in"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_authorize"
+        android:text="@string/label_sign_in" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_reauthorize"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_in"
         android:text="@string/label_reauthorize" />
 
     <androidx.appcompat.widget.AppCompatButton
