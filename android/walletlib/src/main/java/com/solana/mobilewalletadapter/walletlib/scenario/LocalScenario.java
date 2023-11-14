@@ -305,8 +305,8 @@ public abstract class LocalScenario implements Scenario {
 
                     mIoHandler.post(() -> request.complete(
                             new MobileWalletAdapterServer.AuthorizationResult(
-                                    authToken, authRecord.publicKey, authRecord.accountLabel,
-                                    authRecord.walletUriBase)));
+                                    authToken, authRecord.authorizedAccount(),
+                                    authRecord.walletUriBase, null)));
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
                     assert(cause instanceof Exception); // expected to always be an Exception

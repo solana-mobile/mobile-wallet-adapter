@@ -346,8 +346,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @Nullable
         public final Uri walletUriBase;
 
-//        @NonNull @Size(min = 1)
-//        public final AuthorizedAccount[] accounts;
         @NonNull
         public final AuthorizedAccount account;
 
@@ -364,8 +362,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.accountLabel = accountLabel;
             this.walletUriBase = walletUriBase;
             this.signInResult = null;
-//            this.accounts = new AuthorizedAccount[] {
-//                    new AuthorizedAccount(publicKey, accountLabel, null, null, null) };
             this.account = new AuthorizedAccount(publicKey, accountLabel, null, null, null);
         }
 
@@ -375,7 +371,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                    @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
-//            this.accounts = accounts;
             this.account = account;
             this.signInResult = signInResult;
             this.publicKey = account.publicKey;
@@ -388,7 +383,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return "AuthorizeResult{" +
                     "authToken=<REDACTED>" +
                     ", walletUriBase=" + walletUriBase +
-//                    ", accounts=" + Arrays.toString(accounts) +
                     ", account=" + account +
                     '}';
         }

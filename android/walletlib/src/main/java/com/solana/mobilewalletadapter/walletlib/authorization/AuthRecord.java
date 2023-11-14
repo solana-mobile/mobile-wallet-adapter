@@ -10,6 +10,8 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -26,16 +28,14 @@ public class AuthRecord {
     @IntRange(from = 0)
     public final long expires;
 
-    @Deprecated
     @NonNull
     public final byte[] publicKey;
 
-    @Deprecated
     @Nullable
     public final String accountLabel;
 
     @NonNull
-    public final AccountRecord account;
+    public final AccountRecord accountRecord;
 
     @NonNull
     public final String chain;
@@ -58,36 +58,9 @@ public class AuthRecord {
 
     private boolean mRevoked;
 
-//    /*package*/ AuthRecord(@IntRange(from = 1) int id,
-//                           @NonNull IdentityRecord identity,
-//                           @NonNull byte[] publicKey,
-//                           @Nullable String accountLabel,
-//                           @NonNull String chain,
-//                           @NonNull byte[] scope,
-//                           @Nullable Uri walletUriBase,
-//                           @IntRange(from = 1) int publicKeyId,
-//                           @IntRange(from = 1) int walletUriBaseId,
-//                           @IntRange(from = 0) long issued,
-//                           @IntRange(from = 0) long expires) {
-//        // N.B. This is a package-visibility constructor; these values will all be validated by
-//        // other components within this package.
-//        this.id = id;
-//        this.identity = identity;
-//        this.publicKey = publicKey;
-//        this.accountLabel = accountLabel;
-//        this.chain = chain;
-//        this.cluster = chain;
-//        this.scope = scope;
-//        this.walletUriBase = walletUriBase;
-//        this.publicKeyId = publicKeyId;
-//        this.walletUriBaseId = walletUriBaseId;
-//        this.issued = issued;
-//        this.expires = expires;
-//    }
-
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
-                           @NonNull AccountRecord account,
+                           @NonNull AccountRecord accountRecord,
                            @NonNull String chain,
                            @NonNull byte[] scope,
                            @Nullable Uri walletUriBase,
@@ -99,7 +72,7 @@ public class AuthRecord {
         // other components within this package.
         this.id = id;
         this.identity = identity;
-        this.account = account;
+        this.accountRecord = accountRecord;
         this.chain = chain;
         this.cluster = chain;
         this.scope = scope;
@@ -109,8 +82,13 @@ public class AuthRecord {
         this.issued = issued;
         this.expires = expires;
 
-        this.publicKey = account.publicKeyRaw;
-        this.accountLabel = account.accountLabel;
+        this.publicKey = accountRecord.publicKeyRaw;
+        this.accountLabel = accountRecord.accountLabel;
+    }
+
+    public AuthorizedAccount authorizedAccount() {
+        return new AuthorizedAccount(accountRecord.publicKeyRaw, accountRecord.accountLabel,
+                accountRecord.icon, accountRecord.chains, accountRecord.features);
     }
 
     public boolean isExpired() {
