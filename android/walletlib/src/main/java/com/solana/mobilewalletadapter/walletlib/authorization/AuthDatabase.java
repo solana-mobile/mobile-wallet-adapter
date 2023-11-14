@@ -57,7 +57,6 @@ import java.util.List;
             if (!publicKeys.isEmpty()) {
                 AccountRecordsDao accountRecordsDao = new AccountRecordsDao(db);
                 for (PublicKey publicKey : publicKeys) {
-                    Log.d(TAG, "migrating Public Key: " + publicKey.accountLabel + " (" + Base64.encodeToString(publicKey.publicKeyRaw, Base64.NO_WRAP) + ")");
                     accountRecordsDao.insert(publicKey.publicKeyRaw, publicKey.accountLabel,
                             null, null, null);
                 }
