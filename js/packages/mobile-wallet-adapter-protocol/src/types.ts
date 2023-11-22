@@ -48,17 +48,36 @@ type Base64EncodedSignedTransaction = string;
 
 export type Base64EncodedTransaction = string;
 
+/**
+ * @deprecated Replaced by the 'chain' parameter, which adds multi-chain capability as per MWA 2.0 spec.
+ */
 export type Cluster = 'devnet' | 'testnet' | 'mainnet-beta';
 
 export type Finality = 'confirmed' | 'finalized' | 'processed';
+
+export type Chain = string;
+
+export type Feature = string;
 
 export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
 export interface AuthorizeAPI {
+    authorize(params: {
+        chain: Chain;
+        identity: AppIdentity;
+        auth_token?: AuthToken;
+        features?: Feature[];
+        addresses?: Base64EncodedAddress[];
+    }): Promise<AuthorizationResult>;
+
+    /**
+     * @deprecated Replaced by updated authorize() method, which adds MWA 2.0 spec support.
+     */
     authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
 }
+
 export interface CloneAuthorizationAPI {
     cloneAuthorization(params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
 }
@@ -80,12 +99,30 @@ export interface GetCapabilitiesAPI {
 export interface ReauthorizeAPI {
     reauthorize(params: { auth_token: AuthToken; identity: AppIdentity }): Promise<AuthorizationResult>;
 }
+
+/**
+ * @deprecated Replaced by signMessagesDetached, which returns the improved MobileWalletAdapterClient.SignMessagesResult type
+ */
 export interface SignMessagesAPI {
     signMessages(params: {
         addresses: Base64EncodedAddress[];
         payloads: Base64EncodedMessage[];
     }): Promise<Readonly<{ signed_payloads: Base64EncodedSignedMessage[] }>>;
 }
+
+export interface SignMessagesDetachedAPI {
+    signMessagesDetached(params: { addresses: Base64EncodedAddress[]; messages: Base64EncodedMessage[] }): Promise<
+        Readonly<{
+            messages: Base64EncodedMessage[];
+            signatures: Base64EncodedSignature[][];
+            addresses: Base64EncodedAddress[][];
+        }>
+    >;
+}
+
+/**
+ * @deprecated signTransactions is deprecated in MWA 2.0, use signAndSendTransactions.
+ */
 export interface SignTransactionsAPI {
     signTransactions(params: {
         payloads: Base64EncodedTransaction[];
@@ -106,6 +143,7 @@ export interface MobileWallet
         DeauthorizeAPI,
         GetCapabilitiesAPI,
         ReauthorizeAPI,
+        SignMessagesDetachedAPI,
         SignMessagesAPI,
         SignTransactionsAPI,
         SignAndSendTransactionsAPI {}
