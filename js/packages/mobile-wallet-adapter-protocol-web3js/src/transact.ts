@@ -29,12 +29,28 @@ interface Web3SignAndSendTransactionsAPI {
     }): Promise<TransactionSignature[]>;
 }
 
+/**
+ * @deprecated signTransactions is deprecated in MWA 2.0, use signAndSendTransactions.
+ */
 interface Web3SignTransactionsAPI {
     signTransactions<T extends LegacyTransaction | VersionedTransaction>(params: { transactions: T[] }): Promise<T[]>;
 }
 
+/**
+ * @deprecated Replaced by signMessagesDetached, which returns the improved SignMessagesResult type
+ */
 interface Web3SignMessagesAPI {
     signMessages(params: { addresses: Base64EncodedAddress[]; payloads: Uint8Array[] }): Promise<Uint8Array[]>;
+}
+
+interface Web3SignMessagesDetachedAPI {
+    signMessagesDetached(params: { addresses: Base64EncodedAddress[]; messages: Uint8Array[] }): Promise<
+        Readonly<{
+            messages: Uint8Array[];
+            signatures: Uint8Array[][];
+            addresses: Base64EncodedAddress[][];
+        }>
+    >;
 }
 
 export interface Web3MobileWallet
@@ -44,6 +60,7 @@ export interface Web3MobileWallet
         GetCapabilitiesAPI,
         ReauthorizeAPI,
         Web3SignAndSendTransactionsAPI,
+        Web3SignMessagesDetachedAPI,
         Web3SignTransactionsAPI,
         Web3SignMessagesAPI {}
 
@@ -60,8 +77,8 @@ function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTra
 }
 
 function getTransactionFromWireMessage(byteArray: Uint8Array): Transaction | VersionedTransaction {
-    const numSignatures = byteArray[0]
-    const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1
+    const numSignatures = byteArray[0];
+    const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1;
     const version = VersionedMessage.deserializeMessageVersion(byteArray.slice(messageOffset, byteArray.length));
     if (version === 'legacy') {
         return Transaction.from(byteArray);
@@ -109,6 +126,27 @@ export async function transact<TReturn>(
                                 });
                                 const signedMessages = base64EncodedSignedMessages.map(toUint8Array);
                                 return signedMessages;
+                            } as Web3MobileWallet[TMethodName];
+                            break;
+                        case 'signMessagesDetached':
+                            target[p] = async function ({
+                                messages,
+                                ...rest
+                            }: Parameters<Web3MobileWallet['signMessagesDetached']>[0]) {
+                                const base64EncodedMessages = messages.map(fromUint8Array);
+                                const {
+                                    messages: base64EncodedCompiledMessages,
+                                    signatures: base64EncodedSignatures,
+                                    addresses: base64EncodedAddresses,
+                                } = await wallet.signMessagesDetached({
+                                    ...rest,
+                                    messages: base64EncodedMessages,
+                                });
+                                const signedMessages = base64EncodedCompiledMessages.map(toUint8Array);
+                                const signatures = base64EncodedSignatures.map((signature) =>
+                                    signature.map(toUint8Array),
+                                );
+                                return { messages: signedMessages, signatures, addresses: base64EncodedAddresses };
                             } as Web3MobileWallet[TMethodName];
                             break;
                         case 'signTransactions':
