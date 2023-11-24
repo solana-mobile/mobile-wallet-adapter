@@ -132,6 +132,10 @@ export interface SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
         options?: Readonly<{
             min_context_slot?: number;
+            commitment?: string;
+            skip_preflight?: boolean;
+            max_retries?: number;
+            wait_for_commitment_to_send_next_transaction?: boolean;
         }>;
         payloads: Base64EncodedTransaction[];
     }): Promise<Readonly<{ signatures: Base64EncodedSignature[] }>>;

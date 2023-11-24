@@ -25,10 +25,13 @@ import { fromUint8Array, toUint8Array } from './base64Utils.js';
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions<T extends LegacyTransaction | VersionedTransaction>(params: {
         minContextSlot?: number;
+        commitment?: string;
+        skipPreflight?: boolean;
+        maxRetries?: number;
+        waitForCommitmentToSendNextTransaction?: boolean;
         transactions: T[];
     }): Promise<TransactionSignature[]>;
 }
-
 /**
  * @deprecated signTransactions is deprecated in MWA 2.0, use signAndSendTransactions.
  */
@@ -98,16 +101,19 @@ export async function transact<TReturn>(
                     switch (p) {
                         case 'signAndSendTransactions':
                             target[p] = async function ({
-                                minContextSlot,
                                 transactions,
                                 ...rest
                             }: Parameters<Web3MobileWallet['signAndSendTransactions']>[0]) {
                                 const payloads = transactions.map(getPayloadFromTransaction);
                                 const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
-                                    ...rest,
-                                    ...(minContextSlot != null
-                                        ? { options: { min_context_slot: minContextSlot } }
-                                        : null),
+                                    options: {
+                                        min_context_slot: rest.minContextSlot,
+                                        commitment: rest.commitment,
+                                        skip_preflight: rest.skipPreflight,
+                                        max_retries: rest.maxRetries,
+                                        wait_for_commitment_to_send_next_transaction:
+                                            rest.waitForCommitmentToSendNextTransaction,
+                                    },
                                     payloads,
                                 });
                                 const signatures = base64EncodedSignatures.map(toUint8Array).map(bs58.encode);
