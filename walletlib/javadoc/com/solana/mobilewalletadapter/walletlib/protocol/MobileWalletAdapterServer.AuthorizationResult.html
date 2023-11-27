@@ -94,14 +94,14 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Field</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#accountLabel" class="member-name-link">accountLabel</a></code></div>
-<div class="col-last even-row-color">
+<div class="col-first even-row-color"><code>final <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a></code></div>
+<div class="col-second even-row-color"><code><a href="#account" class="member-name-link">account</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#accountLabel" class="member-name-link">accountLabel</a></code></div>
+<div class="col-last odd-row-color">
 <div class="block"><span class="deprecated-label">Deprecated.</span></div>
 </div>
-<div class="col-first odd-row-color"><code>final <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>[]</code></div>
-<div class="col-second odd-row-color"><code><a href="#accounts" class="member-name-link">accounts</a></code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color"><code><a href="#authToken" class="member-name-link">authToken</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
@@ -134,8 +134,8 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color">
 <div class="block"><span class="deprecated-label">Deprecated.</span></div>
 </div>
-<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(java.lang.String,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount%5B%5D,android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.SignInResult)" class="member-name-link">AuthorizationResult</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken,
- <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>[]&nbsp;accounts,
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(java.lang.String,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount,android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.SignInResult)" class="member-name-link">AuthorizationResult</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken,
+ <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>&nbsp;account,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;walletUriBase,
  <a href="../scenario/SignInResult.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignInResult</a>&nbsp;signInResult)</code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
@@ -206,11 +206,10 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="accounts">
-<h3>accounts</h3>
+<section class="detail" id="account">
+<h3>account</h3>
 <div class="member-signature"><span class="annotations">@NonNull
-@Size(min=1L)
-</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>[]</span>&nbsp;<span class="element-name">accounts</span></div>
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a></span>&nbsp;<span class="element-name">account</span></div>
 </section>
 </li>
 <li>
@@ -244,12 +243,12 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="&lt;init&gt;(java.lang.String,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount[],android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.SignInResult)">
+<section class="detail" id="&lt;init&gt;(java.lang.String,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount,android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.SignInResult)">
 <h3>AuthorizationResult</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">AuthorizationResult</span><wbr><span class="parameters">(@NonNull
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;authToken,
  @NonNull @Size(min=1L)
- <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>[]&nbsp;accounts,
+ <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>&nbsp;account,
  @Nullable
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;walletUriBase,
  @Nullable

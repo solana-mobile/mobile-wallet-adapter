@@ -86,7 +86,7 @@ loadScripts(document, 'script');</script>
 <section class="method-summary" id="method-summary">
 <h2>Method Summary</h2>
 <div id="method-summary-table">
-<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab3" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab3', 3)" class="table-tab">Abstract Methods</button></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab3" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab3', 3)" class="table-tab">Abstract Methods</button><button id="method-summary-table-tab6" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab6', 3)" class="table-tab">Deprecated Methods</button></div>
 <div id="method-summary-table.tabpanel" role="tabpanel">
 <div class="summary-table three-column-summary" aria-labelledby="method-summary-table-tab0">
 <div class="table-header col-first">Modifier and Type</div>
@@ -101,8 +101,8 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="IdentityRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">IdentityRecord</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#getAuthorizedIdentities()" class="member-name-link">getAuthorizedIdentities</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#issue(java.lang.String,android.net.Uri,android.net.Uri,byte%5B%5D,java.lang.String,java.lang.String,android.net.Uri,byte%5B%5D)" class="member-name-link">issue</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3 method-summary-table-tab6"><code><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3 method-summary-table-tab6"><code><a href="#issue(java.lang.String,android.net.Uri,android.net.Uri,byte%5B%5D,java.lang.String,java.lang.String,android.net.Uri,byte%5B%5D)" class="member-name-link">issue</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;relativeIconUri,
  byte[]&nbsp;publicKey,
@@ -110,25 +110,36 @@ loadScripts(document, 'script');</script>
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cluster,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;walletUriBase,
  byte[]&nbsp;scope)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3 method-summary-table-tab6">
+<div class="block"><span class="deprecated-label">Deprecated.</span></div>
+</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#reissue(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)" class="member-name-link">reissue</a><wbr>(<a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#issue(java.lang.String,android.net.Uri,android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount,java.lang.String,android.net.Uri,byte%5B%5D)" class="member-name-link">issue</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;relativeIconUri,
+ <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>&nbsp;account,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cluster,
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;walletUriBase,
+ byte[]&nbsp;scope)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#revoke(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)" class="member-name-link">revoke</a><wbr>(<a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#reissue(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)" class="member-name-link">reissue</a><wbr>(<a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#revoke(com.solana.mobilewalletadapter.walletlib.authorization.IdentityRecord)" class="member-name-link">revoke</a><wbr>(<a href="IdentityRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">IdentityRecord</a>&nbsp;identityRecord)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#revoke(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)" class="member-name-link">revoke</a><wbr>(<a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#start()" class="member-name-link">start</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>boolean</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#revoke(com.solana.mobilewalletadapter.walletlib.authorization.IdentityRecord)" class="member-name-link">revoke</a><wbr>(<a href="IdentityRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">IdentityRecord</a>&nbsp;identityRecord)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#stop()" class="member-name-link">stop</a>()</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#start()" class="member-name-link">start</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#toAuthToken(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)" class="member-name-link">toAuthToken</a><wbr>(<a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#stop()" class="member-name-link">stop</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#toAuthToken(com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord)" class="member-name-link">toAuthToken</a><wbr>(<a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a>&nbsp;authRecord)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -174,7 +185,8 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="issue(java.lang.String,android.net.Uri,android.net.Uri,byte[],java.lang.String,java.lang.String,android.net.Uri,byte[])">
 <h3>issue</h3>
-<div class="member-signature"><span class="annotations">@NonNull
+<div class="member-signature"><span class="annotations"><a href="https://d.android.com/reference/java/lang/Deprecated.html" title="class or interface in java.lang" class="external-link">@Deprecated</a>
+@NonNull
 </span><span class="return-type"><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></span>&nbsp;<span class="element-name">issue</span><wbr><span class="parameters">(@NonNull
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
  @NonNull
@@ -185,6 +197,27 @@ loadScripts(document, 'script');</script>
  byte[]&nbsp;publicKey,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
+ @NonNull
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cluster,
+ @Nullable
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;walletUriBase,
+ @Nullable
+ byte[]&nbsp;scope)</span></div>
+<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="issue(java.lang.String,android.net.Uri,android.net.Uri,com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount,java.lang.String,android.net.Uri,byte[])">
+<h3>issue</h3>
+<div class="member-signature"><span class="annotations">@NonNull
+</span><span class="return-type"><a href="AuthRecord.html" title="class in com.solana.mobilewalletadapter.walletlib.authorization">AuthRecord</a></span>&nbsp;<span class="element-name">issue</span><wbr><span class="parameters">(@NonNull
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+ @NonNull
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
+ @NonNull
+ <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;relativeIconUri,
+ @NonNull
+ <a href="../scenario/AuthorizedAccount.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">AuthorizedAccount</a>&nbsp;account,
  @NonNull
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cluster,
  @Nullable
