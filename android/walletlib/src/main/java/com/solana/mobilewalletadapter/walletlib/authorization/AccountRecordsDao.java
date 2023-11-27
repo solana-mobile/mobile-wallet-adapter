@@ -68,12 +68,12 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
 
     @Override
     public void deleteUnreferencedAccounts() {
-        final SQLiteStatement deleteUnreferencedPublicKeys = super.compileStatement(
+        final SQLiteStatement deleteUnreferencedAccounts = super.compileStatement(
                 "DELETE FROM " + TABLE_ACCOUNTS +
                         " WHERE " + COLUMN_ACCOUNTS_ID + " NOT IN " +
                         "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
                         " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
-        deleteUnreferencedPublicKeys.executeUpdateDelete();
+        deleteUnreferencedAccounts.executeUpdateDelete();
     }
 
     // using a long alphanumeric divider reduces the chance of an array element matching the divider
