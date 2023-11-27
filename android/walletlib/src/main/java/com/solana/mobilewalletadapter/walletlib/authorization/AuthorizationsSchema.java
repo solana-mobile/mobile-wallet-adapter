@@ -9,10 +9,13 @@ package com.solana.mobilewalletadapter.walletlib.authorization;
     String COLUMN_AUTHORIZATIONS_ID = "id"; // type: int
     String COLUMN_AUTHORIZATIONS_IDENTITY_ID = "identity_id"; // type: long
     String COLUMN_AUTHORIZATIONS_ISSUED = "issued"; // type: long
-    String COLUMN_AUTHORIZATIONS_ACCOUNT_ID = "public_key_id"; // type: long
+    String COLUMN_AUTHORIZATIONS_ACCOUNT_ID = "account_id"; // type: long
     String COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID = "wallet_uri_base_id"; // type: long
     String COLUMN_AUTHORIZATIONS_SCOPE = "scope"; // type: byte[]
     String COLUMN_AUTHORIZATIONS_CLUSTER = "cluster"; // type: String
+
+    @Deprecated
+    String COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID = "public_key_id"; // type: long
 
     String CREATE_TABLE_AUTHORIZATIONS =
             "CREATE TABLE " + TABLE_AUTHORIZATIONS + " (" +

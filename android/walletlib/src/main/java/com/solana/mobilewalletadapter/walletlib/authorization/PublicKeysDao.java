@@ -66,7 +66,7 @@ public class PublicKeysDao extends DbContentProvider<PublicKey> implements Publi
         final SQLiteStatement deleteUnreferencedPublicKeys = super.compileStatement(
                 "DELETE FROM " + TABLE_PUBLIC_KEYS +
                         " WHERE " + COLUMN_PUBLIC_KEYS_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
                         " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedPublicKeys.executeUpdateDelete();
     }
