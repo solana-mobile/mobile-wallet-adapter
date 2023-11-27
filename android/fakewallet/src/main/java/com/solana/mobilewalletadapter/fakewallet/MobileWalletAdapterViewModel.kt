@@ -117,8 +117,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
                 Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
-                val accounts = arrayOf(buildAccount(publicKey.encoded, "fakewallet"))
-                request.request.completeWithAuthorize(accounts, null,
+                val account = buildAccount(publicKey.encoded, "fakewallet")
+                request.request.completeWithAuthorize(account, null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray(), null)
             } else {
                 request.request.completeWithDecline()
@@ -174,8 +174,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val signInResult = SignInResult(publicKey.encoded,
                     siwsMessage.encodeToByteArray(), signResult.signature, "ed25519")
 
-                val accounts = arrayOf(buildAccount(publicKey.encoded, "fakewallet"))
-                request.request.completeWithAuthorize(accounts, null,
+                val account = buildAccount(publicKey.encoded, "fakewallet")
+                request.request.completeWithAuthorize(account, null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray(), signInResult)
             } else {
                 request.request.completeWithDecline()

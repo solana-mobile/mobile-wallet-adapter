@@ -117,11 +117,11 @@ public class AuthorizeRequest
         mRequest.complete(new Result(accounts, walletUriBase, scope, null));
     }
 
-    public void completeWithAuthorize(@NonNull AuthorizedAccount[] accounts,
+    public void completeWithAuthorize(@NonNull AuthorizedAccount account, // TODO(#44): support multiple addresses
                                       @Nullable Uri walletUriBase,
                                       @Nullable byte[] scope,
                                       @Nullable SignInResult signInResult) {
-        mRequest.complete(new Result(accounts, walletUriBase, scope, signInResult));
+        mRequest.complete(new Result(new AuthorizedAccount[] { account }, walletUriBase, scope, signInResult));
     }
 
     public void completeWithDecline() {

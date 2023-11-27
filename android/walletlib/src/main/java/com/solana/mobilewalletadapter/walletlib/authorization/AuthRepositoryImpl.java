@@ -18,6 +18,8 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -69,7 +71,9 @@ public class AuthRepositoryImpl implements AuthRepository {
     private IdentityRecordDao mIdentityRecordDao;
     private AuthorizationsDao mAuthorizationsDao;
     private WalletUriBaseDao mWalletUriBaseDao;
+    @Deprecated
     private PublicKeysDao mPublicKeysDao;
+    private AccountRecordsDao mAccountsDao;
 
     public AuthRepositoryImpl(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         mContext = context;
@@ -105,6 +109,7 @@ public class AuthRepositoryImpl implements AuthRepository {
             mAuthorizationsDao = new AuthorizationsDao(database, mAuthIssuerConfig);
             mWalletUriBaseDao = new WalletUriBaseDao(database);
             mPublicKeysDao = new PublicKeysDao(database);
+            mAccountsDao = new AccountRecordsDao(database);
             mInitialized = true;
         }
     }
@@ -293,6 +298,7 @@ public class AuthRepositoryImpl implements AuthRepository {
         return revoke;
     }
 
+    @Deprecated
     @NonNull
     @Override
     public synchronized AuthRecord issue(@NonNull String name,
@@ -303,6 +309,20 @@ public class AuthRepositoryImpl implements AuthRepository {
                                          @NonNull String cluster,
                                          @Nullable Uri walletUriBase,
                                          @Nullable byte[] scope) {
+        return issue(name, uri, relativeIconUri,
+                new AuthorizedAccount(publicKey, accountLabel, null, null, null),
+                cluster, walletUriBase, scope);
+    }
+
+    @NonNull
+    @Override
+    public AuthRecord issue(@NonNull String name,
+                            @NonNull Uri uri,
+                            @NonNull Uri relativeIconUri,
+                            @NonNull AuthorizedAccount account,
+                            @NonNull String cluster,
+                            @Nullable Uri walletUriBase,
+                            @Nullable byte[] scope) {
         ensureStarted();
 
         if (scope == null) {
@@ -343,15 +363,18 @@ public class AuthRepositoryImpl implements AuthRepository {
         }
 
 
-        // Next, try and look up the public key
-        final PublicKey pk = mPublicKeysDao.query(publicKey);
+        // Next, try and look up the account
+        final AccountRecord accountRecordQueried = mAccountsDao.query(account.publicKey);
 
-        final int publicKeyId;
-        // If no matching public key exists, create one
-        if (pk == null) {
-            publicKeyId = (int) mPublicKeysDao.insert(publicKey, accountLabel);
+        final int accountId;
+        final AccountRecord accountRecord;
+        // If no matching account exists, create one
+        if (accountRecordQueried == null) {
+            accountId = (int) mAccountsDao.insert(account.publicKey, account.accountLabel, account.icon, account.chains, account.features);
+            accountRecord = new AccountRecord(accountId, account.publicKey, account.accountLabel, account.icon, account.chains, account.features);
         } else {
-            publicKeyId = pk.id;
+            accountId = accountRecordQueried.id;
+            accountRecord = accountRecordQueried;
         }
 
         // Next, try and look up the wallet URI base
@@ -367,7 +390,7 @@ public class AuthRepositoryImpl implements AuthRepository {
 
         final long now = System.currentTimeMillis();
 
-        final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, publicKeyId, cluster, walletUriBaseId, scope);
+        final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, accountId, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
         final int purgeCount = mAuthorizationsDao.purgeOldestEntries(identityRecord.getId());
@@ -375,12 +398,12 @@ public class AuthRepositoryImpl implements AuthRepository {
             Log.v(TAG, "Purged " + purgeCount + " oldest authorizations for identity: " + identityRecord);
             // Note: we only purge if we exceeded the max outstanding authorizations per identity. We
             // thus know that the identity remains referenced; no need to purge unused identities.
-            deleteUnreferencedPublicKeys();
+            deleteUnreferencedAccounts();
             deleteUnreferencedWalletUriBase();
         }
 
-        return new AuthRecord(id, identityRecord, publicKey, accountLabel, cluster, scope,
-                walletUriBase, publicKeyId, walletUriBaseId, now,
+        return new AuthRecord(id, identityRecord, accountRecord, cluster, scope,
+                walletUriBase, accountId, walletUriBaseId, now,
                 now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
@@ -403,11 +426,11 @@ public class AuthRepositoryImpl implements AuthRepository {
             reissued = authRecord;
         } else {
             final int id = (int) mAuthorizationsDao.insert(authRecord.identity.getId(), now,
-                    authRecord.publicKeyId, authRecord.cluster, authRecord.walletUriBaseId, authRecord.scope);
-            reissued = new AuthRecord(id, authRecord.identity, authRecord.publicKey,
-                    authRecord.accountLabel, authRecord.cluster, authRecord.scope,
-                    authRecord.walletUriBase, authRecord.publicKeyId, authRecord.walletUriBaseId,
-                    now, now + mAuthIssuerConfig.authorizationValidityMs);
+                    authRecord.accountId, authRecord.chain, authRecord.walletUriBaseId, authRecord.scope);
+            reissued = new AuthRecord(id, authRecord.identity, authRecord.accountRecord,
+                    authRecord.chain, authRecord.scope, authRecord.walletUriBase,
+                    authRecord.accountId, authRecord.walletUriBaseId, now,
+                    now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);
             // Note: reissue is net-neutral on the number of authorizations per identity, so there's
@@ -428,7 +451,7 @@ public class AuthRepositoryImpl implements AuthRepository {
 
         // There may now be unreferenced authorization data; if so, delete them
         deleteUnreferencedIdentities();
-        deleteUnreferencedPublicKeys();
+        deleteUnreferencedAccounts();
         deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
@@ -444,7 +467,7 @@ public class AuthRepositoryImpl implements AuthRepository {
         final int deleteCount = mIdentityRecordDao.deleteById(identityRecord.getId());
 
         // There may now be unreferenced authorization data; if so, delete them
-        deleteUnreferencedPublicKeys();
+        deleteUnreferencedAccounts();
         deleteUnreferencedWalletUriBase();
 
         return (deleteCount != 0);
@@ -456,8 +479,8 @@ public class AuthRepositoryImpl implements AuthRepository {
     }
 
     @GuardedBy("this")
-    private void deleteUnreferencedPublicKeys() {
-        mPublicKeysDao.deleteUnreferencedPublicKeys();
+    private void deleteUnreferencedAccounts() {
+        mAccountsDao.deleteUnreferencedAccounts();
     }
 
     @GuardedBy("this")
