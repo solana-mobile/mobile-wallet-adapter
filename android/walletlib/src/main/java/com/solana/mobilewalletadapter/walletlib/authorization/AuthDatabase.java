@@ -64,6 +64,11 @@ import java.util.List;
                     final long accountId = accountRecordsDao.insert(publicKey.publicKeyRaw,
                             publicKey.accountLabel, null, null, null);
 
+                    // the public keys will be sorted by their id, and the new account ID will
+                    // always be >= the existing public key ID so it is safe to update these values
+                    // in place. For publicKey.id p(n) and accountId a(n), p(n) > p(n-1) and
+                    // a(n) >= p(n), therefore a(n) > p(n-1). So the 'WHERE account_id = p(n)'
+                    // condition here will not collide with previously updated entries.
                     db.execSQL("UPDATE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
                             " SET " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + accountId +
                             " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + publicKey.id);
