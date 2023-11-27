@@ -62,7 +62,7 @@ import java.util.List;
         contentValues.put(COLUMN_AUTHORIZATIONS_IDENTITY_ID, id);
         contentValues.put(COLUMN_AUTHORIZATIONS_ISSUED, timeStamp);
         contentValues.put(COLUMN_AUTHORIZATIONS_ACCOUNT_ID, accountId);
-        contentValues.put(COLUMN_AUTHORIZATIONS_CLUSTER, cluster);
+        contentValues.put(COLUMN_AUTHORIZATIONS_CHAIN, cluster);
         contentValues.put(COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID, walletUriBaseId);
         contentValues.put(COLUMN_AUTHORIZATIONS_SCOPE, scope);
         return super.insert(TABLE_AUTHORIZATIONS, contentValues);
@@ -96,7 +96,7 @@ import java.util.List;
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_SCOPE +
-                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CLUSTER +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CHAIN +
                         ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_PUBLIC_KEY_RAW +
                         ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_LABEL +
                         ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_ICON +
@@ -129,7 +129,7 @@ import java.util.List;
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID +
                         ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_SCOPE +
-                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CLUSTER +
+                        ", " + TABLE_AUTHORIZATIONS + '.' + COLUMN_AUTHORIZATIONS_CHAIN +
                         ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_PUBLIC_KEY_RAW +
                         ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_LABEL +
                         ", " + TABLE_ACCOUNTS + '.' + COLUMN_ACCOUNTS_ICON +

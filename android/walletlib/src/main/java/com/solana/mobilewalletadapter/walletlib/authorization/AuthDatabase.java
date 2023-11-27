@@ -4,10 +4,6 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
-import static com.solana.mobilewalletadapter.walletlib.authorization.AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID;
-import static com.solana.mobilewalletadapter.walletlib.authorization.AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID;
-import static com.solana.mobilewalletadapter.walletlib.authorization.AuthorizationsSchema.TABLE_AUTHORIZATIONS;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -44,27 +40,33 @@ import java.util.List;
         if (oldVersion < 5) {
             Log.w(TAG, "Old database schema detected; pre-v1.0.0, no DB schema backward compatibility is implemented");
             db.execSQL("DROP TABLE IF EXISTS " + IdentityRecordSchema.TABLE_IDENTITIES);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_AUTHORIZATIONS);
+            db.execSQL("DROP TABLE IF EXISTS " + AuthorizationsSchema.TABLE_AUTHORIZATIONS);
             db.execSQL("DROP TABLE IF EXISTS " + PublicKeysSchema.TABLE_PUBLIC_KEYS);
             db.execSQL("DROP TABLE IF EXISTS " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE);
             onCreate(db);
         } else {
             Log.w(TAG, "Old database schema detected; pre-v2.0.0, migrating public keys to account records");
-            db.execSQL(AccountRecordsSchema.CREATE_TABLE_ACCOUNTS);
-            db.execSQL("ALTER TABLE " + TABLE_AUTHORIZATIONS +
-                    " RENAME COLUMN " + COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID + " TO " + COLUMN_AUTHORIZATIONS_ACCOUNT_ID);
-
             final PublicKeysDao publicKeysDao = new PublicKeysDao(db);
-            final List<PublicKey> publicKeys = publicKeysDao.getAuthorizedPublicKeys();
+            publicKeysDao.deleteUnreferencedPublicKeys();
+
+            db.execSQL(AccountRecordsSchema.CREATE_TABLE_ACCOUNTS);
+            db.execSQL("ALTER TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                    " RENAME COLUMN " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                    " TO " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID);
+            db.execSQL("ALTER TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                    " RENAME COLUMN " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
+                    " TO " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CHAIN);
+
+            final List<PublicKey> publicKeys = publicKeysDao.getPublicKeys();
             if (!publicKeys.isEmpty()) {
                 AccountRecordsDao accountRecordsDao = new AccountRecordsDao(db);
                 for (PublicKey publicKey : publicKeys) {
                     final long accountId = accountRecordsDao.insert(publicKey.publicKeyRaw,
                             publicKey.accountLabel, null, null, null);
 
-                    db.execSQL("UPDATE " + TABLE_AUTHORIZATIONS +
-                            " SET " + COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + accountId +
-                            " WHERE " + COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + publicKey.id);
+                    db.execSQL("UPDATE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                            " SET " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + accountId +
+                            " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + publicKey.id);
                 }
             }
 

@@ -72,13 +72,13 @@ public class PublicKeysDao extends DbContentProvider<PublicKey> implements Publi
     }
 
     @NonNull
-    public List<PublicKey> getAuthorizedPublicKeys() {
+    /*package*/ List<PublicKey> getPublicKeys() {
         final ArrayList<PublicKey> publicKeys = new ArrayList<>();
         try (final Cursor c = super.query(TABLE_PUBLIC_KEYS,
                 PUBLIC_KEYS_COLUMNS,
                 null,
                 null,
-                COLUMN_PUBLIC_KEYS_RAW)) {
+                COLUMN_PUBLIC_KEYS_ID)) {
             while (c.moveToNext()) {
                 publicKeys.add(cursorToEntity(c));
             }
