@@ -23,6 +23,12 @@ export type AppIdentity = Readonly<{
  */
 export type AssociationKeypair = CryptoKeyPair;
 
+export type ProtocolVersion = 'v1' | 'legacy';
+
+export type SessionProperties = Readonly<{
+    protocol_version: ProtocolVersion;
+}>;
+
 /**
  * The context returned from a wallet after having authorized a given
  * account for use with a given application. You can cache this and

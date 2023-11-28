@@ -1,3 +1,5 @@
+import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from "./encryptedMessage";
+
 /**
  * A secret agreed upon by the app and the wallet. Used as
  * a symmetric key to encrypt and decrypt messages over an
@@ -14,7 +16,7 @@ export default async function parseHelloRsp(
         crypto.subtle.exportKey('raw', associationPublicKey),
         crypto.subtle.importKey(
             'raw',
-            payloadBuffer,
+            payloadBuffer.slice(0, ENCODED_PUBLIC_KEY_LENGTH_BYTES),
             { name: 'ECDH', namedCurve: 'P-256' },
             false /* extractable */,
             [] /* keyUsages */,
