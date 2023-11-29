@@ -1,5 +1,6 @@
 import createHelloReq from './createHelloReq.js';
 import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
+import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage.js';
 import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
@@ -9,8 +10,9 @@ import generateAssociationKeypair from './generateAssociationKeypair.js';
 import generateECDHKeypair from './generateECDHKeypair.js';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.js';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
+import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
-import { AssociationKeypair, MobileWallet, WalletAssociationConfig } from './types.js';
+import { AssociationKeypair, MobileWallet, SessionProperties, WalletAssociationConfig } from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**
@@ -34,7 +36,7 @@ type JsonResponsePromises<T> = Record<
 >;
 
 type State =
-    | { __type: 'connected'; sharedSecret: SharedSecret }
+    | { __type: 'connected'; sharedSecret: SharedSecret; sessionProperties: SessionProperties }
     | { __type: 'connecting'; associationKeypair: AssociationKeypair }
     | { __type: 'disconnected' }
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
@@ -171,7 +173,18 @@ export async function transact<TReturn>(
                         state.associationPublicKey,
                         state.ecdhPrivateKey,
                     );
-                    state = { __type: 'connected', sharedSecret };
+                    const sessionPropertiesBuffer = responseBuffer.slice(ENCODED_PUBLIC_KEY_LENGTH_BYTES);
+                    const sessionProperties = sessionPropertiesBuffer.byteLength !== 0 
+                        ? await (async () => {
+                            const sequenceNumberVector = sessionPropertiesBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
+                            const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                            if (sequenceNumber !== (lastKnownInboundSequenceNumber + 1)) {
+                                throw new Error('Encrypted message has invalid sequence number');
+                            }
+                            lastKnownInboundSequenceNumber = sequenceNumber;
+                            return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
+                        })() : <SessionProperties> { protocol_version: 'legacy' };
+                    state = { __type: 'connected', sharedSecret, sessionProperties };
                     const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
                         get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
                             if (target[p] == null) {
