@@ -1,5 +1,6 @@
 import {
     BaseMessageSignerWalletAdapter,
+    ConnectionContext,
     WalletConnectionError,
     WalletDisconnectedError,
     WalletName,
@@ -12,7 +13,6 @@ import {
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import {
-    Connection,
     PublicKey,
     SendOptions,
     Transaction as LegacyTransaction,
@@ -321,7 +321,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     async sendTransaction<T extends LegacyTransaction | VersionedTransaction>(
         transaction: T,
-        connection: Connection,
+        connectionContext: ConnectionContext,
         options?: SendOptions,
     ): Promise<TransactionSignature> {
         return await this.runWithGuard(async () => {
@@ -331,11 +331,11 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 return await this.transact(async (wallet) => {
                     function getTargetCommitment() {
                         let targetCommitment: Finality;
-                        switch (connection.commitment) {
+                        switch (connectionContext.commitment) {
                             case 'confirmed':
                             case 'finalized':
                             case 'processed':
-                                targetCommitment = connection.commitment;
+                                targetCommitment = connectionContext.commitment;
                                 break;
                             default:
                                 targetCommitment = 'finalized';
@@ -377,7 +377,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                               (async () => {
                                   transaction.feePayer ||= this.publicKey ?? undefined;
                                   if (transaction.recentBlockhash == null) {
-                                      const { blockhash } = await connection.getLatestBlockhash({
+                                      const { blockhash } = await connectionContext.getLatestBlockhash({
                                           commitment: getTargetCommitment(),
                                       });
                                       transaction.recentBlockhash = blockhash;
@@ -394,15 +394,11 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                         const [signedTransaction] = await wallet.signTransactions({
                             transactions: [transaction],
                         });
-                        if (isVersionedTransaction(signedTransaction)) {
-                            return await connection.sendTransaction(signedTransaction);
-                        } else {
-                            const serializedTransaction = signedTransaction.serialize();
-                            return await connection.sendRawTransaction(serializedTransaction, {
-                                ...options,
-                                preflightCommitment: getTargetCommitment(),
-                            });
-                        }
+                        const serializedTransaction = signedTransaction.serialize();
+                        return await connectionContext.sendRawTransaction(serializedTransaction, {
+                            ...options,
+                            preflightCommitment: getTargetCommitment(),
+                        });
                     }
                 });
             } catch (error: any) {
