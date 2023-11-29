@@ -32,6 +32,11 @@
         "react-dom": "^18.0.0",
         "swr": "^1.3.0"
     },
+    "resolutions": {
+        "@solana-mobile/mobile-wallet-adapter-protocol": "link:../../js/packages/mobile-wallet-adapter-protocol",
+        "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "link:../../js/packages/mobile-wallet-adapter-protocol-web3js",
+        "@solana-mobile/wallet-adapter-mobile": "link:../../js/packages/wallet-adapter-mobile"
+    },
     "devDependencies": {
         "eslint-plugin-simple-import-sort": "^7.0.0",
         "ngrok": "^4.3.1",
