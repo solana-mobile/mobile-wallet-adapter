@@ -1,9 +1,14 @@
 import type { TransactionVersion } from '@solana/web3.js';
+import { type SolanaSignInInput, type SolanaSignInOutput } from "@solana/wallet-standard";
+import type { IdentifierArray, IdentifierString, WalletAccount, WalletIcon } from '@wallet-standard/core';
 
 export type Account = Readonly<{
     address: Base64EncodedAddress;
     label?: string;
-}>;
+    icon?: WalletIcon;
+    chains?: IdentifierArray;
+    features?: IdentifierArray;
+}> | WalletAccount;
 
 /**
  * Properties that wallets may present to users when an app
@@ -38,6 +43,7 @@ export type AuthorizationResult = Readonly<{
     accounts: Account[];
     auth_token: AuthToken;
     wallet_uri_base: string;
+    sign_in_result?: SolanaSignInOutput;
 }>;
 
 export type AuthToken = string;
@@ -54,7 +60,12 @@ type Base64EncodedSignedTransaction = string;
 
 export type Base64EncodedTransaction = string;
 
+/**
+ * @deprecated Replaced by the 'chain' parameter, which adds multi-chain capability as per MWA 2.0 spec.
+ */
 export type Cluster = 'devnet' | 'testnet' | 'mainnet-beta';
+
+export type Chain = IdentifierString | Cluster;
 
 export type Finality = 'confirmed' | 'finalized' | 'processed';
 
@@ -63,6 +74,18 @@ export type WalletAssociationConfig = Readonly<{
 }>;
 
 export interface AuthorizeAPI {
+    authorize(params: { 
+        identity: AppIdentity, 
+        chain?: Chain, 
+        features?: IdentifierArray, 
+        addresses?: string[], 
+        auth_token?: AuthToken, 
+        sign_in_payload?: SolanaSignInInput,
+    }): Promise<AuthorizationResult>;
+
+    /**
+     * @deprecated Replaced by updated authorize() method, which adds MWA 2.0 spec support.
+     */
     authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
@@ -75,10 +98,24 @@ export interface DeauthorizeAPI {
 export interface GetCapabilitiesAPI {
     getCapabilities(): Promise<
         Readonly<{
+            max_transactions_per_request: number;
+            max_messages_per_request: number;
+            supported_transaction_versions: ReadonlyArray<TransactionVersion>;
+            features: IdentifierArray;
+            /**
+             * @deprecated Replaced by features array.
+             */
+            supports_clone_authorization: boolean;
+            /**
+             * @deprecated Replaced by features array.
+             */
+            supports_sign_and_send_transactions: boolean;
+        }> 
+        | Readonly<{ // legacy get capabilities
             supports_clone_authorization: boolean;
             supports_sign_and_send_transactions: boolean;
-            max_transactions_per_request: boolean;
-            max_messages_per_request: boolean;
+            max_transactions_per_request: number;
+            max_messages_per_request: number;
             supported_transaction_versions: ReadonlyArray<TransactionVersion>;
         }>
     >;
@@ -101,6 +138,10 @@ export interface SignAndSendTransactionsAPI {
     signAndSendTransactions(params: {
         options?: Readonly<{
             min_context_slot?: number;
+            commitment?: string;
+            skip_preflight?: boolean;
+            max_retries?: number;
+            wait_for_commitment_to_send_next_transaction?: boolean;
         }>;
         payloads: Base64EncodedTransaction[];
     }): Promise<Readonly<{ signatures: Base64EncodedSignature[] }>>;
