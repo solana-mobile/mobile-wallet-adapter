@@ -110,13 +110,6 @@ export interface GetCapabilitiesAPI {
              * @deprecated Replaced by features array.
              */
             supports_sign_and_send_transactions: boolean;
-        }> 
-        | Readonly<{ // legacy get capabilities
-            supports_clone_authorization: boolean;
-            supports_sign_and_send_transactions: boolean;
-            max_transactions_per_request: number;
-            max_messages_per_request: number;
-            supported_transaction_versions: ReadonlyArray<TransactionVersion>;
         }>
     >;
 }
@@ -156,3 +149,8 @@ export interface MobileWallet
         SignMessagesAPI,
         SignTransactionsAPI,
         SignAndSendTransactionsAPI {}
+
+// optional features
+export const SolanaSignTransactions = 'solana:signTransactions'
+export const SolanaCloneAuthorization = 'solana:cloneAuthorization'
+export const SolanaSignInWithSolana = 'solana:signInWithSolana'

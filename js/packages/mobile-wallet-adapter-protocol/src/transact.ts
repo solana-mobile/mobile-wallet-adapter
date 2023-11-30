@@ -1,3 +1,4 @@
+import { SolanaSignTransaction } from '@solana/wallet-standard';
 import createHelloReq from './createHelloReq.js';
 import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
 import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage.js';
@@ -12,7 +13,7 @@ import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.j
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
-import { AssociationKeypair, MobileWallet, SessionProperties, WalletAssociationConfig } from './types.js';
+import { AssociationKeypair, MobileWallet, SessionProperties, SolanaCloneAuthorization, WalletAssociationConfig } from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**
@@ -220,6 +221,23 @@ export async function transact<TReturn>(
                                                             } catch (e) {
                                                                 reject(e);
                                                                 return;
+                                                            }
+                                                        }
+                                                        break;
+                                                    }
+                                                    case 'getCapabilities': {
+                                                        switch (sessionProperties.protocol_version) {
+                                                            case 'legacy': {
+                                                                result['features'] = [
+                                                                    SolanaSignTransaction,
+                                                                    result['supports_clone_authorization'] ? SolanaCloneAuthorization : null,
+                                                                ].filter(id => !!id);
+                                                                break;
+                                                            }
+                                                            case 'v1': {
+                                                                result['supports_sign_and_send_transactions'] = true;
+                                                                result['supports_clone_authorization'] = result.features.indexOf(SolanaCloneAuthorization) > -1;
+                                                                break;
                                                             }
                                                         }
                                                         break;
