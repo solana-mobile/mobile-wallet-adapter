@@ -228,10 +228,10 @@ export async function transact<TReturn>(
                                                     case 'getCapabilities': {
                                                         switch (sessionProperties.protocol_version) {
                                                             case 'legacy': {
-                                                                result['features'] = [
-                                                                    SolanaSignTransaction,
-                                                                    result['supports_clone_authorization'] ? SolanaCloneAuthorization : null,
-                                                                ].filter(id => !!id);
+                                                                result['features'] = [ SolanaSignTransaction ];
+                                                                if (result['supports_clone_authorization'] == true) {
+                                                                    result['features'].push(SolanaCloneAuthorization);
+                                                                }
                                                                 break;
                                                             }
                                                             case 'v1': {
