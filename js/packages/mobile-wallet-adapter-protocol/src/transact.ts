@@ -195,17 +195,46 @@ export async function transact<TReturn>(
                                     .toLowerCase();
                                 target[p] = async function (params: Parameters<MobileWallet[TMethodName]>[0]) {
                                     const id = nextJsonRpcMessageId++;
-                                    socket.send(
-                                        await encryptJsonRpcMessage(
-                                            {
-                                                id,
-                                                jsonrpc: '2.0',
-                                                method,
-                                                params: params ?? {},
-                                            },
-                                            sharedSecret,
-                                        ),
-                                    );
+                                    let rpcMessage = {
+                                        id,
+                                        jsonrpc: '2.0' as const,
+                                        method,
+                                        params: params ?? {},
+                                    }
+                                    switch (p) {
+                                        case 'authorize': {
+                                            if (sessionProperties.protocol_version === 'legacy' && params) {
+                                                let { chain } = params as Parameters<MobileWallet['authorize']>[0];
+                                                switch (chain) {
+                                                    case 'solana:testnet': { chain = 'testnet'; break; }
+                                                    case 'solana:devnet': { chain = `devnet`; break; }
+                                                    case 'solana:mainnet': { chain = "mainnet-beta"; break; }
+                                                }
+                                                (params as any).chain = chain;
+                                            }
+                                            
+                                            console.log(`check: ${JSON.stringify(params)}`);
+                                            (params as Parameters<MobileWallet['authorize']>[0]).chain = 'mainnet-beta';
+                                            console.log(`checkaroony: ${JSON.stringify(params)}`);
+                                        }
+                                        case 'reauthorize': {
+                                            const { auth_token, identity } = params as Parameters<MobileWallet['authorize' | 'reauthorize']>[0];
+                                            if (auth_token) {
+                                                switch (sessionProperties.protocol_version) {
+                                                    case 'legacy':
+                                                        rpcMessage.method = 'reauthorize';
+                                                        rpcMessage.params = { auth_token: auth_token, identity: identity };
+                                                        break;
+                                                    default:
+                                                        rpcMessage.method = 'authorize';
+                                                        rpcMessage.params = params ?? {};
+                                                        break;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    socket.send(await encryptJsonRpcMessage(rpcMessage, sharedSecret,));
                                     return new Promise((resolve, reject) => {
                                         jsonRpcResponsePromises[id] = {
                                             resolve(result) {

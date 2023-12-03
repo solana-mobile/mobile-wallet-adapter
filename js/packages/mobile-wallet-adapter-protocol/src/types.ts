@@ -74,6 +74,11 @@ export type WalletAssociationConfig = Readonly<{
 }>;
 
 export interface AuthorizeAPI {
+    /**
+     * @deprecated Replaced by updated authorize() method, which adds MWA 2.0 spec support.
+     */
+    authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
+
     authorize(params: { 
         identity: AppIdentity, 
         chain?: Chain, 
@@ -82,11 +87,6 @@ export interface AuthorizeAPI {
         auth_token?: AuthToken, 
         sign_in_payload?: SolanaSignInInput,
     }): Promise<AuthorizationResult>;
-
-    /**
-     * @deprecated Replaced by updated authorize() method, which adds MWA 2.0 spec support.
-     */
-    authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
     cloneAuthorization(params: { auth_token: AuthToken }): Promise<Readonly<{ auth_token: AuthToken }>>;
