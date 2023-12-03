@@ -212,10 +212,6 @@ export async function transact<TReturn>(
                                                 }
                                                 (params as any).chain = chain;
                                             }
-                                            
-                                            console.log(`check: ${JSON.stringify(params)}`);
-                                            (params as Parameters<MobileWallet['authorize']>[0]).chain = 'mainnet-beta';
-                                            console.log(`checkaroony: ${JSON.stringify(params)}`);
                                         }
                                         case 'reauthorize': {
                                             const { auth_token, identity } = params as Parameters<MobileWallet['authorize' | 'reauthorize']>[0];
