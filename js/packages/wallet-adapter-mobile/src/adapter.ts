@@ -29,7 +29,7 @@ import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { Chain, Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { transact,Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 
 import { toUint8Array } from './base64Utils.js';
@@ -81,16 +81,36 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
      * 'generation' don't continue to do work and throw exceptions.
      */
     private _connectionGeneration = 0;
-    private _cluster: Cluster;
+    private _chain: Chain;
     private _onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
     private _selectedAddress: Base64EncodedAddress | undefined;
 
+    /**
+     * @deprecated @param cluster config paramter is depcrecated, use @param chain instead
+     */
     constructor(config: {
         addressSelector: AddressSelector;
         appIdentity: AppIdentity;
         authorizationResultCache: AuthorizationResultCache;
+        cluster: Cluster;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
+    });
+
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
+    });
+
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
         cluster: Cluster;
         onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     }) {
@@ -98,7 +118,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
         this._authorizationResultCache = config.authorizationResultCache;
         this._addressSelector = config.addressSelector;
         this._appIdentity = config.appIdentity;
-        this._cluster = config.cluster;
+        this._chain = config.chain ?? config.cluster;
         this._onWalletNotFound = config.onWalletNotFound;
         if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
@@ -196,7 +216,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 }
                 await this.transact(async (wallet) => {
                     const authorizationResult = await wallet.authorize({
-                        cluster: this._cluster,
+                        chain: this._chain,
                         identity: this._appIdentity,
                     });
                     // TODO: Evaluate whether there's any threat to not `awaiting` this expression
@@ -244,7 +264,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     private async performReauthorization(wallet: Web3MobileWallet, authToken: AuthToken): Promise<void> {
         try {
-            const authorizationResult = await wallet.reauthorize({
+            const authorizationResult = await wallet.authorize({
                 auth_token: authToken,
                 identity: this._appIdentity,
             });

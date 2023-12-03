@@ -14,6 +14,7 @@ import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
 import { AssociationKeypair, MobileWallet, SessionProperties, SolanaCloneAuthorization, WalletAssociationConfig } from './types.js';
+import cluster from 'cluster';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**
@@ -203,12 +204,20 @@ export async function transact<TReturn>(
                                     }
                                     switch (p) {
                                         case 'authorize': {
-                                            if (sessionProperties.protocol_version === 'legacy' && params) {
-                                                let { chain } = params as Parameters<MobileWallet['authorize']>[0];
+                                            let { chain } = params as Parameters<MobileWallet['authorize']>[0];
+                                            if (sessionProperties.protocol_version === 'legacy') {
                                                 switch (chain) {
                                                     case 'solana:testnet': { chain = 'testnet'; break; }
-                                                    case 'solana:devnet': { chain = `devnet`; break; }
-                                                    case 'solana:mainnet': { chain = "mainnet-beta"; break; }
+                                                    case 'solana:devnet': { chain = 'devnet'; break; }
+                                                    case 'solana:mainnet': { chain = 'mainnet-beta'; break; }
+                                                    default: { chain = (params as any).cluster; }
+                                                }
+                                                (params as any).cluster = chain;
+                                            } else {
+                                                switch (chain) {
+                                                    case 'testnet':
+                                                    case 'devnet': { chain = 'solana:${chain}'; break; }
+                                                    case 'mainnet-beta': { chain = 'solana:mainnet'; break; }
                                                 }
                                                 (params as any).chain = chain;
                                             }
@@ -217,20 +226,22 @@ export async function transact<TReturn>(
                                             const { auth_token, identity } = params as Parameters<MobileWallet['authorize' | 'reauthorize']>[0];
                                             if (auth_token) {
                                                 switch (sessionProperties.protocol_version) {
-                                                    case 'legacy':
+                                                    case 'legacy': {
                                                         rpcMessage.method = 'reauthorize';
                                                         rpcMessage.params = { auth_token: auth_token, identity: identity };
                                                         break;
-                                                    default:
+                                                    }
+                                                    default: {
                                                         rpcMessage.method = 'authorize';
                                                         rpcMessage.params = params ?? {};
                                                         break;
+                                                    }
                                                 }
                                             }
                                             break;
                                         }
                                     }
-                                    socket.send(await encryptJsonRpcMessage(rpcMessage, sharedSecret,));
+                                    socket.send(await encryptJsonRpcMessage(rpcMessage, sharedSecret));
                                     return new Promise((resolve, reject) => {
                                         jsonRpcResponsePromises[id] = {
                                             resolve(result) {

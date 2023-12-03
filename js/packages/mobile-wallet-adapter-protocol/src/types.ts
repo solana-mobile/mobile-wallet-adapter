@@ -80,12 +80,12 @@ export interface AuthorizeAPI {
     authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
 
     authorize(params: { 
-        identity: AppIdentity, 
-        chain?: Chain, 
-        features?: IdentifierArray, 
-        addresses?: string[], 
-        auth_token?: AuthToken, 
-        sign_in_payload?: SolanaSignInInput,
+        identity: AppIdentity;
+        chain?: Chain;
+        features?: IdentifierArray; 
+        addresses?: string[]; 
+        auth_token?: AuthToken; 
+        sign_in_payload?: SolanaSignInInput;
     }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
