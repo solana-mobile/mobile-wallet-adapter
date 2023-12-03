@@ -216,7 +216,7 @@ export async function transact<TReturn>(
                                             } else {
                                                 switch (chain) {
                                                     case 'testnet':
-                                                    case 'devnet': { chain = 'solana:${chain}'; break; }
+                                                    case 'devnet': { chain = `solana:${chain}`; break; }
                                                     case 'mainnet-beta': { chain = 'solana:mainnet'; break; }
                                                 }
                                                 (params as any).chain = chain;
