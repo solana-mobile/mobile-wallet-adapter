@@ -219,7 +219,7 @@ export async function transact<TReturn>(
                                                     case 'devnet': { chain = `solana:${chain}`; break; }
                                                     case 'mainnet-beta': { chain = 'solana:mainnet'; break; }
                                                 }
-                                                (params as any).chain = chain;
+                                                (params as Parameters<MobileWallet['authorize']>[0]).chain = chain;
                                             }
                                         }
                                         case 'reauthorize': {
