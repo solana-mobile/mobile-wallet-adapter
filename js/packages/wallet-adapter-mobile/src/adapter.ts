@@ -88,7 +88,7 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
     private _selectedAddress: Base64EncodedAddress | undefined;
 
     /**
-     * @deprecated @param cluster config paramter is depcrecated, use @param chain instead
+     * @deprecated @param cluster config paramter is deprecated, use @param chain instead
      */
     constructor(config: {
         addressSelector: AddressSelector;
