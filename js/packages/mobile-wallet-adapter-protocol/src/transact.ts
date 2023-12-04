@@ -1,4 +1,3 @@
-import { SolanaSignTransaction } from '@solana/wallet-standard';
 import createHelloReq from './createHelloReq.js';
 import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
 import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage.js';
@@ -13,8 +12,14 @@ import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.j
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
-import { AssociationKeypair, MobileWallet, SessionProperties, SolanaCloneAuthorization, WalletAssociationConfig } from './types.js';
-import cluster from 'cluster';
+import { 
+    AssociationKeypair, 
+    MobileWallet, 
+    SessionProperties, 
+    SolanaCloneAuthorization, 
+    SolanaSignTransactions, 
+    WalletAssociationConfig 
+} from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**
@@ -264,7 +269,7 @@ export async function transact<TReturn>(
                                                     case 'getCapabilities': {
                                                         switch (sessionProperties.protocol_version) {
                                                             case 'legacy': {
-                                                                result['features'] = [ SolanaSignTransaction ];
+                                                                result['features'] = [ SolanaSignTransactions ];
                                                                 if (result['supports_clone_authorization'] == true) {
                                                                     result['features'].push(SolanaCloneAuthorization);
                                                                 }
