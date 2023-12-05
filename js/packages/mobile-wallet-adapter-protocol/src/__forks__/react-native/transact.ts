@@ -1,13 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
-import { 
-    MobileWallet, 
-    SessionProperties, 
-    SolanaCloneAuthorization, 
-    SolanaSignTransactions, 
-    WalletAssociationConfig 
-} from '../../types.js';
+import { MobileWallet, SessionProperties,WalletAssociationConfig } from '../../types.js';
 import createMobileWalletProxy from '../../createMobileWalletProxy.js';
 
 type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };

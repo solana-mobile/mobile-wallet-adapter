@@ -13,14 +13,7 @@ import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.j
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
-import { 
-    AssociationKeypair, 
-    MobileWallet, 
-    SessionProperties, 
-    SolanaCloneAuthorization, 
-    SolanaSignTransactions, 
-    WalletAssociationConfig 
-} from './types.js';
+import { AssociationKeypair, MobileWallet, SessionProperties, WalletAssociationConfig } from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**
