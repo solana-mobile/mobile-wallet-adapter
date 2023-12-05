@@ -83,16 +83,14 @@ export default function useAuthorization() {
     [authorization, setAuthorization],
   );
   const authorizeSession = useCallback(
-    async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      const authorizationResult = await (authorization
-        ? wallet.reauthorize({
-            auth_token: authorization.authToken,
-            identity: APP_IDENTITY,
-          })
-        : wallet.authorize({
-            cluster: 'devnet',
-            identity: APP_IDENTITY,
-          }));
+    async (wallet: AuthorizeAPI) => {
+      const authorizationResult = await wallet.authorize(
+        {
+          chain: 'solana:devnet',
+          identity: APP_IDENTITY,
+          auth_token: authorization ? authorization.authToken : undefined
+        }
+      );
       return (await handleAuthorizationResult(authorizationResult))
         .selectedAccount;
     },
