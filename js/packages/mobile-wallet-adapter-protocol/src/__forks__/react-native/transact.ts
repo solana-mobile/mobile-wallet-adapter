@@ -1,7 +1,8 @@
 import { NativeModules, Platform } from 'react-native';
 
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
-import { MobileWallet, WalletAssociationConfig } from '../../types.js';
+import { MobileWallet, SessionProperties,WalletAssociationConfig } from '../../types.js';
+import createMobileWalletProxy from '../../createMobileWalletProxy.js';
 
 type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };
 
@@ -69,32 +70,17 @@ export async function transact<TReturn>(
 ): Promise<TReturn> {
     let didSuccessfullyConnect = false;
     try {
-        await SolanaMobileWalletAdapter.startSession(config);
+        const sessionProperties: SessionProperties = await SolanaMobileWalletAdapter.startSession(config);
         didSuccessfullyConnect = true;
-        const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
-            get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
-                if (target[p] == null) {
-                    const method = p
-                        .toString()
-                        .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
-                        .toLowerCase();
-                    target[p] = async function (params: Parameters<MobileWallet[TMethodName]>[0]) {
-                        try {
-                            return await SolanaMobileWalletAdapter.invoke(method, params);
-                        } catch (e) {
-                            return handleError(e);
-                        }
-                    } as MobileWallet[TMethodName];
+        const wallet = createMobileWalletProxy(sessionProperties.protocol_version, 
+            async (method, params) => {
+                try {
+                    return SolanaMobileWalletAdapter.invoke(method, params);
+                } catch (e) {
+                    return handleError(e);
                 }
-                return target[p];
-            },
-            defineProperty() {
-                return false;
-            },
-            deleteProperty() {
-                return false;
-            },
-        });
+            }
+        );
         return await callback(wallet);
     } catch (e) {
         return handleError(e);

@@ -10,6 +10,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
 import com.solanamobile.mobilewalletadapter.reactnative.JSONSerializationUtils.convertJsonToMap
 import com.solanamobile.mobilewalletadapter.reactnative.JSONSerializationUtils.convertMapToJson
 import kotlinx.coroutines.*
@@ -89,7 +90,13 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
             val client =
                 localAssociation.start().get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
             sessionState = SessionState(client, localAssociation)
-            promise.resolve(true)
+            val sessionPropertiesMap: WritableMap = WritableNativeMap()
+            sessionPropertiesMap.putString("protocol_version", 
+                when (localAssociation.session.sessionProperties.protocolVersion) {
+                    ProtocolVersion.LEGACY -> "legacy"
+                    ProtocolVersion.V1 -> "v1"
+                })
+            promise.resolve(sessionPropertiesMap)
         } catch (e: ActivityNotFoundException) {
             Log.e(name, "Found no installed wallet that supports the mobile wallet protocol", e)
             cleanup()

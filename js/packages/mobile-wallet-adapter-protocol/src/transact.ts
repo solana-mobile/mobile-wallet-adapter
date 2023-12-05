@@ -1,4 +1,5 @@
 import createHelloReq from './createHelloReq.js';
+import createMobileWalletProxy from './createMobileWalletProxy.js';
 import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
 import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage.js';
 import {
@@ -185,62 +186,46 @@ export async function transact<TReturn>(
                             return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
                         })() : <SessionProperties> { protocol_version: 'legacy' };
                     state = { __type: 'connected', sharedSecret, sessionProperties };
-                    const wallet = new Proxy<MobileWallet>({} as MobileWallet, {
-                        get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
-                            if (target[p] == null) {
-                                const method = p
-                                    .toString()
-                                    .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
-                                    .toLowerCase();
-                                target[p] = async function (params: Parameters<MobileWallet[TMethodName]>[0]) {
-                                    const id = nextJsonRpcMessageId++;
-                                    socket.send(
-                                        await encryptJsonRpcMessage(
-                                            {
-                                                id,
-                                                jsonrpc: '2.0',
-                                                method,
-                                                params: params ?? {},
-                                            },
-                                            sharedSecret,
-                                        ),
-                                    );
-                                    return new Promise((resolve, reject) => {
-                                        jsonRpcResponsePromises[id] = {
-                                            resolve(result) {
-                                                switch (p) {
-                                                    case 'authorize':
-                                                    case 'reauthorize': {
-                                                        const { wallet_uri_base } = result as Awaited<
-                                                            ReturnType<MobileWallet['authorize' | 'reauthorize']>
-                                                        >;
-                                                        if (wallet_uri_base != null) {
-                                                            try {
-                                                                assertSecureEndpointSpecificURI(wallet_uri_base);
-                                                            } catch (e) {
-                                                                reject(e);
-                                                                return;
-                                                            }
-                                                        }
-                                                        break;
+                    const wallet = createMobileWalletProxy(sessionProperties.protocol_version,
+                        async (method, params) => {
+                            const id = nextJsonRpcMessageId++;
+                            socket.send(
+                                await encryptJsonRpcMessage(
+                                    {
+                                        id,
+                                        jsonrpc: '2.0' as const,
+                                        method,
+                                        params: params ?? {},
+                                    }, 
+                                    sharedSecret,
+                                ),
+                            );
+                            return new Promise((resolve, reject) => {
+                                jsonRpcResponsePromises[id] = {
+                                    resolve(result) {
+                                        switch (method) {
+                                            case 'authorize':
+                                            case 'reauthorize': {
+                                                const { wallet_uri_base } = result as Awaited<
+                                                    ReturnType<MobileWallet['authorize' | 'reauthorize']>
+                                                >;
+                                                if (wallet_uri_base != null) {
+                                                    try {
+                                                        assertSecureEndpointSpecificURI(wallet_uri_base);
+                                                    } catch (e) {
+                                                        reject(e);
+                                                        return;
                                                     }
                                                 }
-                                                resolve(result);
-                                            },
-                                            reject,
-                                        };
-                                    });
-                                } as MobileWallet[TMethodName];
-                            }
-                            return target[p];
-                        },
-                        defineProperty() {
-                            return false;
-                        },
-                        deleteProperty() {
-                            return false;
-                        },
-                    });
+                                                break;
+                                            }
+                                        }
+                                        resolve(result);
+                                    },
+                                    reject,
+                                };
+                            });
+                        })
                     try {
                         resolve(await callback(wallet));
                     } catch (e) {
