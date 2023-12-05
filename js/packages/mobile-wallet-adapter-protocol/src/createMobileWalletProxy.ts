@@ -1,5 +1,12 @@
 import { MobileWallet, ProtocolVersion, SolanaCloneAuthorization, SolanaSignTransactions } from "./types";
 
+/**
+ * Creates a {@link MobileWallet} proxy that handles backwards compatibility and API to RPC conversion.
+ * 
+ * @param protocolVersion the protocol version in use for this session/request
+ * @param protocolRequestHandler callback function that handles sending the RPC request to the wallet endpoint.
+ * @returns a {@link MobileWallet} proxy
+ */
 export default function createMobileWalletProxy<TMethodName extends keyof MobileWallet>(
     protocolVersion: ProtocolVersion,
     protocolRequestHandler: (method: string, params: Parameters<MobileWallet[TMethodName]>[0]) => Promise<Object>
@@ -24,6 +31,15 @@ export default function createMobileWalletProxy<TMethodName extends keyof Mobile
     });
 };
 
+/**
+ * Handles all {@link MobileWallet} API requests and determines the correct MWA RPC method and params to call.
+ * This handles backwards compatibility, based on the provided @protocolVersion. 
+ * 
+ * @param methodName the name of {@link MobileWallet} method that was called
+ * @param methodParams the parameters that were passed to the method
+ * @param protocolVersion the protocol version in use for this session/request
+ * @returns the RPC request method and params that should be sent to the wallet endpoint 
+ */
 function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
     methodName: TMethodName, 
     methodParams: Parameters<MobileWallet[TMethodName]>[0],
@@ -75,6 +91,14 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
     return { method, params }
 };
 
+/**
+ * Handles all {@link MobileWallet} API responses and modifies the response for backwards compatibility, if needed 
+ * 
+ * @param method the {@link MobileWallet} method that was called
+ * @param response the original response that was returned by the method call
+ * @param protocolVersion the protocol version in use for this session/request
+ * @returns the possibly modified response 
+ */
 function handleMobileWalletResponse<TMethodName extends keyof MobileWallet>(
     method: TMethodName, 
     response: any,
