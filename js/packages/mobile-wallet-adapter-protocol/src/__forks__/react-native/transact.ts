@@ -81,39 +81,12 @@ export async function transact<TReturn>(
         const wallet = createMobileWalletProxy(sessionProperties.protocol_version, 
             async (method, params) => {
                 try {
-                    return await SolanaMobileWalletAdapter.invoke(method, params);
+                    return SolanaMobileWalletAdapter.invoke(method, params);
                 } catch (e) {
                     return handleError(e);
                 }
             }
         );
-        // const walletOld = new Proxy<MobileWallet>({} as MobileWallet, {
-        //     get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
-        //         if (target[p] == null) {
-        //             target[p] = async function (inputParams: Parameters<MobileWallet[TMethodName]>[0]) {
-        //                 try {
-        //                     const result = await SolanaMobileWalletAdapter.invoke(
-        //                         handleMobileWalletRequest(
-        //                             p, 
-        //                             inputParams, 
-        //                             sessionProperties.protocol_version
-        //                         )
-        //                     );
-        //                     return handleMobileWalletResponse(p, result, sessionProperties.protocol_version);
-        //                 } catch (e) {
-        //                     return handleError(e);
-        //                 }
-        //             } as MobileWallet[TMethodName];
-        //         }
-        //         return target[p];
-        //     },
-        //     defineProperty() {
-        //         return false;
-        //     },
-        //     deleteProperty() {
-        //         return false;
-        //     },
-        // });
         return await callback(wallet);
     } catch (e) {
         return handleError(e);

@@ -124,31 +124,6 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     fun invoke(method: String, params: ReadableMap, promise: Promise) = sessionState?.let {
         Log.d(name, "invoke `$method` with params $params")
         try {
-            // when (method) {
-            //     "authorize", "reauthorize" -> {
-            //         params.getString("auth_token")?.let { authToken ->
-            //             when (it.localAssociation.session.sessionProperties.protocolVersion) {
-            //                 ProtocolVersion.LEGACY -> {
-            //                     it.client.methodCall(
-            //                         "reauthorize",
-            //                         JSONObject().apply {
-            //                             put("auth_token", authToken)
-            //                             put("identity", params.getMap("identity"))
-            //                         },
-            //                         CLIENT_TIMEOUT_MS
-            //                     ).get() as JSONObject
-            //                 }
-            //                 ProtocolVersion.V1 -> {
-            //                     it.client.methodCall(
-            //                         "authorize",
-            //                         convertMapToJson(params),
-            //                         CLIENT_TIMEOUT_MS
-            //                     ).get() as JSONObject
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
             val result = it.client.methodCall(
                 method,
                 convertMapToJson(params),
