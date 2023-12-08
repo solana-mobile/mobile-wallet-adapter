@@ -1,4 +1,14 @@
-import { MobileWallet, ProtocolVersion, SolanaCloneAuthorization, SolanaSignTransactions } from "./types";
+import { createDefaultSolanaSignInParams, createSIWSMessageBase64 } from "./createSIWSMessage";
+import { 
+    AuthorizationResult, 
+    MobileWallet, 
+    ProtocolVersion, 
+    SignInPayload, 
+    SignInResult, 
+    SolanaCloneAuthorization, 
+    SolanaSignTransactions 
+} from "./types";
+import { IdentifierArray } from "@wallet-standard/core";
 
 /**
  * Creates a {@link MobileWallet} proxy that handles backwards compatibility and API to RPC conversion.
@@ -7,17 +17,28 @@ import { MobileWallet, ProtocolVersion, SolanaCloneAuthorization, SolanaSignTran
  * @param protocolRequestHandler callback function that handles sending the RPC request to the wallet endpoint.
  * @returns a {@link MobileWallet} proxy
  */
-export default function createMobileWalletProxy<TMethodName extends keyof MobileWallet>(
+export default function createMobileWalletProxy<
+    TMethodName extends keyof MobileWallet, 
+    TReturn extends Awaited<ReturnType<MobileWallet[TMethodName]>>
+>(
     protocolVersion: ProtocolVersion,
-    protocolRequestHandler: (method: string, params: Parameters<MobileWallet[TMethodName]>[0]) => Promise<Object>
+    protocolRequestHandler: (method: string, params: Parameters<MobileWallet[TMethodName]>[0]) => Promise<any>
 ): MobileWallet {
     return new Proxy<MobileWallet>({} as MobileWallet, {
         get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
             if (target[p] == null) {
                 target[p] = async function (inputParams: Parameters<MobileWallet[TMethodName]>[0]) {
                     const { method, params } = handleMobileWalletRequest(p, inputParams, protocolVersion);
-                    const result = await protocolRequestHandler(method, params);
-                    return handleMobileWalletResponse(p, result, protocolVersion);
+                    const result = await protocolRequestHandler(method, params) as Awaited<ReturnType<MobileWallet[TMethodName]>>;
+                    // if the request tried to sign in but the wallet did not return a sign in result, fallback on message signing
+                    if (method === 'authorize' && params?.hasOwnProperty('sign_in_payload') && !result.hasOwnProperty('sign_in_result')) {
+                        (result as any)['sign_in_result'] = signInFallback(
+                            (params as Parameters<MobileWallet['authorize']>[0]).sign_in_payload as SignInPayload, 
+                            result as Awaited<ReturnType<MobileWallet['authorize']>>, 
+                            protocolRequestHandler
+                        );
+                    }
+                    return handleMobileWalletResponse(p, result, protocolVersion) as TReturn;
                 } as MobileWallet[TMethodName];
             }
             return target[p];
@@ -52,7 +73,7 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
         .toLowerCase();
     switch (methodName) {
         case 'authorize': {
-            let { chain } = params as Parameters<MobileWallet['authorize']>[0];
+            let { chain, sign_in_payload: signInPayload } = params as Parameters<MobileWallet['authorize']>[0];
             if (protocolVersion === 'legacy') {
                 switch (chain) {
                     case 'solana:testnet': { chain = 'testnet'; break; }
@@ -68,6 +89,13 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
                     case 'mainnet-beta': { chain = 'solana:mainnet'; break; }
                 }
                 (params as Parameters<MobileWallet['authorize']>[0]).chain = chain;
+
+                if (signInPayload) {
+                    (params as Parameters<MobileWallet['authorize']>[0]).sign_in_payload = {
+                        ...createDefaultSolanaSignInParams(),
+                        ...signInPayload
+                    };
+                }
             }
         }
         case 'reauthorize': {
@@ -101,28 +129,53 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
  */
 function handleMobileWalletResponse<TMethodName extends keyof MobileWallet>(
     method: TMethodName, 
-    response: any,
+    response: Awaited<ReturnType<MobileWallet[TMethodName]>>,
     protocolVersion: ProtocolVersion
-) {
-    const result = response;
+): Awaited<ReturnType<MobileWallet[TMethodName]>> {
     switch (method) {
         case 'getCapabilities': {
+            const capabilities = response as Awaited<ReturnType<MobileWallet['getCapabilities']>>
             switch (protocolVersion) {
                 case 'legacy': {
-                    result['features'] = [ SolanaSignTransactions ];
-                    if (result['supports_clone_authorization'] == true) {
-                        result['features'].push(SolanaCloneAuthorization);
+                    const features: `${string}:${string}`[] = [ SolanaSignTransactions ];
+                    if (capabilities.supports_clone_authorization === true) {
+                        features.push(SolanaCloneAuthorization);
                     }
-                    break;
+                    return {
+                        ...capabilities,
+                        features: features as IdentifierArray,
+                    } as Awaited<ReturnType<MobileWallet[TMethodName]>>;
                 }
                 case 'v1': {
-                    result['supports_sign_and_send_transactions'] = true;
-                    result['supports_clone_authorization'] = result.features.indexOf(SolanaCloneAuthorization) > -1;
-                    break;
+                    return {
+                        ...capabilities,
+                        supports_sign_and_send_transactions: true,
+                        supports_clone_authorization: capabilities.features.includes(SolanaCloneAuthorization)
+                    } as Awaited<ReturnType<MobileWallet[TMethodName]>>;
                 }
             }
-            break;
         }
     }
-    return result;
+    return response;
 };
+
+async function signInFallback(
+    signInPayload: SignInPayload,
+    authorizationResult: Awaited<ReturnType<MobileWallet['authorize']>>,
+    protocolRequestHandler: (method: string, params: Parameters<MobileWallet['signMessages']>[0]) => Promise<unknown>
+) {
+    const address = (authorizationResult as AuthorizationResult).accounts[0].address
+    const siwsMessage = createSIWSMessageBase64({ ...signInPayload, address })
+    const signMessageResult = await (protocolRequestHandler('sign_messages', 
+        { 
+            addresses: [ address ], 
+            payloads: [ siwsMessage ]
+        }
+    ) as ReturnType<MobileWallet['signMessages']>);
+    const signInResult: SignInResult = {
+        publicKey: address,
+        signed_message: siwsMessage,
+        signature: signMessageResult.signed_payloads[0]
+    };
+    return signInResult;
+}

@@ -1,5 +1,5 @@
 import type { TransactionVersion } from '@solana/web3.js';
-import { type SolanaSignInInput, type SolanaSignInOutput } from "@solana/wallet-standard";
+import { type SolanaSignInInput } from "@solana/wallet-standard";
 import type { IdentifierArray, IdentifierString, WalletAccount, WalletIcon } from '@wallet-standard/core';
 
 export type Account = Readonly<{
@@ -43,7 +43,7 @@ export type AuthorizationResult = Readonly<{
     accounts: Account[];
     auth_token: AuthToken;
     wallet_uri_base: string;
-    sign_in_result?: SolanaSignInOutput;
+    sign_in_result?: SignInResult;
 }>;
 
 export type AuthToken = string;
@@ -85,7 +85,7 @@ export interface AuthorizeAPI {
         features?: IdentifierArray; 
         addresses?: string[]; 
         auth_token?: AuthToken; 
-        sign_in_payload?: SolanaSignInInput;
+        sign_in_payload?: Pick<SignInPayload, 'domain' | 'uri'> & Partial<SignInPayload>;
     }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
@@ -154,3 +154,25 @@ export interface MobileWallet
 export const SolanaSignTransactions = 'solana:signTransactions'
 export const SolanaCloneAuthorization = 'solana:cloneAuthorization'
 export const SolanaSignInWithSolana = 'solana:signInWithSolana'
+
+export type SignInPayload = Readonly<{
+    domain: string;
+    address?: string;
+    statement?: string;
+    uri: string;
+    version: string;
+    chainId: string;
+    nonce: string;
+    issuedAt: string;
+    expirationTime?: string;
+    notBefore?: string;
+    requestId?: string;
+    resources?: string[];
+}> & SolanaSignInInput;
+
+export type SignInResult = Readonly<{
+    publicKey: Base64EncodedAddress;
+    signed_message: Base64EncodedSignedMessage;
+    signature: Base64EncodedAddress;
+    signature_type?: string;
+}>; // | SolanaSignInOutput;

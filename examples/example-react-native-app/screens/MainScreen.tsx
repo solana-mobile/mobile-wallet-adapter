@@ -1,11 +1,12 @@
 import React, {useState} from 'react';
-import {ScrollView, StyleSheet} from 'react-native';
+import {ScrollView, StyleSheet, View} from 'react-native';
 import {Appbar, Divider, Portal, Text, TextInput} from 'react-native-paper';
 
 import AccountInfo from '../components/AccountInfo';
 import RecordMessageButton from '../components/RecordMessageButton';
 import SignMessageButton from '../components/SignMessageButton';
 import useAuthorization from '../utils/useAuthorization';
+import SignInButton from '../components/SignInButton';
 
 export default function MainScreen() {
   const {accounts, onChangeAccount, selectedAccount} = useAuthorization();
@@ -42,7 +43,13 @@ export default function MainScreen() {
             onChange={onChangeAccount}
             selectedAccount={selectedAccount}
           />
-        ) : null}
+        ) : (
+          <View style={styles.container}>
+            <SignInButton mode="contained">
+              Sign In
+            </SignInButton>
+          </View>
+        )}
       </Portal.Host>
     </>
   );
