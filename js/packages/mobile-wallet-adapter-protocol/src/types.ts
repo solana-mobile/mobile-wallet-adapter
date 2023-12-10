@@ -85,7 +85,7 @@ export interface AuthorizeAPI {
         features?: IdentifierArray; 
         addresses?: string[]; 
         auth_token?: AuthToken; 
-        sign_in_payload?: Pick<SignInPayload, 'domain' | 'uri'> & Partial<SignInPayload>;
+        sign_in_payload?: SignInPayloadWithRequiredFields;
     }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
@@ -169,6 +169,9 @@ export type SignInPayload = Readonly<{
     requestId?: string;
     resources?: string[];
 }> & SolanaSignInInput;
+
+export type SignInPayloadWithRequiredFields = Partial<SignInPayload> & 
+    Required<Pick<SignInPayload, 'domain' | 'uri'>>
 
 export type SignInResult = Readonly<{
     publicKey: Base64EncodedAddress;
