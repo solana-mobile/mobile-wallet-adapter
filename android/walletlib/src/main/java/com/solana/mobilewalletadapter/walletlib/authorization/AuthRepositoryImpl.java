@@ -330,23 +330,19 @@ public class AuthRepositoryImpl implements AuthRepository {
         }
 
         // First, try and look up a matching identity
-        int identityId = -1;
-
         IdentityRecord identityRecord = mIdentityRecordDao
                 .findIdentityByParams(name, uri.toString(), relativeIconUri.toString());
-        if (identityRecord != null) {
-            identityId = identityRecord.getId();
-        }
 
         // If no matching identity exists, create one
-        if (identityId == -1) {
+        if (identityRecord == null) {
             Log.d(TAG, "Creating IdentityRecord for " + name + '/' + uri + '/' + relativeIconUri);
 
             final Pair<byte[], byte[]> p = createEncryptedHmacSha256SecretKey();
             final byte[] identityKeyCiphertext = p.first;
             final byte[] identityKeyIV = p.second;
 
-            identityId = (int) mIdentityRecordDao.insert(name, uri.toString(), relativeIconUri.toString(), identityKeyCiphertext, identityKeyIV);
+            int identityId = (int) mIdentityRecordDao.insert(name, uri.toString(), 
+                    relativeIconUri.toString(), identityKeyCiphertext, identityKeyIV);
 
             if (identityId >= 1) {
                 identityRecord = new IdentityRecord.IdentityRecordBuilder()
@@ -361,7 +357,6 @@ public class AuthRepositoryImpl implements AuthRepository {
                 throw new SQLException("Error inserting IdentityRecord");
             }
         }
-
 
         // Next, try and look up the account
         final AccountRecord accountRecordQueried = mAccountsDao.query(account.publicKey);
