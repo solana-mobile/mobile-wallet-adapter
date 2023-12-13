@@ -167,14 +167,14 @@ export type SignInPayload = Readonly<{
     expirationTime?: string;
     notBefore?: string;
     requestId?: string;
-    resources?: string[];
+    resources?: readonly string[];
 }> & SolanaSignInInput;
 
 export type SignInPayloadWithRequiredFields = Partial<SignInPayload> & 
     Required<Pick<SignInPayload, 'domain' | 'uri'>>
 
 export type SignInResult = Readonly<{
-    publicKey: Base64EncodedAddress;
+    address: Base64EncodedAddress;
     signed_message: Base64EncodedSignedMessage;
     signature: Base64EncodedAddress;
     signature_type?: string;

@@ -1,5 +1,5 @@
 import {
-    BaseMessageSignerWalletAdapter,
+    BaseSignInMessageSignerWalletAdapter,
     WalletConnectionError,
     WalletDisconnectedError,
     WalletName,
@@ -26,6 +26,7 @@ import {
     AuthToken,
     Base64EncodedAddress,
     Finality,
+    SignInPayloadWithRequiredFields,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -34,6 +35,8 @@ import { transact,Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-
 
 import { toUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
+import { SolanaSignInInput, SolanaSignInOutput } from '@solana/wallet-standard-features';
+import type { WalletAccount } from '@wallet-standard/core';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -60,7 +63,7 @@ function isVersionedTransaction(
     return 'version' in transaction;
 }
 
-export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
+export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdapter {
     readonly supportedTransactionVersions: Set<TransactionVersion> = new Set(
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
         ['legacy', 0],
@@ -208,29 +211,40 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
             }
             this._connecting = true;
             try {
-                const cachedAuthorizationResult = await this._authorizationResultCache.get();
-                if (cachedAuthorizationResult) {
-                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                    this.handleAuthorizationResult(cachedAuthorizationResult);
-                    return;
-                }
-                await this.transact(async (wallet) => {
-                    const authorizationResult = await wallet.authorize({
-                        chain: this._chain,
-                        identity: this._appIdentity,
-                    });
-                    // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                    Promise.all([
-                        this._authorizationResultCache.set(authorizationResult),
-                        this.handleAuthorizationResult(authorizationResult),
-                    ]);
-                });
+                await this.performAuthorization();
             } catch (e) {
                 throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
             } finally {
                 this._connecting = false;
             }
         });
+    }
+
+    async performAuthorization(signInPayload?: SignInPayloadWithRequiredFields): Promise<AuthorizationResult> {
+        try {
+            const cachedAuthorizationResult = await this._authorizationResultCache.get();
+            if (cachedAuthorizationResult) {
+                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                this.handleAuthorizationResult(cachedAuthorizationResult);
+                return cachedAuthorizationResult;
+            }
+            return await this.transact(async (wallet) => {
+                const authorizationResult = await wallet.authorize({
+                    chain: this._chain,
+                    identity: this._appIdentity,
+                    sign_in_payload: signInPayload,
+                });
+                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+                Promise.all([
+                    this._authorizationResultCache.set(authorizationResult),
+                    this.handleAuthorizationResult(authorizationResult),
+                ]);
+
+                return authorizationResult;
+            });
+        } catch (e) {
+            throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
+        }
     }
 
     private async handleAuthorizationResult(authorizationResult: AuthorizationResult): Promise<void> {
@@ -460,6 +474,41 @@ export class SolanaMobileWalletAdapter extends BaseMessageSignerWalletAdapter {
                 });
             } catch (error: any) {
                 throw new WalletSignMessageError(error?.message, error);
+            }
+        });
+    }
+
+    async signIn(input?: SolanaSignInInput & SignInPayloadWithRequiredFields): Promise<SolanaSignInOutput> {
+        return await this.runWithGuard(async () => {
+            if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
+                throw new WalletNotReadyError();
+            }
+            this._connecting = true;
+            try {
+                const authorizationResult = await this.performAuthorization({
+                    ...input,
+                    domain: input?.domain ?? window.location.host,
+                    uri: input?.uri ?? window.location.origin
+                });
+                if (!authorizationResult.sign_in_result) {
+                    throw new Error("Sign in failed, no sign in result returned by wallet");
+                }
+                const signedInAddress = authorizationResult.sign_in_result.address;
+                const signedInAccount: WalletAccount = {
+                    ...authorizationResult.accounts.find(acc => acc.address == signedInAddress) ?? {
+                        address: signedInAddress
+                    }, 
+                    publicKey: toUint8Array(signedInAddress)
+                } as WalletAccount;
+                return {
+                    account: signedInAccount,
+                    signedMessage: toUint8Array(authorizationResult.sign_in_result.signed_message),
+                    signature: toUint8Array(authorizationResult.sign_in_result.signature)
+                };
+            } catch (e) {
+                throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
+            } finally {
+                this._connecting = false;
             }
         });
     }

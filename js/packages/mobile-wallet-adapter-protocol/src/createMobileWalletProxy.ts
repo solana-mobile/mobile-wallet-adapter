@@ -32,7 +32,7 @@ export default function createMobileWalletProxy<
                     const result = await protocolRequestHandler(method, params) as Awaited<ReturnType<MobileWallet[TMethodName]>>;
                     // if the request tried to sign in but the wallet did not return a sign in result, fallback on message signing
                     if (method === 'authorize' && params?.hasOwnProperty('sign_in_payload') && !result.hasOwnProperty('sign_in_result')) {
-                        (result as any)['sign_in_result'] = signInFallback(
+                        (result as any)['sign_in_result'] = await signInFallback(
                             (params as Parameters<MobileWallet['authorize']>[0]).sign_in_payload as SignInPayload, 
                             result as Awaited<ReturnType<MobileWallet['authorize']>>, 
                             protocolRequestHandler
@@ -173,9 +173,9 @@ async function signInFallback(
         }
     ) as ReturnType<MobileWallet['signMessages']>);
     const signInResult: SignInResult = {
-        publicKey: address,
+        address: address,
         signed_message: siwsMessage,
-        signature: signMessageResult.signed_payloads[0]
+        signature: signMessageResult.signed_payloads[0].slice(siwsMessage.length)
     };
     return signInResult;
 }
