@@ -54,6 +54,68 @@ public class PayloadTest {
     }
 
     @Test
+    public void testPayloadPrepareMessageNoStatement() {
+        // given
+        SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
+                "service.org",
+                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                null,
+                Uri.parse("https://service.org/login"),
+                "1",
+                "1",
+                "32832457",
+                "2021-01-11T11:15:23.000Z",
+                null,
+                null,
+                null,
+                null
+        );
+
+        String expectedMessage = "service.org wants you to sign in with your Solana account:" +
+                "\n43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj" +
+                "\n\n\nURI: https://service.org/login" +
+                "\nVersion: 1" +
+                "\nChain ID: 1" +
+                "\nNonce: 32832457" +
+                "\nIssued At: 2021-01-11T11:15:23.000Z";
+
+        // when
+        String message = payload.prepareMessage();
+
+        // then
+        assertEquals(expectedMessage, message);
+    }
+
+    @Test
+    public void testPayloadPrepareMinimalMessage() {
+        // given
+        SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
+                "service.org",
+                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                "I accept the ServiceOrg Terms of Service: https://service.org/tos",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        String expectedMessage = "service.org wants you to sign in with your Solana account:" +
+                "\n43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj" +
+                "\n\nI accept the ServiceOrg Terms of Service: https://service.org/tos";
+
+        // when
+        String message = payload.prepareMessage();
+
+        // then
+        assertEquals(expectedMessage, message);
+    }
+
+    @Test
     public void testPayloadFromJson() throws JSONException {
         // given
         JSONObject payloadJson = new JSONObject(

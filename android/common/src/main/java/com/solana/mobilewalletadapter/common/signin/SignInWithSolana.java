@@ -220,12 +220,14 @@ public class SignInWithSolana {
 
             final String suffix = String.join("\n", suffixArray);
 
-            prefix = String.join("\n\n", prefix, statement);
             if (statement != null) {
+                prefix = String.join("\n\n", prefix, statement);
                 prefix += "\n";
+            } else {
+                prefix += "\n\n";
             }
 
-            return String.join("\n", prefix, suffix);
+            return suffix.isEmpty() ? prefix.trim() : String.join("\n", prefix, suffix);
         }
 
         @NonNull
