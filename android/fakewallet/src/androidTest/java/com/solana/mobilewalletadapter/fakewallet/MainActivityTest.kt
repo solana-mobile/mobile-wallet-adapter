@@ -184,7 +184,7 @@ class MainActivityTest {
         val identityName = "Test"
         val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
         val signInPayload = SignInWithSolana.Payload(
-            "test.com", "sign in statement", identityUri, Iso8601DateTime.now()
+            "test.com", "sign in statement"
         )
 
         // simulate client side scenario
