@@ -22,7 +22,7 @@ public class PayloadTest {
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 Uri.parse("https://service.org/login"),
                 "1",
-                1,
+                "1",
                 "32832457",
                 "2021-01-11T11:15:23.000Z",
                 null,
@@ -76,7 +76,7 @@ public class PayloadTest {
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 Uri.parse("https://service.org/login"),
                 "1",
-                1,
+                "1",
                 "32832457",
                 "2021-01-11T11:15:23.000Z",
                 null,
@@ -86,6 +86,37 @@ public class PayloadTest {
                         Uri.parse("ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu"),
                         Uri.parse("https://example.com/my-web2-claim.json")
                 }
+        );
+
+        // when
+        SignInWithSolana.Payload payload = SignInWithSolana.Payload.fromJson(payloadJson);
+
+        // then
+        assertEquals(expectedPayload, payload);
+    }
+    @Test
+    public void testPayloadFromMinimalJson() throws JSONException {
+        // given
+        JSONObject payloadJson = new JSONObject(
+                "{" +
+                    "\"domain\": \"service.org\"," +
+                    "\"address\": \"43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj\"" +
+                "}"
+        );
+
+        SignInWithSolana.Payload expectedPayload = new SignInWithSolana.Payload(
+                "service.org",
+                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         // when
@@ -104,7 +135,7 @@ public class PayloadTest {
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 Uri.parse("https://service.org/login"),
                 "1",
-                1,
+                "1",
                 "32832457",
                 "2021-01-11T11:15:23.000Z",
                 null,
@@ -118,16 +149,16 @@ public class PayloadTest {
 
         JSONObject expectedJson = new JSONObject(
                 "{" +
-                        "\"domain\": \"service.org\"," +
-                        "\"address\": \"43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj\"," +
-                        "\"statement\": \"I accept the ServiceOrg Terms of Service: https://service.org/tos\"," +
-                        "\"uri\": \"https://service.org/login\"," +
-                        "\"version\": \"1\"," +
-                        "\"chainId\": 1," +
-                        "\"nonce\": \"32832457\"," +
-                        "\"issuedAt\": \"2021-01-11T11:15:23.000Z\"," +
-                        "\"resources\": [\"ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu\", \"https://example.com/my-web2-claim.json\"]" +
-                        "}"
+                    "\"domain\": \"service.org\"," +
+                    "\"address\": \"43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj\"," +
+                    "\"statement\": \"I accept the ServiceOrg Terms of Service: https://service.org/tos\"," +
+                    "\"uri\": \"https://service.org/login\"," +
+                    "\"version\": \"1\"," +
+                    "\"chainId\": \"1\"," +
+                    "\"nonce\": \"32832457\"," +
+                    "\"issuedAt\": \"2021-01-11T11:15:23.000Z\"," +
+                    "\"resources\": [\"ipfs://Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu\", \"https://example.com/my-web2-claim.json\"]" +
+                "}"
         );
 
         // when

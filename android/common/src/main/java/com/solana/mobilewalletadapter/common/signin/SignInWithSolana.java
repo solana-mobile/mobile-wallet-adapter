@@ -31,8 +31,8 @@ public class SignInWithSolana {
 
     public static class Payload {
         /* RFC 4501 dns authority that is requesting the signing. */
-        @NonNull
-        public final String domain;
+        @Nullable
+        public String domain;
 
         /* Solana address performing the signing */
         @Nullable
@@ -44,24 +44,25 @@ public class SignInWithSolana {
 
         /* RFC 3986 URI referring to the resource that is the subject of the signing
          *  (as in the __subject__ of a claim). */
-        @NonNull
+        @Nullable
         public final Uri uri;
 
         /* Current version of the message. */
-        @NonNull
+        @Nullable
         public final String version;
 
         /* Chain ID to which the session is bound, and the network where
          * Contract Accounts must be resolved. */
-        public final int chainId;
+        @Nullable
+        public final String chainId;
 
         /* Randomized token used to prevent replay attacks, at least 8 alphanumeric
          * characters. */
-        @NonNull
+        @Nullable
         public final String nonce;
 
         /* ISO 8601 datetime string of the current time. */
-        @NonNull
+        @Nullable
         public final String issuedAt;
 
         /* ISO 8601 datetime string that, if present, indicates when the signed
@@ -86,20 +87,18 @@ public class SignInWithSolana {
         @Size(min = 1)
         public final Uri[] resources;
 
-        public Payload(@NonNull String domain,
-                       @Nullable String statement,
-                       @NonNull Uri uri,
-                       @Nullable String issuedAt) {
-            this(domain, null, statement, uri, "1", 1, null,
-                    issuedAt, null, null, null, null);
+        public Payload(@Nullable String domain,
+                       @Nullable String statement) {
+            this(domain, null, statement, null, null, null, null,
+                    null, null, null, null, null);
         }
 
-        public Payload(@NonNull String domain,
+        public Payload(@Nullable String domain,
                        @Nullable String address,
                        @Nullable String statement,
-                       @NonNull Uri uri,
-                       @NonNull String version,
-                       int chainId,
+                       @Nullable Uri uri,
+                       @Nullable String version,
+                       @Nullable String chainId,
                        @Nullable String nonce,
                        @Nullable String issuedAt,
                        @Nullable String expirationTime,
@@ -119,10 +118,8 @@ public class SignInWithSolana {
                 if (nonce.length() < 8 || !nonce.matches("[A-Za-z0-9]+")) {
                     throw new IllegalArgumentException("nonce must be at least 8 alphanumeric characters");
                 }
-                this.nonce = nonce;
-            } else {
-                this.nonce = generateNonce();
             }
+            this.nonce = nonce;
 
             if (issuedAt != null) {
                 try {
@@ -130,10 +127,8 @@ public class SignInWithSolana {
                 } catch (ParseException e) {
                     throw new IllegalArgumentException("issuedAt must be a valid ISO 8601 date time string");
                 }
-                this.issuedAt = issuedAt;
-            } else {
-                this.issuedAt = Iso8601DateTime.now();
             }
+            this.issuedAt = issuedAt;
 
             if (expirationTime != null) {
                 try {
@@ -160,30 +155,45 @@ public class SignInWithSolana {
         }
 
         public String prepareMessage() {
+            if (domain == null) {
+                throw new IllegalStateException("cannot prepare sign in message, no domain provided");
+            }
             if (address == null) {
                 throw new IllegalStateException("cannot prepare sign in message, no address provided");
             }
-            switch (version) {
-                case "1":
-                    return toV1Message();
-                default:
-                    throw new UnsupportedOperationException("Only version 1 SIWS messages are currently supported");
-            }
+            return toV1Message();
         }
 
         private String toV1Message() {
             final String header = domain + " wants you to sign in with your Solana account:";
             String prefix = String.join("\n", header, address);
 
-            final String uriField = "URI: " + uri;
-            final String versionField = "Version: " + version;
-            final String chainField = "Chain ID: " + chainId;
-            final String nonceField = "Nonce: " + nonce;
-            final List<String> suffixArray = new ArrayList<>(
-                    List.of(uriField, versionField, chainField, nonceField));
+            final List<String> suffixArray = new ArrayList<>();
 
-            final String issuedAtField = "Issued At: " + issuedAt;
-            suffixArray.add(issuedAtField);
+            if (uri != null) {
+                final String uriField = "URI: " + uri;
+                suffixArray.add(uriField);
+            }
+
+            if (version != null) {
+                final String versionField = "Version: " + version;
+                suffixArray.add(versionField);
+            }
+
+            if (chainId != null) {
+                final String chainField = "Chain ID: " + chainId;
+                suffixArray.add(chainField);
+            }
+
+            if (nonce != null) {
+                final String nonceField = "Nonce: " + nonce;
+                suffixArray.add(nonceField);
+            }
+
+            if (issuedAt != null) {
+                final String issuedAtField = "Issued At: " + issuedAt;
+                suffixArray.add(issuedAtField);
+            }
 
             if (expirationTime != null) {
                 final String expirationTimeField = "Expiration Time: " + expirationTime;
@@ -226,30 +236,24 @@ public class SignInWithSolana {
         @NonNull
         public static Payload fromJson(JSONObject jsonObject) throws JSONException {
 
-            final String domain = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN);
-            if (domain.isEmpty()) throw new IllegalArgumentException("domain is required");
-
-            final String address = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS) ?
-                    jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS) : null;
+            final String domain = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN)
+                    ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN) : null;
+            final String address = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS)
+                    ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS) : null;
 
             final String uriString = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI);
-            if (uriString.isEmpty()) throw new IllegalArgumentException("uri is required");
-            final Uri uri = Uri.parse(uriString);
+            final Uri uri = uriString.isEmpty() ? null : Uri.parse(uriString);
 
             final String statement = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT)
                     ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT): null;
-
-            final String versionStr = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION);
-            final String version = !versionStr.isEmpty() ? versionStr : "1";
-
-            final int chainId = jsonObject.getInt(SignInWithSolanaContract.PAYLOAD_PARAMETER_CHAIN_ID);
-
-            final String nonce = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_NONCE);
-            // TODO: should we default? (random 8 char alphanumeric string)
-
-            final String issuedAt = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ISSUED_AT);
-            // TODO should we default? (now)
-
+            final String version= jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION)
+                    ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION) : null;
+            final String chainId = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_CHAIN_ID)
+                    ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_CHAIN_ID) : null;
+            final String nonce = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_NONCE)
+                    ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_NONCE) : null;
+            final String issuedAt = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_ISSUED_AT)
+                    ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ISSUED_AT) : null;
             final String expirationTime = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_EXPIRATION_TIME)
                     ? jsonObject.getString(SignInWithSolanaContract.PAYLOAD_PARAMETER_EXPIRATION_TIME): null;
             final String notBefore = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_NOT_BEFORE)
@@ -277,7 +281,7 @@ public class SignInWithSolana {
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN, domain);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, address);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT, statement);
-            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI, uri.toString());
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI, uri != null ? uri.toString() : null);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION, version);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_CHAIN_ID, chainId);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_NONCE, nonce);
@@ -308,14 +312,14 @@ public class SignInWithSolana {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Payload payload = (Payload) o;
-            return domain.equals(payload.domain)
+            return Objects.equals(domain, payload.domain)
                     && Objects.equals(address, payload.address)
                     && Objects.equals(statement, payload.statement)
-                    && uri.equals(payload.uri)
-                    && version.equals(payload.version)
-                    && chainId == payload.chainId
-                    && nonce.equals(payload.nonce)
-                    && issuedAt.equals(payload.issuedAt)
+                    && Objects.equals(uri, payload.uri)
+                    && Objects.equals(version, payload.version)
+                    && Objects.equals(chainId, payload.chainId)
+                    && Objects.equals(nonce, payload.nonce)
+                    && Objects.equals(issuedAt, payload.issuedAt)
                     && Objects.equals(expirationTime, payload.expirationTime)
                     && Objects.equals(notBefore, payload.notBefore)
                     && Objects.equals(requestId, payload.requestId)
@@ -333,19 +337,19 @@ public class SignInWithSolana {
 
     static class Parser {
         static final String DOMAIN = "(?<domain>([^?#]*)) wants you to sign in with your Solana account:";
-        static final String ADDRESS = "\\n(?<address>[a-zA-Z0-9]{32,44})\\n\\n";
-        static final String STATEMENT = "((?<statement>[^\\n]+)\\n)?";
-        static final String URI = "(([^:?#]+):)?(([^?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))";
-        static final String URI_LINE = "\\nURI: (?<uri>" + URI + "?)";
-        static final String VERSION = "\\nVersion: (?<version>1)";
-        static final String CHAIN_ID = "\\nChain ID: (?<chainId>[0-9]+)";
-        static final String NONCE = "\\nNonce: (?<nonce>[a-zA-Z0-9]{8,})";
-        static final String DATETIME = "([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(.[0-9]+)?(([Zz])|([+|-]([01][0-9]|2[0-3]):[0-5][0-9]))";
-        static final String ISSUED_AT = "\\nIssued At: (?<issuedAt>" + DATETIME + ")";
-        static final String EXPIRATION_TIME = "(\\nExpiration Time: (?<expirationTime>" + DATETIME + "))?";
-        static final String NOT_BEFORE = "(\\nNot Before: (?<notBefore>" + DATETIME + "))?";
-        static final String REQUEST_ID = "(\\nRequest ID: (?<requestId>[-._~!$&'()*+,;=:@%a-zA-Z0-9]*))?";
-        static final String RESOURCES = "(\\nResources:(?<resources>(\\n- " + URI + "?)+))?";
+        static final String ADDRESS = "\\n(?<address>[a-zA-Z0-9]{32,44})(?:\\n{1,2}|$)";
+        static final String STATEMENT = "((?<statement>[\\S\\s]+?)(?:\\n|$))??";
+        static final String URI = "(?:(?:[^:?#]+):)?(?:[^?#\\n]*)?(?:[^?#\\n]*)(?:\\?(?:[^#\\n]*))?(?:#(?:.*))";
+        static final String URI_LINE = "(?:\\nURI: (?<uri>" + URI + "?))?";
+        static final String VERSION = "(?:\\nVersion: (?<version>1))?";
+        static final String CHAIN_ID = "(?:\\nChain ID: (?<chainId>[0-9]+))?";
+        static final String NONCE = "(?:\\nNonce: (?<nonce>[a-zA-Z0-9]{8,}))?";
+        static final String DATETIME = "(?:[0-9]+)-(?:0[1-9]|1[012])-(?:0[1-9]|[12][0-9]|3[01])[Tt](?:[01][0-9]|2[0-3]):(?:[0-5][0-9]):(?:[0-5][0-9]|60)(?:.[0-9]+)?(?:(?:[Zz])|(?:[+|-](?:[01][0-9]|2[0-3]):[0-5][0-9]))";
+        static final String ISSUED_AT = "(?:\\nIssued At: (?<issuedAt>" + DATETIME + "))?";
+        static final String EXPIRATION_TIME = "(?:\\nExpiration Time: (?<expirationTime>" + DATETIME + "))?";
+        static final String NOT_BEFORE = "(?:\\nNot Before: (?<notBefore>" + DATETIME + "))?";
+        static final String REQUEST_ID = "(?:\\nRequest ID: (?<requestId>[-._~!$&'()*+,;=:@%a-zA-Z0-9]*))?";
+        static final String RESOURCES = "(?:\\nResources:(?<resources>(\\n- " + URI + "?)+))?";
         static final String MESSAGE = "^" + DOMAIN + ADDRESS + STATEMENT + URI_LINE + VERSION + CHAIN_ID
                 + NONCE + ISSUED_AT + EXPIRATION_TIME + NOT_BEFORE + REQUEST_ID + RESOURCES + "$";
 
@@ -356,14 +360,14 @@ public class SignInWithSolana {
         static final int GROUP_ADDRESS = 3;
         static final int GROUP_STATEMENT = 5;
         static final int GROUP_URI = 6;
-        static final int GROUP_VERSION = 16;
-        static final int GROUP_CHAIN_ID = 17;
-        static final int GROUP_NONCE = 18;
-        static final int GROUP_ISSUED_AT = 19;
-        static final int GROUP_EXPIRATION_TIME = 32;
-        static final int GROUP_NOT_BEFORE = 45;
-        static final int GROUP_REQUEST_ID = 58;
-        static final int GROUP_RESOURCES = 60;
+        static final int GROUP_VERSION = 7;
+        static final int GROUP_CHAIN_ID = 8;
+        static final int GROUP_NONCE = 9;
+        static final int GROUP_ISSUED_AT = 10;
+        static final int GROUP_EXPIRATION_TIME = 11;
+        static final int GROUP_NOT_BEFORE = 12;
+        static final int GROUP_REQUEST_ID = 13;
+        static final int GROUP_RESOURCES = 14;
 
         static Payload parseMessage(String message) {
             Matcher payloadMatcher = Parser.messagePattern.matcher(message);
@@ -381,31 +385,12 @@ public class SignInWithSolana {
 
                 String statement = payloadMatcher.group(GROUP_STATEMENT);
                 String uriString = payloadMatcher.group(GROUP_URI);
-                Uri uri = Uri.parse(uriString);
+                Uri uri = uriString != null ? Uri.parse(uriString) : null;
 
                 String version = payloadMatcher.group(GROUP_VERSION);
-                if (version == null) {
-                    throw new IllegalArgumentException("Failed to parse message: version not found");
-                }
-
-                String chainIdString = payloadMatcher.group(GROUP_CHAIN_ID);
-                int chainId;
-                if (chainIdString == null) {
-                    chainId = 1;
-                } else {
-                    chainId= Integer.parseInt(chainIdString, 10);
-                }
-
+                String chainId = payloadMatcher.group(GROUP_CHAIN_ID);
                 String nonce = payloadMatcher.group(GROUP_NONCE);
-                if (nonce == null) {
-                    throw new IllegalArgumentException("Failed to parse message: nonce not found");
-                }
-
                 String issuedAt = payloadMatcher.group(GROUP_ISSUED_AT);
-                if (issuedAt == null) {
-                    throw new IllegalArgumentException("Failed to parse message: issuedAt not found");
-                }
-
                 String expirationTime = payloadMatcher.group(GROUP_EXPIRATION_TIME);
                 String notBefore = payloadMatcher.group(GROUP_NOT_BEFORE);
                 String requestId = payloadMatcher.group(GROUP_REQUEST_ID);

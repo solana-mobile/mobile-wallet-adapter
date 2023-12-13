@@ -193,6 +193,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         try {
             final JSONObject signInJson = o.optJSONObject(ProtocolContract.PARAMETER_SIGN_IN_PAYLOAD);
             signInPayload = signInJson != null ? SignInWithSolana.Payload.fromJson(signInJson) : null;
+            if (signInPayload != null && signInPayload.domain == null) {
+                signInPayload.domain = identityUri != null ? identityUri.getHost() : identityName;
+            }
         } catch (JSONException e) {
             handleRpcError(id, ERROR_INVALID_PARAMS, "When specified, addresses must be a JSONArray of strings", null);
             return;
