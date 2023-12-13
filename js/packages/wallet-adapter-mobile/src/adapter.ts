@@ -37,6 +37,7 @@ import { toUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
 import { SolanaSignInInput, SolanaSignInOutput } from '@solana/wallet-standard-features';
 import type { WalletAccount } from '@wallet-standard/core';
+import { SignInPayload } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -220,7 +221,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         });
     }
 
-    async performAuthorization(signInPayload?: SignInPayloadWithRequiredFields): Promise<AuthorizationResult> {
+    async performAuthorization(signInPayload?: SignInPayload): Promise<AuthorizationResult> {
         try {
             const cachedAuthorizationResult = await this._authorizationResultCache.get();
             if (cachedAuthorizationResult) {
@@ -478,7 +479,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         });
     }
 
-    async signIn(input?: SolanaSignInInput & SignInPayloadWithRequiredFields): Promise<SolanaSignInOutput> {
+    async signIn(input?: SolanaSignInInput): Promise<SolanaSignInOutput> {
         return await this.runWithGuard(async () => {
             if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
                 throw new WalletNotReadyError();
@@ -488,7 +489,8 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
                 const authorizationResult = await this.performAuthorization({
                     ...input,
                     domain: input?.domain ?? window.location.host,
-                    uri: input?.uri ?? window.location.origin
+                    // address: 
+                    // uri: input?.uri //?? window.location.origin
                 });
                 if (!authorizationResult.sign_in_result) {
                     throw new Error("Sign in failed, no sign in result returned by wallet");

@@ -1,4 +1,4 @@
-import { createDefaultSolanaSignInParams, createSIWSMessageBase64 } from "./createSIWSMessage";
+import { createSIWSMessageBase64 } from "./createSIWSMessage";
 import { 
     AuthorizationResult, 
     MobileWallet, 
@@ -73,7 +73,7 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
         .toLowerCase();
     switch (methodName) {
         case 'authorize': {
-            let { chain, sign_in_payload: signInPayload } = params as Parameters<MobileWallet['authorize']>[0];
+            let { chain } = params as Parameters<MobileWallet['authorize']>[0];
             if (protocolVersion === 'legacy') {
                 switch (chain) {
                     case 'solana:testnet': { chain = 'testnet'; break; }
@@ -89,13 +89,6 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
                     case 'mainnet-beta': { chain = 'solana:mainnet'; break; }
                 }
                 (params as Parameters<MobileWallet['authorize']>[0]).chain = chain;
-
-                if (signInPayload) {
-                    (params as Parameters<MobileWallet['authorize']>[0]).sign_in_payload = {
-                        ...createDefaultSolanaSignInParams(),
-                        ...signInPayload
-                    };
-                }
             }
         }
         case 'reauthorize': {
@@ -164,8 +157,9 @@ async function signInFallback(
     authorizationResult: Awaited<ReturnType<MobileWallet['authorize']>>,
     protocolRequestHandler: (method: string, params: Parameters<MobileWallet['signMessages']>[0]) => Promise<unknown>
 ) {
-    const address = (authorizationResult as AuthorizationResult).accounts[0].address
-    const siwsMessage = createSIWSMessageBase64({ ...signInPayload, address })
+    const domain = signInPayload.domain ?? window.location.host;
+    const address = (authorizationResult as AuthorizationResult).accounts[0].address;
+    const siwsMessage = createSIWSMessageBase64({ ...signInPayload, domain, address })
     const signMessageResult = await (protocolRequestHandler('sign_messages', 
         { 
             addresses: [ address ], 
