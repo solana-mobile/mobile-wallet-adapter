@@ -168,7 +168,7 @@ export type SignInPayload = Readonly<{
     notBefore?: string;
     requestId?: string;
     resources?: readonly string[];
-}> & SolanaSignInInput;
+}> | SolanaSignInInput;
 
 export type SignInPayloadWithRequiredFields = Partial<SignInPayload> & 
     Required<Pick<SignInPayload, 'domain' | 'address'>>

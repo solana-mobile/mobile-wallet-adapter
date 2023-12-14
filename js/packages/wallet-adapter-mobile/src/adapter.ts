@@ -488,9 +488,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
             try {
                 const authorizationResult = await this.performAuthorization({
                     ...input,
-                    domain: input?.domain ?? window.location.host,
-                    // address: 
-                    // uri: input?.uri //?? window.location.origin
+                    domain: input?.domain ?? window.location.host
                 });
                 if (!authorizationResult.sign_in_result) {
                     throw new Error("Sign in failed, no sign in result returned by wallet");
