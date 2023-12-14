@@ -8,6 +8,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+@Deprecated
 /*package*/ interface PublicKeysDaoInterface {
 
     @IntRange(from = -1)

@@ -25,6 +25,10 @@ import { fromUint8Array, toUint8Array } from './base64Utils.js';
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions<T extends LegacyTransaction | VersionedTransaction>(params: {
         minContextSlot?: number;
+        commitment?: string;
+        skipPreflight?: boolean;
+        maxRetries?: number;
+        waitForCommitmentToSendNextTransaction?: boolean;
         transactions: T[];
     }): Promise<TransactionSignature[]>;
 }
@@ -60,8 +64,8 @@ function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTra
 }
 
 function getTransactionFromWireMessage(byteArray: Uint8Array): Transaction | VersionedTransaction {
-    const numSignatures = byteArray[0]
-    const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1
+    const numSignatures = byteArray[0];
+    const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1;
     const version = VersionedMessage.deserializeMessageVersion(byteArray.slice(messageOffset, byteArray.length));
     if (version === 'legacy') {
         return Transaction.from(byteArray);
@@ -82,14 +86,25 @@ export async function transact<TReturn>(
                         case 'signAndSendTransactions':
                             target[p] = async function ({
                                 minContextSlot,
+                                commitment,
+                                skipPreflight,
+                                maxRetries,
+                                waitForCommitmentToSendNextTransaction,
                                 transactions,
                                 ...rest
                             }: Parameters<Web3MobileWallet['signAndSendTransactions']>[0]) {
                                 const payloads = transactions.map(getPayloadFromTransaction);
+                                const options = {
+                                    min_context_slot: minContextSlot,
+                                    commitment: commitment,
+                                    skip_preflight: skipPreflight,
+                                    max_retries: maxRetries,
+                                    wait_for_commitment_to_send_next_transaction: waitForCommitmentToSendNextTransaction
+                                };
                                 const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
                                     ...rest,
-                                    ...(minContextSlot != null
-                                        ? { options: { min_context_slot: minContextSlot } }
+                                    ...(Object.values(options).some(element => element != null) 
+                                        ? { options: options } 
                                         : null),
                                     payloads,
                                 });

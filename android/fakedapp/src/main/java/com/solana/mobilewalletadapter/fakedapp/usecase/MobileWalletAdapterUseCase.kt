@@ -22,6 +22,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenari
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -48,12 +49,14 @@ object MobileWalletAdapterUseCase {
     class Client(private val client: MobileWalletAdapterClient) {
         suspend fun authorize(
             identity: DappIdentity,
-            cluster: String?
+            chain: String?,
+            signInPayload: SignInWithSolana.Payload?
         ): MobileWalletAdapterClient.AuthorizationResult = coroutineScope {
             try {
                 runInterruptible(Dispatchers.IO) {
                     client.authorize(
-                        identity.uri, identity.iconRelativeUri, identity.name, cluster
+                        identity.uri, identity.iconRelativeUri, identity.name, chain,
+                        null, null, null, signInPayload
                     ).get()!!
                 }
             } catch (e: ExecutionException) {

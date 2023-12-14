@@ -10,6 +10,8 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -33,9 +35,13 @@ public class AuthRecord {
     public final String accountLabel;
 
     @NonNull
+    public final AccountRecord accountRecord;
+
+    @NonNull
     public final String chain;
 
-    @NonNull @Deprecated
+    @Deprecated
+    @NonNull
     public final String cluster;
 
     @NonNull
@@ -45,7 +51,7 @@ public class AuthRecord {
     public final Uri walletUriBase;
 
     @IntRange(from = 1)
-    /*package*/ final int publicKeyId;
+    /*package*/ final int accountId;
 
     @IntRange(from = 1)
     /*package*/ final int walletUriBaseId;
@@ -54,12 +60,11 @@ public class AuthRecord {
 
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
-                           @NonNull byte[] publicKey,
-                           @Nullable String accountLabel,
+                           @NonNull AccountRecord accountRecord,
                            @NonNull String chain,
                            @NonNull byte[] scope,
                            @Nullable Uri walletUriBase,
-                           @IntRange(from = 1) int publicKeyId,
+                           @IntRange(from = 1) int accountId,
                            @IntRange(from = 1) int walletUriBaseId,
                            @IntRange(from = 0) long issued,
                            @IntRange(from = 0) long expires) {
@@ -67,16 +72,23 @@ public class AuthRecord {
         // other components within this package.
         this.id = id;
         this.identity = identity;
-        this.publicKey = publicKey;
-        this.accountLabel = accountLabel;
+        this.accountRecord = accountRecord;
         this.chain = chain;
         this.cluster = chain;
         this.scope = scope;
         this.walletUriBase = walletUriBase;
-        this.publicKeyId = publicKeyId;
+        this.accountId = accountId;
         this.walletUriBaseId = walletUriBaseId;
         this.issued = issued;
         this.expires = expires;
+
+        this.publicKey = accountRecord.publicKeyRaw;
+        this.accountLabel = accountRecord.accountLabel;
+    }
+
+    public AuthorizedAccount authorizedAccount() {
+        return new AuthorizedAccount(accountRecord.publicKeyRaw, accountRecord.accountLabel,
+                accountRecord.icon, accountRecord.chains, accountRecord.features);
     }
 
     public boolean isExpired() {

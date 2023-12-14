@@ -115,7 +115,7 @@ class AuthorizeDappFragment : Fragment() {
         viewBinding.btnSimulateInternalError.setOnClickListener {
             request?.let {
                 Log.w(TAG, "Simulating internal error")
-                activityViewModel.authorizeDappSimulateInternalError(it)
+                activityViewModel.authorizationSimulateInternalError(it)
             }
         }
     }

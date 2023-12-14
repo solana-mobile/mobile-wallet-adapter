@@ -6,6 +6,7 @@ export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_SESSION_CLOSED: 'ERROR_SESSION_CLOSED',
     ERROR_SESSION_TIMEOUT: 'ERROR_SESSION_TIMEOUT',
     ERROR_WALLET_NOT_FOUND: 'ERROR_WALLET_NOT_FOUND',
+    ERROR_INVALID_PROTOCOL_VERSION: 'ERROR_INVALID_PROTOCOL_VERSION',
 } as const;
 type SolanaMobileWalletAdapterErrorCodeEnum =
     typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode];
@@ -21,6 +22,7 @@ type ErrorDataTypeMap = {
     };
     [SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND]: undefined;
+    [SolanaMobileWalletAdapterErrorCode.ERROR_INVALID_PROTOCOL_VERSION]: undefined;
 };
 
 export class SolanaMobileWalletAdapterError<TErrorCode extends SolanaMobileWalletAdapterErrorCodeEnum> extends Error {

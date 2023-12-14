@@ -83,20 +83,38 @@ export default function useAuthorization() {
     [authorization, setAuthorization],
   );
   const authorizeSession = useCallback(
-    async (wallet: AuthorizeAPI & ReauthorizeAPI) => {
-      const authorizationResult = await (authorization
-        ? wallet.reauthorize({
-            auth_token: authorization.authToken,
-            identity: APP_IDENTITY,
-          })
-        : wallet.authorize({
-            cluster: 'devnet',
-            identity: APP_IDENTITY,
-          }));
+    async (wallet: AuthorizeAPI) => {
+      const authorizationResult = await wallet.authorize(
+        {
+          chain: 'solana:devnet',
+          identity: APP_IDENTITY,
+          auth_token: authorization ? authorization.authToken : undefined,
+        }
+      );
       return (await handleAuthorizationResult(authorizationResult))
         .selectedAccount;
     },
     [authorization, handleAuthorizationResult],
+  );
+  const authorizeSessionWithSignIn = useCallback(
+    async (wallet: AuthorizeAPI) => {
+      const authorizationResult = await wallet.authorize(
+        {
+          chain: 'solana:devnet',
+          identity: APP_IDENTITY,
+          // used to test sign in with solana
+          // the dapp should also verify the signature returned in the authorizationResult
+          sign_in_payload: {
+            domain: 'solanamobile.com',
+            statement: 'Sign into React Native Sample App',
+            uri: 'https://solanamobile.com',
+          }
+        }
+      );
+      return (await handleAuthorizationResult(authorizationResult))
+        .selectedAccount;
+    },
+    [handleAuthorizationResult],
   );
   const deauthorizeSession = useCallback(
     async (wallet: DeauthorizeAPI) => {
@@ -132,10 +150,11 @@ export default function useAuthorization() {
     () => ({
       accounts: authorization?.accounts ?? null,
       authorizeSession,
+      authorizeSessionWithSignIn,
       deauthorizeSession,
       onChangeAccount,
       selectedAccount: authorization?.selectedAccount ?? null,
     }),
-    [authorization, authorizeSession, deauthorizeSession, onChangeAccount],
+    [authorization, authorizeSession, authorizeSessionWithSignIn, deauthorizeSession, onChangeAccount],
   );
 }

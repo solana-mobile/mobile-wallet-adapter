@@ -20,6 +20,8 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.walletlib.scenario.TestScopeLowPowerMode
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -170,6 +172,48 @@ class MainActivityTest {
 
         // verify that we got an auth authorization error (declined auth)
         assertNotNull(authResult)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulSignIn() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+        val signInPayload = SignInWithSolana.Payload(
+            "test.com", "sign in statement", identityUri, Iso8601DateTime.now()
+        )
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+
+        // trigger authorization from client
+        val authorization = localAssociation.start().get().run {
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, signInPayload)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_sign_in))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // verify that we got an auth token (successful auth)
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+        assertTrue(authResult?.signInResult != null)
     }
 
     @Test

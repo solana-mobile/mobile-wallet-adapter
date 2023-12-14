@@ -2,6 +2,7 @@ import arrayBufferToBase64String from './arrayBufferToBase64String.js';
 import { assertAssociationPort } from './associationPort.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
 import getStringWithURLUnsafeBase64CharactersReplaced from './getStringWithURLUnsafeBase64CharactersReplaced.js';
+import { ProtocolVersion } from './types.js';
 
 const INTENT_NAME = 'solana-wallet';
 
@@ -41,6 +42,7 @@ export default async function getAssociateAndroidIntentURL(
     associationPublicKey: CryptoKey,
     putativePort: number,
     associationURLBase?: string,
+    protocolVersions: ProtocolVersion[] = ['v1'],
 ): Promise<URL> {
     const associationPort = assertAssociationPort(putativePort);
     const exportedKey = await crypto.subtle.exportKey('raw', associationPublicKey);
@@ -48,5 +50,8 @@ export default async function getAssociateAndroidIntentURL(
     const url = getIntentURL('v1/associate/local', associationURLBase);
     url.searchParams.set('association', getStringWithURLUnsafeBase64CharactersReplaced(encodedKey));
     url.searchParams.set('port', `${associationPort}`);
+    protocolVersions.forEach( (version) => {
+        url.searchParams.set('v', version);
+    })
     return url;
 }

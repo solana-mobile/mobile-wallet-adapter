@@ -15,6 +15,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -146,13 +147,17 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public final Uri walletUriBase;
         @NonNull @Size(min = 1)
         public final AuthorizedAccount[] accounts;
+        @Nullable
+        public final SignInResult signInResult;
 
         private AuthorizationResult(@NonNull String authToken,
                                     @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
-                                    @Nullable Uri walletUriBase) {
+                                    @Nullable Uri walletUriBase,
+                                    @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
             this.accounts = accounts;
+            this.signInResult = signInResult;
             this.publicKey = accounts[0].publicKey;
             this.accountLabel = accounts[0].accountLabel;
         }
@@ -199,6 +204,36 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             }
         }
 
+        public static class SignInResult {
+            @NonNull
+            public final byte[] publicKey;
+            @NonNull
+            public final byte[] signedMessage;
+            @NonNull
+            public final byte[] signature;
+            @NonNull
+            public final String signatureType;
+
+            public SignInResult(@NonNull byte[] publicKey, @NonNull byte[] signedMessage,
+                                @NonNull byte[] signature, @NonNull String signatureType) {
+                this.publicKey = publicKey;
+                this.signedMessage = signedMessage;
+                this.signature = signature;
+                this.signatureType = signatureType;
+            }
+
+            @NonNull
+            @Override
+            public String toString() {
+                return "SignInResult{" +
+                        "publicKey=" + Arrays.toString(publicKey) +
+                        ", signedMessage=" + Arrays.toString(signedMessage) +
+                        ", signature=" + Arrays.toString(signature) +
+                        ", signatureType='" + signatureType + '\'' +
+                        '}';
+            }
+        }
+
         @Deprecated @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
         public static AuthorizationResult create(
                 String authToken,
@@ -207,7 +242,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 Uri walletUriBase
         ) {
             AuthorizedAccount[] accounts = new AuthorizedAccount[] { new AuthorizedAccount(publicKey, accountLabel, null, null) };
-            return new AuthorizationResult(authToken, accounts, walletUriBase);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, null);
         }
 
         @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
@@ -216,7 +251,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 AuthorizedAccount[] accounts,
                 Uri walletUriBase
         ) {
-            return new AuthorizationResult(authToken, accounts, walletUriBase);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, null);
         }
     }
 
@@ -291,7 +326,36 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                         walletUriBaseStr + "'; expected a 'https' URI");
             }
 
-            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase);
+            final JSONObject signInResultJson = jo.has(ProtocolContract.RESULT_SIGN_IN) ?
+                    jo.optJSONObject(ProtocolContract.RESULT_SIGN_IN) : null;
+            final AuthorizationResult.SignInResult signInResult;
+            if (signInResultJson != null) {
+                final String address = signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_ADDRESS);
+                if (address.isEmpty()) {
+                    throw new JsonRpc20InvalidResponseException("expected an address in sign_in_result");
+                }
+                final byte[] publicKey = JsonPack.unpackBase64PayloadToByteArray(address);
+
+                final String signedMessageStr = signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_SIGNED_MESSAGE);
+                if (signedMessageStr.isEmpty()) {
+                    throw new JsonRpc20InvalidResponseException("expected an address in sign_in_result");
+                }
+                final byte[] signedMessage = JsonPack.unpackBase64PayloadToByteArray(signedMessageStr);
+
+                final String signatureStr = signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_SIGNATURE);
+                if (signatureStr.isEmpty()) {
+                    throw new JsonRpc20InvalidResponseException("expected an address in sign_in_result");
+                }
+                final byte[] signature = JsonPack.unpackBase64PayloadToByteArray(signatureStr);
+
+                final String signatureType = signInResultJson.has(ProtocolContract.RESULT_SIGN_IN_SIGNATURE_TYPE) ?
+                        signInResultJson.optString(ProtocolContract.RESULT_SIGN_IN_SIGNATURE_TYPE) : "ed25519";
+                signInResult = new AuthorizationResult.SignInResult(publicKey, signedMessage, signature, signatureType);
+            } else {
+                signInResult = null;
+            }
+
+            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase, signInResult);
         }
 
         @Override
@@ -344,8 +408,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                          @Nullable String chain,
                                          @Nullable String authToken,
                                          @Nullable String[] features,
-                                         @Nullable byte[][] addresses
-                                         /* TODO: sign in payload */)
+                                         @Nullable byte[][] addresses,
+                                         @Nullable SignInWithSolana.Payload signInPayload)
             throws IOException {
         if (identityUri != null && (!identityUri.isAbsolute() || !identityUri.isHierarchical())) {
             throw new IllegalArgumentException("If non-null, identityUri must be an absolute, hierarchical Uri");
@@ -372,6 +436,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
             authorize.put(ProtocolContract.PARAMETER_AUTH_TOKEN, authToken); // null is OK
             authorize.put(ProtocolContract.PARAMETER_FEATURES, featuresArr); // null is OK
             authorize.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr); // null is OK
+            if (signInPayload != null ) {
+                authorize.put(ProtocolContract.PARAMETER_SIGN_IN_PAYLOAD, signInPayload.toJson());
+            }
         } catch (JSONException e) {
             throw new UnsupportedOperationException("Failed to create authorize JSON params", e);
         }
