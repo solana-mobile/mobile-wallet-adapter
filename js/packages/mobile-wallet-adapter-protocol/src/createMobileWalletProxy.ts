@@ -31,7 +31,7 @@ export default function createMobileWalletProxy<
                     const { method, params } = handleMobileWalletRequest(p, inputParams, protocolVersion);
                     const result = await protocolRequestHandler(method, params) as Awaited<ReturnType<MobileWallet[TMethodName]>>;
                     // if the request tried to sign in but the wallet did not return a sign in result, fallback on message signing
-                    if (method === 'authorize' && params?.hasOwnProperty('sign_in_payload') && !result.hasOwnProperty('sign_in_result')) {
+                    if (method === 'authorize' && (params as any).sign_in_payload && !(result as any).sign_in_result) {
                         (result as any)['sign_in_result'] = await signInFallback(
                             (params as Parameters<MobileWallet['authorize']>[0]).sign_in_payload as SignInPayload, 
                             result as Awaited<ReturnType<MobileWallet['authorize']>>, 
