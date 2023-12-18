@@ -6,6 +6,7 @@ import DisconnectButton from '../components/DisconnectButton';
 import FundAccountButton from '../components/FundAccountButton';
 import type { NextPage } from 'next';
 import RecordMessageButton from '../components/RecordMessageButton';
+import SignInButton from '../components/SignInButton';
 import SignMessageButton from '../components/SignMessageButton';
 import { styled } from '@mui/material/styles';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -51,9 +52,15 @@ const Home: NextPage = () => {
                 <RecordMessageButton message={memoText}>Record Message</RecordMessageButton>
                 <SignMessageButton message={memoText}>Sign Message</SignMessageButton>
                 <FundAccountButton>Fund Account (devnet)</FundAccountButton>
-                <DisconnectButton color="error" variant="outlined">
-                    Disconnect
-                </DisconnectButton>
+                {publicKey ? (
+                    <DisconnectButton color="error" variant="outlined">
+                        Disconnect
+                    </DisconnectButton>
+                ) : (
+                    <SignInButton variant="outlined">
+                        Sign In
+                    </SignInButton>
+                )}
             </Stack>
         </>
     );
