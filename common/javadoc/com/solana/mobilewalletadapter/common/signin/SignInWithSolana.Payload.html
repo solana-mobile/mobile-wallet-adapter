@@ -97,10 +97,10 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color"><code><a href="#address" class="member-name-link">address</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>final int</code></div>
+<div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second odd-row-color"><code><a href="#chainId" class="member-name-link">chainId</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-first even-row-color"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color"><code><a href="#domain" class="member-name-link">domain</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><code>final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
@@ -141,17 +141,15 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(java.lang.String,java.lang.String,android.net.Uri,java.lang.String)" class="member-name-link">Payload</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;domain,
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;statement,
- <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;issuedAt)</code></div>
+<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(java.lang.String,java.lang.String)" class="member-name-link">Payload</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;domain,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;statement)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(java.lang.String,java.lang.String,java.lang.String,android.net.Uri,java.lang.String,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,android.net.Uri%5B%5D)" class="member-name-link">Payload</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;domain,
+<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(java.lang.String,java.lang.String,java.lang.String,android.net.Uri,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,android.net.Uri%5B%5D)" class="member-name-link">Payload</a><wbr>(<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;domain,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;address,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;statement,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;version,
- int&nbsp;chainId,
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;chainId,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;nonce,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;issuedAt,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;expirationTime,
@@ -214,8 +212,8 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="domain">
 <h3>domain</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">domain</span></div>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">domain</span></div>
 </section>
 </li>
 <li>
@@ -235,34 +233,35 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="uri">
 <h3>uri</h3>
-<div class="member-signature"><span class="annotations">@NonNull
+<div class="member-signature"><span class="annotations">@Nullable
 </span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></span>&nbsp;<span class="element-name">uri</span></div>
 </section>
 </li>
 <li>
 <section class="detail" id="version">
 <h3>version</h3>
-<div class="member-signature"><span class="annotations">@NonNull
+<div class="member-signature"><span class="annotations">@Nullable
 </span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">version</span></div>
 </section>
 </li>
 <li>
 <section class="detail" id="chainId">
 <h3>chainId</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type">int</span>&nbsp;<span class="element-name">chainId</span></div>
+<div class="member-signature"><span class="annotations">@Nullable
+</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">chainId</span></div>
 </section>
 </li>
 <li>
 <section class="detail" id="nonce">
 <h3>nonce</h3>
-<div class="member-signature"><span class="annotations">@NonNull
+<div class="member-signature"><span class="annotations">@Nullable
 </span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">nonce</span></div>
 </section>
 </li>
 <li>
 <section class="detail" id="issuedAt">
 <h3>issuedAt</h3>
-<div class="member-signature"><span class="annotations">@NonNull
+<div class="member-signature"><span class="annotations">@Nullable
 </span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">issuedAt</span></div>
 </section>
 </li>
@@ -304,32 +303,29 @@ loadScripts(document, 'script');</script>
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(java.lang.String,java.lang.String,android.net.Uri,java.lang.String)">
+<section class="detail" id="&lt;init&gt;(java.lang.String,java.lang.String)">
 <h3>Payload</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Payload</span><wbr><span class="parameters">(@NonNull
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Payload</span><wbr><span class="parameters">(@Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;domain,
  @Nullable
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;statement,
- @NonNull
- <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
- @Nullable
- <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;issuedAt)</span></div>
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;statement)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="&lt;init&gt;(java.lang.String,java.lang.String,java.lang.String,android.net.Uri,java.lang.String,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,android.net.Uri[])">
+<section class="detail" id="&lt;init&gt;(java.lang.String,java.lang.String,java.lang.String,android.net.Uri,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,android.net.Uri[])">
 <h3>Payload</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Payload</span><wbr><span class="parameters">(@NonNull
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Payload</span><wbr><span class="parameters">(@Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;domain,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;address,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;statement,
- @NonNull
+ @Nullable
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;uri,
- @NonNull
+ @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;version,
- int&nbsp;chainId,
+ @Nullable
+ <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;chainId,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;nonce,
  @Nullable
