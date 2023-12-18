@@ -73,10 +73,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) = viewModelScope.launch {
         try {
             val signInPayload = SignInWithSolana.Payload(
-                "solanamobile.com",
-                "Sign into Fake dApp to do fake things!",
-                IDENTITY.uri!!,
-                null
+                IDENTITY.uri?.host,
+                "Sign into Fake dApp to do fake things!"
             )
 
             val signInResult = doLocalAssociateAndExecute(intentLauncher) { client ->
