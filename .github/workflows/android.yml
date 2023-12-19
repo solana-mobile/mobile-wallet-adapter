@@ -46,7 +46,7 @@ jobs:
         run: ./gradlew build
 
       # Upload binaries to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: binaries
@@ -61,7 +61,7 @@ jobs:
           retention-days: 5
 
       # Upload javadoc to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: clientlib-javadoc
@@ -70,7 +70,7 @@ jobs:
             !android/clientlib/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: common-javadoc
@@ -79,7 +79,7 @@ jobs:
             !android/common/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: walletlib-javadoc
@@ -117,7 +117,7 @@ jobs:
       # Setup
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: "3.9.16"
           architecture: "x64"
@@ -128,7 +128,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
 
       # Caching
       - name: Gradle cache
@@ -136,7 +136,7 @@ jobs:
 
       # Create Genymotion instance
       - name: Start Genymotion Cloud SaaS instance
-        uses:  genymobile/genymotion-saas-github-action@v0.3
+        uses:  genymobile/genymotion-saas-github-action@v0.4
         with:
           email: ${{ secrets.GMSAAS_EMAIL }}
           password: ${{ secrets.GMSAAS_PASSWORD }}
@@ -153,14 +153,14 @@ jobs:
       # Archive test results
       - name: Archive fakewallet test results
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fakewallet-connected-test-results-${{ matrix.api-level }}
           path: android/fakewallet/build/reports/androidTests/connected/
           retention-days: 7
       - name: Archive fakedapp test results
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fakedapp-connected-test-results-${{ matrix.api-level }}
           path: android/fakedapp/build/reports/androidTests/connected/
@@ -208,19 +208,19 @@ jobs:
     if: ${{ github.event_name == 'release' }}
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: binaries
           path: binaries
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: clientlib-javadoc
           path: clientlib-javadoc
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: common-javadoc
           path: common-javadoc
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: walletlib-javadoc
           path: walletlib-javadoc
