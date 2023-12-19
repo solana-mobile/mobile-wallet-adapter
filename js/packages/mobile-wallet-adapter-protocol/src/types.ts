@@ -85,7 +85,7 @@ export interface AuthorizeAPI {
         features?: IdentifierArray; 
         addresses?: string[]; 
         auth_token?: AuthToken; 
-        sign_in_payload?: SignInPayloadWithRequiredFields;
+        sign_in_payload?: SignInPayload;
     }): Promise<AuthorizationResult>;
 }
 export interface CloneAuthorizationAPI {
@@ -156,26 +156,26 @@ export const SolanaCloneAuthorization = 'solana:cloneAuthorization'
 export const SolanaSignInWithSolana = 'solana:signInWithSolana'
 
 export type SignInPayload = Readonly<{
-    domain: string;
+    domain?: string;
     address?: string;
     statement?: string;
-    uri: string;
-    version: string;
-    chainId: string;
-    nonce: string;
-    issuedAt: string;
+    uri?: string;
+    version?: string;
+    chainId?: string;
+    nonce?: string;
+    issuedAt?: string;
     expirationTime?: string;
     notBefore?: string;
     requestId?: string;
-    resources?: string[];
-}> & SolanaSignInInput;
+    resources?: readonly string[];
+}> | SolanaSignInInput;
 
 export type SignInPayloadWithRequiredFields = Partial<SignInPayload> & 
-    Required<Pick<SignInPayload, 'domain' | 'uri'>>
+    Required<Pick<SignInPayload, 'domain' | 'address'>>
 
 export type SignInResult = Readonly<{
-    publicKey: Base64EncodedAddress;
+    address: Base64EncodedAddress;
     signed_message: Base64EncodedSignedMessage;
     signature: Base64EncodedAddress;
     signature_type?: string;
-}>; // | SolanaSignInOutput;
+}>;
