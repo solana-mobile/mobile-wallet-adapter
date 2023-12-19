@@ -1,0 +1,12 @@
+name: Auto Test
+on:
+  workflow_run:
+    workflows: ["Android CI"]
+    types: 
+      - completed
+jobs:
+  do-stuff:
+    runs-on: ubuntu-latest
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - run: echo "test workflow triggered"
