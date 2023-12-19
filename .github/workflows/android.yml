@@ -208,19 +208,19 @@ jobs:
     if: ${{ github.event_name == 'release' }}
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: binaries
           path: binaries
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: clientlib-javadoc
           path: clientlib-javadoc
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: common-javadoc
           path: common-javadoc
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: walletlib-javadoc
           path: walletlib-javadoc
