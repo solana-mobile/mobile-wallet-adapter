@@ -46,7 +46,7 @@ jobs:
         run: ./gradlew build
 
       # Upload binaries to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: binaries
@@ -61,7 +61,7 @@ jobs:
           retention-days: 5
 
       # Upload javadoc to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: clientlib-javadoc
@@ -70,7 +70,7 @@ jobs:
             !android/clientlib/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: common-javadoc
@@ -79,7 +79,7 @@ jobs:
             !android/common/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: walletlib-javadoc
@@ -153,14 +153,14 @@ jobs:
       # Archive test results
       - name: Archive fakewallet test results
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fakewallet-connected-test-results-${{ matrix.api-level }}
           path: android/fakewallet/build/reports/androidTests/connected/
           retention-days: 7
       - name: Archive fakedapp test results
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fakedapp-connected-test-results-${{ matrix.api-level }}
           path: android/fakedapp/build/reports/androidTests/connected/
