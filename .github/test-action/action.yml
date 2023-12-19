@@ -1,0 +1,67 @@
+name: 'android-test'
+description: 'android instrumented tests'
+runs:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - api-level: 27
+            recipe_uuid: ea5fda48-fa8b-48c1-8acc-07d910856141 # Pixel XL, Android 8.1 (API 27)
+          # fb936099-d261-4dd3-8dec-3fc14f1d0f03 # Pixel 3a, Android 9.0 (API 28)
+          # 4c015ada-e64e-4f5d-a320-06cbf6e95648 # Pixel 3a, Android 10 (API 29)
+          # 95016679-8f8d-4890-b026-e4ad889aadf1 # Pixel 3a, Android 11 (API 30)
+          # see here for more recipes: https://support.genymotion.com/hc/en-us/articles/360007473658-Supported-Android-devices-templates-for-Genymotion-Cloud-SaaS
+
+    steps:
+      # Setup
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9.16"
+          architecture: "x64"
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      # Caching
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+
+      # Create Genymotion instance
+      - name: Start Genymotion Cloud SaaS instance
+        uses:  genymobile/genymotion-saas-github-action@v0.3
+        with:
+          email: ${{ secrets.GMSAAS_EMAIL }}
+          password: ${{ secrets.GMSAAS_PASSWORD }}
+          recipe_uuid: ${{ matrix.recipe_uuid }}
+
+      # Run the tests
+      - name: Run Android Integration Tests
+        run: |
+          cd android
+          adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
+          ./gradlew :fakewallet:connectedV1DebugAndroidTest
+          ./gradlew :fakewallet:installV1Debug :fakedapp:connectedDebugAndroidTest
+
+      # Archive test results
+      - name: Archive fakewallet test results
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: fakewallet-connected-test-results-${{ matrix.api-level }}
+          path: android/fakewallet/build/reports/androidTests/connected/
+          retention-days: 7
+      - name: Archive fakedapp test results
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: fakedapp-connected-test-results-${{ matrix.api-level }}
+          path: android/fakedapp/build/reports/androidTests/connected/
+          retention-days: 7
