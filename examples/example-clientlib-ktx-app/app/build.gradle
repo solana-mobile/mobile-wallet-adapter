@@ -22,13 +22,22 @@ android {
 
         Properties properties = new Properties()
         def propertiesFile = project.rootProject.file('local.properties')
+//        if (propertiesFile.exists()) {
+//            properties.load(propertiesFile.newDataInputStream())
+//            buildConfigField "@Nullable String", "HELIUS_KEY",
+//                    "${if (properties.hasProperty("HELIUS_KEY")) "properties.getProperty("HELIUS_KEY")" else null}"
+//        } else {
+//            buildConfigField "@Nullable String", "HELIUS_KEY", "null"
+//        }
+
+        String heliusKey = null
         if (propertiesFile.exists()) {
             properties.load(propertiesFile.newDataInputStream())
-
-            buildConfigField "String", "HELIUS_KEY", "\"${properties.getProperty("HELIUS_KEY")}\""
-        } else {
-            buildConfigField "String", "HELIUS_KEY", "\"\""
+            if (properties.hasProperty("HELIUS_KEY")) {
+                heliusKey = "\"${properties.getProperty("HELIUS_KEY")}\""
+            }
         }
+        buildConfigField "String", "HELIUS_KEY", "$heliusKey"
     }
 
     buildTypes {
