@@ -2,12 +2,16 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
+import android.util.Base64
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult
+import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult.SignInResult
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import kotlinx.coroutines.*
 import java.io.IOException
 import java.util.concurrent.CancellationException
@@ -21,8 +25,6 @@ class MobileWalletAdapter(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider(),
 ) {
-
-    private val adapterOperations = LocalAdapterOperations(ioDispatcher)
 
     var authToken: String? = null
 
@@ -62,13 +64,85 @@ class MobileWalletAdapter(
             field = value
         }
 
-    suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> {
-        return transact(sender) { }
-    }
+    suspend fun connect(sender: ActivityResultSender) = transact(sender) { }
+
+    suspend fun disconnect(sender: ActivityResultSender): TransactionResult<Unit> =
+        associate(sender) {
+            authToken?.let {
+                deauthorize(it)
+                authToken = null
+            }
+
+            TransactionResult.Success(Unit, null)
+        }
+
+    suspend fun signIn(sender: ActivityResultSender,
+                       signInPayload: SignInWithSolana.Payload): TransactionResult<SignInResult>
+        = when (val result = transact(sender, signInPayload) {}) {
+            is TransactionResult.Success -> {
+                result.authResult.signInResult?.run {
+                    TransactionResult.Success(this, result.authResult)
+                } ?: TransactionResult.Failure(
+                    "Sign in failed, no sign in result returned by wallet",
+                    Exception("no sign in result")
+                )
+            }
+            is TransactionResult.Failure -> TransactionResult.Failure(result.message, result.e)
+            is TransactionResult.NoWalletFound -> TransactionResult.NoWalletFound(result.message)
+        }
 
     suspend fun <T> transact(
         sender: ActivityResultSender,
-        block: suspend AdapterOperations.() -> T,
+        signInPayload: SignInWithSolana.Payload? = null,
+        block: suspend AdapterOperations.(authResult: AuthorizationResult) -> T,
+    ): TransactionResult<T> = associate(sender) { sessionProperties ->
+        val protocolVersion = sessionProperties.protocolVersion
+        val authResult = with (connectionIdentity) {
+            if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
+                /**
+                 * TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
+                 * Both the features & addresses params are set to null for now.
+                 */
+                authorize(identityUri, iconUri, identityName,
+                    blockchain.fullName, authToken, null, null, signInPayload)
+            } else {
+                authToken?.let { token ->
+                    reauthorize(identityUri, iconUri, identityName, token)
+                } ?: run {
+                    authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
+                }
+            }.also {
+                authToken = it.authToken
+
+                signInPayload?.run {
+                    it.signInResult ?: run {
+                        // fallback on signMessages for SIWS result
+                        domain = domain ?: identityUri.host
+                        val siwsMesage = prepareMessage(address ?:
+                        Base64.encodeToString(it.accounts.first().publicKey, Base64.NO_WRAP))
+                        val signResult = signMessagesDetached(
+                            arrayOf(siwsMesage.encodeToByteArray()),
+                            arrayOf(Base64.decode(address!!, Base64.NO_WRAP))
+                        ).messages.first()
+                        return@with it.with(SignInResult(
+                            signResult.addresses.first(),
+                            signResult.message,
+                            signResult.signatures.first(),
+                            "ed25519"
+                        ))
+                    }
+                }
+            }
+        }
+
+        val result = block(authResult)
+
+        TransactionResult.Success(result, authResult)
+    }
+
+    private suspend fun <T> associate(
+        sender: ActivityResultSender,
+        block: suspend AdapterOperations.(sessionProperties: SessionProperties) -> TransactionResult<T>,
     ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
             val scenario = scenarioProvider.provideAssociationScenario(timeout)
@@ -104,31 +178,7 @@ class MobileWalletAdapter(
                 try {
                     @Suppress("BlockingMethodInNonBlockingContext")
                     val client = scenario.start().get(ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                    adapterOperations.client = client
-
-                    val protocolVersion = scenario.session.sessionProperties.protocolVersion
-
-                    val authResult = with (connectionIdentity) {
-                        if (protocolVersion == SessionProperties.ProtocolVersion.V1) {
-                            /**
-                             * TODO: Full MWA 2.0 support has feature & multi-address params. Will be implemented in a future minor release.
-                             * Both the features & addresses params are set to null for now.
-                             */
-                            adapterOperations.authorize(identityUri, iconUri, identityName, blockchain.fullName, authToken, null, null)
-                        } else {
-                            authToken?.let { token ->
-                                adapterOperations.reauthorize(identityUri, iconUri, identityName, token)
-                            } ?: run {
-                                adapterOperations.authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
-                            }.also {
-                                authToken = it.authToken
-                            }
-                        }
-                    }
-
-                    val result = block(adapterOperations)
-
-                    TransactionResult.Success(result, authResult)
+                    block(LocalAdapterOperations(ioDispatcher, client), scenario.session.sessionProperties)
                 } catch (e: InterruptedException) {
                     TransactionResult.Failure("Interrupted while waiting for local association to be ready", e)
                 } catch (e: TimeoutException) {

@@ -2,6 +2,7 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,6 +14,9 @@ import java.io.InvalidObjectException
 class LocalAdapterOperations(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ): AdapterOperations {
+
+    constructor(ioDispatcher: CoroutineDispatcher, client: MobileWalletAdapterClient)
+            : this(ioDispatcher) { this.client = client }
 
     var client: MobileWalletAdapterClient? = null
 
@@ -36,11 +40,12 @@ class LocalAdapterOperations(
         chain: String,
         authToken: String?,
         features: Array<String>?,
-        addresses: Array<ByteArray>?
+        addresses: Array<ByteArray>?,
+        signInPayload: SignInWithSolana.Payload?
     ): MobileWalletAdapterClient.AuthorizationResult {
         return withContext(ioDispatcher) {
             @Suppress("BlockingMethodInNonBlockingContext")
-            client?.authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses, null)?.get()
+            client?.authorize(identityUri, iconUri, identityName, chain, authToken, features, addresses, signInPayload)?.get()
                 ?: throw InvalidObjectException("Provide a client before performing adapter operations")
         }
     }

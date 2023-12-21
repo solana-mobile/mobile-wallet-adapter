@@ -1,8 +1,8 @@
 package com.solana.mobilewalletadapter.clientlib
 
 import android.net.Uri
-import androidx.annotation.Nullable
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 
 interface AdapterOperations {
 
@@ -25,7 +25,8 @@ interface AdapterOperations {
         chain: String,
         authToken: String? = null,
         features: Array<String>? = null,
-        addresses: Array<ByteArray>? = null
+        addresses: Array<ByteArray>? = null,
+        signInPayload: SignInWithSolana.Payload? = null
     ): MobileWalletAdapterClient.AuthorizationResult
 
     suspend fun reauthorize(identityUri: Uri, iconUri: Uri, identityName: String, authToken: String): MobileWalletAdapterClient.AuthorizationResult
