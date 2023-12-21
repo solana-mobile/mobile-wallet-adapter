@@ -1,0 +1,1 @@
+export { encode } from 'js-base64';
