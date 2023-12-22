@@ -172,6 +172,11 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                     '}';
         }
 
+        @NonNull
+        public AuthorizationResult with(SignInResult signInResult) {
+            return new AuthorizationResult(authToken, accounts, walletUriBase, signInResult);
+        }
+
         public static class AuthorizedAccount {
             @NonNull
             public final byte[] publicKey;

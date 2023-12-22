@@ -26,7 +26,9 @@ class SolanaRpcUseCase @Inject constructor() {
     private val api: Api
 
     init {
-        val url = URL("https://devnet.helius-rpc.com/?api-key=${BuildConfig.HELIUS_KEY}")
+        val url = URL(BuildConfig.HELIUS_KEY?.let {
+            "https://devnet.helius-rpc.com/?api-key=$it"
+        } ?: "https://api.devnet.solana.com")
 
         val endPoint = RPCEndpoint.custom(url, url, Network.devnet)
         val network = HttpNetworkingRouter(endPoint)

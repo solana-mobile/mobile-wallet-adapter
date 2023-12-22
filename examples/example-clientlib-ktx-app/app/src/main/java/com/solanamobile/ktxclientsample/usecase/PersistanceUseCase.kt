@@ -54,6 +54,16 @@ class PersistanceUseCase @Inject constructor(
         connection = Connected(pubKey, accountLabel, token)
     }
 
+    fun clearConnection() {
+        sharedPreferences.edit().apply {
+            remove(PUBKEY_KEY)
+            remove(ACCOUNT_LABEL)
+            remove(AUTH_TOKEN_KEY)
+        }.apply()
+
+        connection = NotConnected
+    }
+
     companion object {
         const val PUBKEY_KEY = "stored_pubkey"
         const val ACCOUNT_LABEL = "stored_account_label"

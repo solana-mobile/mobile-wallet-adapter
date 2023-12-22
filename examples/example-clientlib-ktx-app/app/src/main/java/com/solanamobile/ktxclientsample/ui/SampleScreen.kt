@@ -87,68 +87,90 @@ fun SampleScreen(
                     )
                 )
 
-                Row(
-                    modifier = Modifier
-                        .padding(
-                            top = 4.dp,
-                            bottom = 4.dp
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.VpnKey,
-                        contentDescription = "Address",
-                        tint = Color.Black,
+                if (viewState.walletFound && viewState.userAddress.isNotEmpty()) {
+                    Row(
                         modifier = Modifier
-                            .size(24.dp)
-                            .padding(end = 8.dp)
-                    )
+                            .padding(
+                                top = 4.dp,
+                                bottom = 4.dp
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.VpnKey,
+                            contentDescription = "Address",
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(end = 8.dp)
+                        )
 
-                    val accountLabel = if (viewState.walletFound) {
-                        if (viewState.userLabel.isNotEmpty()) {
-                            "${viewState.userLabel} - ${viewState.userAddress}"
-                        } else {
-                            viewState.userAddress
-                        }
-                    } else ""
+                        val accountLabel =
+                            if (viewState.userLabel.isNotEmpty()) {
+                                "${viewState.userLabel} - ${viewState.userAddress}"
+                            } else {
+                                viewState.userAddress
+                            }
 
-                    Text(
-                        text = accountLabel,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                        Text(
+                            text = accountLabel,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Balance: \u25ce",
-                        style = MaterialTheme.typography.h5,
-                        maxLines = 1
-                    )
-
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = if (viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
-                        style = MaterialTheme.typography.h5,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Button(
-                        enabled = viewState.walletFound,
-                        elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = MaterialTheme.colors.secondaryVariant
-                        ),
-                        onClick = {
-                            viewModel.addFunds(intentSender)
-                        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Add Funds",
-                            color = MaterialTheme.colors.primary,
+                            text = "Balance: \u25ce",
+                            style = MaterialTheme.typography.h5,
+                            maxLines = 1
                         )
+
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = if (viewState.solBalance >= 0) viewState.solBalance.toString() else "-",
+                            style = MaterialTheme.typography.h5,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Button(
+                            elevation = ButtonDefaults.elevation(defaultElevation = 4.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.secondaryVariant
+                            ),
+                            onClick = {
+                                viewModel.addFunds()
+                            }
+                        ) {
+                            Text(
+                                text = "Add Funds",
+                                color = MaterialTheme.colors.primary,
+                            )
+                        }
+                    }
+
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        onClick = {
+                            viewModel.disconnect(intentSender)
+                        }
+                    ) {
+                        Text("Disconnect")
+                    }
+                } else {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        onClick = {
+                            viewModel.signIn(intentSender)
+                        }
+                    ) {
+                        Text("Sign In")
                     }
                 }
             }

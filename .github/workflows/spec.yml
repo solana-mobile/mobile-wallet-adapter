@@ -46,7 +46,7 @@ jobs:
         working-directory: spec
 
       # Upload spec jekyll site to workflow artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: spec-jekyll-site
           path: spec/_site/*
@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Update spec jekyll site
-        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        uses: solana-mobile/gha-commit-artifact-to-branch@v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages
