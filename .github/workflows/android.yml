@@ -175,7 +175,7 @@ jobs:
 
     steps:
       - name: Update clientlib javadoc
-        uses: solana-mobile/gha-commit-artifact-to-branch@v1
+        uses: solana-mobile/gha-commit-artifact-to-branch@v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages
