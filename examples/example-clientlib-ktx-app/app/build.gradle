@@ -79,7 +79,7 @@ dependencies {
     implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
 
     implementation "com.google.dagger:hilt-android:2.50"
-    kapt "com.google.dagger:hilt-compiler:2.49"
+    kapt "com.google.dagger:hilt-compiler:2.50"
 
     implementation 'com.github.metaplex-foundation:SolanaKT:2.1.0'
     implementation 'org.bitcoinj:bitcoinj-core:0.16.2'
