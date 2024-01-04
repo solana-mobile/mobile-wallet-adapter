@@ -384,6 +384,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
                                 break;
                             case undefined:
                                 targetPreflightCommitment = targetCommitment;
+                                break;
                             default:
                                 targetPreflightCommitment = 'finalized';
                         }
