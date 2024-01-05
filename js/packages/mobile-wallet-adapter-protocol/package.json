@@ -39,6 +39,7 @@
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
+        "@solana/wallet-standard-util": "^1.1.1",
         "js-base64": "^3.7.5"
     },
     "devDependencies": {
