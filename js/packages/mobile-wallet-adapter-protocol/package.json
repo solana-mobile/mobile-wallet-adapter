@@ -38,6 +38,9 @@
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
+    "dependencies": {
+        "js-base64": "^3.7.5"
+    },
     "devDependencies": {
         "@solana/wallet-standard": "^1.1.1",
         "@solana/web3.js": "^1.58.0",
