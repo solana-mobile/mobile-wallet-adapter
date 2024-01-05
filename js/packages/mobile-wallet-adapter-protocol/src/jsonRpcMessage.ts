@@ -2,8 +2,6 @@ import { decryptMessage, encryptMessage } from './encryptedMessage.js';
 import { SolanaMobileWalletAdapterProtocolError } from './errors.js';
 import { SharedSecret } from './parseHelloRsp.js';
 
-const INITIALIZATION_VECTOR_BYTES = 12;
-
 interface JSONRPCRequest<TParams> {
     id: number;
     jsonrpc: '2.0';
