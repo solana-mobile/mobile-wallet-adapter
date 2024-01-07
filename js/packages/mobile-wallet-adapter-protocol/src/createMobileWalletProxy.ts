@@ -8,7 +8,7 @@ import {
     SolanaCloneAuthorization, 
     SolanaSignTransactions 
 } from "./types";
-import { IdentifierArray } from "@wallet-standard/core";
+import type { IdentifierArray } from "@wallet-standard/core";
 
 /**
  * Creates a {@link MobileWallet} proxy that handles backwards compatibility and API to RPC conversion.
