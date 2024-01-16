@@ -64,7 +64,8 @@ class MobileWalletAdapter(
             field = value
         }
 
-    suspend fun connect(sender: ActivityResultSender) = transact(sender) { }
+    suspend fun connect(sender: ActivityResultSender): TransactionResult<AuthorizationResult> =
+        transact(sender) { it }
 
     suspend fun disconnect(sender: ActivityResultSender): TransactionResult<Unit> =
         associate(sender) {
