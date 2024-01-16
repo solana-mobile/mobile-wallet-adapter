@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib
 
+import android.content.Intent
 import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient.AuthorizationResult
@@ -116,9 +117,9 @@ class MobileWalletAdapterTest {
     fun `validate calling connect is successful using default constructor`() = runTest(testDispatcher) {
         val result = mobileWalletAdapter.connect(sender)
 
-        assertTrue { result is TransactionResult.Success<AuthorizationResult> }
-        assertTrue { result.successPayload is AuthorizationResult }
-        assertTrue { (result as TransactionResult.Success<AuthorizationResult>).authResult == sampleAuthResult }
+        assertTrue { result is TransactionResult.Success<Unit> }
+        assertTrue { result.successPayload is Unit }
+        assertTrue { (result as TransactionResult.Success<Unit>).authResult == sampleAuthResult }
     }
 
     @Test
@@ -318,6 +319,84 @@ class MobileWalletAdapterTest {
         mobileWalletAdapter.transact(sender) { }
 
         verify(mockClient, times(1)).authorize(any(), any(), any(), any())
+    }
+
+    @Test
+    fun `validate https wallet URI is used for the session`() = runTest(testDispatcher) {
+        val walletUriBase = Uri.parse("https://mywallet.com/mwa")
+        sampleAuthResult = AuthorizationResult.create("AUTHRESULTTOKEN", byteArrayOf(), "Some Label", walletUriBase)
+
+        var intentUri: Uri? = null
+        sender = mock {
+            onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
+                intentUri = (invocation.arguments.first() as Intent).data
+                val callback = invocation.arguments[1] as (Int) -> Unit
+                callback(-1)
+            }
+        }
+
+        val creds = ConnectionIdentity(
+            identityUri = Uri.EMPTY,
+            iconUri = Uri.EMPTY,
+            identityName = "Test App",
+        )
+
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+
+        val result1 = mobileWalletAdapter.connect(sender)
+
+        assertTrue { result1 is TransactionResult.Success<Unit> }
+        assertTrue { (result1 as TransactionResult.Success<Unit>).authResult.authToken == sampleAuthResult.authToken }
+        assertTrue { intentUri?.scheme == "solana-wallet" }
+
+        val result2 = mobileWalletAdapter.transact(sender) { }
+
+        assertTrue { result2 is TransactionResult.Success<Unit> }
+        assertTrue { (result2 as TransactionResult.Success<Unit>).authResult.authToken == sampleReauthResult.authToken }
+        assertTrue { intentUri.toString().startsWith(walletUriBase.toString()) }
+    }
+
+    @Test
+    fun `validate non https wallet URI is ignored`() = runTest(testDispatcher) {
+        val walletUriBase = Uri.parse("http://mywallet.com/mwa")
+        sampleAuthResult = AuthorizationResult.create("AUTHRESULTTOKEN", byteArrayOf(), "Some Label", walletUriBase)
+
+        var intentUri: Uri? = null
+        sender = mock {
+            onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
+                intentUri = (invocation.arguments.first() as Intent).data
+                val callback = invocation.arguments[1] as (Int) -> Unit
+                callback(-1)
+            }
+        }
+
+        val creds = ConnectionIdentity(
+            identityUri = Uri.EMPTY,
+            iconUri = Uri.EMPTY,
+            identityName = "Test App",
+        )
+
+        mobileWalletAdapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = mockProvider,
+            ioDispatcher = testDispatcher
+        )
+
+        val result1 = mobileWalletAdapter.connect(sender)
+
+        assertTrue { result1 is TransactionResult.Success<Unit> }
+        assertTrue { (result1 as TransactionResult.Success<Unit>).authResult.authToken == sampleAuthResult.authToken }
+        assertTrue { intentUri?.scheme == "solana-wallet" }
+
+        val result2 = mobileWalletAdapter.transact(sender) { }
+
+        assertTrue { result2 is TransactionResult.Success<Unit> }
+        assertTrue { (result2 as TransactionResult.Success<Unit>).authResult.authToken == sampleReauthResult.authToken }
+        assertTrue { intentUri?.scheme == "solana-wallet" }
     }
 
     @Test

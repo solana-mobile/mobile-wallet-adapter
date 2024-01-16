@@ -146,12 +146,14 @@ class SampleViewModel @Inject constructor(
                 when (result) {
                     is TransactionResult.Success -> {
                         val currentConn = Connected(
-                            PublicKey(result.authResult.publicKey),
-                            result.authResult.accountLabel ?: "",
-                            result.authResult.authToken
+                            PublicKey(result.authResult.accounts.first().publicKey),
+                            result.authResult.accounts.first().accountLabel ?: "",
+                            result.authResult.authToken,
+                            result.authResult.walletUriBase
                         )
 
-                        persistanceUseCase.persistConnection(currentConn.publicKey, currentConn.accountLabel, currentConn.authToken)
+                        persistanceUseCase.persistConnection(currentConn.publicKey,
+                            currentConn.accountLabel, currentConn.authToken, currentConn.walletUriBase)
 
                         _state.value.copy(
                             userAddress = currentConn.publicKey.toBase58(),
@@ -165,6 +167,7 @@ class SampleViewModel @Inject constructor(
                         ).updateViewState()
                     }
                     is TransactionResult.Failure -> {
+                        walletAdapter.authToken = null
                         _state.value.copy(
                             userAddress = "",
                             userLabel = "",

@@ -2,6 +2,7 @@ package com.solana.mobilewalletadapter.clientlib
 
 import android.app.Activity.RESULT_CANCELED
 import android.content.ActivityNotFoundException
+import android.net.Uri
 import android.util.Base64
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
@@ -25,6 +26,8 @@ class MobileWalletAdapter(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scenarioProvider: AssociationScenarioProvider = AssociationScenarioProvider(),
 ) {
+
+    private var walletUriBase: Uri? = null
 
     var authToken: String? = null
 
@@ -64,14 +67,14 @@ class MobileWalletAdapter(
             field = value
         }
 
-    suspend fun connect(sender: ActivityResultSender): TransactionResult<AuthorizationResult> =
-        transact(sender) { it }
+    suspend fun connect(sender: ActivityResultSender): TransactionResult<Unit> = transact(sender) {}
 
     suspend fun disconnect(sender: ActivityResultSender): TransactionResult<Unit> =
         associate(sender) {
             authToken?.let {
                 deauthorize(it)
                 authToken = null
+                walletUriBase = null
             }
 
             TransactionResult.Success(Unit, null)
@@ -114,6 +117,7 @@ class MobileWalletAdapter(
                 }
             }.also {
                 authToken = it.authToken
+                walletUriBase = it.walletUriBase
 
                 signInPayload?.run {
                     it.signInResult ?: run {
@@ -147,7 +151,7 @@ class MobileWalletAdapter(
     ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
             val scenario = scenarioProvider.provideAssociationScenario(timeout)
-            val details = scenario.associationDetails()
+            val details = scenario.associationDetails(walletUriBase.takeIf { it?.scheme == "https" })
 
             val intent = LocalAssociationIntentCreator.createAssociationIntent(
                 details.uriPrefix,
