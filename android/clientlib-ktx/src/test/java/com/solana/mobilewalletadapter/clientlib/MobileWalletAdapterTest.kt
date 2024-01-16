@@ -116,9 +116,9 @@ class MobileWalletAdapterTest {
     fun `validate calling connect is successful using default constructor`() = runTest(testDispatcher) {
         val result = mobileWalletAdapter.connect(sender)
 
-        assertTrue { result is TransactionResult.Success<Unit> }
-        assertTrue { result.successPayload is Unit }
-        assertTrue { (result as TransactionResult.Success<Unit>).authResult == sampleAuthResult }
+        assertTrue { result is TransactionResult.Success<AuthorizationResult> }
+        assertTrue { result.successPayload is AuthorizationResult }
+        assertTrue { (result as TransactionResult.Success<AuthorizationResult>).authResult == sampleAuthResult }
     }
 
     @Test
