@@ -117,7 +117,7 @@ class MobileWalletAdapter(
                 }
             }.also {
                 authToken = it.authToken
-                walletUriBase = it.walletUriBase
+                walletUriBase = it.walletUriBase.takeIf { it?.scheme == "https" }
 
                 signInPayload?.run {
                     it.signInResult ?: run {
@@ -151,7 +151,7 @@ class MobileWalletAdapter(
     ): TransactionResult<T> = coroutineScope {
         return@coroutineScope try {
             val scenario = scenarioProvider.provideAssociationScenario(timeout)
-            val details = scenario.associationDetails(walletUriBase.takeIf { it?.scheme == "https" })
+            val details = scenario.associationDetails(walletUriBase)
 
             val intent = LocalAssociationIntentCreator.createAssociationIntent(
                 details.uriPrefix,
