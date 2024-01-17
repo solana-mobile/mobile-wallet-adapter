@@ -19,7 +19,6 @@ import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
 import com.solanamobile.ktxclientsample.usecase.SolanaRpcUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -34,6 +33,7 @@ data class SampleViewState(
     val userAddress: String = "",
     val userLabel: String = "",
     val memoTx: String = "",
+    val error: String = "",
     val walletFound: Boolean = true
 )
 
@@ -99,10 +99,6 @@ class SampleViewModel @Inject constructor(
                     isLoading = false,
                     memoTx = readableSig
                 ).updateViewState()
-
-                // Clear out the recent transaction
-                delay(5000)
-                _state.value.copy(memoTx = "").updateViewState()
             }
         }
     }
@@ -119,13 +115,15 @@ class SampleViewModel @Inject constructor(
         val conn = persistanceUseCase.getWalletConnection()
         if (conn is Connected) {
             viewModelScope.launch {
-                walletAdapter.disconnect(sender)
                 persistanceUseCase.clearConnection()
+                walletAdapter.disconnect(sender)
                 _state.value.copy(
                     isLoading = false,
                     solBalance = 0.0,
                     userAddress = "",
-                    userLabel = ""
+                    userLabel = "",
+                    memoTx = "",
+                    error = ""
                 ).updateViewState()
             }
         }
@@ -136,6 +134,8 @@ class SampleViewModel @Inject constructor(
         withContext(viewModelScope.coroutineContext) {
             _state.value.copy(
                 isLoading = true,
+                memoTx = "",
+                error = ""
             ).updateViewState()
             val conn = persistanceUseCase.getWalletConnection()
             return@withContext walletAdapter.transact(sender,
@@ -163,14 +163,13 @@ class SampleViewModel @Inject constructor(
                     }
                     is TransactionResult.NoWalletFound -> {
                         _state.value.copy(
-                            walletFound = false
+                            walletFound = false,
+                            error = result.message
                         ).updateViewState()
                     }
                     is TransactionResult.Failure -> {
-                        walletAdapter.authToken = null
                         _state.value.copy(
-                            userAddress = "",
-                            userLabel = "",
+                            error = result.message
                         ).updateViewState()
                     }
                 }
