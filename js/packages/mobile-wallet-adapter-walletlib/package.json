@@ -35,7 +35,7 @@
         "@solana/web3.js": "^1.58.0",
         "@types/react-native": "^0.69.3",
         "react-native-builder-bob": "^0.20.4",
-        "release-it": "^15.0.0"
+        "release-it": "^16.3.0"
     },
     "peerDependencies": {
         "react-native": ">0.69"
