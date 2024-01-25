@@ -20,6 +20,17 @@ sealed class Blockchain(
 ) {
     val fullName
         get() = "$name:$cluster"
+
+    @Deprecated(
+        "RpcCluster is deprecated as of MWA 2.0, this property is preserved for backwards compatibility with legacy endpoints",
+        level = DeprecationLevel.WARNING
+    )
+    val rpcCluster: RpcCluster = when (cluster) {
+        "mainnet", ProtocolContract.CLUSTER_MAINNET_BETA -> RpcCluster.MainnetBeta
+        ProtocolContract.CLUSTER_TESTNET -> RpcCluster.Testnet
+        ProtocolContract.CLUSTER_DEVNET -> RpcCluster.Devnet
+        else -> RpcCluster.Custom(cluster)
+    }
 }
 
 sealed class Solana {
