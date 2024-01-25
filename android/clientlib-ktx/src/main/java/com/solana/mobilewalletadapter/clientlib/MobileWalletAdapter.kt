@@ -113,7 +113,7 @@ class MobileWalletAdapter(
                 authToken?.let { token ->
                     reauthorize(identityUri, iconUri, identityName, token)
                 } ?: run {
-                    authorize(identityUri, iconUri, identityName, RpcCluster.Custom(blockchain.cluster))
+                    authorize(identityUri, iconUri, identityName, blockchain.rpcCluster)
                 }
             }.also {
                 authToken = it.authToken
