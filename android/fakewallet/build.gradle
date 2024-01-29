@@ -5,20 +5,26 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'androidx.navigation.safeargs.kotlin'
+    id 'kotlin-kapt'
 }
 
 android {
-    namespace = "com.solana.mobilewalletadapter.fakedapp"
+    namespace = "com.solana.mobilewalletadapter.fakewallet"
 
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.solana.mobilewalletadapter.fakedapp"
+        applicationId "com.solana.mobilewalletadapter.fakewallet"
         minSdk 23
         targetSdk 34
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
 
     signingConfigs {
@@ -49,6 +55,22 @@ android {
         }
     }
 
+    flavorDimensions = ["protocol_version"]
+
+    productFlavors {
+        v1 {
+            dimension "protocol_version"
+            buildConfigField "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion",
+                    "PROTOCOL_VERSION", "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion.V1"
+        }
+        legacy {
+            dimension "protocol_version"
+            resValue "string", "app_name", "Fake Wallet App (Legacy)"
+            buildConfigField "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion",
+                    "PROTOCOL_VERSION", "com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion.LEGACY"
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -60,36 +82,42 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 
 dependencies {
-    implementation project(path: ':clientlib')
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestUtil 'androidx.test:orchestrator:1.4.2'
 
+    androidTestImplementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.22'
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation 'androidx.test:core-ktx:1.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.5'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+    androidTestImplementation project(path: ':clientlib')
+
+    annotationProcessor 'androidx.room:room-compiler:2.6.1'
     implementation 'androidx.activity:activity-ktx:1.8.2'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.6'
+    implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
     implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.solanamobile:digital-asset-links-android:1.0.3'
+    implementation 'io.coil-kt:coil:2.5.0'
+    implementation 'io.coil-kt:coil-svg:2.5.0'
     implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
-
-    // Testing-only dependencies
-    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
-    androidTestImplementation 'androidx.test:core:1.5.0'
-    androidTestImplementation 'androidx.test:core-ktx:1.5.0'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.5'
-    androidTestImplementation 'androidx.test:runner:1.5.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
-
-    testImplementation 'androidx.test:core:1.5.0'
-    testImplementation 'androidx.test.ext:junit:1.1.5'
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    testImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
-    testImplementation 'androidx.test.ext:truth:1.5.0'
+    implementation 'io.github.funkatronics:multimult:0.2.0'
+    implementation project(path: ':walletlib')
+    kapt 'androidx.room:room-compiler:2.6.1'
 }
