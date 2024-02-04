@@ -27,8 +27,8 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
         final String chainsString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_CHAINS));
         final String featuresString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_FEATURES));
         final Uri accountIcon = accountIconStr != null ? Uri.parse(accountIconStr) : null;
-        final String[] chains = deserialize(chainsString);
-        final String[] features = deserialize(featuresString);
+        final String[] chains = chainsString != null ? deserialize(chainsString) : null;
+        final String[] features = featuresString != null ? deserialize(featuresString) : null;
         return new AccountRecord(publicKeyId, publicKey, accountLabel, accountIcon, chains, features);
     }
 
