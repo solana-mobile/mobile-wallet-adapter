@@ -111,7 +111,7 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.5.0'
+    compileOnly 'androidx.annotation:annotation:1.7.1'
     implementation 'com.neovisionaries:nv-websocket-client:2.14' // TODO: use plugin projects to select WS implementation
     api project(path: ':common')
 }
