@@ -120,7 +120,7 @@ tasks.whenTaskAdded { task ->
 dependencies {
     api(project(":clientlib"))
     implementation 'androidx.core:core-ktx:1.9.0'
-    implementation "androidx.activity:activity-ktx:1.6.1"
+    implementation "androidx.activity:activity-ktx:1.8.2"
     implementation 'androidx.test.ext:junit-ktx:1.1.5'
 
     testImplementation 'junit:junit:4.13.2'
