@@ -61,8 +61,14 @@ public class SignAndSendTransactionsRequest
     }
 
     @Nullable
-    public Boolean getWaitForCommitmentYoSendNExtTransaction() {
+    public Boolean getWaitForCommitmentToSendNextTransaction() {
         return mRequest.waitForCommitmentToSendNextTransaction;
+    }
+
+    @Deprecated
+    @Nullable
+    public Boolean getWaitForCommitmentYoSendNExtTransaction() {
+        return getWaitForCommitmentToSendNextTransaction();
     }
 
     public void completeWithSignatures(@NonNull @Size(min = 1) byte[][] signatures) {
