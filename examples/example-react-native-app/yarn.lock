@@ -1866,14 +1866,14 @@
     "@sinonjs/commons" "^3.0.0"
 
 "@solana-mobile/mobile-wallet-adapter-protocol-web3js@file:../../js/packages/mobile-wallet-adapter-protocol-web3js":
-  version "2.1.0"
+  version "2.1.1"
   dependencies:
-    "@solana-mobile/mobile-wallet-adapter-protocol" "^2.1.0"
+    "@solana-mobile/mobile-wallet-adapter-protocol" "^2.1.1"
     bs58 "^5.0.0"
     js-base64 "^3.7.5"
 
-"@solana-mobile/mobile-wallet-adapter-protocol@^2.1.0", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
-  version "2.1.0"
+"@solana-mobile/mobile-wallet-adapter-protocol@^2.1.1", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
+  version "2.1.1"
   dependencies:
     "@solana/wallet-standard" "^1.1.2"
     "@solana/wallet-standard-util" "^1.1.1"
@@ -4372,9 +4372,9 @@ invariant@*, invariant@^2.2.4:
     loose-envify "^1.0.0"
 
 ip@^1.1.5:
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.8.tgz#ae05948f6b075435ed3307acce04629da8cdbf48"
-  integrity sha512-PuExPYUiu6qMBQb4l06ecm6T6ujzhmh+MeJcW9wa89PoAz5pvd4zPgN5WJV104mb6S2T1AwNIAaB70JNrLQWhg==
+  version "1.1.9"
+  resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.9.tgz#8dfbcc99a754d07f425310b86a99546b1151e396"
+  integrity sha512-cyRxvOEpNHNtchU3Ln9KC/auJgup87llfQpQ+t5ghoC/UhL16SWzbueiCsdTnWmqAWl7LadfuwhlqmtOaqMHdQ==
 
 is-array-buffer@^3.0.1, is-array-buffer@^3.0.2:
   version "3.0.2"
