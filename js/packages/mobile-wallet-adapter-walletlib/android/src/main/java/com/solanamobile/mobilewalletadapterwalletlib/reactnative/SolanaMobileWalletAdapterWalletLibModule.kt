@@ -187,10 +187,13 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 is AuthorizeDappResponse ->
                     (pendingRequest as? MobileWalletAdapterRemoteRequest.AuthorizeDapp)
                         ?.request?.completeWithAuthorize(
-                            response.publicKey,
-                            response.accountLabel,
-                            null, //Uri.parse(response.walletUriBase),
-                            response.authorizationScope
+                            response.accounts.first().let { account ->
+                                AuthorizedAccount(account.publicKey, account.accountLabel, account.icon?.let{ Uri.parse(it) }, 
+                                    account.chains?.toTypedArray(), account.features?.toTypedArray())
+                            },
+                            response.walletUriBase?.let { Uri.parse(response.walletUriBase) },
+                            response.authorizationScope,
+                            null // TODO: SignInResult
                         )
                 else -> completeWithInvalidResponse()
             }

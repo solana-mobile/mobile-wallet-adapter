@@ -28,9 +28,17 @@ object AuthorizationNotValidResponse : MobileWalletAdapterFailureResponse()
 data class InvalidSignaturesResponse(val valid: BooleanArray) : MobileWalletAdapterFailureResponse()
 
 @Serializable
-data class AuthorizeDappResponse(
+data class AuthorizedAccount(
     @Serializable(with = ByteArrayAsMapSerializer::class) val publicKey: ByteArray,
     val accountLabel: String? = String(publicKey),
+    val icon: String? = null,
+    val chains: List<String>? = null,
+    val features: List<String>? = null
+)
+
+@Serializable
+data class AuthorizeDappResponse(
+    val accounts: List<AuthorizedAccount>,
     val walletUriBase: String? = null,
     @Serializable(with = ByteArrayAsMapSerializer::class) val authorizationScope: ByteArray
 ) : MobileWalletAdapterResponse()

@@ -1,4 +1,5 @@
 import type { TransactionVersion } from '@solana/web3.js';
+import type { IdentifierArray } from '@wallet-standard/core';
 import { useEffect } from 'react';
 import { Linking, NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
@@ -32,11 +33,11 @@ const SolanaMobileWalletAdapterWalletLib =
 const MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME = 'MobileWalletAdapterServiceRequestBridge';
 
 export interface MobileWalletAdapterConfig {
-    supportsSignAndSendTransactions: boolean;
     maxTransactionsPerSigningRequest: number;
     maxMessagesPerSigningRequest: number;
     supportedTransactionVersions: Array<TransactionVersion>;
     noConnectionWarningTimeoutMs: number;
+    optionalFeatures: IdentifierArray;
 }
 
 export function useMobileWalletAdapterSession(

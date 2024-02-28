@@ -76,7 +76,7 @@ internal object FailReasonTransformingSerializer
 internal object MobileWalletAdapterResponseSerializer : JsonContentPolymorphicSerializer<MobileWalletAdapterResponse>(MobileWalletAdapterResponse::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<out MobileWalletAdapterResponse> =
         if ((element as? JsonObject)?.containsKey("failReason") == true) FailReasonTransformingSerializer
-        else if ((element as? JsonObject)?.containsKey("publicKey") == true) AuthorizeDappResponse.serializer()
+        else if ((element as? JsonObject)?.containsKey("accounts") == true) AuthorizeDappResponse.serializer()
         else if ((element as? JsonObject)?.containsKey("authorizationScope") == true) ReauthorizeDappResponse.serializer()
         else if ((element as? JsonObject)?.containsKey("signedPayloads") == true) SignedPayloads.serializer()
         else if ((element as? JsonObject)?.containsKey("signedTransactions") == true) SignedAndSentTransactions.serializer() 

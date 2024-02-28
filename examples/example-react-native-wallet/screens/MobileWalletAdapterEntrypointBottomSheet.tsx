@@ -37,6 +37,7 @@ import {
   VerificationFailed,
   VerificationSucceeded,
 } from '../utils/ClientTrustUseCase';
+import { SolanaSignTransactions } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
@@ -80,11 +81,11 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
 
   const config: MobileWalletAdapterConfig = useMemo(() => {
     return {
-      supportsSignAndSendTransactions: true,
       maxTransactionsPerSigningRequest: 10,
       maxMessagesPerSigningRequest: 10,
       supportedTransactionVersions: [0, 'legacy'],
       noConnectionWarningTimeoutMs: 3000,
+      optionalFeatures: [SolanaSignTransactions]
     };
   }, []);
 

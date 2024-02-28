@@ -1,3 +1,4 @@
+import type { IdentifierArray } from '@wallet-standard/core';
 import { NativeModules, Platform } from 'react-native';
 
 const LINKING_ERROR =
@@ -29,6 +30,9 @@ type AppIdentity = Readonly<{
     iconRelativeUri?: string;
     identityName?: string;
 }>;
+
+export type Base64EncodedAddress = string;
+type Base64EncodedSignedMessage = string;
 
 /**
  * Mobile Wallet Adapter Requests are remote requests coming from
@@ -101,6 +105,10 @@ export type SignAndSendTransactionsRequest = Readonly<{
     __type: MWARequestType.SignAndSendTransactionsRequest;
     payloads: Uint8Array[];
     minContextSlot?: number;
+    commitment?: string;
+    skipPreflight?: boolean;
+    maxRetries?: number;
+    waitForCommitmentToSendNextTransaction?: boolean;
 }> &
     IMWARequest &
     IVerifiableIdentityRequest;
@@ -143,11 +151,24 @@ export type InvalidSignaturesResponse = Readonly<{
 }>;
 
 /* Authorize Dapp */
-export type AuthorizeDappCompleteResponse = Readonly<{
-    publicKey: Uint8Array;
+export type AuthorizedAccount = Readonly<{
+    publicKey: Base64EncodedAddress;
     accountLabel?: string;
+    icon?: string;
+    chains?: IdentifierArray;
+    features?: IdentifierArray;
+}>;
+export type SignInResult = Readonly<{
+    address: Base64EncodedAddress;
+    signed_message: Base64EncodedSignedMessage;
+    signature: Base64EncodedAddress;
+    signature_type?: string;
+}>;
+export type AuthorizeDappCompleteResponse = Readonly<{
+    accounts: Array<AuthorizedAccount>
     walletUriBase?: string;
     authorizationScope?: Uint8Array;
+    signInResult?: SignInResult;
 }>;
 export type AuthorizeDappResponse = AuthorizeDappCompleteResponse | UserDeclinedResponse;
 

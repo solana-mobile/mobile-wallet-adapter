@@ -54,8 +54,13 @@ export default function AuthenticationScreen({
           style={styles.actionButton}
           onPress={() => {
             resolve(request, {
-              publicKey: wallet.publicKey.toBytes(),
-              accountLabel: 'Backpack',
+              accounts: [{
+                publicKey: wallet.publicKey.toBytes(),
+                accountLabel: 'Backpack',
+                icon: 'data:text/plain;base64',
+                chains: ['solana:devnet', 'solana:testnet'],
+                features: ['solana:signTransactions']
+              }],
               authorizationScope: new TextEncoder().encode(verificationState?.authorizationScope)
             } as AuthorizeDappCompleteResponse);
           }}
