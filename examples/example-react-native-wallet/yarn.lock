@@ -1834,7 +1834,7 @@
     js-base64 "^3.7.5"
 
 "@solana-mobile/mobile-wallet-adapter-protocol@^2.1.1", "@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol":
-  version "2.1.1"
+  version "2.1.2"
   dependencies:
     "@solana/wallet-standard" "^1.1.2"
     "@solana/wallet-standard-util" "^1.1.1"

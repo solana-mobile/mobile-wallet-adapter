@@ -7,64 +7,35 @@
     "license": "Apache-2.0",
     "type": "module",
     "sideEffects": false,
-    "react-native": "lib/commonjs/index",
-    "main": "lib/commonjs/index",
-    "module": "lib/module/index",
-    "types": "lib/typescript/index.d.ts",
+    "main": "lib/esm/index",
+    "react-native": "lib/esm/index",
+    "module": "lib/esm/index",
+    "types": "lib/types/index.d.ts",
     "files": [
         "android",
         "!android/build",
         "lib",
-        "src",
         "LICENSE"
     ],
     "publishConfig": {
         "access": "public"
     },
     "scripts": {
-        "typecheck": "tsc --noEmit",
-        "lint": "eslint \"**/*.{js,ts,tsx}\"",
-        "prepack": "bob build",
-        "release": "release-it",
+        "clean": "shx rm -rf lib/*",
+        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "postbuild": "cross-env echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "example": "yarn --cwd example",
-        "bootstrap": "yarn example && yarn install && yarn example pods",
-        "clean": "shx rm -rf lib/*"
+        "bootstrap": "yarn example && yarn install && yarn example pods"
     },
     "devDependencies": {
-        "@release-it/conventional-changelog": "^7.0.0",
         "@solana/web3.js": "^1.58.0",
         "@types/react-native": "^0.69.3",
         "@wallet-standard/core": "^1.0.3",
-        "react-native-builder-bob": "^0.20.4",
-        "release-it": "^16.3.0"
+        "cross-env": "^7.0.3",
+        "shx": "^0.3.4"
     },
     "peerDependencies": {
         "react-native": ">0.69"
-    },
-    "release-it": {
-        "git": {
-          "commitMessage": "chore: release ${version}",
-          "tagName": "v${version}"
-        },
-        "npm": {
-          "publish": true
-        },
-        "github": {
-          "release": true
-        },
-        "plugins": {
-          "@release-it/conventional-changelog": {
-            "preset": "angular"
-          }
-        }
-      },
-    "react-native-builder-bob": {
-        "source": "src",
-        "output": "lib",
-        "targets": [
-          "commonjs",
-          "module",
-          "typescript"
-        ]
-      }
+    }
 }
