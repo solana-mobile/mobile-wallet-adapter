@@ -161,8 +161,6 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
     @ReactMethod
     fun resolve(requestJson: String, responseJson: String) = launch {
-        println("+++ request JSON = $requestJson")
-        println("+++ response JSON = $responseJson")
         val completedRequest = json.decodeFromString(MobileWalletAdapterRequestSerializer, requestJson)
         val response = json.decodeFromString(MobileWalletAdapterResponseSerializer, responseJson)
         val pendingRequest = pendingRequests[completedRequest.requestId]
