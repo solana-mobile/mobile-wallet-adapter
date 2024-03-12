@@ -37,7 +37,8 @@ import {
   VerificationFailed,
   VerificationSucceeded,
 } from '../utils/ClientTrustUseCase';
-import { SolanaSignTransactions } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { SolanaSignInWithSolana, SolanaSignTransactions } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import SignInScreen from '../bottomsheets/SignInScreen';
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
@@ -53,7 +54,8 @@ function getRequestScreenComponent(request: MWARequest | null | undefined) {
     case MWARequestType.SignMessagesRequest:
       return <SignPayloadsScreen request={request as SignPayloadsRequest} />;
     case MWARequestType.AuthorizeDappRequest:
-      return <AuthenticationScreen request={request as AuthorizeDappRequest} />;
+      return request.signInPayload ? <SignInScreen request={request as AuthorizeDappRequest}/> 
+        : <AuthenticationScreen request={request as AuthorizeDappRequest} />;
     default:
       return <ActivityIndicator size="large" />;
   }
@@ -85,7 +87,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       maxMessagesPerSigningRequest: 10,
       supportedTransactionVersions: [0, 'legacy'],
       noConnectionWarningTimeoutMs: 3000,
-      optionalFeatures: [SolanaSignTransactions]
+      optionalFeatures: [SolanaSignTransactions, SolanaSignInWithSolana]
     };
   }, []);
 
