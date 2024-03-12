@@ -1,7 +1,9 @@
 package com.solanamobile.mobilewalletadapterwalletlib.reactnative.model
 
+import com.solana.mobilewalletadapter.walletlib.scenario.SignInResult
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.ByteArrayAsMapSerializer
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.ByteArrayCollectionAsMapCollectionSerializer
+import com.solanamobile.mobilewalletadapterwalletlib.reactnative.SignInResultSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -40,7 +42,8 @@ data class AuthorizedAccount(
 data class AuthorizeDappResponse(
     val accounts: List<AuthorizedAccount>,
     val walletUriBase: String? = null,
-    @Serializable(with = ByteArrayAsMapSerializer::class) val authorizationScope: ByteArray
+    @Serializable(with = ByteArrayAsMapSerializer::class) val authorizationScope: ByteArray,
+    @Serializable(with = SignInResultSerializer::class) val signInResult: SignInResult? = null
 ) : MobileWalletAdapterResponse()
 
 @Serializable

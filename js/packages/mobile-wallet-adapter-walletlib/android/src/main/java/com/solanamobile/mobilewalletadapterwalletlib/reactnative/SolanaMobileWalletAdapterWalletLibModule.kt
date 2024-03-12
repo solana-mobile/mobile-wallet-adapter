@@ -10,6 +10,7 @@ import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import com.solana.mobilewalletadapter.walletlib.scenario.*
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.BuildConfig
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.*
@@ -160,6 +161,8 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
     @ReactMethod
     fun resolve(requestJson: String, responseJson: String) = launch {
+        println("+++ request JSON = $requestJson")
+        println("+++ response JSON = $responseJson")
         val completedRequest = json.decodeFromString(MobileWalletAdapterRequestSerializer, requestJson)
         val response = json.decodeFromString(MobileWalletAdapterResponseSerializer, responseJson)
         val pendingRequest = pendingRequests[completedRequest.requestId]
@@ -193,7 +196,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                             },
                             response.walletUriBase?.let { Uri.parse(response.walletUriBase) },
                             response.authorizationScope,
-                            null // TODO: SignInResult
+                            response.signInResult
                         )
                 else -> completeWithInvalidResponse()
             }
@@ -279,7 +282,9 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         val surrogate = when(request) {
             is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> AuthorizeDapp(
                 scenarioId!!, request.request.cluster, request.request.identityName,
-                request.request.identityUri.toString(), request.request.iconRelativeUri.toString()
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.features?.asList(), request.request.addresses?.asList(), 
+                request.request.signInPayload
             )
             is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> ReauthorizeDapp(
                 scenarioId!!, request.request.cluster, request.request.identityName,

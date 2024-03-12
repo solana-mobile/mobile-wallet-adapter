@@ -31,6 +31,21 @@ type AppIdentity = Readonly<{
     identityName?: string;
 }>;
 
+export type SignInPayload = Readonly<{
+    domain?: string;
+    address?: string;
+    statement?: string;
+    uri?: string;
+    version?: string;
+    chainId?: string;
+    nonce?: string;
+    issuedAt?: string;
+    expirationTime?: string;
+    notBefore?: string;
+    requestId?: string;
+    resources?: readonly string[];
+}>
+
 export type Base64EncodedAddress = string;
 type Base64EncodedSignedMessage = string;
 
@@ -63,15 +78,18 @@ interface IMWARequest {
 }
 
 interface IVerifiableIdentityRequest {
-    cluster: string;
+    chain: string;
     authorizationScope: Uint8Array;
     appIdentity?: AppIdentity;
 }
 
 export type AuthorizeDappRequest = Readonly<{
     __type: MWARequestType.AuthorizeDappRequest;
-    cluster: string;
+    chain: string;
     appIdentity?: AppIdentity;
+    features?: IdentifierArray;
+    addresses?: [String];
+    signInPayload?: SignInPayload;
 }> &
     IMWARequest;
 

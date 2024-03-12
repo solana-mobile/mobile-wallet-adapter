@@ -20,7 +20,7 @@ type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 
 const signPayloads = async (wallet: Keypair, request: SignPayloadsRequest) => {
   if (request.__type === MWARequestType.SignTransactionsRequest) {
-    signTransanctions(wallet, request);
+    signTransactions(wallet, request);
   } else if (request.__type === MWARequestType.SignMessagesRequest) {
     signMessages(wallet, request);
   } else {
@@ -29,7 +29,7 @@ const signPayloads = async (wallet: Keypair, request: SignPayloadsRequest) => {
   }
 };
 
-const signTransanctions = async (
+const signTransactions = async (
   wallet: Keypair,
   request: SignTransactionsRequest,
 ) => {
