@@ -279,33 +279,33 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     private fun sendWalletServiceRequestToReact(request: MobileWalletAdapterRemoteRequest) {
         val surrogate = when(request) {
             is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> AuthorizeDapp(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.features?.asList(), request.request.addresses?.asList(), 
                 request.request.signInPayload
             )
             is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> ReauthorizeDapp(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope
             )
             is MobileWalletAdapterRemoteRequest.DeauthorizeDapp -> DeauthorizeDapp(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope
             )
             is MobileWalletAdapterRemoteRequest.SignMessages -> SignMessages(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope, request.request.payloads.toList()
             )
             is MobileWalletAdapterRemoteRequest.SignTransactions -> SignTransactions(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope, request.request.payloads.toList()
             )
             is MobileWalletAdapterRemoteRequest.SignAndSendTransactions -> SignAndSendTransactions(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope, request.request.payloads.toList()
             )

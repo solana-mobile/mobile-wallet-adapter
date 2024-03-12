@@ -108,7 +108,7 @@ export default function SignAndSendTransactionsScreen({
     <View>
       <MWABottomsheetHeader
         title={'Sign and Send Transactions'}
-        cluster={request.cluster}
+        cluster={request.chain}
         appIdentity={request.appIdentity}>
         <Text style={styles.content}>
           This request has {request.payloads.length}{' '}

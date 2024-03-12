@@ -128,7 +128,7 @@ export default function SignPayloadsScreen({request}: SignPayloadsScreenProps) {
     <View>
       <MWABottomsheetHeader
         title={'Sign ' + (isSignTransactions ? 'transactions' : 'messages')}
-        cluster={request.cluster}
+        cluster={request.chain}
         appIdentity={request.appIdentity}>
         <Text style={styles.content}>
           This request has {request.payloads.length}{' '}

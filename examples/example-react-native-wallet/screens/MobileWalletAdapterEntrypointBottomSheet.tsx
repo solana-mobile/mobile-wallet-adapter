@@ -37,7 +37,7 @@ import {
   VerificationFailed,
   VerificationSucceeded,
 } from '../utils/ClientTrustUseCase';
-import { SolanaSignTransactions } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { SolanaSignInWithSolana, SolanaSignTransactions } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import SignInScreen from '../bottomsheets/SignInScreen';
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
@@ -87,7 +87,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       maxMessagesPerSigningRequest: 10,
       supportedTransactionVersions: [0, 'legacy'],
       noConnectionWarningTimeoutMs: 3000,
-      optionalFeatures: [SolanaSignTransactions]
+      optionalFeatures: [SolanaSignTransactions, SolanaSignInWithSolana]
     };
   }, []);
 
