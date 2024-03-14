@@ -47,6 +47,50 @@ object MobileWalletAdapterUseCase {
     )
 
     class Client(private val client: MobileWalletAdapterClient) {
+
+        suspend fun authorizeLegacy(
+            identity: DappIdentity,
+            cluster: String?
+        ): MobileWalletAdapterClient.AuthorizationResult = coroutineScope {
+            try {
+                runInterruptible(Dispatchers.IO) {
+                    client.authorize(
+                        identity.uri, identity.iconRelativeUri, identity.name, cluster
+                    ).get()!!
+                }
+            } catch (e: ExecutionException) {
+                when (val cause = e.cause) {
+                    is IOException -> throw MobileWalletAdapterOperationFailedException(
+                        "IO error while sending authorize", cause
+                    )
+                    is TimeoutException -> throw MobileWalletAdapterOperationFailedException(
+                        "Timed out while waiting for authorize result", cause
+                    )
+                    is JsonRpc20Client.JsonRpc20RemoteException -> when (cause.code) {
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> throw MobileWalletAdapterOperationFailedException(
+                            "Not authorized", cause
+                        )
+                        ProtocolContract.ERROR_CLUSTER_NOT_SUPPORTED -> throw MobileWalletAdapterOperationFailedException(
+                            "Cluster not supported", cause
+                        )
+                        else -> throw MobileWalletAdapterOperationFailedException(
+                            "Remote exception for authorize", cause
+                        )
+                    }
+                    is MobileWalletAdapterClient.InsecureWalletEndpointUriException -> throw MobileWalletAdapterOperationFailedException(
+                        "authorize result contained a non-HTTPS wallet base URI", cause
+                    )
+                    is JsonRpc20Client.JsonRpc20Exception -> throw MobileWalletAdapterOperationFailedException(
+                        "JSON-RPC client exception for authorize", cause
+                    )
+                    else -> throw MobileWalletAdapterOperationFailedException(null, e)
+                }
+            } catch (e: CancellationException) {
+                Log.w(TAG, "authorize request was cancelled", e)
+                throw e
+            }
+        }
+
         suspend fun authorize(
             identity: DappIdentity,
             chain: String?,
