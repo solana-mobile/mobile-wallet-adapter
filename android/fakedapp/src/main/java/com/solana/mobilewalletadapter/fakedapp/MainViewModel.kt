@@ -460,17 +460,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         signInPayload: SignInWithSolana.Payload? = null
     ): MobileWalletAdapterClient.AuthorizationResult {
         val result = try {
-            if (uiState.value.sessionProtocolVersion == ProtocolVersion.V1) {
-                client.authorize(identity, chain, signInPayload)
-            } else {
-                val cluster = when (chain) {
-                    ProtocolContract.CHAIN_SOLANA_MAINNET -> ProtocolContract.CLUSTER_MAINNET_BETA
-                    ProtocolContract.CHAIN_SOLANA_TESTNET -> ProtocolContract.CLUSTER_TESTNET
-                    ProtocolContract.CHAIN_SOLANA_DEVNET -> ProtocolContract.CLUSTER_DEVNET
-                    else -> ProtocolContract.CLUSTER_TESTNET
-                }
-                client.authorizeLegacy(identity, cluster)
-            }
+            client.authorize(identity, chain, signInPayload, uiState.value.sessionProtocolVersion!!)
         } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
             _uiState.update {
                 it.copy(
