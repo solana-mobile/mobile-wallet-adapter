@@ -86,12 +86,16 @@ object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x01.toByte(), // 1 signature required (fee payer)
         0x00.toByte(), // 0 read-only account signatures
-        0x01.toByte(), // 1 read-only account not requiring a signature
-        0x02.toByte(), // 2 accounts
+        0x02.toByte(), // 2 read-only account not requiring a signature
+        0x03.toByte(), // 3 accounts
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // Fee payer account public key
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x03.toByte(), 0x06.toByte(), 0x46.toByte(), 0x6F.toByte(), 0xE5.toByte(), 0x21.toByte(), 0x17.toByte(), 0x32.toByte(), // Compute Budget Program account
+        0xFF.toByte(), 0xEC.toByte(), 0xAD.toByte(), 0xBA.toByte(), 0x72.toByte(), 0xC3.toByte(), 0x9B.toByte(), 0xE7.toByte(),
+        0xBC.toByte(), 0x8C.toByte(), 0xE5.toByte(), 0xBB.toByte(), 0xC5.toByte(), 0xF7.toByte(), 0x12.toByte(), 0x6B.toByte(),
+        0x2C.toByte(), 0x43.toByte(), 0x9B.toByte(), 0x3A.toByte(), 0x40.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x05.toByte(), 0x4a.toByte(), 0x53.toByte(), 0x5a.toByte(), 0x99.toByte(), 0x29.toByte(), 0x21.toByte(), 0x06.toByte(), // Memo program v2 account address
         0x4d.toByte(), 0x24.toByte(), 0xe8.toByte(), 0x71.toByte(), 0x60.toByte(), 0xda.toByte(), 0x38.toByte(), 0x7c.toByte(),
         0x7c.toByte(), 0x35.toByte(), 0xb5.toByte(), 0xdd.toByte(), 0xbc.toByte(), 0x92.toByte(), 0xbb.toByte(), 0x81.toByte(),
@@ -100,7 +104,17 @@ object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x03.toByte(), // 3 instructions
         0x01.toByte(), // program ID (index into list of accounts)
+        0x00.toByte(), // 0 accounts
+        0x09.toByte(), // 9 byte payload
+        0x03.toByte(), 0xA0.toByte(), 0x86.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // setComputeUnitLimit
+        0x00.toByte(),
+        0x01.toByte(), // program ID (index into list of accounts)
+        0x00.toByte(), // 0 accounts
+        0x05.toByte(), // 5 byte payload
+        0x02.toByte(), 0x40.toByte(), 0x0D.toByte(), 0x03.toByte(), 0x00.toByte(),                                              // setComputeUnitPrice
+        0x02.toByte(), // program ID (index into list of accounts)
         0x01.toByte(), // 1 account
         0x00.toByte(), // account index 0
         0x14.toByte(), // 20 byte payload
@@ -114,9 +128,9 @@ object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
     override val HEADER_OFFSET = 65
     override val ACCOUNT_PUBLIC_KEY_OFFSET = 69
     override val ACCOUNT_PUBLIC_KEY_LEN = 32
-    override val BLOCKHASH_OFFSET = 133
+    override val BLOCKHASH_OFFSET = 165
     override val BLOCKHASH_LEN = 32
-    override val SUFFIX_DIGITS_OFFSET = 181
+    override val SUFFIX_DIGITS_OFFSET = 234
     override val SUFFIX_DIGITS_LEN = 8
 }
 
@@ -140,12 +154,16 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
         //region sign data
         0x01.toByte(), // 1 signature required (fee payer)
         0x00.toByte(), // 0 read-only account signatures
-        0x01.toByte(), // 1 read-only account not requiring a signature
-        0x02.toByte(), // 2 accounts
+        0x02.toByte(), // 2 read-only account not requiring a signature
+        0x03.toByte(), // 3 accounts
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // Fee payer account public key
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x03.toByte(), 0x06.toByte(), 0x46.toByte(), 0x6F.toByte(), 0xE5.toByte(), 0x21.toByte(), 0x17.toByte(), 0x32.toByte(), // Compute Budget Program account
+        0xFF.toByte(), 0xEC.toByte(), 0xAD.toByte(), 0xBA.toByte(), 0x72.toByte(), 0xC3.toByte(), 0x9B.toByte(), 0xE7.toByte(),
+        0xBC.toByte(), 0x8C.toByte(), 0xE5.toByte(), 0xBB.toByte(), 0xC5.toByte(), 0xF7.toByte(), 0x12.toByte(), 0x6B.toByte(),
+        0x2C.toByte(), 0x43.toByte(), 0x9B.toByte(), 0x3A.toByte(), 0x40.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         0x05.toByte(), 0x4a.toByte(), 0x53.toByte(), 0x5a.toByte(), 0x99.toByte(), 0x29.toByte(), 0x21.toByte(), 0x06.toByte(), // Memo program v2 account address
         0x4d.toByte(), 0x24.toByte(), 0xe8.toByte(), 0x71.toByte(), 0x60.toByte(), 0xda.toByte(), 0x38.toByte(), 0x7c.toByte(),
         0x7c.toByte(), 0x35.toByte(), 0xb5.toByte(), 0xdd.toByte(), 0xbc.toByte(), 0x92.toByte(), 0xbb.toByte(), 0x81.toByte(),
@@ -156,8 +174,17 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
         //endregion
         //region instructions
-        0x01.toByte(), // 1 instruction (memo)
+        0x03.toByte(), // 3 instructions (priority fees + memo)
         0x01.toByte(), // program ID (index into list of accounts)
+        0x00.toByte(), // 0 accounts
+        0x09.toByte(), // 9 byte payload
+        0x03.toByte(), 0xA0.toByte(), 0x86.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // setComputeUnitLimit
+        0x00.toByte(),
+        0x01.toByte(), // program ID (index into list of accounts)
+        0x00.toByte(), // 0 accounts
+        0x05.toByte(), // 5 byte payload
+        0x02.toByte(), 0x40.toByte(), 0x0D.toByte(), 0x03.toByte(), 0x00.toByte(),                                              // setComputeUnitPrice
+        0x02.toByte(), // program ID (index into list of accounts)
         0x01.toByte(), // 1 account
         0x00.toByte(), // account index 0
         0x14.toByte(), // 20 byte payload
@@ -175,8 +202,8 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
     override val HEADER_OFFSET = 65
     override val ACCOUNT_PUBLIC_KEY_OFFSET = 70
     override val ACCOUNT_PUBLIC_KEY_LEN = 32
-    override val BLOCKHASH_OFFSET = 134
+    override val BLOCKHASH_OFFSET = 166
     override val BLOCKHASH_LEN = 32
-    override val SUFFIX_DIGITS_OFFSET = 183
+    override val SUFFIX_DIGITS_OFFSET = 235
     override val SUFFIX_DIGITS_LEN = 8
 }
