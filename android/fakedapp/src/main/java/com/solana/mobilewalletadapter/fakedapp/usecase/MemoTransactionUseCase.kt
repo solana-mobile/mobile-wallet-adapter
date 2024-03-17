@@ -109,7 +109,6 @@ object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
         0x00.toByte(), // 0 accounts
         0x09.toByte(), // 9 byte payload
         0x03.toByte(), // setComputeUnitPrice
-//        0x20.toByte(), 0x4E.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit price (20000 ulamports)
         0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit price (1 ulamports)
         0x01.toByte(), // program ID (index into list of accounts)
         0x00.toByte(), // 0 accounts
@@ -181,7 +180,6 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
         0x00.toByte(), // 0 accounts
         0x09.toByte(), // 9 byte payload
         0x03.toByte(), // setComputeUnitPrice
-//        0x20.toByte(), 0x4E.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit price (20000 ulamports)
         0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit price (1 ulamports)
         0x01.toByte(), // program ID (index into list of accounts)
         0x00.toByte(), // 0 accounts
