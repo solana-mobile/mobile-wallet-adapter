@@ -108,12 +108,12 @@ object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
         0x01.toByte(), // program ID (index into list of accounts)
         0x00.toByte(), // 0 accounts
         0x09.toByte(), // 9 byte payload
-        0x03.toByte(), 0xA0.toByte(), 0x86.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // setComputeUnitLimit
+        0x03.toByte(), 0xA0.toByte(), 0x86.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit price (ulamports)
         0x00.toByte(),
         0x01.toByte(), // program ID (index into list of accounts)
         0x00.toByte(), // 0 accounts
         0x05.toByte(), // 5 byte payload
-        0x02.toByte(), 0x40.toByte(), 0x0D.toByte(), 0x03.toByte(), 0x00.toByte(),                                              // setComputeUnitPrice
+        0x02.toByte(), 0x40.toByte(), 0x0D.toByte(), 0x03.toByte(), 0x00.toByte(),                                              // compute unit limit (units)
         0x02.toByte(), // program ID (index into list of accounts)
         0x01.toByte(), // 1 account
         0x00.toByte(), // account index 0
@@ -178,12 +178,12 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
         0x01.toByte(), // program ID (index into list of accounts)
         0x00.toByte(), // 0 accounts
         0x09.toByte(), // 9 byte payload
-        0x03.toByte(), 0xA0.toByte(), 0x86.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // setComputeUnitLimit
+        0x03.toByte(), 0xA0.toByte(), 0x86.toByte(), 0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit price (ulamports)
         0x00.toByte(),
         0x01.toByte(), // program ID (index into list of accounts)
         0x00.toByte(), // 0 accounts
         0x05.toByte(), // 5 byte payload
-        0x02.toByte(), 0x40.toByte(), 0x0D.toByte(), 0x03.toByte(), 0x00.toByte(),                                              // setComputeUnitPrice
+        0x02.toByte(), 0x40.toByte(), 0x0D.toByte(), 0x03.toByte(), 0x00.toByte(),                                              // compute unit limit (units)
         0x02.toByte(), // program ID (index into list of accounts)
         0x01.toByte(), // 1 account
         0x00.toByte(), // account index 0
