@@ -40,7 +40,7 @@ class MainActivityTestPhantom {
     val walletDisplayName = "Phantom"
     val walletAuthorizeButton = By.textContains("Connect")
     val walletSignTransactionButton = By.textContains("Approve")
-    val walletSendTransactionButton: BySelector? = null
+    val walletSendTransactionButton: BySelector? = By.textContains("Approve")
 
     @Test
     fun getCapabilities_isSuccessful() {
@@ -102,13 +102,6 @@ class MainActivityTestPhantom {
 
         uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
 
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
-
         waitForWalletButton(uiDevice, walletSignTransactionButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
@@ -135,13 +128,6 @@ class MainActivityTestPhantom {
         waitForWalletButton(uiDevice, walletSignTransactionButton).click()
 
         uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
 
         waitForWalletButton(uiDevice, walletSignTransactionButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
@@ -178,13 +164,6 @@ class MainActivityTestPhantom {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
-
         waitForWalletButton(uiDevice, walletSignTransactionButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
@@ -213,13 +192,6 @@ class MainActivityTestPhantom {
         onView(withId(R.id.btn_sign_txn_x3)).perform(click())
 
         handleWalletDisambiguationIfNecessary(uiDevice)
-
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
 
         waitForWalletButton(uiDevice, walletSignTransactionButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
@@ -250,13 +222,6 @@ class MainActivityTestPhantom {
         onView(withId(R.id.btn_sign_and_send_txn_x1)).perform(click())
 
         handleWalletDisambiguationIfNecessary(uiDevice)
-
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
 
         waitForWalletButton(uiDevice, walletSignTransactionButton).click()
 
@@ -297,13 +262,6 @@ class MainActivityTestPhantom {
 
         handleWalletDisambiguationIfNecessary(uiDevice)
 
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
-
         waitForWalletButton(uiDevice, walletSignTransactionButton)
             .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
 
@@ -335,13 +293,6 @@ class MainActivityTestPhantom {
         onView(withId(R.id.btn_sign_and_send_txn_x1)).perform(click())
 
         handleWalletDisambiguationIfNecessary(uiDevice)
-
-        // specific to Phantom, phantom displays this "Transaction Expired Warning"
-        // and gives an option for the user to ignore and proceed anyway
-        if (walletPackageName == "app.phantom") {
-            waitForWalletButton(uiDevice, By.textContains("proceed anyway")).click()
-            uiDevice.waitForWindowUpdate(walletPackageName, WINDOW_CHANGE_TIMEOUT)
-        }
 
         waitForWalletButton(uiDevice, walletSignTransactionButton).click()
 
