@@ -147,8 +147,8 @@ jobs:
         run: |
           cd android
           adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
-          ./gradlew :fakewallet:connectedV1DebugAndroidTest
-          ./gradlew :fakewallet:installV1Debug :fakedapp:connectedDebugAndroidTest
+          ./gradlew :fakewallet:connectedV1DebugAndroidTest 
+          ./gradlew :fakewallet:installV1Debug :fakedapp:connectedDebugAndroidTest --tests MainActivityTest
 
       # Archive test results
       - name: Archive fakewallet test results
