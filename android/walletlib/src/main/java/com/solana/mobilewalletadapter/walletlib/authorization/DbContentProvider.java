@@ -82,8 +82,7 @@ import androidx.annotation.Nullable;
     @IntRange(from = 0)
     protected int update(@NonNull String tableName, @Nullable ContentValues values,
                          @Nullable String selection, @Nullable String[] selectionArgs) {
-        return mDb.update(tableName, values, selection,
-                selectionArgs);
+        return mDb.update(tableName, values, selection, selectionArgs);
     }
 
     @NonNull

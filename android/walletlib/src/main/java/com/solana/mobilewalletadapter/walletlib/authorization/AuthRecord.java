@@ -9,6 +9,7 @@ import android.net.Uri;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount;
 
@@ -28,14 +29,20 @@ public class AuthRecord {
     @IntRange(from = 0)
     public final long expires;
 
+    @Deprecated
     @NonNull
     public final byte[] publicKey;
 
+    @Deprecated
     @Nullable
     public final String accountLabel;
 
+    @Deprecated
     @NonNull
     public final AccountRecord accountRecord;
+
+    @Size(min = 1)
+    public final AccountRecord[] accounts;
 
     @NonNull
     public final String chain;
@@ -50,6 +57,7 @@ public class AuthRecord {
     @Nullable
     public final Uri walletUriBase;
 
+    @Deprecated
     @IntRange(from = 1)
     /*package*/ final int accountId;
 
@@ -60,11 +68,10 @@ public class AuthRecord {
 
     /*package*/ AuthRecord(@IntRange(from = 1) int id,
                            @NonNull IdentityRecord identity,
-                           @NonNull AccountRecord accountRecord,
+                           @NonNull AccountRecord[] accounts,
                            @NonNull String chain,
                            @NonNull byte[] scope,
                            @Nullable Uri walletUriBase,
-                           @IntRange(from = 1) int accountId,
                            @IntRange(from = 1) int walletUriBaseId,
                            @IntRange(from = 0) long issued,
                            @IntRange(from = 0) long expires) {
@@ -72,20 +79,36 @@ public class AuthRecord {
         // other components within this package.
         this.id = id;
         this.identity = identity;
-        this.accountRecord = accountRecord;
+        this.accounts = accounts;
         this.chain = chain;
         this.cluster = chain;
         this.scope = scope;
         this.walletUriBase = walletUriBase;
-        this.accountId = accountId;
         this.walletUriBaseId = walletUriBaseId;
         this.issued = issued;
         this.expires = expires;
 
+        this.accountRecord = accounts[0];
         this.publicKey = accountRecord.publicKeyRaw;
         this.accountLabel = accountRecord.accountLabel;
+        this.accountId = accountRecord.id;
     }
 
+    @Size(min = 1)
+    public AuthorizedAccount[] getAuthorizedAccounts() {
+        AuthorizedAccount[] authorizedAccounts = new AuthorizedAccount[accounts.length];
+        for (int i = 0; i < accounts.length; i++) {
+            AccountRecord accountRecord = accounts[i];
+            authorizedAccounts[i] = new AuthorizedAccount(
+                    accountRecord.publicKeyRaw, accountRecord.accountLabel,
+                    accountRecord.icon, accountRecord.chains, accountRecord.features
+            );
+        }
+        return authorizedAccounts;
+    }
+
+    @Deprecated
+    @NonNull
     public AuthorizedAccount authorizedAccount() {
         return new AuthorizedAccount(accountRecord.publicKeyRaw, accountRecord.accountLabel,
                 accountRecord.icon, accountRecord.chains, accountRecord.features);
@@ -127,7 +150,7 @@ public class AuthRecord {
         return "AuthRecord{" +
                 "id=" + id +
                 ", identity=" + identity +
-                ", publicKey=" + Arrays.toString(publicKey) +
+                ", accounts=" + Arrays.toString(accounts) +
                 ", chain='" + chain + '\'' +
                 ", scope=" + Arrays.toString(scope) +
                 ", walletUriBase='" + walletUriBase + '\'' +

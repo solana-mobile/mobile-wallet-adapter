@@ -34,6 +34,7 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -314,12 +315,27 @@ public class AuthRepositoryImpl implements AuthRepository {
                 cluster, walletUriBase, scope);
     }
 
+    @Deprecated
     @NonNull
     @Override
     public AuthRecord issue(@NonNull String name,
                             @NonNull Uri uri,
                             @NonNull Uri relativeIconUri,
                             @NonNull AuthorizedAccount account,
+                            @NonNull String cluster,
+                            @Nullable Uri walletUriBase,
+                            @Nullable byte[] scope) {
+        return issue(name, uri, relativeIconUri,
+                new AuthorizedAccount[]{ account },
+                cluster, walletUriBase, scope);
+    }
+
+    @NonNull
+    @Override
+    public AuthRecord issue(@NonNull String name,
+                            @NonNull Uri uri,
+                            @NonNull Uri relativeIconUri,
+                            @NonNull AuthorizedAccount[] accounts,
                             @NonNull String cluster,
                             @Nullable Uri walletUriBase,
                             @Nullable byte[] scope) {
@@ -358,20 +374,6 @@ public class AuthRepositoryImpl implements AuthRepository {
             }
         }
 
-        // Next, try and look up the account
-        final AccountRecord accountRecordQueried = mAccountsDao.query(account.publicKey);
-
-        final int accountId;
-        final AccountRecord accountRecord;
-        // If no matching account exists, create one
-        if (accountRecordQueried == null) {
-            accountId = (int) mAccountsDao.insert(account.publicKey, account.accountLabel, account.icon, account.chains, account.features);
-            accountRecord = new AccountRecord(accountId, account.publicKey, account.accountLabel, account.icon, account.chains, account.features);
-        } else {
-            accountId = accountRecordQueried.id;
-            accountRecord = accountRecordQueried;
-        }
-
         // Next, try and look up the wallet URI base
         final WalletUri walletUri = mWalletUriBaseDao.getByUri(walletUriBase);
 
@@ -385,7 +387,7 @@ public class AuthRepositoryImpl implements AuthRepository {
 
         final long now = System.currentTimeMillis();
 
-        final int id = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, accountId, cluster, walletUriBaseId, scope);
+        final int authRecordId = (int) mAuthorizationsDao.insert(identityRecord.getId(), now, cluster, walletUriBaseId, scope);
 
         // If needed, purge oldest entries for this identity
         final int purgeCount = mAuthorizationsDao.purgeOldestEntries(identityRecord.getId());
@@ -397,8 +399,28 @@ public class AuthRepositoryImpl implements AuthRepository {
             deleteUnreferencedWalletUriBase();
         }
 
-        return new AuthRecord(id, identityRecord, accountRecord, cluster, scope,
-                walletUriBase, accountId, walletUriBaseId, now,
+        // Finally, try and look up the accounts
+        final List<AccountRecord> accountRecords = new ArrayList<>();
+        for (AuthorizedAccount account: accounts) {
+
+            final AccountRecord accountRecordQueried = mAccountsDao.query(account.publicKey);
+
+            final int accountId;
+            final AccountRecord accountRecord;
+            // If no matching account exists, create one
+            if (accountRecordQueried == null) {
+                accountId = (int) mAccountsDao.insert(authRecordId, account.publicKey,
+                        account.accountLabel, account.icon, account.chains, account.features);
+                accountRecord = new AccountRecord(accountId, authRecordId, account.publicKey,
+                        account.accountLabel, account.icon, account.chains, account.features);
+            } else {
+                accountRecord = accountRecordQueried;
+            }
+            accountRecords.add(accountRecord);
+        }
+
+        return new AuthRecord(authRecordId, identityRecord, accountRecords.toArray(new AccountRecord[0]),
+                cluster, scope, walletUriBase, walletUriBaseId, now,
                 now + mAuthIssuerConfig.authorizationValidityMs);
     }
 
@@ -421,10 +443,10 @@ public class AuthRepositoryImpl implements AuthRepository {
             reissued = authRecord;
         } else {
             final int id = (int) mAuthorizationsDao.insert(authRecord.identity.getId(), now,
-                    authRecord.accountId, authRecord.chain, authRecord.walletUriBaseId, authRecord.scope);
-            reissued = new AuthRecord(id, authRecord.identity, authRecord.accountRecord,
+                    authRecord.chain, authRecord.walletUriBaseId, authRecord.scope);
+            reissued = new AuthRecord(id, authRecord.identity, authRecord.accounts,
                     authRecord.chain, authRecord.scope, authRecord.walletUriBase,
-                    authRecord.accountId, authRecord.walletUriBaseId, now,
+                    authRecord.walletUriBaseId, now,
                     now + mAuthIssuerConfig.authorizationValidityMs);
             Log.d(TAG, "Reissued AuthRecord: " + reissued);
             revoke(authRecord);

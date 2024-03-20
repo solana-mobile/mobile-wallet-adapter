@@ -4,7 +4,9 @@
 
 package com.solana.mobilewalletadapter.walletlib.authorization;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -16,7 +18,7 @@ import java.util.List;
 /*package*/ class AuthDatabase extends SQLiteOpenHelper {
     private static final String TAG = AuthDatabase.class.getSimpleName();
     private static final String DATABASE_NAME_SUFFIX = "-solana-wallet-lib-auth.db";
-    private static final int DATABASE_SCHEMA_VERSION = 6;
+    private static final int DATABASE_SCHEMA_VERSION = 7;
 
     AuthDatabase(@NonNull Context context, @NonNull AuthIssuerConfig authIssuerConfig) {
         super(context, getDatabaseName(authIssuerConfig), null, DATABASE_SCHEMA_VERSION);
@@ -27,8 +29,7 @@ import java.util.List;
         super.onConfigure(db);
     }
 
-    @Override
-    public void onCreate(SQLiteDatabase db) {
+    @Override    public void onCreate(SQLiteDatabase db) {
         db.execSQL(IdentityRecordSchema.CREATE_TABLE_IDENTITIES);
         db.execSQL(AuthorizationsSchema.CREATE_TABLE_AUTHORIZATIONS);
         db.execSQL(AccountRecordsSchema.CREATE_TABLE_ACCOUNTS);
@@ -45,37 +46,125 @@ import java.util.List;
             db.execSQL("DROP TABLE IF EXISTS " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE);
             onCreate(db);
         } else {
-            Log.w(TAG, "Old database schema detected; pre-v2.0.0, migrating public keys to account records");
-            final PublicKeysDao publicKeysDao = new PublicKeysDao(db);
-            publicKeysDao.deleteUnreferencedPublicKeys();
+            // first migrate from public keys to accounts if necessary
+            if (oldVersion == 5) {
+                Log.w(TAG, "Old database schema detected; pre-v2.0.0, migrating public keys to account records");
+                final PublicKeysDao publicKeysDao = new PublicKeysDao(db);
+                publicKeysDao.deleteUnreferencedPublicKeys();
 
-            db.execSQL(AccountRecordsSchema.CREATE_TABLE_ACCOUNTS);
-            db.execSQL("ALTER TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                    " RENAME COLUMN " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
-                    " TO " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID);
-            db.execSQL("ALTER TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                    " RENAME COLUMN " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
-                    " TO " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CHAIN);
+                db.execSQL(AccountRecordsSchema.CREATE_TABLE_ACCOUNTS);
+                db.execSQL("ALTER TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                        " RENAME COLUMN " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_PUBLIC_KEY_ID +
+                        " TO " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID);
+                db.execSQL("ALTER TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                        " RENAME COLUMN " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CLUSTER +
+                        " TO " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CHAIN);
 
-            final List<PublicKey> publicKeys = publicKeysDao.getPublicKeys();
-            if (!publicKeys.isEmpty()) {
+                final List<PublicKey> publicKeys = publicKeysDao.getPublicKeys();
+                if (!publicKeys.isEmpty()) {
+                    AccountRecordsDao accountRecordsDao = new AccountRecordsDao(db);
+                    for (PublicKey publicKey : publicKeys) {
+                        final long accountId = accountRecordsDao.insert(0, publicKey.publicKeyRaw,
+                                publicKey.accountLabel, null, null, null);
+
+                        // the public keys will be sorted by their id, and the new account ID will
+                        // always be >= the existing public key ID so it is safe to update these values
+                        // in place. For publicKey.id p(n) and accountId a(n), p(n) > p(n-1) and
+                        // a(n) >= p(n), therefore a(n) > p(n-1). So the 'WHERE account_id = p(n)'
+                        // condition here will not collide with previously updated entries.
+                        db.execSQL("UPDATE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+                                " SET " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + accountId +
+                                " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + publicKey.id);
+                    }
+                }
+
+                db.execSQL("DROP TABLE IF EXISTS " + PublicKeysSchema.TABLE_PUBLIC_KEYS);
+            } else {
+                // oldVersion == 6, add parent id column to accounts table
+                db.execSQL("ALTER TABLE " + AccountRecordsSchema.TABLE_ACCOUNTS +
+                        " ADD COLUMN " + AccountRecordsSchema.COLUMN_ACCOUNTS_PARENT_ID);
+            }
+
+            // migrate to multi account structure
+            Log.w(TAG, "Old database schema detected; pre-v2.1.0, migrating to multi account structure");
+
+//            try (final Cursor cursor = db.rawQuery("SELECT " +
+//                            AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
+//                            ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
+//                            ", " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_ID +
+//                            ", " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_PUBLIC_KEY_RAW +
+//                            ", " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_LABEL +
+//                            " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
+//                            " INNER JOIN " + AccountRecordsSchema.TABLE_ACCOUNTS +
+//                            " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
+//                            " = " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_ID,
+//                    null)) {
+//                AccountRecordsDao accountRecordsDao = new AccountRecordsDao(db);
+//                while (cursor.moveToNext()) {
+//                    final int parentId = cursor.getInt(0);
+//                    final int accountId = cursor.getInt(1);
+//                    ContentValues values = new ContentValues();
+//                    values.put(AccountRecordsSchema.COLUMN_ACCOUNTS_PARENT_ID, parentId);
+//                    accountRecordsDao.update(AccountRecordsSchema.TABLE_ACCOUNTS, values,
+//                            AccountRecordsSchema.COLUMN_ACCOUNTS_ID + "=" + accountId, null);
+//                }
+//            }
+
+            // migrate to multi account structure
+            // first add parent id column to accounts table
+            // add parent ids to accounts table
+            try (final Cursor cursor = db.query(AuthorizationsSchema.TABLE_AUTHORIZATIONS,
+                    new String[]{
+                            AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID,
+                            AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID
+                    },
+                    null, null, null, null,
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID)) {
                 AccountRecordsDao accountRecordsDao = new AccountRecordsDao(db);
-                for (PublicKey publicKey : publicKeys) {
-                    final long accountId = accountRecordsDao.insert(publicKey.publicKeyRaw,
-                            publicKey.accountLabel, null, null, null);
-
-                    // the public keys will be sorted by their id, and the new account ID will
-                    // always be >= the existing public key ID so it is safe to update these values
-                    // in place. For publicKey.id p(n) and accountId a(n), p(n) > p(n-1) and
-                    // a(n) >= p(n), therefore a(n) > p(n-1). So the 'WHERE account_id = p(n)'
-                    // condition here will not collide with previously updated entries.
-                    db.execSQL("UPDATE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-                            " SET " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + accountId +
-                            " WHERE " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " = " + publicKey.id);
+                while (cursor.moveToNext()) {
+                    final int parentId = cursor.getInt(0);
+                    final int accountId = cursor.getInt(1);
+                    ContentValues values = new ContentValues();
+                    values.put(AccountRecordsSchema.COLUMN_ACCOUNTS_PARENT_ID, parentId);
+                    accountRecordsDao.update(AccountRecordsSchema.TABLE_ACCOUNTS, values,
+                            AccountRecordsSchema.COLUMN_ACCOUNTS_ID + "=" + accountId, null);
                 }
             }
 
-            db.execSQL("DROP TABLE IF EXISTS " + PublicKeysSchema.TABLE_PUBLIC_KEYS);
+            // now we can drop the account id column from the authorizations table
+            // first backup the existing authorizations table
+            String authorizationMigrationTable = "authorizations_backup";
+            db.execSQL("CREATE TEMPORARY TABLE " + authorizationMigrationTable + " (" +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + " INTEGER NOT NULL PRIMARY KEY," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + " INTEGER NOT NULL," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED + " INTEGER NOT NULL," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + " INTEGER NOT NULL," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID + " INTEGER NOT NULL," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE + " BLOB NOT NULL," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CHAIN + " TEXT NOT NULL)");
+            db.execSQL("INSERT INTO " + authorizationMigrationTable + " SELECT " +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CHAIN + " FROM " +
+                    AuthorizationsSchema.TABLE_AUTHORIZATIONS);
+
+            // now drop the existing authorizations table and recreate it with new schema
+            db.execSQL("DROP TABLE " + AuthorizationsSchema.TABLE_AUTHORIZATIONS);
+            db.execSQL(AuthorizationsSchema.CREATE_TABLE_AUTHORIZATIONS);
+            db.execSQL("INSERT INTO " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + " SELECT " +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_IDENTITY_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ISSUED + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_WALLET_URI_BASE_ID + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_SCOPE + "," +
+                    AuthorizationsSchema.COLUMN_AUTHORIZATIONS_CHAIN + " FROM " +
+                    authorizationMigrationTable);
+
+            db.execSQL("DROP TABLE IF EXISTS " + authorizationMigrationTable);
         }
     }
 
