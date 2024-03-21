@@ -10,6 +10,7 @@ import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig
 import com.solana.mobilewalletadapter.walletlib.scenario.*
+import com.solana.mobilewalletadapter.walletlib.scenario.AuthorizedAccount
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.BuildConfig
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.*
@@ -193,7 +194,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                             },
                             response.walletUriBase?.let { Uri.parse(response.walletUriBase) },
                             response.authorizationScope,
-                            null // TODO: SignInResult
+                            response.signInResult
                         )
                 else -> completeWithInvalidResponse()
             }
@@ -278,31 +279,33 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     private fun sendWalletServiceRequestToReact(request: MobileWalletAdapterRemoteRequest) {
         val surrogate = when(request) {
             is MobileWalletAdapterRemoteRequest.AuthorizeDapp -> AuthorizeDapp(
-                scenarioId!!, request.request.cluster, request.request.identityName,
-                request.request.identityUri.toString(), request.request.iconRelativeUri.toString()
+                scenarioId!!, request.request.chain, request.request.identityName,
+                request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
+                request.request.features?.asList(), request.request.addresses?.asList(), 
+                request.request.signInPayload
             )
             is MobileWalletAdapterRemoteRequest.ReauthorizeDapp -> ReauthorizeDapp(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope
             )
             is MobileWalletAdapterRemoteRequest.DeauthorizeDapp -> DeauthorizeDapp(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope
             )
             is MobileWalletAdapterRemoteRequest.SignMessages -> SignMessages(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope, request.request.payloads.toList()
             )
             is MobileWalletAdapterRemoteRequest.SignTransactions -> SignTransactions(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope, request.request.payloads.toList()
             )
             is MobileWalletAdapterRemoteRequest.SignAndSendTransactions -> SignAndSendTransactions(
-                scenarioId!!, request.request.cluster, request.request.identityName,
+                scenarioId!!, request.request.chain, request.request.identityName,
                 request.request.identityUri.toString(), request.request.iconRelativeUri.toString(),
                 request.request.authorizationScope, request.request.payloads.toList()
             )

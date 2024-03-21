@@ -1,15 +1,16 @@
 package com.solanamobile.mobilewalletadapterwalletlib.reactnative.model
 
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
+import com.solanamobile.mobilewalletadapterwalletlib.reactnative.SignInPayloadSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-sealed class MobileWalletAdapterRequest
-{
+sealed class MobileWalletAdapterRequest {
     open val requestId: String = UUID.randomUUID().toString()
     abstract val sessionId: String
-    abstract val cluster: String
+    abstract val chain: String
     abstract val identityName: String?
     abstract val identityUri: String?
     abstract val iconRelativeUri: String?
@@ -19,10 +20,13 @@ sealed class MobileWalletAdapterRequest
 @SerialName("AUTHORIZE_DAPP")
 data class AuthorizeDapp(
     override val sessionId: String,
-    override val cluster: String,
+    override val chain: String,
     override val identityName: String?,
     override val identityUri: String?,
-    override val iconRelativeUri: String?
+    override val iconRelativeUri: String?,
+    val features: List<String>? = null,
+    val addresses: List<String>? = null,
+    @Serializable(with = SignInPayloadSerializer::class) val signInPayload: SignInWithSolana.Payload? = null
 ) : MobileWalletAdapterRequest()
 
 @Serializable
@@ -34,7 +38,7 @@ sealed class VerifiableIdentityRequestSurrogate : MobileWalletAdapterRequest() {
 @SerialName("REAUTHORIZE_DAPP")
 data class ReauthorizeDapp(
     override val sessionId: String,
-    override val cluster: String,
+    override val chain: String,
     override val identityName: String?,
     override val identityUri: String?,
     override val iconRelativeUri: String?,
@@ -45,7 +49,7 @@ data class ReauthorizeDapp(
 @SerialName("DEAUTHORIZE_DAPP")
 data class DeauthorizeDapp(
     override val sessionId: String,
-    override val cluster: String,
+    override val chain: String,
     override val identityName: String?,
     override val identityUri: String?,
     override val iconRelativeUri: String?,
@@ -61,7 +65,7 @@ sealed class SignPayloads : VerifiableIdentityRequestSurrogate() {
 @SerialName("SIGN_MESSAGES")
 data class SignMessages(
     override val sessionId: String,
-    override val cluster: String,
+    override val chain: String,
     override val identityName: String?,
     override val identityUri: String?,
     override val iconRelativeUri: String?,
@@ -73,7 +77,7 @@ data class SignMessages(
 @SerialName("SIGN_TRANSACTIONS")
 data class SignTransactions(
     override val sessionId: String,
-    override val cluster: String,
+    override val chain: String,
     override val identityName: String?,
     override val identityUri: String?,
     override val iconRelativeUri: String?,
@@ -85,7 +89,7 @@ data class SignTransactions(
 @SerialName("SIGN_AND_SEND_TRANSACTIONS")
 data class SignAndSendTransactions(
     override val sessionId: String,
-    override val cluster: String,
+    override val chain: String,
     override val identityName: String?,
     override val identityUri: String?,
     override val iconRelativeUri: String?,

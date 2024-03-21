@@ -1,5 +1,8 @@
 package com.solanamobile.mobilewalletadapterwalletlib.reactnative
 
+import android.util.Base64
+import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
+import com.solana.mobilewalletadapter.walletlib.scenario.SignInResult
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.AuthorizeDappResponse
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.DeauthorizeDappResponse
 import com.solanamobile.mobilewalletadapterwalletlib.reactnative.model.MobileWalletAdapterFailureResponse
@@ -17,12 +20,17 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import org.json.JSONObject
 
 internal open class TypeTransformingSerializer<T: Any>(serializer: KSerializer<T>) : JsonTransformingSerializer<T>(serializer) {
     override fun transformSerialize(element: JsonElement): JsonElement =
@@ -109,4 +117,41 @@ object ByteArrayCollectionAsMapCollectionSerializer : KSerializer<List<ByteArray
 
     override fun serialize(encoder: Encoder, value: List<ByteArray>) =
         encoder.encodeSerializableValue(ListSerializer(ByteArrayAsMapSerializer), value)
+}
+
+object SignInPayloadSerializer : KSerializer<SignInWithSolana.Payload> {
+    override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+    
+    val json = Json { ignoreUnknownKeys = true }
+
+    override fun deserialize(decoder: Decoder): SignInWithSolana.Payload =
+        SignInWithSolana.Payload.fromJson(
+            JSONObject(decoder.decodeSerializableValue(JsonElement.serializer()).toString())
+        )
+
+    override fun serialize(encoder: Encoder, value: SignInWithSolana.Payload) =
+        encoder.encodeSerializableValue(JsonElement.serializer(), 
+            json.decodeFromString(JsonElement.serializer(), value.toJson().toString()))
+}
+
+object SignInResultSerializer : KSerializer<SignInResult> {
+    override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
+
+    override fun deserialize(decoder: Decoder): SignInResult =
+        decoder.decodeSerializableValue(JsonObject.serializer()).let { json ->
+            SignInResult(
+                Base64.decode(json["address"]!!.jsonPrimitive.content, Base64.NO_WRAP),
+                Base64.decode(json["signed_message"]!!.jsonPrimitive.content, Base64.NO_WRAP),
+                Base64.decode(json["signature"]!!.jsonPrimitive.content, Base64.NO_WRAP),
+                json["signature_type"]?.jsonPrimitive?.content
+            )
+        }
+
+    override fun serialize(encoder: Encoder, value: SignInResult) =
+        encoder.encodeSerializableValue(JsonElement.serializer(), buildJsonObject { 
+            put("address", Base64.encodeToString(value.publicKey, Base64.NO_WRAP))
+            put("signed_message", Base64.encodeToString(value.signedMessage, Base64.NO_WRAP))
+            put("signature", Base64.encodeToString(value.signature, Base64.NO_WRAP))
+            put("signature_type", value.signatureType)
+        })
 }

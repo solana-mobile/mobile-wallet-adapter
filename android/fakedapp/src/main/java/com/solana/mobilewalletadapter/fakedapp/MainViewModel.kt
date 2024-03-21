@@ -456,11 +456,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doAuthorize(
         client: MobileWalletAdapterUseCase.Client,
         identity: MobileWalletAdapterUseCase.DappIdentity,
-        cluster: String?,
+        chain: String?,
         signInPayload: SignInWithSolana.Payload? = null
     ): MobileWalletAdapterClient.AuthorizationResult {
         val result = try {
-            client.authorize(identity, cluster, signInPayload)
+            client.authorize(identity, chain, signInPayload, uiState.value.sessionProtocolVersion!!)
         } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
             _uiState.update {
                 it.copy(
