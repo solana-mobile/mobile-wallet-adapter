@@ -15,7 +15,7 @@ function createConfig({
 }: {
     bundleName: string;
     format: 'cjs' | 'esm';
-    runtime: 'node' | 'react-native';
+    runtime: 'browser' | 'node' | 'react-native';
 }): RollupOptions {
     return {
         input: 'src/index.ts',
@@ -56,14 +56,14 @@ function createConfig({
             }),
             externals(),
             nodeResolve({
-                browser: false,
+                browser: runtime === 'browser',
                 extensions: ['.ts'],
                 preferBuiltins: runtime === 'node',
             }),
             replace({
                 preventAssignment: true,
                 values: {
-                    'process.env.BROWSER': JSON.stringify(false),
+                    'process.env.BROWSER': JSON.stringify(runtime === 'browser'),
                     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
                 },
             }),
@@ -76,7 +76,23 @@ function createConfig({
 }
 
 const config: RollupOptions[] = [
+    createConfig({ bundleName: 'index.js', format: 'cjs', runtime: 'node' }),
+    createConfig({
+        bundleName: 'index.browser.js',
+        format: 'cjs',
+        runtime: 'browser',
+    }),
+    createConfig({
+        bundleName: 'index.native.js',
+        format: 'cjs',
+        runtime: 'react-native',
+    }),
     createConfig({ bundleName: 'index.js', format: 'esm', runtime: 'node' }),
+    createConfig({
+        bundleName: 'index.browser.js',
+        format: 'esm',
+        runtime: 'browser',
+    }),
     createConfig({
         bundleName: 'index.native.js',
         format: 'esm',
