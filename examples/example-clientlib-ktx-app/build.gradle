@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        compose_version = '1.6.3'
+        compose_version = '1.6.4'
         compose_material_version = '1.6.3'
         compose_compiler_version = '1.5.11'
     }
