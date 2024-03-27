@@ -1,9 +1,8 @@
-package com.solanamobile.mobilewalletadapterwalletlib.reactnative
+package com.mobilewalletadapterreactnative
 
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
-
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.ReactRootView
@@ -14,7 +13,7 @@ class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
      * Returns the name of the main component registered from JavaScript. This is used to schedule
      * rendering of the component.
      */
-    override protected  fun getMainComponentName() = "MobileWalletAdapterEntrypoint"
+    override protected fun getMainComponentName() = "MobileWalletAdapterEntrypoint"
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -22,15 +21,15 @@ class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
 
         windowLayoutParams.gravity = Gravity.BOTTOM
         windowLayoutParams.flags =
-            windowLayoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND
+                windowLayoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND
 
         window.attributes = windowLayoutParams
         super.onCreate(null)
     }
 
     /**
-     * Returns the instance of the [ReactActivityDelegate]. There the RootView is created and
-     * you can specify the renderer you wish to use - the new renderer (Fabric) or the old renderer
+     * Returns the instance of the [ReactActivityDelegate]. There the RootView is created and you
+     * can specify the renderer you wish to use - the new renderer (Fabric) or the old renderer
      * (Paper).
      */
     override protected fun createReactActivityDelegate(): ReactActivityDelegate {
@@ -38,7 +37,7 @@ class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
     }
 
     class MainActivityDelegate(val activity: ReactActivity?, mainComponentName: String?) :
-        ReactActivityDelegate(activity, mainComponentName) {
+            ReactActivityDelegate(activity, mainComponentName) {
 
         override protected fun createRootView(): ReactRootView {
             val reactRootView = ReactRootView(getContext())
