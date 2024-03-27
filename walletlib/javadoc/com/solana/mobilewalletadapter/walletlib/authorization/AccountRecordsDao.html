@@ -109,14 +109,17 @@ loadScripts(document, 'script');</script>
 <div class="col-second odd-row-color"><code><a href="#COLUMN_ACCOUNTS_LABEL" class="member-name-link">COLUMN_ACCOUNTS_LABEL</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#COLUMN_ACCOUNTS_PUBLIC_KEY_RAW" class="member-name-link">COLUMN_ACCOUNTS_PUBLIC_KEY_RAW</a></code></div>
+<div class="col-second even-row-color"><code><a href="#COLUMN_ACCOUNTS_PARENT_ID" class="member-name-link">COLUMN_ACCOUNTS_PARENT_ID</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#CREATE_TABLE_ACCOUNTS" class="member-name-link">CREATE_TABLE_ACCOUNTS</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#COLUMN_ACCOUNTS_PUBLIC_KEY_RAW" class="member-name-link">COLUMN_ACCOUNTS_PUBLIC_KEY_RAW</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#TABLE_ACCOUNTS" class="member-name-link">TABLE_ACCOUNTS</a></code></div>
+<div class="col-second even-row-color"><code><a href="#CREATE_TABLE_ACCOUNTS" class="member-name-link">CREATE_TABLE_ACCOUNTS</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#TABLE_ACCOUNTS" class="member-name-link">TABLE_ACCOUNTS</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -159,7 +162,8 @@ loadScripts(document, 'script');</script>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#deleteUnreferencedAccounts()" class="member-name-link">deleteUnreferencedAccounts</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>long</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#insert(byte%5B%5D,java.lang.String,android.net.Uri,java.lang.String%5B%5D,java.lang.String%5B%5D)" class="member-name-link">insert</a><wbr>(byte[]&nbsp;publicKey,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#insert(long,byte%5B%5D,java.lang.String,android.net.Uri,java.lang.String%5B%5D,java.lang.String%5B%5D)" class="member-name-link">insert</a><wbr>(long&nbsp;parentId,
+ byte[]&nbsp;publicKey,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
  <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a>&nbsp;accountIcon,
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>[]&nbsp;chains,
@@ -254,6 +258,20 @@ loadScripts(document, 'script');</script>
 <dd>
 <ul class="see-list">
 <li><a href="../../../../../constant-values.html#com.solana.mobilewalletadapter.walletlib.authorization.AccountRecordsDao.COLUMN_ACCOUNTS_ID">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="COLUMN_ACCOUNTS_PARENT_ID">
+<h3>COLUMN_ACCOUNTS_PARENT_ID</h3>
+<div class="member-signature"><span class="modifiers">static final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">COLUMN_ACCOUNTS_PARENT_ID</span></div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="see-list">
+<li><a href="../../../../../constant-values.html#com.solana.mobilewalletadapter.walletlib.authorization.AccountRecordsDao.COLUMN_ACCOUNTS_PARENT_ID">Constant Field Values</a></li>
 </ul>
 </dd>
 </dl>
@@ -380,9 +398,11 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="insert(byte[],java.lang.String,android.net.Uri,java.lang.String[],java.lang.String[])">
+<section class="detail" id="insert(long,byte[],java.lang.String,android.net.Uri,java.lang.String[],java.lang.String[])">
 <h3>insert</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">long</span>&nbsp;<span class="element-name">insert</span><wbr><span class="parameters">(@NonNull
+ long&nbsp;parentId,
+ @NonNull
  byte[]&nbsp;publicKey,
  @Nullable
  <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;accountLabel,
