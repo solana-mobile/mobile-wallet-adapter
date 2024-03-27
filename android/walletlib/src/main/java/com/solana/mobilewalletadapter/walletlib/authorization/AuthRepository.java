@@ -32,11 +32,21 @@ public interface AuthRepository {
                      @Nullable Uri walletUriBase,
                      @Nullable byte[] scope);
 
+    @Deprecated
     @NonNull
     AuthRecord issue(@NonNull String name,
                      @NonNull Uri uri,
                      @NonNull Uri relativeIconUri,
                      @NonNull AuthorizedAccount account,
+                     @NonNull String cluster,
+                     @Nullable Uri walletUriBase,
+                     @Nullable byte[] scope);
+
+    @NonNull
+    AuthRecord issue(@NonNull String name,
+                     @NonNull Uri uri,
+                     @NonNull Uri relativeIconUri,
+                     @NonNull AuthorizedAccount[] accounts,
                      @NonNull String cluster,
                      @Nullable Uri walletUriBase,
                      @Nullable byte[] scope);

@@ -12,6 +12,9 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AccountRecordsDao extends DbContentProvider<AccountRecord>
         implements AccountRecordsDaoInterface, AccountRecordsSchema {
 
@@ -20,25 +23,18 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
     @NonNull
     @Override
     protected AccountRecord cursorToEntity(@NonNull Cursor cursor) {
-        final int publicKeyId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_ID));
-        final byte[] publicKey = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_PUBLIC_KEY_RAW));
-        final String accountLabel = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_LABEL));
-        final String accountIconStr = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_ICON));
-        final String chainsString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_CHAINS));
-        final String featuresString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_FEATURES));
-        final Uri accountIcon = accountIconStr != null ? Uri.parse(accountIconStr) : null;
-        final String[] chains = chainsString != null ? deserialize(chainsString) : null;
-        final String[] features = featuresString != null ? deserialize(featuresString) : null;
-        return new AccountRecord(publicKeyId, publicKey, accountLabel, accountIcon, chains, features);
+        return buildAccountRecordFromCursor(cursor);
     }
 
     @Override
-    public long insert(@NonNull byte[] publicKey,
+    public long insert(@NonNull long parentId,
+                       @NonNull byte[] publicKey,
                        @Nullable String accountLabel,
                        @Nullable Uri accountIcon,
                        @Nullable String[] chains,
                        @Nullable String[] features) {
-        final ContentValues accountContentValues = new ContentValues(4);
+        final ContentValues accountContentValues = new ContentValues(6);
+        accountContentValues.put(COLUMN_ACCOUNTS_PARENT_ID, parentId);
         accountContentValues.put(COLUMN_ACCOUNTS_PUBLIC_KEY_RAW, publicKey);
         accountContentValues.put(COLUMN_ACCOUNTS_LABEL, accountLabel);
         accountContentValues.put(COLUMN_ACCOUNTS_ICON, accountIcon != null ? accountIcon.toString() : null);
@@ -70,8 +66,8 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
     public void deleteUnreferencedAccounts() {
         final SQLiteStatement deleteUnreferencedAccounts = super.compileStatement(
                 "DELETE FROM " + TABLE_ACCOUNTS +
-                        " WHERE " + COLUMN_ACCOUNTS_ID + " NOT IN " +
-                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
+                        " WHERE " + COLUMN_ACCOUNTS_PARENT_ID + " NOT IN " +
+                        "(SELECT DISTINCT " + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
                         " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + ')');
         deleteUnreferencedAccounts.executeUpdateDelete();
     }
@@ -86,6 +82,7 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
     }
 
     /*package*/ static AccountRecord buildAccountRecordFromRaw(@IntRange(from = 1) int id,
+                                                               @IntRange(from = 1) int parentId,
                                                                @NonNull byte[] publicKeyRaw,
                                                                @Nullable String accountLabel,
                                                                @Nullable String iconStr,
@@ -94,6 +91,20 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
         final Uri icon = iconStr != null ? Uri.parse(iconStr) : null;
         final String[] chains = chainsStr != null ? deserialize(chainsStr) : null;
         final String[] features = featuresStr != null ? deserialize(featuresStr) : null;
-        return new AccountRecord(id, publicKeyRaw, accountLabel, icon, chains, features);
+        return new AccountRecord(id, parentId, publicKeyRaw, accountLabel, icon, chains, features);
+    }
+
+    /*package*/ static AccountRecord buildAccountRecordFromCursor(@NonNull Cursor cursor) {
+        final int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_ID));
+        final int parentId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_PARENT_ID));
+        final byte[] publicKey = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_PUBLIC_KEY_RAW));
+        final String accountLabel = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_LABEL));
+        final String accountIconStr = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_ICON));
+        final String chainsString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_CHAINS));
+        final String featuresString = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ACCOUNTS_FEATURES));
+        final Uri accountIcon = accountIconStr != null ? Uri.parse(accountIconStr) : null;
+        final String[] chains = chainsString != null ? deserialize(chainsString) : null;
+        final String[] features = featuresString != null ? deserialize(featuresString) : null;
+        return new AccountRecord(id, parentId, publicKey, accountLabel, accountIcon, chains, features);
     }
 }
