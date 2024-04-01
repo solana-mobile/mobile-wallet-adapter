@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.BaseAdapter
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -17,7 +18,6 @@ import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.fakedapp.databinding.ActivityMainBinding
-import com.solana.mobilewalletadapter.fakedapp.usecase.Base58EncodeUseCase
 import com.solana.mobilewalletadapter.fakedapp.usecase.MemoTransactionVersion
 import com.solana.mobilewalletadapter.fakedapp.usecase.MobileWalletAdapterUseCase.StartMobileWalletAdapterActivity
 import kotlinx.coroutines.launch
@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        val accountLabels = mutableListOf<String>()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
@@ -56,12 +58,11 @@ class MainActivity : AppCompatActivity() {
                         if (spinnerPos > 0) viewBinding.spinnerTxnVer.setSelection(spinnerPos)
                     }
 
-                    viewBinding.spinnerAccounts.adapter =
-                        ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_item,
-                            uiState.accounts?.map { account ->
-                                account.accountLabel ?: Base58EncodeUseCase.invoke(account.publicKey)
-                            } ?: listOf()
-                        )
+                    if (accountLabels != uiState.accountLabels) {
+                        accountLabels.clear()
+                        accountLabels.addAll(uiState.accountLabels ?: listOf())
+                        (viewBinding.spinnerAccounts.adapter as? BaseAdapter)?.notifyDataSetChanged()
+                    }
 
                     viewBinding.tvWalletUriPrefix.text =
                         uiState.walletUriBase?.toString() ?: getString(R.string.string_no_wallet_uri_prefix)
@@ -179,6 +180,18 @@ class MainActivity : AppCompatActivity() {
         viewBinding.btnSignAndSendTxnX20.setOnClickListener {
             viewModel.signAndSendTransactions(mwaLauncher, 20)
         }
+
+        viewBinding.spinnerAccounts.adapter = ArrayAdapter(this@MainActivity,
+            android.R.layout.simple_spinner_item, accountLabels)
+        viewBinding.spinnerAccounts.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, selected: View?,
+                                            index: Int, id: Long) {
+                    viewModel.setSelectedAccount(index)
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
     }
 
     override fun onResume() {

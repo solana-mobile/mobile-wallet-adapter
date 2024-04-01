@@ -195,6 +195,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(txnVersion = txnVersion) }
     }
 
+    fun setSelectedAccount(accountIndex: Int) {
+        _uiState.update { it.copy(selectedAccount = _uiState.value.accounts?.get(accountIndex)!!) }
+    }
+
     fun signTransactions(
         intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         numTransactions: Int
@@ -369,11 +373,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         val signedMessages = try {
+            println("++++ signing message with account ${_uiState.value.selectedAccount?.accountLabel}")
             doLocalAssociateAndExecute(intentLauncher, _uiState.value.walletUriBase) { client ->
                 doReauthorize(client, IDENTITY, _uiState.value.authToken!!).also {
                     Log.d(TAG, "Reauthorized: $it")
                 }
-                client.signMessagesDetached(messages, arrayOf(_uiState.value.primaryPublicKey!!)).also {
+                client.signMessagesDetached(messages,
+                    arrayOf(_uiState.value.selectedAccount!!.publicKey)).also {
                     Log.d(TAG, "Signed message(s): $it")
                 }
             }
@@ -393,7 +399,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 OffChainMessageSigningUseCase.verify(
                     sm.first.message,
                     sm.first.signatures[0],
-                    _uiState.value.primaryPublicKey!!,
+                    _uiState.value.selectedAccount!!.publicKey,
                     sm.second
                 )
             }
@@ -476,6 +482,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 authToken = result.authToken,
                 accounts = result.accounts.asList(),
+                selectedAccount = result.accounts.first(),
                 walletUriBase = result.walletUriBase
             )
         }
@@ -505,6 +512,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 authToken = result.authToken,
                 accounts = result.accounts.asList(),
+                selectedAccount = it.selectedAccount ?: result.accounts.first(),
                 walletUriBase = result.walletUriBase
             )
         }
@@ -550,6 +558,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     data class UiState(
         val authToken: String? = null,
         val accounts: List<AuthorizedAccount>? = null,
+        val selectedAccount: AuthorizedAccount? = null,
         val walletUriBase: Uri? = null,
         val messages: List<String> = emptyList(),
         val txnVersion: MemoTransactionVersion = MemoTransactionVersion.Legacy,
@@ -557,6 +566,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         val hasAuthToken: Boolean get() = (authToken != null)
         val primaryPublicKey: ByteArray? get() = (accounts?.first()?.publicKey)
+        val accountLabels: List<String>? get() = accounts?.map { it.accountLabel ?: Base58EncodeUseCase(it.publicKey) }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -568,6 +578,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (accounts != null && accounts.size == other.accounts?.size) {
                 accounts.zip(other.accounts).all { (a1, a2) -> a1.publicKey.contentEquals(a2.publicKey) }
             } else if (other.accounts != null) return false
+            if (!selectedAccount?.publicKey.contentEquals(other.selectedAccount?.publicKey)) return false
             if (walletUriBase != other.walletUriBase) return false
             if (messages != other.messages) return false
             if (txnVersion != other.txnVersion) return false
@@ -579,6 +590,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         override fun hashCode(): Int {
             var result = authToken?.hashCode() ?: 0
             result = 31 * result + (accounts?.hashCode() ?: 0)
+            result = 31 * result + (selectedAccount?.hashCode() ?: 0)
             result = 31 * result + (walletUriBase?.hashCode() ?: 0)
             result = 31 * result + messages.hashCode()
             result = 31 * result + txnVersion.hashCode()
