@@ -50,6 +50,13 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
 
+                            viewBinding.textAccount.text =
+                                if (request is MobileWalletAdapterServiceRequest.SignMessages) {
+                                    request.accounts.first().accountLabel
+                                } else {
+                                    request.request.authorizedAccounts.first().accountLabel
+                                }
+
                             viewBinding.btnAuthorize.setOnClickListener {
                                 activityViewModel.signPayloadsSimulateSign(request)
                             }
@@ -84,6 +91,8 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.textSignPayloads.setText(R.string.label_sign_transactions)
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
+
+                            viewBinding.textAccount.text = request.request.authorizedAccounts.first().accountLabel
 
                             viewBinding.btnAuthorize.setOnClickListener {
                                 activityViewModel.signAndSendTransactionsSimulateSign(request)
