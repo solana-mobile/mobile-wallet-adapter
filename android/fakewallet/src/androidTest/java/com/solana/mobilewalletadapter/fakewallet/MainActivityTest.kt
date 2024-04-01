@@ -175,6 +175,45 @@ class MainActivityTest {
     }
 
     @Test
+    fun authorizationFlow_SuccessfulAuthorizeX3() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val cluster = ProtocolContract.CLUSTER_TESTNET
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+
+        // trigger authorization from client
+        val authorization = localAssociation.start().get().run {
+            authorize(identityUri, iconUri, identityName, cluster)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_authorize_x3))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // verify that we got an auth token (successful auth)
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+        assertTrue(authResult?.accounts?.size == 3)
+    }
+
+    @Test
     fun authorizationFlow_SuccessfulSignIn() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -214,6 +253,59 @@ class MainActivityTest {
         // verify that we got an auth token (successful auth)
         assertTrue(authResult?.authToken?.isNotEmpty() == true)
         assertTrue(authResult?.signInResult != null)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulSignMessagesMultiAccount() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        val messages = arrayOf("hello world 1!".encodeToByteArray(), "hello world 2!".encodeToByteArray())
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+
+        // trigger authorization from client
+        val scenario = localAssociation.start().get()
+        val authorization = scenario.authorize(identityUri, iconUri, identityName, chain,
+            null, null, null, null)
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize_x3))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // trigger authorization from client
+        val signMessagesFuture = scenario.signMessagesDetached(messages,
+                authResult.accounts.map { it.publicKey }.toTypedArray())
+
+        // then
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "sign_payloads")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val signedPayloads = signMessagesFuture.get()
+
+        // verify that we got all signatures
+        assertTrue(signedPayloads.messages.size == 2)
+        assertTrue(signedPayloads.messages[0].signatures.size == 3)
+        assertTrue(signedPayloads.messages[1].signatures.size == 3)
     }
 
     @Test
