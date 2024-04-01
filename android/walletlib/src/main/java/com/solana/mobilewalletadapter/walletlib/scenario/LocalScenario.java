@@ -303,7 +303,7 @@ public abstract class LocalScenario implements Scenario {
 
                     mIoHandler.post(() -> request.complete(
                             new MobileWalletAdapterServer.AuthorizationResult(
-                                    authToken, authRecord.authorizedAccount(),
+                                    authToken, authRecord.getAuthorizedAccounts(),
                                     authRecord.walletUriBase, null)));
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
@@ -360,7 +360,7 @@ public abstract class LocalScenario implements Scenario {
             mIoHandler.post(() -> mCallbacks.onSignTransactionsRequest(new SignTransactionsRequest(
                     request, authRecord.identity.getName(), authRecord.identity.getUri(),
                     authRecord.identity.getRelativeIconUri(), authRecord.scope,
-                    authRecord.publicKey, authRecord.chain)));
+                    authRecord.getAuthorizedAccounts(), authRecord.chain)));
         }
 
         @Override
@@ -379,7 +379,7 @@ public abstract class LocalScenario implements Scenario {
                 final SignMessagesRequest smr = new SignMessagesRequest(request,
                         authRecord.identity.getName(), authRecord.identity.getUri(),
                         authRecord.identity.getRelativeIconUri(), authRecord.scope,
-                        authRecord.publicKey, authRecord.chain);
+                        authRecord.getAuthorizedAccounts(), authRecord.chain);
                 mIoHandler.post(() -> mCallbacks.onSignMessagesRequest(smr));
             } catch (IllegalArgumentException e) {
                 mIoHandler.post(() -> request.completeExceptionally(
@@ -403,7 +403,7 @@ public abstract class LocalScenario implements Scenario {
             mIoHandler.post(() -> mCallbacks.onSignAndSendTransactionsRequest(
                     new SignAndSendTransactionsRequest(request, authRecord.identity.getName(),
                             authRecord.identity.getUri(), authRecord.identity.getRelativeIconUri(),
-                            authRecord.scope, authRecord.publicKey, authRecord.chain)));
+                            authRecord.scope, authRecord.getAuthorizedAccounts(), authRecord.chain)));
         }
     };
 

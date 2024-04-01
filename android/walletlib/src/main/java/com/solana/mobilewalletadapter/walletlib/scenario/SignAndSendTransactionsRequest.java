@@ -15,7 +15,8 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 public class SignAndSendTransactionsRequest
         extends BaseVerifiableIdentityRequest<MobileWalletAdapterServer.SignAndSendTransactionsRequest> {
     @NonNull
-    protected final byte[] mPublicKey;
+    @Size(min = 1)
+    protected final AuthorizedAccount[] mAuthorizedAccounts;
 
     /*package*/ SignAndSendTransactionsRequest(
             @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request,
@@ -23,15 +24,20 @@ public class SignAndSendTransactionsRequest
             @Nullable Uri identityUri,
             @Nullable Uri iconUri,
             @NonNull byte[] authorizationScope,
-            @NonNull byte[] publicKey,
+            @NonNull @Size(min = 1) AuthorizedAccount[] authorizedAccounts,
             @NonNull String chain) {
         super(request, identityName, identityUri, iconUri, chain, authorizationScope);
-        mPublicKey = publicKey;
+        mAuthorizedAccounts = authorizedAccounts;
     }
 
     @NonNull
+    @Size(min = 1)
+    public AuthorizedAccount[] getAuthorizedAccounts() { return mAuthorizedAccounts; }
+
+    @Deprecated
+    @NonNull
     public byte[] getPublicKey() {
-        return mPublicKey;
+        return mAuthorizedAccounts[0].publicKey;
     }
 
     @NonNull

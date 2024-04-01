@@ -17,8 +17,8 @@ public class SignTransactionsRequest extends SignPayloadsRequest {
                                         @Nullable Uri identityUri,
                                         @Nullable Uri iconUri,
                                         @NonNull byte[] authorizationScope,
-                                        @NonNull byte[] authorizedPublicKey,
+                                        @NonNull AuthorizedAccount[] authorizedAccounts,
                                         @NonNull String chain) {
-        super(request, identityName, identityUri, iconUri, authorizationScope, authorizedPublicKey, chain);
+        super(request, identityName, identityUri, iconUri, authorizationScope, authorizedAccounts, chain);
     }
 }
