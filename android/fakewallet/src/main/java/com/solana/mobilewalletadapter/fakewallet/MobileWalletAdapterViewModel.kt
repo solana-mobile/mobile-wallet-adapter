@@ -202,14 +202,20 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signedPayloads = when (request) {
                 is MobileWalletAdapterServiceRequest.SignTransactions -> {
-                    val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.accounts.first().publicKey)
-                    check(keypair != null) { "Unknown public key for signing request" }
                     Array(request.request.payloads.size) { i ->
+                        val tx = request.request.payloads[i]
+                        val keypairs = SolanaSigningUseCase.getSignersForTransaction(tx).map {
+                            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(it)
+                            check(keypair != null) { "Unknown public key for signing request" }
+                            keypair
+                        }
                         try {
-                            SolanaSigningUseCase.signTransaction(
-                                request.request.payloads[i],
-                                keypair
-                            ).signedPayload
+                            var partiallySignedTx = tx
+                            keypairs.forEach { keypair ->
+                                partiallySignedTx =
+                                    SolanaSigningUseCase.signTransaction(partiallySignedTx, keypair).signedPayload
+                            }
+                            partiallySignedTx
                         } catch (e: IllegalArgumentException) {
                             Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                             valid[i] = false

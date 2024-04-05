@@ -78,6 +78,39 @@ object SolanaSigningUseCase {
         return Result(signedMessage, sig)
     }
 
+    fun getSignersForTransaction(
+        transaction: ByteArray
+    ): List<ByteArray> {
+
+        val signers = mutableListOf<ByteArray>()
+
+        // Validate the transaction only up through the account addresses array
+        val (numSignatures, numSignaturesOffset) = readCompactArrayLen(transaction, 0)
+        val prefixOffset = numSignaturesOffset + (SIGNATURE_LEN * numSignatures)
+        val prefix = transaction[prefixOffset].toInt()
+
+        // if the highest bit of the prefix is not set, the message is not versioned
+        val txnVersionOffset = if (prefix and 0x7f == prefix) 0 else 1
+        val headerOffset = prefixOffset + txnVersionOffset
+
+        val accountsArrayOffset = headerOffset + 3
+        require(accountsArrayOffset <= transaction.size) { "transaction header extends beyond buffer bounds" }
+        val numSignaturesHeader = transaction[headerOffset].toInt()
+        require(numSignatures == numSignaturesHeader) { "Signatures array length does not match transaction required number of signatures" }
+
+        val (numAccounts, numAccountsOffset) = readCompactArrayLen(transaction, accountsArrayOffset)
+        require(numAccounts >= numSignatures) { "Accounts array is smaller than number of required signatures" }
+        val blockhashOffset = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * numAccounts
+        require(blockhashOffset <= transaction.size) { "Accounts array extends beyond buffer bounds" }
+        for (i in 0 until numSignatures) {
+            val accountOff = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * i
+            val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
+            signers.add(accountPublicKey)
+        }
+
+        return signers.toList()
+    }
+
     private fun readCompactArrayLen(b: ByteArray, off: Int): Pair<Int, Int> {
         var len: Int
 

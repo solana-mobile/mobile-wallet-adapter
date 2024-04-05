@@ -23,6 +23,12 @@ import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.walletlib.scenario.TestScopeLowPowerMode
+import com.solana.publickey.SolanaPublicKey
+import com.solana.transaction.AccountMeta
+import com.solana.transaction.Message
+import com.solana.transaction.Transaction
+import com.solana.transaction.TransactionInstruction
+import com.solana.transaction.toUnsignedTransaction
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -306,6 +312,81 @@ class MainActivityTest {
         assertTrue(signedPayloads.messages.size == 2)
         assertTrue(signedPayloads.messages[0].signatures.size == 3)
         assertTrue(signedPayloads.messages[1].signatures.size == 3)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulSignTransactionMultiAccount() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        val memoProgramId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+        val messages = arrayOf("hello world 1!".encodeToByteArray(), "hello world 2!".encodeToByteArray())
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+
+        // trigger authorization from client
+        val scenario = localAssociation.start().get()
+        val authorization = scenario.authorize(identityUri, iconUri, identityName, chain,
+            null, null, null, null)
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize_x3))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // build transaction
+        val transactions = (0..1).map {
+            Message.Builder().apply {
+                authResult.accounts.forEach {
+                    addInstruction(
+                        TransactionInstruction(
+                            memoProgramId,
+                            listOf(AccountMeta(SolanaPublicKey(it.publicKey), true, true)),
+                            "hello world!".encodeToByteArray()
+                        )
+                    )
+                }
+                setRecentBlockhash(memoProgramId)
+            }.build().toUnsignedTransaction()
+        }
+
+        // trigger authorization from client
+        val signTransactionsFuture = scenario.signTransactions(transactions.map { it.serialize() }.toTypedArray())
+
+        // then
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "sign_payloads")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val signedPayloadsResult = signTransactionsFuture.get()
+
+        // verify that we got all signatures on each transaction
+        assertTrue(signedPayloadsResult.signedPayloads.size == 2)
+        signedPayloadsResult.signedPayloads.forEachIndexed { i, txBytes ->
+            val signedTransaction = Transaction.from(txBytes)
+            assertTrue(signedTransaction.signatures.size == 3)
+            signedTransaction.signatures.forEach {
+                assertTrue(!it.contentEquals(ByteArray(it.size)))
+            }
+            assertTrue(signedTransaction.message.serialize().contentEquals(transactions[i].message.serialize()))
+        }
     }
 
     @Test
