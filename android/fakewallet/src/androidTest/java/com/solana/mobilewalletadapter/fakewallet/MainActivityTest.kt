@@ -309,9 +309,10 @@ class MainActivityTest {
         val signedPayloads = signMessagesFuture.get()
 
         // verify that we got all signatures
-        assertTrue(signedPayloads.messages.size == 2)
-        assertTrue(signedPayloads.messages[0].signatures.size == 3)
-        assertTrue(signedPayloads.messages[1].signatures.size == 3)
+        assertTrue(signedPayloads.messages.size == messages.size)
+        signedPayloads.messages.forEach {
+            assertTrue(it.signatures.size == 3)
+        }
     }
 
     @Test
@@ -324,8 +325,8 @@ class MainActivityTest {
         val identityName = "Test"
         val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
 
+        val transactionCount = 2
         val memoProgramId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
-        val messages = arrayOf("hello world 1!".encodeToByteArray(), "hello world 2!".encodeToByteArray())
 
         // simulate client side scenario
         val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
@@ -351,7 +352,7 @@ class MainActivityTest {
         val authResult = authorization.get()
 
         // build transaction
-        val transactions = (0..1).map {
+        val transactions = (0 until transactionCount).map {
             Message.Builder().apply {
                 authResult.accounts.forEach {
                     addInstruction(
@@ -378,7 +379,7 @@ class MainActivityTest {
         val signedPayloadsResult = signTransactionsFuture.get()
 
         // verify that we got all signatures on each transaction
-        assertTrue(signedPayloadsResult.signedPayloads.size == 2)
+        assertTrue(signedPayloadsResult.signedPayloads.size == transactionCount)
         signedPayloadsResult.signedPayloads.forEachIndexed { i, txBytes ->
             val signedTransaction = Transaction.from(txBytes)
             assertTrue(signedTransaction.signatures.size == 3)

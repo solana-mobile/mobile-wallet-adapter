@@ -373,7 +373,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         val signedMessages = try {
-            println("++++ signing message with account ${_uiState.value.selectedAccount?.accountLabel}")
             doLocalAssociateAndExecute(intentLauncher, _uiState.value.walletUriBase) { client ->
                 doReauthorize(client, IDENTITY, _uiState.value.authToken!!).also {
                     Log.d(TAG, "Reauthorized: $it")
