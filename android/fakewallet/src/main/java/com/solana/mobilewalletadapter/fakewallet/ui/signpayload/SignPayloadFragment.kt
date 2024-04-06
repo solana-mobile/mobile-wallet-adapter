@@ -59,7 +59,7 @@ class SignPayloadFragment : Fragment() {
                                         true
                                     }
                                 }.joinToString {
-                                    "\n${it.accountLabel ?: it.displayAddress ?: Base58.encodeToString(it.publicKey)}"
+                                    it.accountLabel ?: it.displayAddress ?: Base58.encodeToString(it.publicKey)
                                 }
 
                             viewBinding.btnAuthorize.setOnClickListener {
