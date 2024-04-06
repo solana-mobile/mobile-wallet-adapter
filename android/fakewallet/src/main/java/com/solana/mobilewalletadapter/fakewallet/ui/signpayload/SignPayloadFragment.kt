@@ -97,7 +97,9 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
 
-                            viewBinding.textAccount.text = request.request.authorizedAccounts.first().accountLabel
+                            viewBinding.textAccount.text = request.request.authorizedAccounts.joinToString {
+                                it.accountLabel ?: it.displayAddress ?: Base58.encodeToString(it.publicKey)
+                            }
 
                             viewBinding.btnAuthorize.setOnClickListener {
                                 activityViewModel.signAndSendTransactionsSimulateSign(request)
