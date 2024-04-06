@@ -23,7 +23,6 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConf
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import java.nio.charset.StandardCharsets
 
@@ -561,7 +560,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         override fun onSignMessagesRequest(request: SignMessagesRequest) {
             if (verifyPrivilegedMethodSource(request)) {
                 val accounts = request.authorizedAccounts.filter { aa ->
-                    request.addresses.any { it.contentEquals(aa.publicKey) }
+                    request.addresses.any { it contentEquals aa.publicKey }
                 }
                 if (accounts.isEmpty()) {
                     request.completeWithAuthorizationNotValid()

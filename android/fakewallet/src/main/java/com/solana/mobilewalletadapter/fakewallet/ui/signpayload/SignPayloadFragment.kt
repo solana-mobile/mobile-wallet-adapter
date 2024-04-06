@@ -54,7 +54,7 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.textAccount.text =
                                 request.request.authorizedAccounts.filter { aa ->
                                     if (request is MobileWalletAdapterServiceRequest.SignMessages) {
-                                        request.request.addresses.any { it.contentEquals(aa.publicKey) }
+                                        request.request.addresses.any { it contentEquals aa.publicKey }
                                     } else {
                                         true
                                     }

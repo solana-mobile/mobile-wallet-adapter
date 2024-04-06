@@ -575,9 +575,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             if (authToken != other.authToken) return false
             if (accounts != null && accounts.size == other.accounts?.size) {
-                accounts.zip(other.accounts).all { (a1, a2) -> a1.publicKey.contentEquals(a2.publicKey) }
+                accounts.zip(other.accounts).all { (a1, a2) -> a1.publicKey contentEquals a2.publicKey }
             } else if (other.accounts != null) return false
-            if (!selectedAccount?.publicKey.contentEquals(other.selectedAccount?.publicKey)) return false
+            if (!(selectedAccount?.publicKey contentEquals other.selectedAccount?.publicKey)) return false
             if (walletUriBase != other.walletUriBase) return false
             if (messages != other.messages) return false
             if (txnVersion != other.txnVersion) return false

@@ -44,7 +44,7 @@ object SolanaSigningUseCase {
             for (i in 0 until numSignatures) {
                 val accountOff = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * i
                 val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
-                if (publicKeyBytes.contentEquals(accountPublicKey)) {
+                if (publicKeyBytes contentEquals accountPublicKey) {
                     accountIndex = i
                     break
                 }
