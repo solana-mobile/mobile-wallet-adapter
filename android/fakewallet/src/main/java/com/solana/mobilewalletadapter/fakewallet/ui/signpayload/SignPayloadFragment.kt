@@ -14,6 +14,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
@@ -51,10 +52,14 @@ class SignPayloadFragment : Fragment() {
                                 request.request.payloads.size.toString()
 
                             viewBinding.textAccount.text =
-                                if (request is MobileWalletAdapterServiceRequest.SignMessages) {
-                                    request.accounts.first().accountLabel
-                                } else {
-                                    request.request.authorizedAccounts.first().accountLabel
+                                request.request.authorizedAccounts.filter { aa ->
+                                    if (request is MobileWalletAdapterServiceRequest.SignMessages) {
+                                        request.request.addresses.any { it.contentEquals(aa.publicKey) }
+                                    } else {
+                                        true
+                                    }
+                                }.joinToString {
+                                    "\n${it.accountLabel ?: it.displayAddress ?: Base58.encodeToString(it.publicKey)}"
                                 }
 
                             viewBinding.btnAuthorize.setOnClickListener {
