@@ -175,7 +175,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 }
 
                 val signInResult = SignInResult(publicKey.encoded,
-                    siwsMessage.encodeToByteArray(), signResult.signatures.first(), "ed25519")
+                    siwsMessage.encodeToByteArray(), signResult.signature, "ed25519")
 
                 val account = buildAccount(publicKey.encoded, "fakewallet")
                 request.request.completeWithAuthorize(account, null,

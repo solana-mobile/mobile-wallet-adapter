@@ -66,9 +66,9 @@ object SolanaSigningUseCase {
     fun signMessage(
         message: ByteArray,
         keypairs: List<AsymmetricCipherKeyPair>
-    ): ResultPoop {
+    ): Result {
         var signedMessage = message.clone()
-        val sigs = keypairs.map { keypair ->
+        keypairs.forEach { keypair ->
             val privateKey = keypair.private as Ed25519PrivateKeyParameters
 
             val signer = Ed25519Signer()
@@ -80,10 +80,9 @@ object SolanaSigningUseCase {
             val offset = signedMessage.size
             signedMessage = signedMessage.copyOf(signedMessage.size + SIGNATURE_LEN)
             sig.copyInto(signedMessage, offset)
-            sig
         }
 
-        return ResultPoop(signedMessage, sigs)
+        return Result(signedMessage, signedMessage.sliceArray(message.size until message.size + SIGNATURE_LEN))
     }
 
     fun getSignersForTransaction(
@@ -145,11 +144,6 @@ object SolanaSigningUseCase {
 
     const val SIGNATURE_LEN = 64
     const val PUBLIC_KEY_LEN = 32
-
-    data class ResultPoop(
-        val signedPayload: ByteArray,
-        val signatures: List<ByteArray>
-    )
 
     data class Result(
         val signedPayload: ByteArray,
