@@ -20,8 +20,8 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
-import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
+import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
 import com.solana.mobilewalletadapter.walletlib.scenario.TestScopeLowPowerMode
 import com.solana.publickey.SolanaPublicKey
 import com.solana.transaction.AccountMeta
@@ -29,6 +29,9 @@ import com.solana.transaction.Message
 import com.solana.transaction.Transaction
 import com.solana.transaction.TransactionInstruction
 import com.solana.transaction.toUnsignedTransaction
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.crypto.signers.Ed25519Signer
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -310,13 +313,24 @@ class MainActivityTest {
 
         // verify that we got all signatures
         assertTrue(signedPayloads.messages.size == messages.size)
-        signedPayloads.messages.forEach {
-            assertTrue(it.signatures.size == 3)
+        signedPayloads.messages.forEachIndexed { i, signedMessage ->
+            assertArrayEquals(messages[i], signedMessage.message)
+            assertTrue(signedMessage.signatures.size == 3)
+            assertTrue(signedMessage.addresses.size == 3)
+            signedMessage.addresses.zip(signedMessage.signatures).forEachIndexed { j, sm ->
+                val address = sm.first
+                val sig = sm.second
+                assertArrayEquals(authResult.accounts[j].publicKey, address)
+                val signer = Ed25519Signer()
+                signer.init(false, Ed25519PublicKeyParameters(address, 0))
+                signer.update(signedMessage.message, 0, signedMessage.message.size)
+                assertTrue(signer.verifySignature(sig))
+            }
         }
     }
 
     @Test
-    fun authorizationFlow_SuccessfulSignTransactionMultiAccount() {
+    fun authorizationFlow_SuccessfulSignTransactionsMultiAccount() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -382,11 +396,103 @@ class MainActivityTest {
         assertTrue(signedPayloadsResult.signedPayloads.size == transactionCount)
         signedPayloadsResult.signedPayloads.forEachIndexed { i, txBytes ->
             val signedTransaction = Transaction.from(txBytes)
+            val signedMessage = signedTransaction.message.serialize()
+            assertArrayEquals(transactions[i].message.serialize(), signedMessage)
             assertTrue(signedTransaction.signatures.size == 3)
-            signedTransaction.signatures.forEach {
-                assertTrue(!it.contentEquals(ByteArray(it.size)))
+            signedTransaction.message.accounts.zip(signedTransaction.signatures).forEachIndexed { j, pair ->
+                val address = pair.first.bytes
+                val sig = pair.second
+                assertArrayEquals(authResult.accounts[j].publicKey, address)
+                val signer = Ed25519Signer()
+                signer.init(false, Ed25519PublicKeyParameters(address, 0))
+                signer.update(signedMessage, 0, signedMessage.size)
+                assertTrue(signer.verifySignature(sig))
             }
-            assertTrue(signedTransaction.message.serialize().contentEquals(transactions[i].message.serialize()))
+        }
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulSignAndSendTransactionsMultiAccount() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        val transactionCount = 2
+        val memoProgramId = SolanaPublicKey.from("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+
+        // trigger authorization from client
+        val scenario = localAssociation.start().get()
+        val authorization = scenario.authorize(identityUri, iconUri, identityName, chain,
+            null, null, null, null)
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize_x3))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // build transaction
+        val transactions = (0 until transactionCount).map {
+            Message.Builder().apply {
+                authResult.accounts.forEach {
+                    addInstruction(
+                        TransactionInstruction(
+                            memoProgramId,
+                            listOf(AccountMeta(SolanaPublicKey(it.publicKey), true, true)),
+                            "hello world!".encodeToByteArray()
+                        )
+                    )
+                }
+                setRecentBlockhash(memoProgramId)
+            }.build().toUnsignedTransaction()
+        }
+
+        // trigger authorization from client
+        val signAndSendFuture = scenario.signAndSendTransactions(
+            transactions.map { it.serialize() }.toTypedArray(),
+            null, null, null, null, null
+        )
+
+        // then
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "sign_payloads")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        onView(withId(R.id.btn_simulate_transactions_submitted))
+            .check(matches(isDisplayed())).perform(click())
+
+        val signAndSendResult = signAndSendFuture.get()
+
+        // verify that we got all signatures on each transaction
+        assertTrue(signAndSendResult.signatures.size == transactionCount)
+        signAndSendResult.signatures.forEachIndexed { i, sigBlock ->
+            assertTrue(sigBlock.size == authResult.accounts.size*SolanaSigningUseCase.SIGNATURE_LEN)
+            val signedMessage = transactions[i].message.serialize()
+            sigBlock.asList().chunked(SolanaSigningUseCase.SIGNATURE_LEN) { it.toByteArray() }.forEachIndexed { j, sig ->
+                val address = authResult.accounts[j].publicKey
+                assertArrayEquals(authResult.accounts[j].publicKey, address)
+                val signer = Ed25519Signer()
+                signer.init(false, Ed25519PublicKeyParameters(address, 0))
+                signer.update(signedMessage, 0, signedMessage.size)
+                assertTrue(signer.verifySignature(sig))
+            }
         }
     }
 

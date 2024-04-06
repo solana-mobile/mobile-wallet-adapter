@@ -168,7 +168,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val siwsMessage = request.signInPayload.prepareMessage(address)
                 val signResult = try {
                     val messageBytes = siwsMessage.encodeToByteArray()
-                    SolanaSigningUseCase.signMessage(messageBytes, keypair)
+                    SolanaSigningUseCase.signMessage(messageBytes, listOf(keypair))
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "failed to sign SIWS payload", e)
                     request.request.completeWithInternalError(e)
@@ -176,7 +176,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 }
 
                 val signInResult = SignInResult(publicKey.encoded,
-                    siwsMessage.encodeToByteArray(), signResult.signature, "ed25519")
+                    siwsMessage.encodeToByteArray(), signResult.signatures.first(), "ed25519")
 
                 val account = buildAccount(publicKey.encoded, "fakewallet")
                 request.request.completeWithAuthorize(account, null,
@@ -212,12 +212,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                             Base58.encodeToString((it.public as Ed25519PublicKeyParameters).encoded)
                         }}")
                         try {
-                            var partiallySignedTx = tx
-                            keypairs.forEach { keypair ->
-                                partiallySignedTx =
-                                    SolanaSigningUseCase.signTransaction(partiallySignedTx, keypair).signedPayload
-                            }
-                            partiallySignedTx
+                            SolanaSigningUseCase.signTransaction(tx, keypairs).signedPayload
                         } catch (e: IllegalArgumentException) {
                             Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                             valid[i] = false
@@ -237,9 +232,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                     Array(request.request.payloads.size) { i ->
                         // TODO: wallet should check that the payload is NOT a transaction
                         //  to ensure the user is not being tricked into signing a transaction
-                        keypairs.fold(byteArrayOf()) { acc, keypair ->
-                            acc + SolanaSigningUseCase.signMessage(request.request.payloads[i], keypair).signedPayload
-                        }
+                        SolanaSigningUseCase.signMessage(request.request.payloads[i], keypairs).signedPayload
                     }
                 }
             }
@@ -291,22 +284,26 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     fun signAndSendTransactionsSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         viewModelScope.launch {
-            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
-            check(keypair != null) { "Unknown public key for signing request" }
-
-            val signingResults = request.request.payloads.map { payload ->
+            val signingResults = request.request.payloads.map { tx ->
+                val keypairs = SolanaSigningUseCase.getSignersForTransaction(tx).mapNotNull {
+                    getApplication<FakeWalletApplication>().keyRepository.getKeypair(it)
+                }
+                Log.d(TAG, "Simulating transaction signing with ${keypairs.joinToString {
+                    Base58.encodeToString((it.public as Ed25519PublicKeyParameters).encoded)
+                }}")
                 try {
-                    SolanaSigningUseCase.signTransaction(payload, keypair)
+                    SolanaSigningUseCase.signTransaction(tx, keypairs)
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "not a valid Solana transaction", e)
-                    SolanaSigningUseCase.Result(byteArrayOf(), byteArrayOf())
+                    SolanaSigningUseCase.Result(byteArrayOf(), listOf())
                 }
             }
 
-            val valid = signingResults.map { result -> result.signature.isNotEmpty() }
+            val valid = signingResults.map { result -> result.signatures.isNotEmpty() }
             if (valid.all { it }) {
-                Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
-                val signatures = signingResults.map { result -> result.signature }
+                val signatures = signingResults.map { result ->
+                    result.signatures.fold(byteArrayOf()) { acc, s -> acc + s }
+                }
                 val signedTransactions = signingResults.map { result -> result.signedPayload }
                 val requestWithSignatures = request.copy(
                     signatures = signatures.toTypedArray(),
