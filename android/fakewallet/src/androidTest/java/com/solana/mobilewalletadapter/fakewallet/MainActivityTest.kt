@@ -260,8 +260,12 @@ class MainActivityTest {
         val authResult = authorization.get()
 
         // verify that we got an auth token (successful auth)
-        assertTrue(authResult?.authToken?.isNotEmpty() == true)
-        assertTrue(authResult?.signInResult != null)
+        assertTrue(authResult.authToken.isNotEmpty())
+        assertTrue(authResult.signInResult != null)
+        val signer = Ed25519Signer()
+        signer.init(false, Ed25519PublicKeyParameters(authResult.accounts.first().publicKey, 0))
+        signer.update(authResult.signInResult!!.signedMessage, 0, authResult.signInResult!!.signedMessage.size)
+        assertTrue(signer.verifySignature(authResult.signInResult!!.signature))
     }
 
     @Test

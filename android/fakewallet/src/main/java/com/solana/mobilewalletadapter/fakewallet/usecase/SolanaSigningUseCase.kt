@@ -81,6 +81,7 @@ object SolanaSigningUseCase {
             val offset = signedMessage.size
             signedMessage = signedMessage.copyOf(signedMessage.size + SIGNATURE_LEN)
             sig.copyInto(signedMessage, offset)
+            sig
         }
 
         return Result(signedMessage, sigs)
