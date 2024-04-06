@@ -622,12 +622,14 @@ where:
 ```
 {
     “signatures”: [“<transaction_signature>”, ...],
+    “signed_payloads”: [“<signed_transaction>”, ...],
 }
 ```
 
 where:
 
-- `signatures`: the corresponding base64-encoded transaction signatures
+- `signed_payloads`: the corresponding base64-encoded signed transaction payloads
+- `signatures`: the corresponding base64-encoded transaction signatures (Deprecated). The number of signatures returned is dependent on the number of signatures requested in each payload. For example: if a dapp requests 2 transactions to be signed and sent, where the first paylaod requires 2 signatures from the wallet, and the second transaction requires 1 signature from the wallet, 3 signatures will be returned here in the order `[ "transaction1_signature1", "transaction1_signature2", "transaction2_signature1" ]`. Dapps and wallets should instead transition to the `signed_payloads` parameter and parse the transaction signautres from the signed payloads, however. 
 
 ###### Errors
 {: .no_toc }
