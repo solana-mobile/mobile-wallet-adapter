@@ -265,7 +265,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun authorizationFlow_SuccessfulSignMessagesMultiAccount() {
+    fun signingFlow_SuccessfulSignMessagesMultiAccount() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -330,7 +330,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun authorizationFlow_SuccessfulSignTransactionsMultiAccount() {
+    fun signingFlow_SuccessfulSignTransactionsMultiAccount() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -412,7 +412,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun authorizationFlow_SuccessfulSignAndSendTransactionsMultiAccount() {
+    fun signingFlow_SuccessfulSignAndSendTransactionsMultiAccount() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
