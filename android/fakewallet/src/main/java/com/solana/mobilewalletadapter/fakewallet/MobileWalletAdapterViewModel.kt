@@ -294,15 +294,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                     SolanaSigningUseCase.signTransaction(tx, keypairs)
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "not a valid Solana transaction", e)
-                    SolanaSigningUseCase.Result(byteArrayOf(), listOf())
+                    SolanaSigningUseCase.Result(byteArrayOf(), byteArrayOf())
                 }
             }
 
-            val valid = signingResults.map { result -> result.signatures.isNotEmpty() }
+            val valid = signingResults.map { result -> result.signature.isNotEmpty() }
             if (valid.all { it }) {
-                val signatures = signingResults.map { result ->
-                    result.signatures.fold(byteArrayOf()) { acc, s -> acc + s }
-                }
+                val signatures = signingResults.map { result -> result.signature }
                 val signedTransactions = signingResults.map { result -> result.signedPayload }
                 val requestWithSignatures = request.copy(
                     signatures = signatures.toTypedArray(),

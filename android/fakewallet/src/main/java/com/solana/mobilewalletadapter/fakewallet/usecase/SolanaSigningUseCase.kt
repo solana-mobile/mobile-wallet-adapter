@@ -36,7 +36,7 @@ object SolanaSigningUseCase {
 
         val partiallySignedTx = transaction.clone()
 
-        val sigs = keypairs.map { keypair ->
+        keypairs.forEach { keypair ->
             val publicKey = keypair.public as Ed25519PublicKeyParameters
             val privateKey = keypair.private as Ed25519PrivateKeyParameters
             val publicKeyBytes = publicKey.encoded
@@ -58,16 +58,15 @@ object SolanaSigningUseCase {
             assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
 
             System.arraycopy(sig, 0, partiallySignedTx, numSignaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
-            sig
         }
 
-        return Result(partiallySignedTx, sigs)
+        return Result(partiallySignedTx, partiallySignedTx.sliceArray(1 until 1 + SIGNATURE_LEN))
     }
 
     fun signMessage(
         message: ByteArray,
         keypairs: List<AsymmetricCipherKeyPair>
-    ): Result {
+    ): ResultPoop {
         var signedMessage = message.clone()
         val sigs = keypairs.map { keypair ->
             val privateKey = keypair.private as Ed25519PrivateKeyParameters
@@ -84,7 +83,7 @@ object SolanaSigningUseCase {
             sig
         }
 
-        return Result(signedMessage, sigs)
+        return ResultPoop(signedMessage, sigs)
     }
 
     fun getSignersForTransaction(
@@ -147,8 +146,13 @@ object SolanaSigningUseCase {
     const val SIGNATURE_LEN = 64
     const val PUBLIC_KEY_LEN = 32
 
-    data class Result(
+    data class ResultPoop(
         val signedPayload: ByteArray,
         val signatures: List<ByteArray>
+    )
+
+    data class Result(
+        val signedPayload: ByteArray,
+        val signature: ByteArray
     )
 }

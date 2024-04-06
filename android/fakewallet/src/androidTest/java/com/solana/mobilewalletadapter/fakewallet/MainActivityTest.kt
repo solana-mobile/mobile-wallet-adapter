@@ -486,17 +486,15 @@ class MainActivityTest {
 
         // verify that we got all signatures on each transaction
         assertTrue(signAndSendResult.signatures.size == transactionCount)
-        signAndSendResult.signatures.forEachIndexed { i, sigBlock ->
-            assertTrue(sigBlock.size == authResult.accounts.size*SolanaSigningUseCase.SIGNATURE_LEN)
+        signAndSendResult.signatures.forEachIndexed { i, signature ->
+            assertTrue(signature.size == SolanaSigningUseCase.SIGNATURE_LEN)
             val signedMessage = transactions[i].message.serialize()
-            sigBlock.asList().chunked(SolanaSigningUseCase.SIGNATURE_LEN) { it.toByteArray() }.forEachIndexed { j, sig ->
-                val address = authResult.accounts[j].publicKey
-                assertArrayEquals(authResult.accounts[j].publicKey, address)
-                val signer = Ed25519Signer()
-                signer.init(false, Ed25519PublicKeyParameters(address, 0))
-                signer.update(signedMessage, 0, signedMessage.size)
-                assertTrue(signer.verifySignature(sig))
-            }
+            val address = transactions[i].message.accounts.first().bytes
+            assertArrayEquals(authResult.accounts[0].publicKey, address)
+            val signer = Ed25519Signer()
+            signer.init(false, Ed25519PublicKeyParameters(address, 0))
+            signer.update(signedMessage, 0, signedMessage.size)
+            assertTrue(signer.verifySignature(signature))
         }
     }
 
