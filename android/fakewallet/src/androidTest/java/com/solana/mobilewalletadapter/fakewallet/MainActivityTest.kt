@@ -32,6 +32,7 @@ import com.solana.transaction.toUnsignedTransaction
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -82,7 +83,7 @@ class MainActivityTest {
         val identityUri = Uri.parse("https://test.com")
         val iconUri = Uri.parse("favicon.ico")
         val identityName = "Test"
-        val cluster = ProtocolContract.CLUSTER_TESTNET
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
 
         // simulate client side scenario
         val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
@@ -97,7 +98,7 @@ class MainActivityTest {
 
         // trigger authorization from client
         localAssociation.start().get().run {
-            authorize(identityUri, iconUri, identityName, cluster)
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
         }
 
         uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
@@ -108,7 +109,7 @@ class MainActivityTest {
     }
 
     @Test
-    fun authorizationFlow_SuccessfulAuthorization() {
+    fun authorizationFlow_SuccessfulAuthorizationLegacy() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -146,14 +147,14 @@ class MainActivityTest {
     }
 
     @Test
-    fun authorizationFlow_DeclinedAuthorization() {
+    fun authorizationFlow_SuccessfulAuthorization() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         val identityUri = Uri.parse("https://test.com")
         val iconUri = Uri.parse("favicon.ico")
         val identityName = "Test"
-        val cluster = ProtocolContract.CLUSTER_TESTNET
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
 
         // simulate client side scenario
         val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
@@ -168,7 +169,96 @@ class MainActivityTest {
 
         // trigger authorization from client
         val authorization = localAssociation.start().get().run {
-            authorize(identityUri, iconUri, identityName, cluster)
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // verify that we got an auth token (successful auth)
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulReauthorization() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+        val scenario = localAssociation.start().get()
+
+        // trigger authorization from client
+        val authorization = scenario.run {
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // trigger reauthorization from client
+        val reauthorization = scenario.run {
+            authorize(identityUri, iconUri, identityName, chain, authResult.authToken, null,
+                authResult.accounts.map { it.publicKey }.toTypedArray(), null)
+        }
+
+        val reauthResult = reauthorization.get()
+
+        // verify that we got a successful reauth
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+        assertEquals(authResult.authToken, reauthResult.authToken)
+        reauthResult.accounts.forEachIndexed { i, aa ->
+            assertArrayEquals(authResult.accounts[i].publicKey, aa.publicKey)
+        }
+    }
+
+    @Test
+    fun authorizationFlow_DeclinedAuthorization() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+
+        // trigger authorization from client
+        val authorization = localAssociation.start().get().run {
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
         }
 
         uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
@@ -220,6 +310,59 @@ class MainActivityTest {
         // verify that we got an auth token (successful auth)
         assertTrue(authResult?.authToken?.isNotEmpty() == true)
         assertTrue(authResult?.accounts?.size == 3)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulReauthorizeX3() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        // simulate client side scenario
+        val localAssociation = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation.port,
+            localAssociation.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent)
+        val scenario = localAssociation.start().get()
+
+        // trigger authorization from client
+        val authorization = scenario.run {
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_authorize_x3))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+
+        // trigger reauthorization from client
+        val reauthorization = scenario.run {
+            authorize(identityUri, iconUri, identityName, chain, authResult.authToken, null,
+                authResult.accounts.map { it.publicKey }.toTypedArray(), null)
+        }
+
+        val reauthResult = reauthorization.get()
+
+        // verify that we got an auth token (successful auth)
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+        assertEquals(3, authResult?.accounts?.size)
+        assertEquals(authResult.authToken, reauthResult.authToken)
+        assertEquals(3, reauthResult.accounts.size)
+        reauthResult.accounts.forEachIndexed { i, aa ->
+            assertArrayEquals(authResult.accounts[i].publicKey, aa.publicKey)
+        }
     }
 
     @Test
