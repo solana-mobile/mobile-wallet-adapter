@@ -96,28 +96,31 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Field</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><code>protected final byte[]</code></div>
-<div class="col-second even-row-color"><code><a href="#mAuthorizationScope" class="member-name-link">mAuthorizationScope</a></code></div>
+<div class="col-first even-row-color"><code>protected final byte[][]</code></div>
+<div class="col-second even-row-color"><code><a href="#mAddresses" class="member-name-link">mAddresses</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>protected final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#mChain" class="member-name-link">mChain</a></code></div>
+<div class="col-first odd-row-color"><code>protected final byte[]</code></div>
+<div class="col-second odd-row-color"><code><a href="#mAuthorizationScope" class="member-name-link">mAuthorizationScope</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>protected final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
-<div class="col-second even-row-color"><code><a href="#mIconUri" class="member-name-link">mIconUri</a></code></div>
+<div class="col-first even-row-color"><code>protected final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#mChain" class="member-name-link">mChain</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>protected final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#mIdentityName" class="member-name-link">mIdentityName</a></code></div>
+<div class="col-first odd-row-color"><code>protected final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#mIconUri" class="member-name-link">mIconUri</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>protected final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
-<div class="col-second even-row-color"><code><a href="#mIdentityUri" class="member-name-link">mIdentityUri</a></code></div>
+<div class="col-first even-row-color"><code>protected final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#mIdentityName" class="member-name-link">mIdentityName</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>protected final <a href="../protocol/MobileWalletAdapterServer.SignRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignRequest</a>&lt;<a href="../protocol/MobileWalletAdapterServer.SignedPayloadsResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignedPayloadsResult</a>&gt;</code></div>
-<div class="col-second odd-row-color"><code><a href="#mRequest" class="member-name-link">mRequest</a></code></div>
+<div class="col-first odd-row-color"><code>protected final <a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#mIdentityUri" class="member-name-link">mIdentityUri</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>protected final <a href="../protocol/MobileWalletAdapterServer.SignRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignRequest</a>&lt;<a href="../protocol/MobileWalletAdapterServer.SignedPayloadsResult.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterServer.SignedPayloadsResult</a>&gt;</code></div>
+<div class="col-second even-row-color"><code><a href="#mRequest" class="member-name-link">mRequest</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
 </div>
 <div class="inherited-list">
 <h3 id="fields-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.SignPayloadsRequest">Fields inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignPayloadsRequest</a></h3>
-<code><a href="SignPayloadsRequest.html#mAuthorizedPublicKey">mAuthorizedPublicKey</a></code></div>
+<code><a href="SignPayloadsRequest.html#mAuthorizedAccounts">mAuthorizedAccounts</a>, <a href="SignPayloadsRequest.html#mAuthorizedPublicKey">mAuthorizedPublicKey</a></code></div>
 </section>
 </li>
 <!-- ========== METHOD SUMMARY =========== -->
@@ -137,32 +140,35 @@ loadScripts(document, 'script');</script>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#completeWithInternalError(java.lang.Exception)" class="member-name-link">completeWithInternalError</a><wbr>(<a href="https://d.android.com/reference/java/lang/Exception.html" title="class or interface in java.lang" class="external-link">Exception</a>&nbsp;e)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>byte[]</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getAuthorizationScope()" class="member-name-link">getAuthorizationScope</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final byte[][]</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getAddresses()" class="member-name-link">getAddresses</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getChain()" class="member-name-link">getChain</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#getCluster()" class="member-name-link">getCluster</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
-<div class="block"><span class="deprecated-label">Deprecated.</span></div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getIconRelativeUri()" class="member-name-link">getIconRelativeUri</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>byte[]</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getAuthorizationScope()" class="member-name-link">getAuthorizationScope</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getIdentityName()" class="member-name-link">getIdentityName</a>()</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getChain()" class="member-name-link">getChain</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getIdentityUri()" class="member-name-link">getIdentityUri</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#getCluster()" class="member-name-link">getCluster</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
+<div class="block"><span class="deprecated-label">Deprecated.</span></div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getIconRelativeUri()" class="member-name-link">getIconRelativeUri</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getIdentityName()" class="member-name-link">getIdentityName</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/android/net/Uri.html" title="class or interface in android.net" class="external-link">Uri</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getIdentityUri()" class="member-name-link">getIdentityUri</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.SignPayloadsRequest">Methods inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="SignPayloadsRequest.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">SignPayloadsRequest</a></h3>
-<code><a href="SignPayloadsRequest.html#completeWithAuthorizationNotValid()">completeWithAuthorizationNotValid</a>, <a href="SignPayloadsRequest.html#completeWithDecline()">completeWithDecline</a>, <a href="SignPayloadsRequest.html#completeWithInvalidPayloads(boolean%5B%5D)">completeWithInvalidPayloads</a>, <a href="SignPayloadsRequest.html#completeWithSignedPayloads(byte%5B%5D%5B%5D)">completeWithSignedPayloads</a>, <a href="SignPayloadsRequest.html#completeWithTooManyPayloads()">completeWithTooManyPayloads</a>, <a href="SignPayloadsRequest.html#getAuthorizedPublicKey()">getAuthorizedPublicKey</a>, <a href="SignPayloadsRequest.html#getPayloads()">getPayloads</a></code></div>
+<code><a href="SignPayloadsRequest.html#completeWithAuthorizationNotValid()">completeWithAuthorizationNotValid</a>, <a href="SignPayloadsRequest.html#completeWithDecline()">completeWithDecline</a>, <a href="SignPayloadsRequest.html#completeWithInvalidPayloads(boolean%5B%5D)">completeWithInvalidPayloads</a>, <a href="SignPayloadsRequest.html#completeWithSignedPayloads(byte%5B%5D%5B%5D)">completeWithSignedPayloads</a>, <a href="SignPayloadsRequest.html#completeWithTooManyPayloads()">completeWithTooManyPayloads</a>, <a href="SignPayloadsRequest.html#getAuthorizedAccounts()">getAuthorizedAccounts</a>, <a href="SignPayloadsRequest.html#getAuthorizedPublicKey()">getAuthorizedPublicKey</a>, <a href="SignPayloadsRequest.html#getPayloads()">getPayloads</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://d.android.com/reference/java/lang/Object.html#clone--" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://d.android.com/reference/java/lang/Object.html#equals-java.lang.Object-" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://d.android.com/reference/java/lang/Object.html#finalize--" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://d.android.com/reference/java/lang/Object.html#getClass--" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://d.android.com/reference/java/lang/Object.html#hashCode--" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notify--" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notifyAll--" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://d.android.com/reference/java/lang/Object.html#toString--" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait--" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-int-" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -177,6 +183,14 @@ loadScripts(document, 'script');</script>
 <section class="field-details" id="field-detail">
 <h2>Field Details</h2>
 <ul class="member-list">
+<li>
+<section class="detail" id="mAddresses">
+<h3>mAddresses</h3>
+<div class="member-signature"><span class="annotations">@NonNull
+@Size(min=1L)
+</span><span class="modifiers">protected final</span>&nbsp;<span class="return-type">byte[][]</span>&nbsp;<span class="element-name">mAddresses</span></div>
+</section>
+</li>
 <li>
 <section class="detail" id="mIdentityName">
 <h3>mIdentityName</h3>
@@ -227,6 +241,12 @@ loadScripts(document, 'script');</script>
 <section class="method-details" id="method-detail">
 <h2>Method Details</h2>
 <ul class="member-list">
+<li>
+<section class="detail" id="getAddresses()">
+<h3>getAddresses</h3>
+<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type">byte[][]</span>&nbsp;<span class="element-name">getAddresses</span>()</div>
+</section>
+</li>
 <li>
 <section class="detail" id="getIdentityName()">
 <h3>getIdentityName</h3>
