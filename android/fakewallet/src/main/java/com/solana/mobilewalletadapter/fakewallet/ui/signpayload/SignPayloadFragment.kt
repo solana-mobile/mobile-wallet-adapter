@@ -14,6 +14,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
@@ -50,6 +51,17 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
 
+                            viewBinding.textAccount.text =
+                                request.request.authorizedAccounts.filter { aa ->
+                                    if (request is MobileWalletAdapterServiceRequest.SignMessages) {
+                                        request.request.addresses.any { it contentEquals aa.publicKey }
+                                    } else {
+                                        true
+                                    }
+                                }.joinToString {
+                                    it.accountLabel ?: it.displayAddress ?: Base58.encodeToString(it.publicKey)
+                                }
+
                             viewBinding.btnAuthorize.setOnClickListener {
                                 activityViewModel.signPayloadsSimulateSign(request)
                             }
@@ -84,6 +96,10 @@ class SignPayloadFragment : Fragment() {
                             viewBinding.textSignPayloads.setText(R.string.label_sign_transactions)
                             viewBinding.textNumTransactions.text =
                                 request.request.payloads.size.toString()
+
+                            viewBinding.textAccount.text = request.request.authorizedAccounts.joinToString {
+                                it.accountLabel ?: it.displayAddress ?: Base58.encodeToString(it.publicKey)
+                            }
 
                             viewBinding.btnAuthorize.setOnClickListener {
                                 activityViewModel.signAndSendTransactionsSimulateSign(request)

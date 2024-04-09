@@ -6,6 +6,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sign_payloads"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.signpayload.SignPayloadFragment">
@@ -40,12 +41,32 @@
         app:layout_constraintStart_toEndOf="@id/label_num_transactions"
         android:textSize="22sp" />
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_account"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toBottomOf="@id/label_num_transactions"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="@string/label_account"
+        android:textSize="22sp" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_account"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toTopOf="@id/label_account"
+        app:layout_constraintBottom_toBottomOf="@id/label_account"
+        app:layout_constraintStart_toEndOf="@id/label_account"
+        android:textSize="22sp" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_authorize"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:layout_constraintTop_toBottomOf="@id/label_num_transactions"
+        app:layout_constraintTop_toBottomOf="@id/label_account"
         app:layout_constraintStart_toStartOf="parent"
         android:text="@string/label_authorize"
         android:textSize="22sp" />
@@ -55,7 +76,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:layout_constraintTop_toBottomOf="@id/label_num_transactions"
+        app:layout_constraintTop_toBottomOf="@id/label_account"
         app:layout_constraintEnd_toEndOf="parent"
         android:text="@string/label_decline"
         android:textSize="22sp" />

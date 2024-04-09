@@ -777,8 +777,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         public final byte[][] addresses;
 
         protected SignMessagesRequest(@Nullable Object id,
-                                          @NonNull byte[][] payloads,
-                                          @NonNull byte[][] addresses) {
+                                      @NonNull byte[][] payloads,
+                                      @NonNull byte[][] addresses) {
             super(id, payloads);
             this.addresses = addresses;
         }

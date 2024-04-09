@@ -98,6 +98,13 @@ class AuthorizeDappFragment : Fragment() {
             }
         }
 
+        viewBinding.btnAuthorizeX3.setOnClickListener {
+            request?.let {
+                Log.i(TAG, "Authorizing dapp, with 3 accounts")
+                activityViewModel.authorizeDapp(it, true, 3)
+            }
+        }
+
         viewBinding.btnDecline.setOnClickListener {
             request?.let {
                 Log.w(TAG, "Not authorizing dapp")
