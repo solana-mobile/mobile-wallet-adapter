@@ -126,6 +126,17 @@ These features are mandatory and must be implemented by wallet endpoints. Dapp e
 - [`solana:signMessages`](#sign_messages)
 - [`solana:signAndSendTransaction`](#sign_and_send_transactions)
 
+#### Account Profiles
+
+Account profiles are identifiers that are used to decribe an authorized account's capabilities. These are defined as feature identifiers for compatibiblity with the wallet-standard account features API.
+
+- `solana:readOnly`
+   - A read-only account. These accounts should not be used as writeable accounts in transaction. These acounts may contain assets, but dapp endpoints should only expect to read from these accounts and prove ownership via a message sign. If a dapp requests a transaction signature from a readonly account, the wallet should reject the transaction. Read-only accounts are limited to the following features: [`solana:signMessages`](#sign_messages), `solana:signInWithSolana`.
+- `solana:readWrite`
+   - An account that can be used as a writeable acount in transactions. Read-write accounts support, at a minimum, the following features: [`solana:signMessages`](#sign_messages), [`solana:signAndSendTransaction`](#sign_and_send_transactions).
+- `solana:payer`
+   - An account that will be used to pay for transactions. Payer accounts support, at a minimum, the following features: [`solana:signAndSendTransaction`](#sign_and_send_transactions).
+
 #### Optional Features
 
 These features are optional, wallet endpoints may choose to implement these features. Dapp endpoints can check if a wallet supports these features by calling [`get_capabilities`](#get_capabilities).  
