@@ -20,18 +20,18 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 
 # Non-normative front matter
 
-Oten times, a dapp needs to send a single request to a wallet for approval. With a standard MWA session, a user will be presented with 2 steps in order to complete a single request. The dapp must first call `authorize` to establish an authorized session, then send its request for approval. This feature allows a dapp to execute a single request to a wallet endpoint and the wallet will show a single UI modal to the user.  
+Often times, a dapp needs to send a single request to a wallet for approval. With a standard MWA session, a user will be presented with 2 steps in order to complete a single request. The dapp must first call `authorize` to establish an authorized session, then send its request for approval. This feature allows a dapp to execute a single request to a wallet endpoint and the wallet will show a single UI modal to the user.  
 
 ## Summary
 
-One-Shot sessions allow a dapp end point to access a single privaledgd method in a single UI modal. 
+One-Shot sessions allow a dapp end point to access a single priviledgd method in a single UI modal. 
 
 ## User stories
 
 These user stories outline the goals and user experiences that this feature aims to enable.
 
 1. As a user, I want to be able to sign transactions with fewer steps and interactions so that I can interact with dapps in a seamless and less intrusive flow.
-2. As a dapp developer, I want the ability to send a one off request to wallet endpoints without needing to establish an authorized session with the wallet so that I can more easily send signing requests that do not require subsequent requests. 
+2. As a dapp developer, I want the ability to send a one off request to wallet endpoints with a single interaction form the the user so that I can more easily send signing requests that do not require subsequent requests. 
 
 ## Requirements
 
