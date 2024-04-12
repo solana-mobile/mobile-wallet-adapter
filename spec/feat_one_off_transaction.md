@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Mobile Wallet Adapter One-Off Transactions feature extension specification
+title: Mobile Wallet Adapter One-Shot Sessions feature extension specification
 ---
 
 # One-Off Transactions feature specification
@@ -20,26 +20,26 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 
 # Non-normative front matter
 
-TODO
+Oten times, a dapp needs to send a single request to a wallet for approval. With a standard MWA session, a user will be presented with 2 steps in order to complete a single request. The dapp must first call `authorize` to establish an authorized session, then send its request for approval. This feature allows a dapp to execute a single request to a wallet endpoint and the wallet will show a single UI modal to the user.  
 
 ## Summary
 
-"One Off" transactions are transactions that do not require a previous authorization to complete. This is effectively a combination of `authorize` + `sign_and_send_transactions` into a single request. Wallet endpoints supporting this feature should show a single UI modal to sign the rquested transactions.
+One-Shot sessions allow a dapp end point to access a single privaledgd method in a single UI modal. 
 
 ## User stories
 
 These user stories outline the goals and user experiences that this feature aims to enable.
 
 1. As a user, I want to be able to sign transactions with fewer steps and interactions so that I can interact with dapps in a seamless and less intrusive flow.
-2. As a dapp developer, I want the ability to send a one off request to wallet endpoints without needing to establish an authorized session with the wallet so that I can more easily send transactions that do not require subsequent requests. 
+2. As a dapp developer, I want the ability to send a one off request to wallet endpoints without needing to establish an authorized session with the wallet so that I can more easily send signing requests that do not require subsequent requests. 
 
 ## Requirements
 
 These requirements are derived from the user stories, and exist to guide feature specification design decisions.
 
-1. One off transaction requests should .
+1. One shot requests should use the existing authorization and identity verification mechanisms present in the mobile wallet adapter specification.
 
-   _Rationale: ..._
+   _Rationale: This ensures that wallets can service these one-off requests the same security guarantees present in a standard MWA flow._
 
 # Specification
 
@@ -47,7 +47,7 @@ This specification is an extension of the [Mobile Wallet Adapter Specification](
 
 ## Feature Identifier
 
-The namespace for this feature is `solana` and the name (reference) of the feature is `oneOffTransactions`. The resulting feature identifier for this feature is `solana:oneOffTransactions`.
+The namespace for this feature is `solana` and the name (reference) of the feature is `authorizeOneShot`. The resulting feature identifier for this feature is `solana:authorizeOneShot`.
 
 ## Wallet RPC interface
 
@@ -63,7 +63,7 @@ A detailed description of any new RPC methods specified by this feature extensio
 
 Non-privileged methods do not require the current session to be in an authorized state to invoke them (though they may still accept an `auth_token` to provide their functionality).
 
-#### one_off_sign_and_send_transactions
+#### authorize_oneshot
 
 ##### JSON-RPC method specification
 
@@ -71,7 +71,7 @@ Non-privileged methods do not require the current session to be in an authorized
 {: .no_toc }
 
 ```
-one_off_sign_and_send_transactions
+authorize_oneshot
 ```
 
 ###### Params
@@ -84,11 +84,10 @@ one_off_sign_and_send_transactions
         “icon”: “<dapp_icon_relative_path>”,
         “name”: “<dapp_name>”,
     },
-    "cluster": "<cluster>",
-    “payloads”: [“<transaction>”, ...],
-    "options": {
-        “min_context_slot”: <min_context_slot>,
-    }
+    "chain": "<chain>",
+    "features": ["<feature_id>", ...],
+    "addresses": ["<address>", ...],
+    "cluster": "<cluster>"
 }
 ```
 
@@ -96,76 +95,64 @@ where:
 
 - `identity`: a JSON object, containing:
   - `uri`: (optional) a URI representing the web address associated with the dapp endpoint making this authorization request. If present, it must be an absolute, hierarchical URI.
-  - `icon`: (optional) a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
+  - `icon`: (optional) either a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image or a relative path (from `uri`) to an image asset file of an icon identifying the dapp endpoint making this authorization request
   - `name`: (optional) the display name for this dapp endpoint
-- `cluster`: (optional) if set, the Solana network cluster with which the dapp endpoint intends to interact; supported values include `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `mainnet-beta`.
-- `payloads`: one or more base64-encoded transaction payload to sign
-- `options`: (optional) a JSON object, containing:
-  - `min_context_slot`: (optional) if set, the minimum slot number at which to perform preflight transaction checks
+- `chain`: (optional) if set, the [chain identifier](#chain-identifiers) for the chain with which the dapp endpoint intends to interact; supported values include `solana:mainnet`, `solana:testnet`, `solana:devnet`, `mainnet-beta`, `testnet`, `devnet`. If not set, defaults to `solana:mainnet`.
+- `addresses`: (optional) if set, a list of base64 encoded account addresses that the dapp endpoint wishes to be included in the authorized scope. Defaults to `null`. 
+- `features`: (optional) if set, a list of [feature identifiers](#feature-identifiers) that the dapp endpoint intends to use in the session. Defaults to `null`. 
+- `cluster`: (optional) an alias for `chain`. This parameter is maintained for backwards compatibility with previous versions of the spec, and will be ignored if the `chain` parameter is present. 
 
 ###### Result
 {: .no_toc }
 
 ```
 {
-    “signatures”: [“<transaction_signature>”, ...],
+    “auth_token”: “<auth_token>”,
+    “accounts”: [
+        {
+            “address”: “<address>", 
+            "display_address": "<display_address>",
+            "display_address_format": "<display_address_format>",
+            “label”: “<label>”, 
+            "icon": "<icon>",
+            "chains": ["<chain_id>", ...], 
+            "features": ["<feature_id>", ...]
+        },
+        ...
+    ],
     “wallet_uri_base”: “<wallet_uri_base>”,
 }
 ```
 
 where:
 
-- `signatures`: the corresponding base64-encoded transaction signatures
+- `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to reauthorize access to [privileged methods](#privileged-methods).
+- `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
+  - `address`: a base64-encoded public key for this account. 
+  - `display_address`: (optional) the address for this account. The format of this string will depend on the chain, and is specified by the `display_address_format` field
+  - `display_address_format`: (optional) the format of the `display_address`.
+  - `chains`: a list of [chain identifiers](#chain-identifiers) supported by this account. These should be a subset of the chains supported by the wallet.
+  - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
+  - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
+  - `icon`: (optional) a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image of an icon for the account. This may be displayed by the app.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 
 ###### Errors
 {: .no_toc }
 
-- `-32601` (Method not found) if `one_off_sign_and_send_transactions` is not supported by this wallet endpoint
+- `-32601` (Method not found) if `authorize_oneshot` is not supported by this wallet endpoint
 - `-32602` (Invalid params) if the params object does not match the format defined above
 - `ERROR_AUTHORIZATION_FAILED` if the wallet endpoint did not authorize access to the requested privileged methods
-- `ERROR_CLUSTER_NOT_SUPPORTED` if the wallet endpoint does not support the requested Solana cluster
-- `ERROR_INVALID_PAYLOADS`
-
-  ```
-  “data”: {
-      “valid”: [<transaction_valid>, ...]
-  }
-  ```
-
-  if any transaction does not represent a valid transaction for signing, where:
-
-  - `transaction_valid`: an array of booleans with the same length as `payloads` indicating which are valid
-- `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign this transaction for any reason
-- `ERROR_NOT_SUBMITTED`
-
-  ```
-  “data”: {
-      “signatures”: [“<transaction_signature>”, ...],
-  }
-  ```
-
-  if the wallet endpoint was unable to submit one or more of the signed transactions to the network, where:
-
-  - `signatures`: the corresponding base64-encoded transaction signatures for transactions which were successfully sent to the network, or `null` for transactions which were unable to be submitted to the network for any reason
-- `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all transactions due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
+- `ERROR_CHAIN_NOT_SUPPORTED` if the wallet endpoint does not support the requested chain
 
 ##### Description
 
-This method allows the dapp endpoint to request transactions to be signed and sent by a wallet endpoint without requiring the establishment of an authorized session.
+This method allows the dapp endpoint to access single privileged method from a wallet endpoint while requiring only one interaction from the user. Wallets supporting this feature will cache the request and await a single privileged request from the dapp. Upon receipt of the subsequent request, only then will the wallet present UI to the user to confirm. Any further requests sent within this authorization scope will be rejected by the wallet endpoint. 
 
-Wallet endpoints should make every effort possible to [verify the authenticity](#dapp-identity-verification) of the presented identity. While the `uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
+The parameters of this method are identical to the standard [`authorize`](spec.md#authorize) request and should be handled in the same manor. Wallet endpoints should still perform the same identiy verification that is performed for a standard [`authorize`](spec.md#authorize) request:
 
-The `cluster` parameter allows the dapp endpoint to select a specific Solana cluster with which to interact. This is relevant for both [`sign_transactions`](#sign_transactions), where a wallet may refuse to sign transactions without a currently valid blockhash, and for [`sign_and_send_transactions`](#sign_and_send_transactions), where the wallet endpoint must know which cluster to submit the transactions to. This parameter would normally be used to select a cluster other than `mainnet-beta` for dapp development and testing purposes. Under normal circumstances, this field should be omitted, in which case the wallet endpoint will interact with the `mainnet-beta` cluster.
-
-The wallet endpoint should attempt to simulate the transactions provided by `payloads` and present them to the user for approval (if applicable). If approved (or if it does not require approval), the wallet endpoint should verify the transactions, sign them with the private keys for the authorized addresses, submit them to the network, and return the transaction signatures to the dapp endpoint.
-
-`options` allows customization of how the wallet endpoint processes the transactions it sends to the Solana network. If specified, `min_context_slot` specifies the minimum slot number that the transactions should be evaluated at. This allows the wallet endpoint to wait for its network RPC node to reach the same point in time as the node used by the dapp endpoint, ensuring that, e.g., the recent blockhash encoded in the transactions will be available.
+>Wallet endpoints should make every effort possible to [verify the authenticity](spec.md#dapp-identity-verification) of the presented identity. While the `uri` parameter is optional, it is strongly recommended - without it, the wallet endpoint may not be able to verify the authenticity of the dapp.
 
 ###### Non-normative commentary
 
-This method is optional, to support immediate completion of transactions with fewer steps for a better user experience for dapps that do not require multiple requests to a wallet.  
-
-it does not allow the dapp endpoint to specify the network RPC server to submit the transaction to; that is at the discretion of the wallet endpoint. If this is a detail that matters to the dapp endpoint, it should instead use the `sign_transactions` method and submit the transaction to a network RPC server of its choosing.
-
-It is recommended that dapp endpoints verify that each transaction reached an appropriate level of commitment (typically either `confirmed` or `finalized`).
+This method is optional, to support immediate completion of a single privileged method request with fewer steps for a better user experience for dapps that do not require multiple requests to a wallet.  
