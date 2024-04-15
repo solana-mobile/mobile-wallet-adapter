@@ -139,14 +139,14 @@ These features are deprecated, but can be supported by wallet endpoints to maint
 
 - [`solana:signTransactions`](#sign_transactions)
 
-## Account Profiles
+## Account Labels
 
-Account profiles are labels that are used to decribe an authorized account's capabilities and intended use. Each authorized account that is returned in [`authorize`](#authorize) request response can include a list of these profiles. The dapp endpoint can use these labels in combination with the account's list of [`features`](#feature-identifiers) to determine how each acount should be used. 
+Account labels are used to decribe an authorized account's capabilities and intended use. Each authorized account that is returned in [`authorize`](#authorize) request response can include a list of these labels. The dapp endpoint can use these labels in combination with the account's list of [`features`](#feature-identifiers) to determine how each acount should be used. 
 
 - `primary`
   - The users primary account. This account will be used for sign in, and is expected to have the users primary assets. 
 - `identity`
-  - An account that contains the users preffered identity credentials. Identity accoutns should be used for e.g sign in.
+  - An account that contains the users preffered identity credentials. Identity accounts should be used for e.g sign in.
 - `feePayer`
   - Fee payer accounts, when present, should be used to pay for transaction fees. This profile is incompatible with the `immutable` profile, a fee payer account cannot be `immutable`. 
 - `mutable`
@@ -431,7 +431,7 @@ where:
             "display_address_format": "<display_address_format>",
             “label”: “<label>”, 
             "icon": "<icon>",
-            "profiles": ["<account_profile>", ...],
+            "labels": ["<account_label>", ...],
             "chains": ["<chain_id>", ...], 
             "features": ["<feature_id>", ...]
         },
@@ -458,7 +458,7 @@ where:
   - `features`: (optional) a list of [feature identifiers](#feature-identifiers) that represent the features that are supported by this account. These features must be a subset of the features returned by [`get_capabilities`](#get_capabilities). If this parameter is not present the account has access to all available features (both mandatory and optional) supported by the wallet.  
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
   - `icon`: (optional) a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image of an icon for the account. This may be displayed by the app.
-  - `profiles`: a list of [account profile](#account-profiles) labels for this account. Defaults to `[ "mutable", "feePayer" ]`.
+  - `labels`: a list of [account labels](#account-labels) for this account.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
   - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
