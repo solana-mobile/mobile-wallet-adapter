@@ -145,6 +145,8 @@ Account profiles are labels that are used to decribe an authorized account's cap
 
 - `primary`
   - The users primary account. This account will be used for sign in, and is expected to have the users primary assets. 
+- `identity`
+  - An account that contains the users preffered identity credentials. Identity accoutns should be used for e.g sign in.
 - `feePayer`
   - Fee payer accounts, when present, should be used to pay for transaction fees. This profile is incompatible with the `immutable` profile, a fee payer account cannot be `immutable`. 
 - `mutable`
