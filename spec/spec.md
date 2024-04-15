@@ -147,7 +147,6 @@ Account profiles are labels that are used to decribe an authorized account's cap
   - The users primary account. This account will be used for sign in, and is expected to have the users primary assets. 
 - `feePayer`
   - Fee payer accounts, when present, should be used to pay for transaction fees. This profile is incompatible with the `immutable` profile, a fee payer account cannot be `immutable`. 
-
 - `mutable`
   - A mutable account can be used as a writeable account in transactions and will allow transactions that change its state. This profile is incompatible with the `immutable` profile, a single account will never specify both `mutable` and `immutable` profiles. 
 - `immutable`
