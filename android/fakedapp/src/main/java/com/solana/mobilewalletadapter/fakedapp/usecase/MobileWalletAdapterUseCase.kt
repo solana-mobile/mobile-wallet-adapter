@@ -363,6 +363,8 @@ object MobileWalletAdapterUseCase {
                 val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
                     uriPrefix, localAssociation.port, localAssociation.session
                 ).apply {
+                    // for some reason extras = Bundle()... causes a parcelization exception
+                    // have to put the bundle in as an extra like this:
                     putExtra("binderTest", Bundle().apply {
                         putParcelable("token", contract.token)
                     })
