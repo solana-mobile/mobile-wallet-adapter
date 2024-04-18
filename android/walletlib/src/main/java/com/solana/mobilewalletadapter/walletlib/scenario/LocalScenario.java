@@ -135,13 +135,13 @@ public abstract class LocalScenario implements Scenario {
 
             @Override
             public boolean bindService() {
-                if (callingPackage != null) {
-                    Log.i(TAG, "Binding to client service...");
-                    Intent intent = new Intent(AssociationContract.LOCAL_ADAPTER_SERVICE_ACTION);
-                    intent.setPackage(callingPackage);
-
-                    mBound = context.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-                }
+//                if (callingPackage != null) {
+//                    Log.i(TAG, "Binding to client service...");
+//                    Intent intent = new Intent(AssociationContract.LOCAL_ADAPTER_SERVICE_ACTION);
+//                    intent.setPackage(callingPackage);
+//
+//                    mBound = context.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+//                }
 
                 Log.i(TAG, "Bound to client service? " + mBound);
                 return mBound;
