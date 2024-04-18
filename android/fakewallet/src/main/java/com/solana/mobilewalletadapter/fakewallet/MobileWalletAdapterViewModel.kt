@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.fakewallet
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.IBinder
 import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -14,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.funkatronics.encoders.Base58
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
+import com.solana.mobilewalletadapter.common.service.BinderToken
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.fakewallet.usecase.*
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
@@ -34,6 +36,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     private var clientTrustUseCase: ClientTrustUseCase? = null
     private var scenario: LocalScenario? = null
+
+    private var binderToken: BinderToken? = null
+    private var binder: IBinder? = null
 
     fun processLaunch(intent: Intent?, callingPackage: String?): Boolean {
         if (intent == null) {
@@ -92,9 +97,22 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                     )
                 ),
                 AuthIssuerConfig("fakewallet"),
-                MobileWalletAdapterScenarioCallbacks()
+                MobileWalletAdapterScenarioCallbacks(),
+                callingPackage
             )
         }.also { it.start() }
+
+        intent.getBundleExtra("binderTest")?.getBinder("binder")?.let {
+            Log.d(TAG, "wallet side received binder = ${it.hashCode()}")
+            Log.d(TAG, "wallet side received binder alive? ${it.isBinderAlive}")
+            binder = it
+        }
+
+        (intent.getBundleExtra("binderTest")?.getParcelable("token") as? BinderToken)?.let {
+            Log.d(TAG, "wallet side received binder token = ${it.binder.hashCode()}")
+            Log.d(TAG, "wallet side received binder token alive? ${it.binder.isBinderAlive}")
+            binderToken = it
+        }
 
         return true
     }

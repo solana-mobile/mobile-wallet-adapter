@@ -4,10 +4,20 @@
 
 package com.solana.mobilewalletadapter.fakedapp.usecase
 
+import android.app.Application
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Binder
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Messenger
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -23,7 +33,10 @@ import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
+import com.solana.mobilewalletadapter.common.service.BinderToken
+import com.solana.mobilewalletadapter.common.service.MobileWalletAdapterService
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
+import com.solana.mobilewalletadapter.fakedapp.MainViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -344,12 +357,14 @@ object MobileWalletAdapterUseCase {
     suspend fun <T> localAssociateAndExecute(
         intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         uriPrefix: Uri? = null,
+        context: Context,
         action: suspend (Client, SessionProperties) -> T
-    ): T = localAssociateAndExecuteAsync(intentLauncher, uriPrefix, action).await()
+    ): T = localAssociateAndExecuteAsync(intentLauncher, uriPrefix, context, action).await()
 
     suspend fun <T> localAssociateAndExecuteAsync(
         intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
         uriPrefix: Uri? = null,
+        context: Context,
         action: suspend (Client, SessionProperties) -> T
     ): Deferred<T> = coroutineScope {
         // Use async to launch in a new Job, for proper cancellation semantics
@@ -361,6 +376,31 @@ object MobileWalletAdapterUseCase {
                 val associationIntent = LocalAssociationIntentCreator.createAssociationIntent(
                     uriPrefix, localAssociation.port, localAssociation.session
                 )
+
+//                val testToken = BinderToken()
+//                Log.d(TAG, "parcelized binder token hash = ${testToken.binder.hashCode()}")
+//
+//                val binder = Binder()
+//                Log.d(TAG, "intent extra binder hash = ${binder.hashCode()}")
+//
+//                associationIntent.putExtra("binderTest", Bundle().apply {
+//                    putParcelable("token", testToken)
+//                    putBinder("binder", binder)
+//                })
+
+//                val serviceConnection = object : ServiceConnection {
+//                    override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
+//                        Log.i(TAG, "service connected!! $componentName")
+//                    }
+//
+//                    override fun onServiceDisconnected(componentName: ComponentName?) {
+//                        Log.i(TAG, "service DISconnected!! $componentName")
+//                    }
+//                }
+//                Intent(context, MobileWalletAdapterService::class.java).also { intent ->
+//                    context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+//                }
+
                 try {
                     contract.waitForActivityResumed() // may throw TimeoutCancellationException
                 } catch (e: TimeoutCancellationException) {
@@ -406,6 +446,8 @@ object MobileWalletAdapterUseCase {
                         @Suppress("BlockingMethodInNonBlockingContext") // running in Dispatchers.IO; blocking is appropriate
                         localAssociation.close()
                             .get(LOCAL_ASSOCIATION_CLOSE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+
+//                        context.unbindService(serviceConnection)
                     }
                 }
             }

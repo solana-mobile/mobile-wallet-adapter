@@ -62,7 +62,7 @@ public class LocalWebSocketServerScenarioTest {
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig, lowPowerNoConnectionCallback,
-                publicKey, port, powerConfig, supportedVersions).start();
+                publicKey, port, powerConfig, supportedVersions, null).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
@@ -104,7 +104,7 @@ public class LocalWebSocketServerScenarioTest {
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig, lowPowerNoConnectionCallback,
-                publicKey, port, powerConfig, supportedVersions).start();
+                publicKey, port, powerConfig, supportedVersions, null).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then

@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
@@ -14,7 +15,6 @@ import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LocalWebSocketServerScenario extends LocalScenario {
@@ -44,7 +44,20 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                         @WebSocketsTransportContract.LocalPortRange int port) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
                 associationPublicKey, port, new DevicePowerConfigProvider(context),
-                associationProtocolVersions);
+                associationProtocolVersions, null);
+    }
+
+    public LocalWebSocketServerScenario(@NonNull Context context,
+                                        @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                        @NonNull AuthIssuerConfig authIssuerConfig,
+                                        @NonNull LocalScenario.Callbacks callbacks,
+                                        @NonNull byte[] associationPublicKey,
+                                        @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                                        @WebSocketsTransportContract.LocalPortRange int port,
+                                        @Nullable String callingPackage) {
+        this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
+                associationPublicKey, port, new DevicePowerConfigProvider(context),
+                associationProtocolVersions, callingPackage);
     }
 
     /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
@@ -54,9 +67,10 @@ public class LocalWebSocketServerScenario extends LocalScenario {
                                              @NonNull byte[] associationPublicKey,
                                              @WebSocketsTransportContract.LocalPortRange int port,
                                              PowerConfigProvider powerConfigProvider,
-                                             @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
+                                             @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                                             @Nullable String callingPackage) {
         super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
-                powerConfigProvider, associationProtocolVersions);
+                powerConfigProvider, associationProtocolVersions, callingPackage);
         this.port = port;
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }
@@ -67,6 +81,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
             throw new IllegalStateException("Already started");
         }
         mState = State.RUNNING;
+        mServiceBinder.bindService();
         mWebSocketServer.init();
         super.start();
     }
@@ -80,6 +95,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
         mIoHandler.post(() -> {
             mCallbacks.onScenarioComplete();
             mWebSocketServer.close(); // this will close all MobileWalletAdapterSessions
+            mServiceBinder.unbindService();
             mCallbacks.onScenarioTeardownComplete();
         });
     }

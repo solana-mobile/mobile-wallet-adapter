@@ -4,9 +4,13 @@
 
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
@@ -14,10 +18,12 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
+import com.solana.mobilewalletadapter.common.service.MobileWalletAdapterService;
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRecord;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthRepository;
@@ -52,6 +58,8 @@ public abstract class LocalScenario implements Scenario {
     @NonNull
     protected final Handler mIoHandler;
     @NonNull
+    protected final ServiceBinder mServiceBinder;
+    @NonNull
     protected final Callbacks mCallbacks;
     @NonNull
     protected final AuthRepository mAuthRepository;
@@ -77,13 +85,25 @@ public abstract class LocalScenario implements Scenario {
                 associationPublicKey, new DevicePowerConfigProvider(context), List.of());
     }
 
+    protected LocalScenario(@NonNull Context context,
+                            @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                            @NonNull AuthIssuerConfig authIssuerConfig,
+                            @NonNull Callbacks callbacks,
+                            @NonNull byte[] associationPublicKey,
+                            @NonNull PowerConfigProvider powerConfigProvider,
+                            @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
+        this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks,
+                associationPublicKey, powerConfigProvider, associationProtocolVersions, null);
+    }
+
     /*package*/ LocalScenario(@NonNull Context context,
                               @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                               @NonNull AuthIssuerConfig authIssuerConfig,
                               @NonNull Callbacks callbacks,
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider,
-                              @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
+                              @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                              @Nullable String callingPackage) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationProtocolVersions = associationProtocolVersions;
@@ -97,6 +117,44 @@ public abstract class LocalScenario implements Scenario {
         mAuthRepository = new AuthRepositoryImpl(context, authIssuerConfig);
 
         this.mPowerManager = powerConfigProvider;
+
+        this.mServiceBinder = new ServiceBinder() {
+            private boolean mBound = false;
+            @NonNull
+            private final ServiceConnection mServiceConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName componentName, IBinder binder) {
+                    Log.i(TAG, "Bound to client service:" + componentName);
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName componentName) {
+                    Log.w(TAG, "Client service disconnected unexpectedly " + componentName);
+                }
+            };
+
+            @Override
+            public boolean bindService() {
+                if (callingPackage != null) {
+                    Log.i(TAG, "Binding to client service...");
+                    Intent intent = new Intent(AssociationContract.LOCAL_ADAPTER_SERVICE_ACTION);
+                    intent.setPackage(callingPackage);
+
+                    mBound = context.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+                }
+
+                Log.i(TAG, "Bound to client service? " + mBound);
+                return mBound;
+            }
+
+            @Override
+            public void unbindService() {
+                if (mBound) {
+                    Log.i(TAG, "Unbinding client service...");
+                    context.unbindService(mServiceConnection);
+                }
+            }
+        };
     }
 
     @Override
@@ -409,5 +467,10 @@ public abstract class LocalScenario implements Scenario {
 
     public interface Callbacks extends Scenario.Callbacks {
         void onLowPowerAndNoConnection();
+    }
+
+    protected interface ServiceBinder {
+        boolean bindService();
+        void unbindService();
     }
 }

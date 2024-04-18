@@ -8,6 +8,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.AssociationContract;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
@@ -40,10 +41,19 @@ public class LocalAssociationUri extends AssociationUri {
                                                        @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                                        @NonNull AuthIssuerConfig authIssuerConfig,
                                                        @NonNull Scenario.Callbacks callbacks) {
+        return createScenario(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, null);
+    }
+
+    @NonNull
+    public LocalWebSocketServerScenario createScenario(@NonNull Context context,
+                                                       @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                                       @NonNull AuthIssuerConfig authIssuerConfig,
+                                                       @NonNull Scenario.Callbacks callbacks,
+                                                       @Nullable String callingPackage) {
         if (callbacks instanceof LocalScenario.Callbacks) {
             return new LocalWebSocketServerScenario(context, mobileWalletAdapterConfig,
                     authIssuerConfig, (LocalScenario.Callbacks) callbacks,
-                    associationPublicKey, associationProtocolVersions, port);
+                    associationPublicKey, associationProtocolVersions, port, callingPackage);
         } else {
             throw new IllegalArgumentException("callbacks must implement " + LocalScenario.Callbacks.class.getName());
         }

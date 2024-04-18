@@ -18,5 +18,7 @@ public class AssociationContract {
     public static final String REMOTE_PARAMETER_REFLECTOR_HOST_AUTHORITY = "reflector"; // type: String
     public static final String REMOTE_PARAMETER_REFLECTOR_ID = "id"; // type: Long
 
+    public static final String LOCAL_ADAPTER_SERVICE_ACTION = "com.solana.mobilewalletadapter.action.SERVICE";
+
     private AssociationContract() {}
 }

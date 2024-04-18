@@ -21,5 +21,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service android:name="com.solana.mobilewalletadapter.common.service.MobileWalletAdapterService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.solana.mobilewalletadapter.action.SERVICE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

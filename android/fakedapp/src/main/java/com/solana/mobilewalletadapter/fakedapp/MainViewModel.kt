@@ -542,7 +542,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         action: suspend (MobileWalletAdapterUseCase.Client) -> T
     ): T {
         return try {
-            MobileWalletAdapterUseCase.localAssociateAndExecute(intentLauncher, uriPrefix) { client, sessionProperties ->
+            MobileWalletAdapterUseCase.localAssociateAndExecute(intentLauncher, uriPrefix, getApplication()) { client, sessionProperties ->
                 _uiState.update {
                     it.copy(sessionProtocolVersion = sessionProperties.protocolVersion)
                 }
