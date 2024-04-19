@@ -45,7 +45,7 @@
         "js-base64": "^3.7.5"
     },
     "devDependencies": {
-        "@solana/web3.js": "^1.58.0",
+        "@solana/web3.js": "^1.91.7",
         "agadoo": "^2.0.0",
         "cross-env": "^7.0.3",
         "shx": "^0.3.4"
