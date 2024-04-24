@@ -4,28 +4,13 @@ This is a package that provides React Native bridge for the native `mobile-walle
 
 Deep dive and read the full Mobile Wallet Adapter protocol [specification](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#mobile-wallet-adapter-specification).
 
-## TODO
-- Separate bottom sheet signing experience or make optional
-
 ## Note
 This package is still in alpha and is not production ready. However, the API is stable and will not change drastically, so you can begin integration with your wallet.
 
 
 ## Quickstart
 
-### 1. Define your MWA entrypoint
-
-To support bottom sheet signing flow, you need to define a React component to be the entrypoint for MWA. When the dApp sends out an intent for `solana-wallet://`, this entrypoint component will be rendered.
-
-Define your entrypoint component in `index.js`:
-```typescript
-AppRegistry.registerComponent(
-  'MobileWalletAdapterEntrypoint', // Constant
-  () => YourMWAComponent,
-);
-```
-
-### 2. Start listening and handling MWA requests
+### 1. Start listening and handling MWA requests
 
 Use this API to start a session and start handling requests:
 ```typescript
@@ -64,7 +49,7 @@ useMobileWalletAdapterSession(
 );
 ```
 
-### 3. Handling requests
+### 2. Handling requests
 
 A `MWARequest` is handled by calling `resolve(request, response)` and each request have their appropriate response types.
 
