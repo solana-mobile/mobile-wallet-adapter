@@ -107,7 +107,6 @@ where:
 
 ```
 {
-    “auth_token”: “<auth_token>”,
     “accounts”: [
         {
             “address”: “<address>", 
@@ -126,7 +125,6 @@ where:
 
 where:
 
-- `auth_token`: an opaque string representing a unique identifying token issued by the wallet endpoint to the dapp endpoint. The format and contents are an implementation detail of the wallet endpoint. The dapp endpoint can use this on future connections to reauthorize access to [privileged methods](#privileged-methods).
 - `accounts`: one or more value objects that represent the accounts to which this auth token corresponds. These objects hold the following properties:
   - `address`: a base64-encoded public key for this account. 
   - `display_address`: (optional) the address for this account. The format of this string will depend on the chain, and is specified by the `display_address_format` field
