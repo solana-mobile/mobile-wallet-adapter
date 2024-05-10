@@ -7,7 +7,7 @@
     "scripts": {
         "clean": "shx rm -rf .next out",
         "dev": "NODE_OPTIONS='--inspect' next dev",
-        "build": "yarn clean && next build && next export",
+        "build": "yarn clean && next build",
         "start": "next start",
         "lint": "next lint",
         "tunnel:start": "ngrok http 3000",
