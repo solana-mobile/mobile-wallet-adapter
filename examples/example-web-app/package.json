@@ -7,7 +7,7 @@
     "scripts": {
         "clean": "shx rm -rf .next out",
         "dev": "NODE_OPTIONS='--inspect' next dev",
-        "build": "yarn clean && next build && next export",
+        "build": "yarn clean && next build",
         "start": "next start",
         "lint": "next lint",
         "tunnel:start": "ngrok http 3000",
@@ -26,7 +26,7 @@
         "@solana/wallet-adapter-react": "^0.15.35",
         "@solana/wallet-adapter-react-ui": "^0.9.34",
         "@solana/web3.js": "^1.91.7",
-        "next": "^13.5.0",
+        "next": "^14.1.1",
         "notistack": "^2.0.5",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
