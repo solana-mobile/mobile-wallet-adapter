@@ -106,7 +106,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     fun authorizeDapp(
         request: MobileWalletAdapterServiceRequest.AuthorizationRequest,
-        authorized: Boolean
+        authorized: Boolean,
+        numAccounts: Int = 1
     ) {
         if (rejectStaleRequest(request)) {
             return
@@ -114,11 +115,13 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         viewModelScope.launch {
             if (authorized) {
-                val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
-                val publicKey = keypair.public as Ed25519PublicKeyParameters
-                Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
-                val account = buildAccount(publicKey.encoded, "fakewallet")
-                request.request.completeWithAuthorize(account, null,
+                val accounts = (0 until numAccounts).map {
+                    val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
+                    val publicKey = keypair.public as Ed25519PublicKeyParameters
+                    Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+                    buildAccount(publicKey.encoded, "fakewallet account $it")
+                }
+                request.request.completeWithAuthorize(accounts.toTypedArray(), null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray(), null)
             } else {
                 request.request.completeWithDecline()
@@ -164,7 +167,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val siwsMessage = request.signInPayload.prepareMessage(address)
                 val signResult = try {
                     val messageBytes = siwsMessage.encodeToByteArray()
-                    SolanaSigningUseCase.signMessage(messageBytes, keypair)
+                    SolanaSigningUseCase.signMessage(messageBytes, listOf(keypair))
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "failed to sign SIWS payload", e)
                     request.request.completeWithInternalError(e)
@@ -195,29 +198,45 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
 
         viewModelScope.launch {
-            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.authorizedPublicKey)
-            check(keypair != null) { "Unknown public key for signing request" }
 
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signedPayloads = when (request) {
-                is MobileWalletAdapterServiceRequest.SignTransactions ->
+                is MobileWalletAdapterServiceRequest.SignTransactions -> {
                     Array(request.request.payloads.size) { i ->
+                        val tx = request.request.payloads[i]
+                        val keypairs = SolanaSigningUseCase.getSignersForTransaction(tx).mapNotNull {
+                            getApplication<FakeWalletApplication>().keyRepository.getKeypair(it)
+                        }
+                        Log.d(TAG, "Simulating transaction signing with ${keypairs.joinToString {
+                            Base58.encodeToString((it.public as Ed25519PublicKeyParameters).encoded)
+                        }}")
                         try {
-                            SolanaSigningUseCase.signTransaction(request.request.payloads[i], keypair).signedPayload
+                            SolanaSigningUseCase.signTransaction(tx, keypairs).signedPayload
                         } catch (e: IllegalArgumentException) {
                             Log.w(TAG, "Transaction [$i] is not a valid Solana transaction", e)
                             valid[i] = false
                             byteArrayOf()
                         }
                     }
-                is MobileWalletAdapterServiceRequest.SignMessages ->
-                    Array(request.request.payloads.size) { i ->
-                        SolanaSigningUseCase.signMessage(request.request.payloads[i], keypair).signedPayload
+                }
+                is MobileWalletAdapterServiceRequest.SignMessages -> {
+                    val keypairs = request.request.addresses.map {
+                        val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(it)
+                        check(keypair != null) { "Unknown public key for signing request" }
+                        keypair
                     }
+                    Log.d(TAG, "Simulating message signing with ${keypairs.joinToString {
+                        Base58.encodeToString((it.public as Ed25519PublicKeyParameters).encoded)
+                    }}")
+                    Array(request.request.payloads.size) { i ->
+                        // TODO: wallet should check that the payload is NOT a transaction
+                        //  to ensure the user is not being tricked into signing a transaction
+                        SolanaSigningUseCase.signMessage(request.request.payloads[i], keypairs).signedPayload
+                    }
+                }
             }
 
             if (valid.all { it }) {
-                Log.d(TAG, "Simulating signing with ${request.request.authorizedPublicKey}")
                 request.request.completeWithSignedPayloads(signedPayloads)
             } else {
                 Log.e(TAG, "One or more transactions not valid")
@@ -264,12 +283,15 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     fun signAndSendTransactionsSimulateSign(request: MobileWalletAdapterServiceRequest.SignAndSendTransactions) {
         viewModelScope.launch {
-            val keypair = getApplication<FakeWalletApplication>().keyRepository.getKeypair(request.request.publicKey)
-            check(keypair != null) { "Unknown public key for signing request" }
-
-            val signingResults = request.request.payloads.map { payload ->
+            val signingResults = request.request.payloads.map { tx ->
+                val keypairs = SolanaSigningUseCase.getSignersForTransaction(tx).mapNotNull {
+                    getApplication<FakeWalletApplication>().keyRepository.getKeypair(it)
+                }
+                Log.d(TAG, "Simulating transaction signing with ${keypairs.joinToString {
+                    Base58.encodeToString((it.public as Ed25519PublicKeyParameters).encoded)
+                }}")
                 try {
-                    SolanaSigningUseCase.signTransaction(payload, keypair)
+                    SolanaSigningUseCase.signTransaction(tx, keypairs)
                 } catch (e: IllegalArgumentException) {
                     Log.w(TAG, "not a valid Solana transaction", e)
                     SolanaSigningUseCase.Result(byteArrayOf(), byteArrayOf())
@@ -278,7 +300,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
             val valid = signingResults.map { result -> result.signature.isNotEmpty() }
             if (valid.all { it }) {
-                Log.d(TAG, "Simulating signing with ${request.request.publicKey}")
                 val signatures = signingResults.map { result -> result.signature }
                 val signedTransactions = signingResults.map { result -> result.signedPayload }
                 val requestWithSignatures = request.copy(
@@ -536,7 +557,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         override fun onSignMessagesRequest(request: SignMessagesRequest) {
             if (verifyPrivilegedMethodSource(request)) {
-                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignMessages(request))
+                val accounts = request.authorizedAccounts.filter { aa ->
+                    request.addresses.any { it contentEquals aa.publicKey }
+                }
+                if (accounts.isEmpty()) {
+                    request.completeWithAuthorizationNotValid()
+                } else {
+                    cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignMessages(request))
+                }
             } else {
                 request.completeWithDecline()
             }
@@ -590,9 +618,16 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             val signInPayload: SignInWithSolana.Payload,
             override val sourceVerificationState: ClientTrustUseCase.VerificationState
         ) : AuthorizationRequest(request, sourceVerificationState)
-        sealed class SignPayloads(override val request: SignPayloadsRequest) : MobileWalletAdapterRemoteRequest(request)
-        data class SignTransactions(override val request: SignTransactionsRequest) : SignPayloads(request)
-        data class SignMessages(override val request: SignMessagesRequest) : SignPayloads(request)
+        sealed class SignPayloads(
+            override val request: SignPayloadsRequest
+        ) : MobileWalletAdapterRemoteRequest(request)
+        data class SignTransactions(
+            override val request: SignTransactionsRequest
+        ) : SignPayloads(request)
+        data class SignMessages(
+            override val request: SignMessagesRequest,
+//            val accounts: List<AuthorizedAccount>
+        ) : SignPayloads(request)
         data class SignAndSendTransactions(
             override val request: SignAndSendTransactionsRequest,
             val endpointUri: Uri,

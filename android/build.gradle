@@ -10,15 +10,15 @@ buildscript {
         google()
     }
     dependencies {
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.7.6"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.7.7"
     }
 }
 
 plugins {
     id 'com.android.application' version '8.4.0' apply false
     id 'com.android.library' version '8.4.0' apply false
-    id 'org.jetbrains.kotlin.android' version '1.9.22' apply false
-    id 'io.github.gradle-nexus.publish-plugin' version '1.3.0'
+    id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 nexusPublishing {

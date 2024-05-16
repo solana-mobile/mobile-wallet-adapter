@@ -14,9 +14,27 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 
 public abstract class SignPayloadsRequest
         extends BaseVerifiableIdentityRequest<MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult>> {
+    @Deprecated
     @NonNull
     protected final byte[] mAuthorizedPublicKey;
 
+    @NonNull
+    @Size(min = 1)
+    protected final AuthorizedAccount[] mAuthorizedAccounts;
+
+    protected SignPayloadsRequest(@NonNull MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult> request,
+                                  @Nullable String identityName,
+                                  @Nullable Uri identityUri,
+                                  @Nullable Uri iconUri,
+                                  @NonNull byte[] authorizationScope,
+                                  @NonNull AuthorizedAccount[] authorizedAccounts,
+                                  @NonNull String chain) {
+        super(request, identityName, identityUri, iconUri, chain, authorizationScope);
+        mAuthorizedAccounts = authorizedAccounts;
+        mAuthorizedPublicKey = authorizedAccounts[0].publicKey;
+    }
+
+    @Deprecated
     protected SignPayloadsRequest(@NonNull MobileWalletAdapterServer.SignRequest<MobileWalletAdapterServer.SignedPayloadsResult> request,
                                   @Nullable String identityName,
                                   @Nullable Uri identityUri,
@@ -24,13 +42,21 @@ public abstract class SignPayloadsRequest
                                   @NonNull byte[] authorizationScope,
                                   @NonNull byte[] authorizedPublicKey,
                                   @NonNull String chain) {
-        super(request, identityName, identityUri, iconUri, chain, authorizationScope);
-        mAuthorizedPublicKey = authorizedPublicKey;
+        this(request, identityName, identityUri, iconUri, authorizationScope,
+                new AuthorizedAccount[] {
+                        new AuthorizedAccount(authorizedPublicKey, null, null, null, null)
+                }, chain);
     }
 
+    @Deprecated
     @NonNull
     public byte[] getAuthorizedPublicKey() {
         return mAuthorizedPublicKey;
+    }
+
+    @Size(min = 1)
+    public AuthorizedAccount[] getAuthorizedAccounts() {
+        return mAuthorizedAccounts;
     }
 
     @NonNull

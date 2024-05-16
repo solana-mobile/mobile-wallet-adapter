@@ -7,7 +7,7 @@
     "scripts": {
         "clean": "shx rm -rf .next out",
         "dev": "NODE_OPTIONS='--inspect' next dev",
-        "build": "yarn clean && next build && next export",
+        "build": "yarn clean && next build",
         "start": "next start",
         "lint": "next lint",
         "tunnel:start": "ngrok http 3000",
@@ -25,8 +25,8 @@
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-adapter-react": "^0.15.35",
         "@solana/wallet-adapter-react-ui": "^0.9.34",
-        "@solana/web3.js": "^1.58.0",
-        "next": "^12.1.6",
+        "@solana/web3.js": "^1.91.7",
+        "next": "^14.1.1",
         "notistack": "^2.0.5",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
@@ -35,7 +35,8 @@
     "resolutions": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "link:../../js/packages/mobile-wallet-adapter-protocol",
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "link:../../js/packages/mobile-wallet-adapter-protocol-web3js",
-        "@solana-mobile/wallet-adapter-mobile": "link:../../js/packages/wallet-adapter-mobile"
+        "@solana-mobile/wallet-adapter-mobile": "link:../../js/packages/wallet-adapter-mobile",
+        "postcss": "^8.4.31"
     },
     "devDependencies": {
         "eslint-plugin-simple-import-sort": "^7.0.0",

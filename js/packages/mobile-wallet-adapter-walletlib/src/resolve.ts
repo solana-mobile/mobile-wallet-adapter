@@ -1,3 +1,4 @@
+import type { IdentifierArray } from '@wallet-standard/core';
 import { NativeModules, Platform } from 'react-native';
 
 const LINKING_ERROR =
@@ -30,6 +31,24 @@ type AppIdentity = Readonly<{
     identityName?: string;
 }>;
 
+export type SignInPayload = Readonly<{
+    domain?: string;
+    address?: string;
+    statement?: string;
+    uri?: string;
+    version?: string;
+    chainId?: string;
+    nonce?: string;
+    issuedAt?: string;
+    expirationTime?: string;
+    notBefore?: string;
+    requestId?: string;
+    resources?: readonly string[];
+}>
+
+export type Base64EncodedAddress = string;
+type Base64EncodedSignedMessage = string;
+
 /**
  * Mobile Wallet Adapter Requests are remote requests coming from
  * the dApp for authorization, signing, and sending services.
@@ -59,15 +78,18 @@ interface IMWARequest {
 }
 
 interface IVerifiableIdentityRequest {
-    cluster: string;
+    chain: string;
     authorizationScope: Uint8Array;
     appIdentity?: AppIdentity;
 }
 
 export type AuthorizeDappRequest = Readonly<{
     __type: MWARequestType.AuthorizeDappRequest;
-    cluster: string;
+    chain: string;
     appIdentity?: AppIdentity;
+    features?: IdentifierArray;
+    addresses?: [String];
+    signInPayload?: SignInPayload;
 }> &
     IMWARequest;
 
@@ -101,6 +123,10 @@ export type SignAndSendTransactionsRequest = Readonly<{
     __type: MWARequestType.SignAndSendTransactionsRequest;
     payloads: Uint8Array[];
     minContextSlot?: number;
+    commitment?: string;
+    skipPreflight?: boolean;
+    maxRetries?: number;
+    waitForCommitmentToSendNextTransaction?: boolean;
 }> &
     IMWARequest &
     IVerifiableIdentityRequest;
@@ -143,11 +169,24 @@ export type InvalidSignaturesResponse = Readonly<{
 }>;
 
 /* Authorize Dapp */
-export type AuthorizeDappCompleteResponse = Readonly<{
-    publicKey: Uint8Array;
+export type AuthorizedAccount = Readonly<{
+    publicKey: Base64EncodedAddress;
     accountLabel?: string;
+    icon?: string;
+    chains?: IdentifierArray;
+    features?: IdentifierArray;
+}>;
+export type SignInResult = Readonly<{
+    address: Base64EncodedAddress;
+    signed_message: Base64EncodedSignedMessage;
+    signature: Base64EncodedAddress;
+    signature_type?: string;
+}>;
+export type AuthorizeDappCompleteResponse = Readonly<{
+    accounts: Array<AuthorizedAccount>
     walletUriBase?: string;
     authorizationScope?: Uint8Array;
+    signInResult?: SignInResult;
 }>;
 export type AuthorizeDappResponse = AuthorizeDappCompleteResponse | UserDeclinedResponse;
 

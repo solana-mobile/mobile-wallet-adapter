@@ -114,11 +114,11 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.test:core:1.5.0'
     testImplementation 'androidx.arch.core:core-testing:2.2.0'
-    testImplementation 'org.robolectric:robolectric:4.11.1'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    testImplementation 'org.robolectric:robolectric:4.12.1'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1'
 
-    compileOnly 'androidx.annotation:annotation:1.5.0'
-    implementation 'org.java-websocket:Java-WebSocket:1.5.5'
+    compileOnly 'androidx.annotation:annotation:1.7.1'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.6'
     implementation 'org.slf4j:slf4j-android:1.7.36' // SLF4J logging facility for Java-WebSocket
     api project(path: ':common')
 }

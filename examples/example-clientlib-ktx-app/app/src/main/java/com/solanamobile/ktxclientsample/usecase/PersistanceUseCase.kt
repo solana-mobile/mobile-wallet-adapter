@@ -1,6 +1,7 @@
 package com.solanamobile.ktxclientsample.usecase
 
 import android.content.SharedPreferences
+import android.net.Uri
 import com.solana.core.PublicKey
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
@@ -12,7 +13,8 @@ object NotConnected : WalletConnection()
 data class Connected(
     val publicKey: PublicKey,
     val accountLabel: String,
-    val authToken: String
+    val authToken: String,
+    val walletUriBase: Uri? = null
 ): WalletConnection()
 
 class PersistanceUseCase @Inject constructor(
@@ -32,11 +34,14 @@ class PersistanceUseCase @Inject constructor(
                 val key = sharedPreferences.getString(PUBKEY_KEY, "")
                 val accountLabel = sharedPreferences.getString(ACCOUNT_LABEL, "") ?: ""
                 val token = sharedPreferences.getString(AUTH_TOKEN_KEY, "")
+                val walletUriBase = sharedPreferences.getString(WALLET_URI_BASE, null)?.run {
+                    Uri.parse(this)
+                }
 
                 val newConn = if (key.isNullOrEmpty() || token.isNullOrEmpty()) {
                     NotConnected
                 } else {
-                    Connected(PublicKey(key), accountLabel, token)
+                    Connected(PublicKey(key), accountLabel, token, walletUriBase)
                 }
 
                 return newConn
@@ -44,11 +49,12 @@ class PersistanceUseCase @Inject constructor(
         }
     }
 
-    fun persistConnection(pubKey: PublicKey, accountLabel: String, token: String) {
+    fun persistConnection(pubKey: PublicKey, accountLabel: String, token: String, walletUriBase: Uri?) {
         sharedPreferences.edit().apply {
             putString(PUBKEY_KEY, pubKey.toBase58())
             putString(ACCOUNT_LABEL, accountLabel)
             putString(AUTH_TOKEN_KEY, token)
+            putString(WALLET_URI_BASE, walletUriBase.toString())
         }.apply()
 
         connection = Connected(pubKey, accountLabel, token)
@@ -59,6 +65,7 @@ class PersistanceUseCase @Inject constructor(
             remove(PUBKEY_KEY)
             remove(ACCOUNT_LABEL)
             remove(AUTH_TOKEN_KEY)
+            remove(WALLET_URI_BASE)
         }.apply()
 
         connection = NotConnected
@@ -68,6 +75,7 @@ class PersistanceUseCase @Inject constructor(
         const val PUBKEY_KEY = "stored_pubkey"
         const val ACCOUNT_LABEL = "stored_account_label"
         const val AUTH_TOKEN_KEY = "stored_auth_token"
+        const val WALLET_URI_BASE = "stored_wallet_uri_base"
     }
 
 }

@@ -11,11 +11,11 @@ plugins {
 android {
     namespace = "com.solana.mobilewalletadapter.clientlib"
 
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         minSdk 19
-        targetSdk 33
+        targetSdk 34
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -111,7 +111,7 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.5.0'
+    compileOnly 'androidx.annotation:annotation:1.7.1'
     implementation 'com.neovisionaries:nv-websocket-client:2.14' // TODO: use plugin projects to select WS implementation
     api project(path: ':common')
 }

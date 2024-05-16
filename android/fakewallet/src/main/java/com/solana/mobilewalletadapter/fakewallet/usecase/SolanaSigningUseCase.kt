@@ -13,11 +13,83 @@ object SolanaSigningUseCase {
     // throws IllegalArgumentException
     fun signTransaction(
         transaction: ByteArray,
-        keypair: AsymmetricCipherKeyPair
+        keypairs: List<AsymmetricCipherKeyPair>
     ): Result {
-        val publicKey = keypair.public as Ed25519PublicKeyParameters
-        val privateKey = keypair.private as Ed25519PrivateKeyParameters
-        val publicKeyBytes = publicKey.encoded
+        // Validate the transaction only up through the account addresses array
+        val (numSignatures, numSignaturesOffset) = readCompactArrayLen(transaction, 0)
+        val prefixOffset = numSignaturesOffset + (SIGNATURE_LEN * numSignatures)
+        val prefix = transaction[prefixOffset].toInt()
+
+        // if the highest bit of the prefix is not set, the message is not versioned
+        val txnVersionOffset = if (prefix and 0x7f == prefix) 0 else 1
+        val headerOffset = prefixOffset + txnVersionOffset
+
+        val accountsArrayOffset = headerOffset + 3
+        require(accountsArrayOffset <= transaction.size) { "transaction header extends beyond buffer bounds" }
+        val numSignaturesHeader = transaction[headerOffset].toInt()
+        require(numSignatures == numSignaturesHeader) { "Signatures array length does not match transaction required number of signatures" }
+
+        val (numAccounts, numAccountsOffset) = readCompactArrayLen(transaction, accountsArrayOffset)
+        require(numAccounts >= numSignatures) { "Accounts array is smaller than number of required signatures" }
+        val blockhashOffset = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * numAccounts
+        require(blockhashOffset <= transaction.size) { "Accounts array extends beyond buffer bounds" }
+
+        val partiallySignedTx = transaction.clone()
+
+        keypairs.forEach { keypair ->
+            val publicKey = keypair.public as Ed25519PublicKeyParameters
+            val privateKey = keypair.private as Ed25519PrivateKeyParameters
+            val publicKeyBytes = publicKey.encoded
+            var accountIndex = -1
+            for (i in 0 until numSignatures) {
+                val accountOff = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * i
+                val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
+                if (publicKeyBytes contentEquals accountPublicKey) {
+                    accountIndex = i
+                    break
+                }
+            }
+            require(accountIndex != -1) { "Transaction does not require a signature with the requested keypair" }
+
+            val signer = Ed25519Signer()
+            signer.init(true, privateKey)
+            signer.update(transaction, prefixOffset, transaction.size - prefixOffset)
+            val sig = signer.generateSignature()
+            assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
+
+            System.arraycopy(sig, 0, partiallySignedTx, numSignaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
+        }
+
+        return Result(partiallySignedTx, partiallySignedTx.sliceArray(1 until 1 + SIGNATURE_LEN))
+    }
+
+    fun signMessage(
+        message: ByteArray,
+        keypairs: List<AsymmetricCipherKeyPair>
+    ): Result {
+        var signedMessage = message.clone()
+        keypairs.forEach { keypair ->
+            val privateKey = keypair.private as Ed25519PrivateKeyParameters
+
+            val signer = Ed25519Signer()
+            signer.init(true, privateKey)
+            signer.update(message, 0, message.size)
+            val sig = signer.generateSignature()
+            assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
+
+            val offset = signedMessage.size
+            signedMessage = signedMessage.copyOf(signedMessage.size + SIGNATURE_LEN)
+            sig.copyInto(signedMessage, offset)
+        }
+
+        return Result(signedMessage, signedMessage.sliceArray(message.size until message.size + SIGNATURE_LEN))
+    }
+
+    fun getSignersForTransaction(
+        transaction: ByteArray
+    ): List<ByteArray> {
+
+        val signers = mutableListOf<ByteArray>()
 
         // Validate the transaction only up through the account addresses array
         val (numSignatures, numSignaturesOffset) = readCompactArrayLen(transaction, 0)
@@ -37,45 +109,13 @@ object SolanaSigningUseCase {
         require(numAccounts >= numSignatures) { "Accounts array is smaller than number of required signatures" }
         val blockhashOffset = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * numAccounts
         require(blockhashOffset <= transaction.size) { "Accounts array extends beyond buffer bounds" }
-        var accountIndex = -1
         for (i in 0 until numSignatures) {
             val accountOff = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * i
             val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
-            if (publicKeyBytes.contentEquals(accountPublicKey)) {
-                accountIndex = i
-                break
-            }
+            signers.add(accountPublicKey)
         }
-        require(accountIndex != -1) { "Transaction does not require a signature with the requested keypair" }
 
-        val signer = Ed25519Signer()
-        signer.init(true, privateKey)
-        signer.update(transaction, prefixOffset, transaction.size - prefixOffset)
-        val sig = signer.generateSignature()
-        assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
-
-        val signedTransaction = transaction.clone()
-        System.arraycopy(sig, 0, signedTransaction, numSignaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
-
-        return Result(signedTransaction, sig)
-    }
-
-    fun signMessage(
-        message: ByteArray,
-        keypair: AsymmetricCipherKeyPair
-    ): Result {
-        val privateKey = keypair.private as Ed25519PrivateKeyParameters
-
-        val signer = Ed25519Signer()
-        signer.init(true, privateKey)
-        signer.update(message, 0, message.size)
-        val sig = signer.generateSignature()
-        assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
-
-        val signedMessage = message.copyOf(message.size + SIGNATURE_LEN)
-        sig.copyInto(signedMessage, message.size)
-
-        return Result(signedMessage, sig)
+        return signers.toList()
     }
 
     private fun readCompactArrayLen(b: ByteArray, off: Int): Pair<Int, Int> {

@@ -22,6 +22,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenari
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
+import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
@@ -47,17 +48,31 @@ object MobileWalletAdapterUseCase {
     )
 
     class Client(private val client: MobileWalletAdapterClient) {
+
         suspend fun authorize(
             identity: DappIdentity,
             chain: String?,
-            signInPayload: SignInWithSolana.Payload?
+            signInPayload: SignInWithSolana.Payload?,
+            protocolVersion: ProtocolVersion = ProtocolVersion.V1
         ): MobileWalletAdapterClient.AuthorizationResult = coroutineScope {
             try {
                 runInterruptible(Dispatchers.IO) {
-                    client.authorize(
-                        identity.uri, identity.iconRelativeUri, identity.name, chain,
-                        null, null, null, signInPayload
-                    ).get()!!
+                    if (protocolVersion == ProtocolVersion.V1) {
+                        client.authorize(
+                            identity.uri, identity.iconRelativeUri, identity.name, chain,
+                            null, null, null, signInPayload
+                        ).get()!!
+                    } else {
+                        val cluster = when (chain) {
+                            ProtocolContract.CHAIN_SOLANA_MAINNET -> ProtocolContract.CLUSTER_MAINNET_BETA
+                            ProtocolContract.CHAIN_SOLANA_TESTNET -> ProtocolContract.CLUSTER_TESTNET
+                            ProtocolContract.CHAIN_SOLANA_DEVNET -> ProtocolContract.CLUSTER_DEVNET
+                            else -> throw IllegalArgumentException("Provided chain parameter is not valid for a legacy session: $chain")
+                        }
+                        client.authorize(
+                            identity.uri, identity.iconRelativeUri, identity.name, cluster
+                        ).get()!!
+                    }
                 }
             } catch (e: ExecutionException) {
                 when (val cause = e.cause) {
@@ -83,6 +98,9 @@ object MobileWalletAdapterUseCase {
                     )
                     is JsonRpc20Client.JsonRpc20Exception -> throw MobileWalletAdapterOperationFailedException(
                         "JSON-RPC client exception for authorize", cause
+                    )
+                    is IllegalArgumentException -> throw MobileWalletAdapterOperationFailedException(
+                        "Invalid chain for legacy session", cause
                     )
                     else -> throw MobileWalletAdapterOperationFailedException(null, e)
                 }

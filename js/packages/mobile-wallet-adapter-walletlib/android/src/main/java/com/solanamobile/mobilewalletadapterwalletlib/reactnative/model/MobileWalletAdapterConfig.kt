@@ -16,12 +16,12 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
-data class MobileWalletAdapterConfigSurrogate(
-    val supportsSignAndSendTransactions: Boolean,
+private data class MobileWalletAdapterConfigSurrogate(
     val maxTransactionsPerSigningRequest: Int,
     val maxMessagesPerSigningRequest: Int,
     val supportedTransactionVersions: List<@Serializable(with = TransactionVersionSerializer::class) Any>,
     val noConnectionWarningTimeoutMs: Long,
+    val optionalFeatures: List<String>
 )
 
 object TransactionVersionSerializer : JsonContentPolymorphicSerializer<Any>(Any::class) {
@@ -38,22 +38,22 @@ object MobileWalletAdapterConfigSerializer : KSerializer<MobileWalletAdapterConf
     override fun deserialize(decoder: Decoder): MobileWalletAdapterConfig {
         val surrogate = decoder.decodeSerializableValue(delegateSerializer)
         return MobileWalletAdapterConfig(
-            surrogate.supportsSignAndSendTransactions, 
             surrogate.maxTransactionsPerSigningRequest,
             surrogate.maxMessagesPerSigningRequest,
             surrogate.supportedTransactionVersions.toTypedArray(),
-            surrogate.noConnectionWarningTimeoutMs
+            surrogate.noConnectionWarningTimeoutMs,
+            surrogate.optionalFeatures.toTypedArray()
         )
     }
 
     override fun serialize(encoder: Encoder, value: MobileWalletAdapterConfig) {
         encoder.encodeSerializableValue(delegateSerializer, 
             MobileWalletAdapterConfigSurrogate(
-                value.supportsSignAndSendTransactions,
                 value.maxTransactionsPerSigningRequest,
                 value.maxMessagesPerSigningRequest,
                 value.supportedTransactionVersions.toList(),
-                value.noConnectionWarningTimeoutMs
+                value.noConnectionWarningTimeoutMs,
+                value.optionalFeatures.toList()
             )
         )
     }
