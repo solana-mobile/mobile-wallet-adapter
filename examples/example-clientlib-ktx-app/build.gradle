@@ -2,7 +2,7 @@ buildscript {
     ext {
         compose_version = '1.6.7'
         compose_material_version = '1.6.7'
-        compose_compiler_version = '1.5.11'
+        compose_compiler_version = '1.5.14'
     }
 
     dependencies {
@@ -13,7 +13,7 @@ buildscript {
 plugins {
     id 'com.android.application' version '8.4.0' apply false
     id 'com.android.library' version '8.4.0' apply false
-    id 'org.jetbrains.kotlin.android' version '1.9.23' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
 }
 
 task clean(type: Delete) {
