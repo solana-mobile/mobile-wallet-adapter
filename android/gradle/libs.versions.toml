@@ -11,12 +11,15 @@ androidxCoreKtx = "1.13.1"
 androidxCoreTesting = "2.2.0"
 androidxJunit = "1.1.5"
 androidxTest = "1.5.0"
+androidxTestRunner = "1.5.2"
+androidxTestUiautomator = "2.3.0"
 annotation = "1.8.0"
 bouncycastle = "1.78.1"
 espressoCore = "3.5.1"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
 kotlinTest = "2.0.0"
+androidxTestOrchestrator = "1.4.2"
 robolectric = "4.12.2"
 
 [libraries]
@@ -27,11 +30,15 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
 androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxJunit" }
 androidx-navigation-safeArgsGradlePlugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
+
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-test-espresso-intents = { module = "androidx.test.espresso:espresso-intents", version.ref = "espressoCore" }
+androidx-test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "androidxTestOrchestrator" }
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTest" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 androidx-test-truth = { module = "androidx.test.ext:truth", version.ref = "androidxTest" }
+androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "androidxTestUiautomator" }
 
 bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }

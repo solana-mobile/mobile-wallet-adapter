@@ -82,9 +82,9 @@ dependencies {
     androidTestImplementation libs.core.ktx
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.junit.ktx
-    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.espresso.core
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+    androidTestImplementation libs.androidx.test.uiautomator
 
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.junit

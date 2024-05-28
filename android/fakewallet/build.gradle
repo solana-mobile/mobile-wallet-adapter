@@ -87,18 +87,18 @@ android {
 }
 
 dependencies {
-    androidTestImplementation 'androidx.test:runner:1.5.2'
-    androidTestUtil 'androidx.test:orchestrator:1.4.2'
+    androidTestImplementation libs.androidx.test.runner
+    androidTestUtil libs.androidx.test.orchestrator
 
     androidTestImplementation libs.kotlin.stdlib
     androidTestImplementation libs.androidx.test.core
     androidTestImplementation libs.core.ktx
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.junit.ktx
-    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.espresso.core
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+    androidTestImplementation libs.androidx.test.uiautomator
     androidTestImplementation 'com.solanamobile:web3-solana:0.2.3'
     androidTestImplementation project(path: ':clientlib')
 
