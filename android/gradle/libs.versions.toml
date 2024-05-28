@@ -15,6 +15,7 @@ androidxLifecycle = "2.8.0"
 androidxNavigation = "2.7.7"
 androidxRoom = "2.6.1"
 androidxTest = "1.5.0"
+androidxTestOrchestrator = "1.4.2"
 androidxTestRunner = "1.5.2"
 androidxTestUiautomator = "2.3.0"
 annotation = "1.8.0"
@@ -23,7 +24,7 @@ espressoCore = "3.5.1"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
 kotlinTest = "2.0.0"
-androidxTestOrchestrator = "1.4.2"
+material = "1.12.0"
 robolectric = "4.12.2"
 
 [libraries]
@@ -59,6 +60,7 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
 [plugins]

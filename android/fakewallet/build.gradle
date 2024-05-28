@@ -112,7 +112,7 @@ dependencies {
     implementation libs.androidx.navigation.fragment.ktx
     implementation libs.androidx.room.runtime
     implementation libs.androidx.room.ktx
-    implementation 'com.google.android.material:material:1.12.0'
+    implementation libs.material
     implementation 'com.solanamobile:digital-asset-links-android:1.0.3'
     implementation 'io.coil-kt:coil:2.6.0'
     implementation 'io.coil-kt:coil-svg:2.6.0'
