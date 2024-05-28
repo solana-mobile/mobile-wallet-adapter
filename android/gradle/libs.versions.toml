@@ -12,6 +12,7 @@ androidxCoreTesting = "2.2.0"
 androidxJunit = "1.1.5"
 androidxTest = "1.5.0"
 annotation = "1.8.0"
+bouncycastle = "1.78.1"
 espressoCore = "3.5.1"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
@@ -32,6 +33,7 @@ androidx-test-espresso-intents = { module = "androidx.test.espresso:espresso-int
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTest" }
 androidx-test-truth = { module = "androidx.test.ext:truth", version.ref = "androidxTest" }
 
+bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinTest" }
