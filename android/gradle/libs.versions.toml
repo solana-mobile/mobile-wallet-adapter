@@ -2,14 +2,18 @@
 # plugin versions
 androidGradlePlugin = "8.4.1"
 kotlinAndroidPlugin = "2.0.0"
-navigationSafeArgsGradlePlugin = "2.7.7"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
 androidxActivityKtx = "1.9.0"
+androidxAppcompat = "1.6.1"
+androidxConstraintLayout = "2.1.4"
 androidxCoreKtx = "1.13.1"
 androidxCoreTesting = "2.2.0"
 androidxJunit = "1.1.5"
+androidxLifecycle = "2.8.0"
+androidxNavigation = "2.7.7"
+androidxRoom = "2.6.1"
 androidxTest = "1.5.0"
 androidxTestRunner = "1.5.2"
 androidxTestUiautomator = "2.3.0"
@@ -25,11 +29,19 @@ robolectric = "4.12.2"
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppcompat" }
 androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "androidxCoreTesting" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintLayout" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCoreKtx" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
 androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxJunit" }
-androidx-navigation-safeArgsGradlePlugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
+androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidxNavigation" }
+androidx-navigation-safeArgsGradlePlugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "androidxNavigation" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidxRoom" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "androidxRoom" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidxRoom" }
 
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
