@@ -3,9 +3,9 @@
  */
 
 plugins {
-    id 'com.android.library'
-    id 'maven-publish'
-    id 'signing'
+    id libs.plugins.android.library
+    id libs.plugins.maven.publish
+    id libs.plugins.signing
 }
 
 android {

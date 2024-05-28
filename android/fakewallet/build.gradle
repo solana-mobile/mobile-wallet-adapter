@@ -3,10 +3,10 @@
  */
 
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'androidx.navigation.safeargs.kotlin'
-    id 'kotlin-kapt'
+    id libs.plugins.android.application
+    id libs.plugins.kotlin
+    id libs.plugins.androidx.navigation.safeArgs
+    id libs.plugins.kotlin.kapt
 }
 
 android {
