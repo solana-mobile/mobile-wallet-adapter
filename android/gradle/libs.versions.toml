@@ -21,12 +21,15 @@ androidxTestUiautomator = "2.3.0"
 annotation = "1.8.0"
 bouncycastle = "1.78.1"
 coil = "2.6.0"
+digitalAssetLinksAndroid = "1.0.3"
 espressoCore = "3.5.1"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
 kotlinTest = "2.0.0"
 material = "1.12.0"
+multimult = "0.2.1"
 robolectric = "4.12.2"
+web3Solana = "0.2.3"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
@@ -58,13 +61,16 @@ bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bo
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
+digital-asset-links-android = { module = "com.solanamobile:digital-asset-links-android", version.ref = "digitalAssetLinksAndroid" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinTest" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
+multimult = { module = "io.github.funkatronics:multimult", version.ref = "multimult" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+web3-solana = { module = "com.solanamobile:web3-solana", version.ref = "web3Solana" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }

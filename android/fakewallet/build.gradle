@@ -99,7 +99,7 @@ dependencies {
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.espresso.core
     androidTestImplementation libs.androidx.test.uiautomator
-    androidTestImplementation 'com.solanamobile:web3-solana:0.2.3'
+    androidTestImplementation libs.web3.solana
     androidTestImplementation project(path: ':clientlib')
 
     annotationProcessor libs.androidx.room.compiler
@@ -113,12 +113,12 @@ dependencies {
     implementation libs.androidx.room.runtime
     implementation libs.androidx.room.ktx
     implementation libs.material
-    implementation 'com.solanamobile:digital-asset-links-android:1.0.3'
+    implementation libs.digital.asset.links.android
     implementation libs.coil
     implementation libs.coil.svg
     implementation libs.bcprov.jdk18on
     implementation libs.kotlinx.coroutines.android
-    implementation 'io.github.funkatronics:multimult:0.2.1'
+    implementation libs.multimult
     implementation project(path: ':walletlib')
     kapt libs.androidx.room.compiler
 }
