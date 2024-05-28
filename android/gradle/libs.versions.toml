@@ -1,0 +1,38 @@
+[versions]
+# plugin versions
+androidGradlePlugin = "8.4.1"
+kotlinAndroidPlugin = "2.0.0"
+navigationSafeArgsGradlePlugin = "2.7.7"
+nexusPublishPlugin = "2.0.0"
+
+# library versions
+androidxCoreTesting = "2.2.0"
+androidxJunit = "1.1.5"
+androidxTest = "1.5.0"
+annotation = "1.8.0"
+junit = "4.13.2"
+kotlinxCoroutinesTest = "1.8.1"
+kotlinTest = "2.0.0"
+robolectric = "4.12.2"
+
+[libraries]
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
+androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "androidxCoreTesting" }
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
+androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxJunit" }
+androidx-navigation-safeArgsGradlePlugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTest" }
+
+core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinTest" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroidPlugin" }
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
