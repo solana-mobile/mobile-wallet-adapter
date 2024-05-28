@@ -118,7 +118,7 @@ dependencies {
     testImplementation libs.kotlinx.coroutines.test
 
     compileOnly libs.androidx.annotation
-    implementation 'org.java-websocket:Java-WebSocket:1.5.6'
-    implementation 'org.slf4j:slf4j-android:1.7.36' // SLF4J logging facility for Java-WebSocket
+    implementation libs.java.websocket
+    implementation libs.slf4j.android // SLF4J logging facility for Java-WebSocket
     api project(path: ':common')
 }

@@ -23,6 +23,7 @@ bouncycastle = "1.78.1"
 coil = "2.6.0"
 digitalAssetLinksAndroid = "1.0.3"
 espressoCore = "3.5.1"
+javaWebsocket = "1.5.6"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
 kotlinTest = "2.0.0"
@@ -30,7 +31,9 @@ material = "1.12.0"
 mockitoInline = "5.2.0"
 mockitoKotlin = "4.1.0"
 multimult = "0.2.1"
+nvWebsocketClient = "2.14"
 robolectric = "4.12.2"
+slf4jAndroid = "1.7.36"
 web3Solana = "0.2.3"
 
 [libraries]
@@ -64,6 +67,7 @@ coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
 digital-asset-links-android = { module = "com.solanamobile:digital-asset-links-android", version.ref = "digitalAssetLinksAndroid" }
+java-websocket = { module = "org.java-websocket:Java-WebSocket", version.ref = "javaWebsocket" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinTest" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
@@ -73,7 +77,9 @@ material = { module = "com.google.android.material:material", version.ref = "mat
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 multimult = { module = "io.github.funkatronics:multimult", version.ref = "multimult" }
+nv-websocket-client = { module = "com.neovisionaries:nv-websocket-client", version.ref = "nvWebsocketClient" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+slf4j-android = { module = "org.slf4j:slf4j-android", version.ref = "slf4jAndroid" }
 web3-solana = { module = "com.solanamobile:web3-solana", version.ref = "web3Solana" }
 
 [plugins]
