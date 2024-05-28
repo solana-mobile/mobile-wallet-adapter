@@ -20,6 +20,7 @@ androidxTestRunner = "1.5.2"
 androidxTestUiautomator = "2.3.0"
 annotation = "1.8.0"
 bouncycastle = "1.78.1"
+coil = "2.6.0"
 espressoCore = "3.5.1"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
@@ -54,6 +55,8 @@ androidx-test-truth = { module = "androidx.test.ext:truth", version.ref = "andro
 androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "androidxTestUiautomator" }
 
 bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+coil = { module = "io.coil-kt:coil", version.ref = "coil" }
+coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinTest" }
