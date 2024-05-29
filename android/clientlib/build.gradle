@@ -3,7 +3,7 @@
  */
 
 plugins {
-    id 'com.android.library'
+    alias libs.plugins.android.library
     id 'maven-publish'
     id 'signing'
 }
@@ -111,7 +111,7 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.8.0'
-    implementation 'com.neovisionaries:nv-websocket-client:2.14' // TODO: use plugin projects to select WS implementation
+    compileOnly libs.androidx.annotation
+    implementation libs.nv.websocket.client // TODO: use plugin projects to select WS implementation
     api project(path: ':common')
 }

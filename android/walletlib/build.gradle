@@ -3,7 +3,7 @@
  */
 
 plugins {
-    id 'com.android.library'
+    alias libs.plugins.android.library
     id 'maven-publish'
     id 'signing'
 }
@@ -111,14 +111,14 @@ tasks.whenTaskAdded { task ->
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'androidx.test:core:1.5.0'
-    testImplementation 'androidx.arch.core:core-testing:2.2.0'
-    testImplementation 'org.robolectric:robolectric:4.12.2'
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1'
+    testImplementation libs.junit
+    testImplementation libs.androidx.test.core
+    testImplementation libs.androidx.arch.core.testing
+    testImplementation libs.robolectric
+    testImplementation libs.kotlinx.coroutines.test
 
-    compileOnly 'androidx.annotation:annotation:1.8.0'
-    implementation 'org.java-websocket:Java-WebSocket:1.5.6'
-    implementation 'org.slf4j:slf4j-android:1.7.36' // SLF4J logging facility for Java-WebSocket
+    compileOnly libs.androidx.annotation
+    implementation libs.java.websocket
+    implementation libs.slf4j.android // SLF4J logging facility for Java-WebSocket
     api project(path: ':common')
 }
