@@ -85,9 +85,5 @@ web3-solana = { module = "com.solanamobile:web3-solana", version.ref = "web3Sola
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
-androidx-navigation-safeArgs = { id = "androidx.navigation.safeargs.kotlin", version.ref = "androidxNavigation" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroidPlugin" }
-kotlin-kapt = { id = "kotlin-kapt" }
-maven-publish = { id = "maven-publish" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
-signing = { id = "signing" }

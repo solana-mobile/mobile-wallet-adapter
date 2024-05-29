@@ -3,10 +3,10 @@
  */
 
 plugins {
-    id libs.plugins.android.application
-    id libs.plugins.kotlin
-    id libs.plugins.androidx.navigation.safeArgs
-    id libs.plugins.kotlin.kapt
+    alias libs.plugins.android.application
+    alias libs.plugins.kotlin.android
+    id 'androidx.navigation.safeargs.kotlin'
+    id 'kotlin-kapt'
 }
 
 android {

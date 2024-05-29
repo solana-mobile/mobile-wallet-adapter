@@ -1,8 +1,8 @@
 plugins {
-    id libs.plugins.android.library
-    id libs.plugins.kotlin.android
-    id libs.plugins.maven.publish
-    id libs.plugins.signing
+    alias libs.plugins.android.library
+    alias libs.plugins.kotlin.android
+    id 'maven-publish'
+    id 'signing'
 }
 
 android {

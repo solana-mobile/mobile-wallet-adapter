@@ -3,8 +3,8 @@
  */
 
 plugins {
-    id libs.plugins.android.application
-    id libs.plugins.kotlin
+    alias libs.plugins.android.application
+    alias libs.plugins.kotlin.android
 }
 
 android {
