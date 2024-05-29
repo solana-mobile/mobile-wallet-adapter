@@ -119,6 +119,7 @@ tasks.whenTaskAdded { task ->
 
 dependencies {
     api(project(":clientlib"))
+    api libs.web3.solana
     implementation libs.androidx.core.ktx
     implementation libs.androidx.activity.ktx
     implementation libs.androidx.junit.ktx

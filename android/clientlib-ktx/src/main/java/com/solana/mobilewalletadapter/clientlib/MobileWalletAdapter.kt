@@ -234,7 +234,7 @@ class MobileWalletAdapter(
             return@coroutineScope TransactionResult.Failure("Request was interrupted", e)
         } catch (e: ActivityNotFoundException) {
             return@coroutineScope TransactionResult.NoWalletFound("No compatible wallet found.")
-        } catch (e: java.lang.IllegalStateException) {
+        } catch (e: java.lang.RuntimeException) {
             return@coroutineScope TransactionResult.Failure(e.message.toString(), e)
         }
     }
