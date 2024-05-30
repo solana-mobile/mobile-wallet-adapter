@@ -57,6 +57,7 @@ jobs:
         run: |
           cd android
           echo tralala > tralala.txt
+          emulator -writable-system
           adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
           adb root 2> /dev/null
           adb remount
