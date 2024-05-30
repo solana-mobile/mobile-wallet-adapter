@@ -57,7 +57,7 @@ jobs:
         run: |
           cd android
           echo tralala > tralala.txt
-          emulator -writable-system
+          gmsaas instances list -q | xargs -n1 gmsaas instances -writeable-system
           adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS
           adb root 2> /dev/null
           adb remount
