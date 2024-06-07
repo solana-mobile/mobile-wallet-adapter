@@ -3,6 +3,7 @@ package com.solana.mobilewalletadapter.clientlib
 import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
+import com.solana.transaction.Transaction
 
 interface AdapterOperations {
 
@@ -47,4 +48,21 @@ interface AdapterOperations {
     suspend fun signTransactions(transactions: Array<ByteArray>): MobileWalletAdapterClient.SignPayloadsResult
 
     suspend fun signAndSendTransactions(transactions: Array<ByteArray>, params: TransactionParams = DefaultTransactionParams): MobileWalletAdapterClient.SignAndSendTransactionsResult
+    suspend fun AdapterOperations.signTransactions(vararg transactions: Transaction): List<Transaction> =
+        signTransactions(
+            runCatching {
+                transactions.map { it.serialize() }.toTypedArray()
+            }.getOrElse {
+                throw IllegalArgumentException("Transactions could not be serialized", it)
+            }
+        ).signedPayloads.map { Transaction.from(it) }
+    suspend fun AdapterOperations.signAndSendTransactions(vararg transactions: Transaction)
+    : MobileWalletAdapterClient.SignAndSendTransactionsResult =
+        signAndSendTransactions(
+            runCatching {
+                transactions.map { it.serialize() }.toTypedArray()
+            }.getOrElse {
+                throw IllegalArgumentException("Transactions could not be serialized", it)
+            }
+        )
 }
