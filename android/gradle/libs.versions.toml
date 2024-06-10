@@ -34,7 +34,7 @@ multimult = "0.2.1"
 nvWebsocketClient = "2.14"
 robolectric = "4.12.2"
 slf4jAndroid = "1.7.36"
-web3Core = "0.3.0-beta2"
+web3Core = "0.3.0-beta3"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
