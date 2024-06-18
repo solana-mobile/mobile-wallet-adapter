@@ -1,80 +1,66 @@
 package com.solanamobile.ktxclientsample.usecase
 
-import com.solana.Solana
-import com.solana.api.Api
-import com.solana.api.getBalance
-import com.solana.api.getRecentBlockhash
-import com.solana.api.getSignatureStatuses
-import com.solana.api.requestAirdrop
-import com.solana.core.PublicKey
-import com.solana.models.SignatureStatusRequestConfiguration
-import com.solana.networking.Commitment
-import com.solana.networking.HttpNetworkingRouter
-import com.solana.networking.Network
-import com.solana.networking.RPCEndpoint
+import com.solana.networking.KtorNetworkDriver
+import com.solana.publickey.SolanaPublicKey
+import com.solana.rpc.Commitment
+import com.solana.rpc.SolanaRpcClient
+import com.solana.rpc.TransactionOptions
 import com.solanamobile.ktxclientsample.BuildConfig
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import java.net.URL
 import javax.inject.Inject
 
 class SolanaRpcUseCase @Inject constructor() {
 
-    private val api: Api
+    private val rpc: SolanaRpcClient
 
     init {
-        val url = URL(BuildConfig.HELIUS_KEY?.let {
+        val url = BuildConfig.HELIUS_KEY?.let {
             "https://devnet.helius-rpc.com/?api-key=$it"
-        } ?: "https://api.devnet.solana.com")
+        } ?: "https://api.devnet.solana.com"
 
-        val endPoint = RPCEndpoint.custom(url, url, Network.devnet)
-        val network = HttpNetworkingRouter(endPoint)
-
-        api = Solana(network).api
+        rpc = SolanaRpcClient(url, KtorNetworkDriver())
     }
 
-    suspend fun requestAirdrop(pubkey: PublicKey): String =
+    suspend fun requestAirdrop(pubkey: SolanaPublicKey): String =
         withContext(Dispatchers.IO) {
-            val result = api.requestAirdrop(pubkey, LAMPORTS_PER_AIRDROP)
-            result.getOrThrow()
+            val result = rpc.requestAirdrop(pubkey,
+                LAMPORTS_PER_AIRDROP/LAMPORTS_PER_SOL.toFloat())
+            result.result ?: throw Error(result.error?.message)
         }
 
     suspend fun awaitConfirmationAsync(signature: String): Deferred<Boolean> {
         return coroutineScope {
             async {
                 return@async withContext(Dispatchers.IO) {
-                    repeat(5) {
-                        val result = api.getSignatureStatuses(listOf(signature), SignatureStatusRequestConfiguration(true))
-                        val status = result.getOrThrow()[0].confirmationStatus
-
-                        if (status == Commitment.CONFIRMED.value || status == Commitment.FINALIZED.value) {
-                            return@withContext true
-                        }
-                    }
-
-                    false
+                    rpc.confirmTransaction(signature, TransactionOptions(commitment = Commitment.CONFIRMED))
+                        .getOrDefault(false)
                 }
             }
         }
     }
 
-    suspend fun getBalance(pubkey: PublicKey, asReadable: Boolean = true): Double =
+    suspend fun getBalance(pubkey: SolanaPublicKey, asReadable: Boolean = true): Double =
         withContext(Dispatchers.IO) {
-            val result = api.getBalance(pubkey)
+            val result = rpc.getBalance(pubkey).let { result ->
+                result.result ?: throw Error(result.error?.message)
+            }
 
             if (asReadable) {
-                result.getOrThrow().toDouble() / LAMPORTS_PER_SOL.toDouble()
+                result.toDouble() / LAMPORTS_PER_SOL.toDouble()
             } else {
-                result.getOrThrow().toDouble()
+                result.toDouble()
             }
         }
 
     suspend fun getLatestBlockHash(): String =
         withContext(Dispatchers.IO) {
-            api.getRecentBlockhash().getOrThrow()
+            rpc.getLatestBlockhash().run {
+                result?.blockhash ?: throw Error(error?.message)
+            }
         }
 
     companion object {
