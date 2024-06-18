@@ -2,9 +2,6 @@ package com.solanamobile.ktxclientsample.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.solana.core.PublicKey
-import com.solana.core.SerializeConfig
-import com.solana.core.Transaction
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.AdapterOperations
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
@@ -13,6 +10,9 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.successPayload
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.programs.MemoProgram
+import com.solana.publickey.SolanaPublicKey
+import com.solana.transaction.Message
+import com.solana.transaction.toUnsignedTransaction
 import com.solanamobile.ktxclientsample.usecase.Connected
 import com.solanamobile.ktxclientsample.usecase.NotConnected
 import com.solanamobile.ktxclientsample.usecase.PersistanceUseCase
@@ -59,7 +59,7 @@ class SampleViewModel @Inject constructor(
         if (persistedConn is Connected) {
             viewModelScope.launch {
                 _state.value.copy(
-                    userAddress = persistedConn.publicKey.toBase58(),
+                    userAddress = persistedConn.publicKey.base58(),
                     userLabel = persistedConn.accountLabel,
                     solBalance = solanaRpcUseCase.getBalance(persistedConn.publicKey)
                 ).updateViewState()
@@ -82,15 +82,15 @@ class SampleViewModel @Inject constructor(
         viewModelScope.launch {
             connect(sender) { authResult ->
                 withContext(Dispatchers.IO) {
-                    val publicKey = PublicKey(authResult.accounts.first().publicKey)
+                    val publicKey = SolanaPublicKey(authResult.accounts.first().publicKey)
                     val blockHash = solanaRpcUseCase.getLatestBlockHash()
 
-                    val tx = Transaction()
-                    tx.add(MemoProgram.writeUtf8(publicKey, memoText))
-                    tx.setRecentBlockHash(blockHash!!)
-                    tx.feePayer = publicKey
+                    val tx = Message.Builder()
+                        .setRecentBlockhash(blockHash)
+                        .addInstruction(MemoProgram.publishMemo(publicKey, memoText))
+                        .build().toUnsignedTransaction()
 
-                    val bytes = tx.serialize(SerializeConfig(requireAllSignatures = false))
+                    val bytes = tx.serialize()
                     val sig = signAndSendTransactions(arrayOf(bytes)).signatures.firstOrNull()
                     Base58.encode(sig)
                 }
@@ -146,7 +146,7 @@ class SampleViewModel @Inject constructor(
                 when (result) {
                     is TransactionResult.Success -> {
                         val currentConn = Connected(
-                            PublicKey(result.authResult.accounts.first().publicKey),
+                            SolanaPublicKey(result.authResult.accounts.first().publicKey),
                             result.authResult.accounts.first().accountLabel ?: "",
                             result.authResult.authToken,
                             result.authResult.walletUriBase
@@ -156,7 +156,7 @@ class SampleViewModel @Inject constructor(
                             currentConn.accountLabel, currentConn.authToken, currentConn.walletUriBase)
 
                         _state.value.copy(
-                            userAddress = currentConn.publicKey.toBase58(),
+                            userAddress = currentConn.publicKey.base58(),
                             userLabel = currentConn.accountLabel,
                             solBalance = solanaRpcUseCase.getBalance(currentConn.publicKey)
                         ).updateViewState()
@@ -179,7 +179,7 @@ class SampleViewModel @Inject constructor(
             }
         }
 
-    private suspend fun requestAirdrop(publicKey: PublicKey) {
+    private suspend fun requestAirdrop(publicKey: SolanaPublicKey) {
         try {
             val tx = solanaRpcUseCase.requestAirdrop(publicKey)
             val confirmed = solanaRpcUseCase.awaitConfirmationAsync(tx).await()

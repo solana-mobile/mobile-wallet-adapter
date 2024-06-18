@@ -2,7 +2,7 @@ package com.solanamobile.ktxclientsample.usecase
 
 import android.content.SharedPreferences
 import android.net.Uri
-import com.solana.core.PublicKey
+import com.solana.publickey.SolanaPublicKey
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
 
@@ -11,7 +11,7 @@ sealed class WalletConnection
 object NotConnected : WalletConnection()
 
 data class Connected(
-    val publicKey: PublicKey,
+    val publicKey: SolanaPublicKey,
     val accountLabel: String,
     val authToken: String,
     val walletUriBase: Uri? = null
@@ -41,7 +41,7 @@ class PersistanceUseCase @Inject constructor(
                 val newConn = if (key.isNullOrEmpty() || token.isNullOrEmpty()) {
                     NotConnected
                 } else {
-                    Connected(PublicKey(key), accountLabel, token, walletUriBase)
+                    Connected(SolanaPublicKey.from(key), accountLabel, token, walletUriBase)
                 }
 
                 return newConn
@@ -49,9 +49,9 @@ class PersistanceUseCase @Inject constructor(
         }
     }
 
-    fun persistConnection(pubKey: PublicKey, accountLabel: String, token: String, walletUriBase: Uri?) {
+    fun persistConnection(pubKey: SolanaPublicKey, accountLabel: String, token: String, walletUriBase: Uri?) {
         sharedPreferences.edit().apply {
-            putString(PUBKEY_KEY, pubKey.toBase58())
+            putString(PUBKEY_KEY, pubKey.base58())
             putString(ACCOUNT_LABEL, accountLabel)
             putString(AUTH_TOKEN_KEY, token)
             putString(WALLET_URI_BASE, walletUriBase.toString())
