@@ -14,7 +14,6 @@ import {
   SignMessagesRequest,
   SignTransactionsRequest,
   SignAndSendTransactionsRequest,
-  useMobileWalletAdapterSession,
   MWARequestType,
   MWARequest,
   MWASessionEvent,
@@ -114,11 +113,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
     async function initializeMWASession() {
       const associationUri = await Linking.getInitialURL();
       if (associationUri) {
-        initializeMobileWalletAdapterSession(
-          'wallet label',
-          config,
-          associationUri,
-        );
+        initializeMobileWalletAdapterSession('wallet label', config);
       } else {
         console.error('Error retrieving associationUri');
       }
@@ -129,7 +124,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
     );
     initializeMWASession();
     return () => listener.remove();
-  }, []);
+  }, [config, handleRequest, handleSessionEvent]);
 
   useEffect(() => {
     const initClientTrustUseCase = async () => {

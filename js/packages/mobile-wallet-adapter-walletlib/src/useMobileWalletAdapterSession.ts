@@ -43,7 +43,6 @@ export interface MobileWalletAdapterConfig {
 export function useMobileWalletAdapterSession(
     walletName: string,
     config: MobileWalletAdapterConfig,
-    associationUri: string,
     handleRequest: (request: MWARequest) => void,
     handleSessionEvent: (sessionEvent: MWASessionEvent) => void,
 ) {
@@ -59,7 +58,7 @@ export function useMobileWalletAdapterSession(
                 console.warn('Unexpected native event type');
             }
         });
-        initializeScenario(walletName, config, associationUri);
+        initializeScenario(walletName, config);
 
         return () => {
             listener.remove();
@@ -85,17 +84,13 @@ export function initializeMWAEventListener(
     return listener;
 }
 
-export function initializeMobileWalletAdapterSession(
-    walletName: string,
-    config: MobileWalletAdapterConfig,
-    associationUri: string,
-) {
-    initializeScenario(walletName, config, associationUri);
+export function initializeMobileWalletAdapterSession(walletName: string, config: MobileWalletAdapterConfig) {
+    initializeScenario(walletName, config);
 }
 
 // Create Scenario and establish session with dapp
-function initializeScenario(walletName: string, walletConfig: MobileWalletAdapterConfig, associationUri: string) {
-    SolanaMobileWalletAdapterWalletLib.createScenario(walletName, associationUri, JSON.stringify(walletConfig));
+function initializeScenario(walletName: string, walletConfig: MobileWalletAdapterConfig) {
+    SolanaMobileWalletAdapterWalletLib.createScenario(walletName, JSON.stringify(walletConfig));
 }
 
 function isMWARequest(nativeEvent: any): boolean {
