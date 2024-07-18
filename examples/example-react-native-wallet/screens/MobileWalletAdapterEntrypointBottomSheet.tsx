@@ -24,6 +24,8 @@ import {
   DeauthorizeDappResponse,
   MWARequestFailReason,
   getCallingPackage,
+  initializeMWAEventListener,
+  initializeMobileWalletAdapterSession,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
@@ -37,7 +39,10 @@ import {
   VerificationFailed,
   VerificationSucceeded,
 } from '../utils/ClientTrustUseCase';
-import { SolanaSignInWithSolana, SolanaSignTransactions } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {
+  SolanaSignInWithSolana,
+  SolanaSignTransactions,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import SignInScreen from '../bottomsheets/SignInScreen';
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
@@ -54,8 +59,11 @@ function getRequestScreenComponent(request: MWARequest | null | undefined) {
     case MWARequestType.SignMessagesRequest:
       return <SignPayloadsScreen request={request as SignPayloadsRequest} />;
     case MWARequestType.AuthorizeDappRequest:
-      return request.signInPayload ? <SignInScreen request={request as AuthorizeDappRequest}/> 
-        : <AuthenticationScreen request={request as AuthorizeDappRequest} />;
+      return request.signInPayload ? (
+        <SignInScreen request={request as AuthorizeDappRequest} />
+      ) : (
+        <AuthenticationScreen request={request as AuthorizeDappRequest} />
+      );
     default:
       return <ActivityIndicator size="large" />;
   }
@@ -87,7 +95,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       maxMessagesPerSigningRequest: 10,
       supportedTransactionVersions: [0, 'legacy'],
       noConnectionWarningTimeoutMs: 3000,
-      optionalFeatures: [SolanaSignTransactions, SolanaSignInWithSolana]
+      optionalFeatures: [SolanaSignTransactions, SolanaSignInWithSolana],
     };
   }, []);
 
@@ -97,6 +105,30 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
   }, []);
   const handleSessionEvent = useCallback((sessionEvent: MWASessionEvent) => {
     setCurEvent(sessionEvent);
+  }, []);
+
+  // Initialize the MWA by:
+  //  1. Begin listening for MWA events
+  //  2. Starting the MWA session
+  useEffect(() => {
+    async function initializeMWASession() {
+      const associationUri = await Linking.getInitialURL();
+      if (associationUri) {
+        initializeMobileWalletAdapterSession(
+          'wallet label',
+          config,
+          associationUri,
+        );
+      } else {
+        console.error('Error retrieving associationUri');
+      }
+    }
+    const listener = initializeMWAEventListener(
+      handleRequest,
+      handleSessionEvent,
+    );
+    initializeMWASession();
+    return () => listener.remove();
   }, []);
 
   useEffect(() => {
@@ -112,6 +144,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
     initClientTrustUseCase();
   }, []);
 
+  // Listen for termination event and exit app
   useEffect(() => {
     if (!curEvent) {
       return;
@@ -183,25 +216,6 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
       resolve(curRequest, {} as DeauthorizeDappResponse);
     }
   }, [wallet, curRequest, endWalletSession, clientTrustUseCase]);
-
-  // Start an MWA session
-
-  useEffect(() => {
-    if (!curEvent) {
-      return;
-    }
-
-    if (curEvent.__type === MWASessionEventType.SessionTerminatedEvent) {
-      endWalletSession();
-    }
-  }, [curEvent, endWalletSession]);
-
-  useMobileWalletAdapterSession(
-    'Example RN Wallet',
-    config,
-    handleRequest,
-    handleSessionEvent,
-  );
 
   return (
     <Modal

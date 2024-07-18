@@ -1,7 +1,7 @@
 import type { TransactionVersion } from '@solana/web3.js';
 import type { IdentifierArray } from '@wallet-standard/core';
 import { useEffect } from 'react';
-import { Linking, NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import { EmitterSubscription, NativeEventEmitter, NativeModules, Platform } from 'react-native';
 
 import { MWASessionEvent, MWASessionEventType } from './mwaSessionEvents.js';
 import { MWARequest, MWARequestType } from './resolve.js';
@@ -43,6 +43,7 @@ export interface MobileWalletAdapterConfig {
 export function useMobileWalletAdapterSession(
     walletName: string,
     config: MobileWalletAdapterConfig,
+    associationUri: string,
     handleRequest: (request: MWARequest) => void,
     handleSessionEvent: (sessionEvent: MWASessionEvent) => void,
 ) {
@@ -58,7 +59,7 @@ export function useMobileWalletAdapterSession(
                 console.warn('Unexpected native event type');
             }
         });
-        initializeScenario(walletName, config);
+        initializeScenario(walletName, config, associationUri);
 
         return () => {
             listener.remove();
@@ -66,16 +67,35 @@ export function useMobileWalletAdapterSession(
     }, []);
 }
 
-async function initializeScenario(walletName: string, walletConfig: MobileWalletAdapterConfig) {
-    // Get initial URL
-    const initialUrl = await Linking.getInitialURL();
+export function initializeMWAEventListener(
+    handleRequest: (request: MWARequest) => void,
+    handleSessionEvent: (sessionEvent: MWASessionEvent) => void,
+): EmitterSubscription {
+    const mwaEventEmitter = new NativeEventEmitter();
+    const listener = mwaEventEmitter.addListener(MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME, (nativeEvent) => {
+        if (isMWARequest(nativeEvent)) {
+            handleRequest(nativeEvent as MWARequest);
+        } else if (isMWASessionEvent(nativeEvent)) {
+            handleSessionEvent(nativeEvent as MWASessionEvent);
+        } else {
+            console.warn('Unexpected native event type');
+        }
+    });
 
-    // Create Scenario and establish session with dapp
-    if (initialUrl) {
-        SolanaMobileWalletAdapterWalletLib.createScenario(walletName, initialUrl, JSON.stringify(walletConfig));
-    } else {
-        console.warn('Initial URL is unexpectedly uninitialized');
-    }
+    return listener;
+}
+
+export function initializeMobileWalletAdapterSession(
+    walletName: string,
+    config: MobileWalletAdapterConfig,
+    associationUri: string,
+) {
+    initializeScenario(walletName, config, associationUri);
+}
+
+// Create Scenario and establish session with dapp
+function initializeScenario(walletName: string, walletConfig: MobileWalletAdapterConfig, associationUri: string) {
+    SolanaMobileWalletAdapterWalletLib.createScenario(walletName, associationUri, JSON.stringify(walletConfig));
 }
 
 function isMWARequest(nativeEvent: any): boolean {
