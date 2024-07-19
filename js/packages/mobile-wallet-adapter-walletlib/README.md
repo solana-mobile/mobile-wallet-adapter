@@ -40,13 +40,38 @@ const handleSessionEvent = useCallback((sessionEvent: MWASessionEvent) => {
   /* ... */
 }, []);
 
-// Connect to the calling dApp and begin handling dApp requests
+// 1. Use a React hook API to begin listening for MWA events and initalize the session
 useMobileWalletAdapterSession(
   'Example Wallet Label',
   config,
   handleRequest,
   handleSessionEvent,
 );
+```
+
+Alternatively and for more flexibility, you can invoke individual methods to listen for MWA events (`initializeMWAEventListener`) and initialize the session (`initializeMWASession`).
+
+#### initializeMWAEventListener
+
+- Registers a listener for MWA Requests and MWA Session Events, using the provided handlers.
+- You should ensure the listener is cleaned up, when it is out of scope (e.g `listener.remove()` on dismount).
+
+#### initializeMWASession
+
+- Establishes a session with the dApp endpoint and begins transmission of MWA requests/events.
+- This should be called *after* `initializeMWAEventListener` is called, to ensure no events are missed.
+
+#### Example: 
+
+```
+useEffect(() => {
+  const listener = initializeMWAEventListener(
+    handleRequest,
+    handleSessionEvent,
+  );
+      initializeMobileWalletAdapterSession('wallet label', config);
+  return () => listener.remove();
+}, [config, handleRequest, handleSessionEvent]);
 ```
 
 ### 2. Handling requests
@@ -138,22 +163,3 @@ Fields:
 - `SignAndSendTransactionsRequest`
   - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#sign_and_send_transactions)
   - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
-
-
-# Changelog
-
-## 1.0.3
-- Fixed a rerender bug within `useMobileWalletAdapterSession` where `initializeScenario` was needlessly called on rerender. 
-
-- Added `DeauthorizeDappRequest` type, so Javascript side now knows when a dApp requests for deauthorization.
-
-- Added `ReauthorizeDappRequest` type, so Javascript side now knows when a dApp requests for reauthorization.
-
-- Refactored `IMWARequest` to only include fields `requestId`, `sessionId`, and `__type`. 
-
-- Added `IVerifableIdentityRequest` to take on the fields `authorizationScope`, `cluster`, and `appIdentity`.
-
-- `AuthorizeDappRequest` now no longer includes `authorizationScope`. This was mistakenly included previously.
-
-- Updated documentation in the README. See "Properties of an MWA Request".
-
