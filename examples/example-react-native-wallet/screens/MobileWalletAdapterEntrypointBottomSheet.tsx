@@ -111,11 +111,14 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
   //  2. Starting the MWA session
   useEffect(() => {
     async function initializeMWASession() {
-      const associationUri = await Linking.getInitialURL();
-      if (associationUri) {
-        initializeMobileWalletAdapterSession('wallet label', config);
-      } else {
-        console.error('Error retrieving associationUri');
+      try {
+        const sessionId = await initializeMobileWalletAdapterSession(
+          'wallet label',
+          config,
+        );
+        console.log('sessionId: ' + sessionId);
+      } catch (e) {
+        console.error(e);
       }
     }
     const listener = initializeMWAEventListener(

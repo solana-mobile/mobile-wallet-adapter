@@ -63,15 +63,43 @@ Alternatively and for more flexibility, you can invoke individual methods to lis
 
 #### Example: 
 
-```
+```ts
 useEffect(() => {
+  const config: MobileWalletAdapterConfig = {
+      supportsSignAndSendTransactions: true,
+      maxTransactionsPerSigningRequest: 10,
+      maxMessagesPerSigningRequest: 10,
+      supportedTransactionVersions: [0, 'legacy'],
+      noConnectionWarningTimeoutMs: 3000,
+    };
+
+  // MWA Session Handlers
+  const handleRequest = (request: MWARequest) => {
+    /* ... */
+  };
+  const handleSessionEvent = (sessionEvent: MWASessionEvent) => {
+    /* ... */
+  };
+
+  async function initializeMWASession() {
+    try {
+      const sessionId = await initializeMobileWalletAdapterSession(
+        'wallet label',
+        config,
+      );
+      console.log('sessionId: ' + sessionId);
+    } catch (e) {
+      console.error(e);
+    }
+  }
   const listener = initializeMWAEventListener(
     handleRequest,
     handleSessionEvent,
   );
-      initializeMobileWalletAdapterSession('wallet label', config);
+  initializeMWASession();
+
   return () => listener.remove();
-}, [config, handleRequest, handleSessionEvent]);
+}, []);
 ```
 
 ### 2. Handling requests

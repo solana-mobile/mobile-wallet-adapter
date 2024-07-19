@@ -18,6 +18,13 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 
+enum class ErrorCode(val code: String) {
+    ERROR_INTENT_DATA_NOT_FOUND("ERROR_INTENT_DATA_NOT_FOUND"),
+    ERROR_SESSION_ALREADY_CREATED("ERROR_SESSION_ALREADY_CREATED"),
+    ERROR_UNSUPPORTED_ASSOCIATION_URI("ERROR_UNSUPPORTED_ASSOCIATION_URI"),
+    ERROR_UNSUPPORTED_ASSOCIATION_TYPE("ERROR_UNSUPPORTED_ASSOCIATION_TYPE")
+}
+
 class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext), CoroutineScope {
 
@@ -28,49 +35,36 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     override fun getName() = "SolanaMobileWalletAdapterWalletLib"
 
     override val coroutineContext =
-        Dispatchers.IO +
-                CoroutineName(
-                    "SolanaMobileWalletAdapterWalletLibModuleScope"
-                ) +
-                SupervisorJob()
+        Dispatchers.IO + CoroutineName("SolanaMobileWalletAdapterWalletLibModuleScope") + SupervisorJob()
 
     // Session events that notify about the lifecycle of the Scenario session. We are choosing
     // to go with the naming convention Session rather than Scenario for readability.
     sealed interface MobileWalletAdapterSessionEvent {
         val type: String
-
         object None : MobileWalletAdapterSessionEvent {
             override val type: String = ""
         }
-
         object SessionTerminated : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_TERMINATED"
         }
-
         object ScenarioReady : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_READY"
         }
-
         object ScenarioServingClients : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_SERVING_CLIENTS"
         }
-
         object ScenarioServingComplete : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_SERVING_COMPLETE"
         }
-
         object ScenarioComplete : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_COMPLETE"
         }
-
         class ScenarioError(val message: String? = null) : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_ERROR"
         }
-
         object ScenarioTeardownComplete : MobileWalletAdapterSessionEvent {
             override val type: String = "SESSION_TEARDOWN_COMPLETE"
         }
-
         object LowPowerNoConnection : MobileWalletAdapterSessionEvent {
             override val type: String = "LOW_POWER_NO_CONNECTION"
         }
@@ -113,6 +107,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         set(value) {
             value?.let { scenarioId = UUID.randomUUID().toString() }
                 ?: run {
+                    scenarioUri = null
                     scenarioId = null
                     scenario?.close()
                 }
@@ -135,39 +130,45 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
             else -> Uri.parse("https://api.testnet.solana.com")
         }
     }
-
     @ReactMethod
     fun createScenario(
         walletName: String,
         config: String,
+        promise: Promise,
     ) = launch {
         // Get the intent that started this activity
-        val intent = reactContext.getCurrentActivity()?.getIntent()
+        val intent = reactContext.getCurrentActivity()?.intent
         if (intent == null) {
             Log.e(TAG, "Unable to get intent in current context")
+            promise.reject(ErrorCode.ERROR_INTENT_DATA_NOT_FOUND.code, "Unable to get intent in current context")
             return@launch
         }
+
         // Get the data from the intent and parse into URI
-        val data = intent.getData()
+        val data = intent.data
         if (data == null) {
             Log.e(TAG, "Unable to get intent data in current context")
+            promise.reject(ErrorCode.ERROR_INTENT_DATA_NOT_FOUND.code, "Unable to get intent data in current context")
             return@launch
         }
         val uri = Uri.parse(data.toString())
 
         // TODO: this is dirty, need some stateful object/data to know what state we are in.
-        //  also, should we suport multiple simulatneous scenario?
+        //  also, should we support multiple simultaneous scenarios?
         if (uri == scenarioUri && scenario != null) {
             Log.w(TAG, "Session already created for uri: $uri")
+            promise.reject(ErrorCode.ERROR_SESSION_ALREADY_CREATED.code, "Session already created for uri: $uri")
             return@launch
         }
 
         val associationUri = AssociationUri.parse(uri)
         if (associationUri == null) {
             Log.e(TAG, "Unsupported association URI: $uri")
+            promise.reject(ErrorCode.ERROR_UNSUPPORTED_ASSOCIATION_URI.code, "Unsupported association URI: $uri")
             return@launch
         } else if (associationUri !is LocalAssociationUri) {
             Log.e(TAG, "Current implementation of fakewallet does not support remote clients")
+            promise.reject(ErrorCode.ERROR_UNSUPPORTED_ASSOCIATION_TYPE.code, "Current implementation of fakewallet does not support remote clients")
             return@launch
         }
 
@@ -186,8 +187,11 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                 kotlinConfig,
                 AuthIssuerConfig(walletName),
                 MobileWalletAdapterScenarioCallbacks()
-            ).also { it.start() }
+            ).also {
+                it.start()
+            }
 
+        promise.resolve(scenarioId)
         Log.d(TAG, "scenario created: $walletName")
     }
 
@@ -609,8 +613,6 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         override fun onScenarioServingComplete() {
             launch(Dispatchers.Main) {
                 scenario = null
-                scenarioId = null
-                scenarioUri = null
                 sendSessionEventToReact(MobileWalletAdapterSessionEvent.ScenarioServingComplete)
             }
         }
