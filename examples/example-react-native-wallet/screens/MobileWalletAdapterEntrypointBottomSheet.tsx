@@ -25,6 +25,8 @@ import {
   getCallingPackage,
   initializeMWAEventListener,
   initializeMobileWalletAdapterSession,
+  SolanaMWAWalletLibErrorCode,
+  SolanaMWAWalletLibError,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
@@ -117,8 +119,12 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
           config,
         );
         console.log('sessionId: ' + sessionId);
-      } catch (e) {
-        console.error(e);
+      } catch (e: any) {
+        if (e instanceof SolanaMWAWalletLibError) {
+          console.error(e.name, e.code, e.message);
+        } else {
+          console.error(e);
+        }
       }
     }
     const listener = initializeMWAEventListener(

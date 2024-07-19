@@ -65,39 +65,33 @@ Alternatively and for more flexibility, you can invoke individual methods to lis
 
 ```ts
 useEffect(() => {
-  const config: MobileWalletAdapterConfig = {
+  async function initializeMWASession() {
+    const config: MobileWalletAdapterConfig = {
       supportsSignAndSendTransactions: true,
       maxTransactionsPerSigningRequest: 10,
       maxMessagesPerSigningRequest: 10,
       supportedTransactionVersions: [0, 'legacy'],
       noConnectionWarningTimeoutMs: 3000,
     };
-
-  // MWA Session Handlers
-  const handleRequest = (request: MWARequest) => {
-    /* ... */
-  };
-  const handleSessionEvent = (sessionEvent: MWASessionEvent) => {
-    /* ... */
-  };
-
-  async function initializeMWASession() {
     try {
       const sessionId = await initializeMobileWalletAdapterSession(
         'wallet label',
         config,
       );
       console.log('sessionId: ' + sessionId);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+        if (e instanceof SolanaMWAWalletLibError) {
+          console.error(e.name, e.code, e.message);
+        } else {
+          console.error(e);
+        }   
     }
   }
   const listener = initializeMWAEventListener(
-    handleRequest,
-    handleSessionEvent,
+    (request: MWARequest) => { /* ... */ },
+    (sessionEvent: MWASessionEvent) => { /* ... */ },
   );
   initializeMWASession();
-
   return () => listener.remove();
 }, []);
 ```
