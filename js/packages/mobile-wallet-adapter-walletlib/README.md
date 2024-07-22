@@ -10,60 +10,67 @@ This package is still in alpha and is not production ready. However, the API is 
 
 ## Quickstart
 
-### 1. Start listening and handling MWA requests
+### 1. Initialize the MWA event listener
 
-Use this API to start a session and start handling requests:
-```typescript
-import {
-  MobileWalletAdapterConfig,
-  MWARequest,
-  MWASessionEvent,
-  useMobileWalletAdapterSession,
-} from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
-
-const config: MobileWalletAdapterConfig = useMemo(() => {
-  return {
-    supportsSignAndSendTransactions: true,
-    maxTransactionsPerSigningRequest: 10,
-    maxMessagesPerSigningRequest: 10,
-    supportedTransactionVersions: [0, 'legacy'],
-    noConnectionWarningTimeoutMs: 3000,
-  };
-}, []);
-
-// MWA Session Handlers
-const handleRequest = useCallback((request: MWARequest) => {
-  /* ... */
-}, []);
-
-const handleSessionEvent = useCallback((sessionEvent: MWASessionEvent) => {
-  /* ... */
-}, []);
-
-// 1. Use a React hook API to begin listening for MWA events and initalize the session
-useMobileWalletAdapterSession(
-  'Example Wallet Label',
-  config,
-  handleRequest,
-  handleSessionEvent,
-);
-```
-
-Alternatively and for more flexibility, you can invoke individual methods to listen for MWA events (`initializeMWAEventListener`) and initialize the session (`initializeMWASession`).
-
-#### initializeMWAEventListener
-
-- Registers a listener for MWA Requests and MWA Session Events, using the provided handlers.
-- You should ensure the listener is cleaned up, when it is out of scope (e.g `listener.remove()` on dismount).
-
-#### initializeMWASession
-
-- Establishes a session with the dApp endpoint and begins transmission of MWA requests/events.
-- This should be called *after* `initializeMWAEventListener` is called, to ensure no events are missed.
-
-#### Example: 
+Use the following API to start listening for MWA requests and events, and register request handlers.
 
 ```ts
+import {
+  initializeMWAEventListener,
+  MWARequest,
+  MWASessionEvent,
+} from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
+
+const listener: EmitterSubscription = initializeMWAEventListener(
+  (request: MWARequest) => { /* ... */ },
+  (sessionEvent: MWASessionEvent) => { /* ... */ },
+);
+
+/* ... */
+
+// Clean up the listener when it is out of scope
+listener.remove()
+```
+
+You should ensure the listener is cleaned up with `listener.remove()` when it goes out of scope (e.g `listener.remove()` on component lifecycle unmount). 
+
+### 2. Initialize the MWA session
+
+Define your wallet config and use `initializeMWASession` to establish a session with the dApp endpoint and begin emission of MWA requests/events. 
+
+> **Note:** This should be called *after* `initializeMWAEventListener` is called, to ensure no events are missed.
+
+```ts
+const config: MobileWalletAdapterConfig = {
+  supportsSignAndSendTransactions: true,
+  maxTransactionsPerSigningRequest: 10,
+  maxMessagesPerSigningRequest: 10,
+  supportedTransactionVersions: [0, 'legacy'],
+  noConnectionWarningTimeoutMs: 3000,
+  optionalFeatures: ['solana:signInWithSolana']
+};
+
+try {
+  const sessionId = await initializeMobileWalletAdapterSession(
+    'Wallet Name',
+    config,
+  );
+  console.log('sessionId: ' + sessionId);
+} catch (e: any) {
+    if (e instanceof SolanaMWAWalletLibError) {
+      console.error(e.name, e.code, e.message);
+    } else {
+      console.error(e);
+    }   
+}
+```
+
+> **Note**: Although, the `initializeMobileWalletAdapterSession` method returns a `sessionId`, this library only supports one active session for now.
+
+### Example usage:
+
+```ts
+// When your MWA entrypoint is loaded, call a `useEffect` to kick off the listener and session.
 useEffect(() => {
   async function initializeMWASession() {
     const config: MobileWalletAdapterConfig = {
@@ -75,7 +82,7 @@ useEffect(() => {
     };
     try {
       const sessionId = await initializeMobileWalletAdapterSession(
-        'wallet label',
+        'Wallet Name',
         config,
       );
       console.log('sessionId: ' + sessionId);
@@ -92,11 +99,13 @@ useEffect(() => {
     (sessionEvent: MWASessionEvent) => { /* ... */ },
   );
   initializeMWASession();
+
+  // When the component is unmounted, clean up the listener.
   return () => listener.remove();
 }, []);
 ```
 
-### 2. Handling requests
+### 3. Handling requests and events
 
 A `MWARequest` is handled by calling `resolve(request, response)` and each request have their appropriate response types.
 
