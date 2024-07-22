@@ -10,46 +10,102 @@ This package is still in alpha and is not production ready. However, the API is 
 
 ## Quickstart
 
-### 1. Start listening and handling MWA requests
+### 1. Initialize the MWA event listener
 
-Use this API to start a session and start handling requests:
-```typescript
+Use the following API to start listening for MWA requests and events, and register request handlers.
+
+```ts
 import {
-  MobileWalletAdapterConfig,
+  initializeMWAEventListener,
   MWARequest,
   MWASessionEvent,
-  useMobileWalletAdapterSession,
 } from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
 
-const config: MobileWalletAdapterConfig = useMemo(() => {
-  return {
-    supportsSignAndSendTransactions: true,
-    maxTransactionsPerSigningRequest: 10,
-    maxMessagesPerSigningRequest: 10,
-    supportedTransactionVersions: [0, 'legacy'],
-    noConnectionWarningTimeoutMs: 3000,
-  };
-}, []);
-
-// MWA Session Handlers
-const handleRequest = useCallback((request: MWARequest) => {
-  /* ... */
-}, []);
-
-const handleSessionEvent = useCallback((sessionEvent: MWASessionEvent) => {
-  /* ... */
-}, []);
-
-// Connect to the calling dApp and begin handling dApp requests
-useMobileWalletAdapterSession(
-  'Example Wallet Label',
-  config,
-  handleRequest,
-  handleSessionEvent,
+const listener: EmitterSubscription = initializeMWAEventListener(
+  (request: MWARequest) => { /* ... */ },
+  (sessionEvent: MWASessionEvent) => { /* ... */ },
 );
+
+/* ... */
+
+// Clean up the listener when it is out of scope
+listener.remove()
 ```
 
-### 2. Handling requests
+You should ensure the listener is cleaned up with `listener.remove()` when it goes out of scope (e.g `listener.remove()` on component lifecycle unmount). 
+
+### 2. Initialize the MWA session
+
+Define your wallet config and use `initializeMWASession` to establish a session with the dApp endpoint and begin emission of MWA requests/events. 
+
+> **Note:** This should be called *after* `initializeMWAEventListener` is called, to ensure no events are missed.
+
+```ts
+const config: MobileWalletAdapterConfig = {
+  supportsSignAndSendTransactions: true,
+  maxTransactionsPerSigningRequest: 10,
+  maxMessagesPerSigningRequest: 10,
+  supportedTransactionVersions: [0, 'legacy'],
+  noConnectionWarningTimeoutMs: 3000,
+  optionalFeatures: ['solana:signInWithSolana']
+};
+
+try {
+  const sessionId = await initializeMobileWalletAdapterSession(
+    'Wallet Name',
+    config,
+  );
+  console.log('sessionId: ' + sessionId);
+} catch (e: any) {
+    if (e instanceof SolanaMWAWalletLibError) {
+      console.error(e.name, e.code, e.message);
+    } else {
+      console.error(e);
+    }   
+}
+```
+
+> **Note**: Although, the `initializeMobileWalletAdapterSession` method returns a `sessionId`, this library only supports one active session for now.
+
+### Example usage:
+
+```ts
+// When your MWA entrypoint is loaded, call a `useEffect` to kick off the listener and session.
+useEffect(() => {
+  async function initializeMWASession() {
+    const config: MobileWalletAdapterConfig = {
+      supportsSignAndSendTransactions: true,
+      maxTransactionsPerSigningRequest: 10,
+      maxMessagesPerSigningRequest: 10,
+      supportedTransactionVersions: [0, 'legacy'],
+      noConnectionWarningTimeoutMs: 3000,
+    };
+    try {
+      const sessionId = await initializeMobileWalletAdapterSession(
+        'Wallet Name',
+        config,
+      );
+      console.log('sessionId: ' + sessionId);
+    } catch (e: any) {
+        if (e instanceof SolanaMWAWalletLibError) {
+          console.error(e.name, e.code, e.message);
+        } else {
+          console.error(e);
+        }   
+    }
+  }
+  const listener = initializeMWAEventListener(
+    (request: MWARequest) => { /* ... */ },
+    (sessionEvent: MWASessionEvent) => { /* ... */ },
+  );
+  initializeMWASession();
+
+  // When the component is unmounted, clean up the listener.
+  return () => listener.remove();
+}, []);
+```
+
+### 3. Handling requests and events
 
 A `MWARequest` is handled by calling `resolve(request, response)` and each request have their appropriate response types.
 
@@ -138,22 +194,3 @@ Fields:
 - `SignAndSendTransactionsRequest`
   - [Spec](https://solana-mobile.github.io/mobile-wallet-adapter/spec/spec.html#sign_and_send_transactions)
   - Interfaces: `IMWARequest`, `IVerifiableIdentityRequest`
-
-
-# Changelog
-
-## 1.0.3
-- Fixed a rerender bug within `useMobileWalletAdapterSession` where `initializeScenario` was needlessly called on rerender. 
-
-- Added `DeauthorizeDappRequest` type, so Javascript side now knows when a dApp requests for deauthorization.
-
-- Added `ReauthorizeDappRequest` type, so Javascript side now knows when a dApp requests for reauthorization.
-
-- Refactored `IMWARequest` to only include fields `requestId`, `sessionId`, and `__type`. 
-
-- Added `IVerifableIdentityRequest` to take on the fields `authorizationScope`, `cluster`, and `appIdentity`.
-
-- `AuthorizeDappRequest` now no longer includes `authorizationScope`. This was mistakenly included previously.
-
-- Updated documentation in the README. See "Properties of an MWA Request".
-

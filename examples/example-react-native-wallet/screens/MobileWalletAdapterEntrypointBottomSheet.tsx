@@ -14,7 +14,6 @@ import {
   SignMessagesRequest,
   SignTransactionsRequest,
   SignAndSendTransactionsRequest,
-  useMobileWalletAdapterSession,
   MWARequestType,
   MWARequest,
   MWASessionEvent,
@@ -26,6 +25,8 @@ import {
   getCallingPackage,
   initializeMWAEventListener,
   initializeMobileWalletAdapterSession,
+  SolanaMWAWalletLibErrorCode,
+  SolanaMWAWalletLibError,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import AuthenticationScreen from '../bottomsheets/AuthenticationScreen';
@@ -112,15 +113,18 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
   //  2. Starting the MWA session
   useEffect(() => {
     async function initializeMWASession() {
-      const associationUri = await Linking.getInitialURL();
-      if (associationUri) {
-        initializeMobileWalletAdapterSession(
+      try {
+        const sessionId = await initializeMobileWalletAdapterSession(
           'wallet label',
           config,
-          associationUri,
         );
-      } else {
-        console.error('Error retrieving associationUri');
+        console.log('sessionId: ' + sessionId);
+      } catch (e: any) {
+        if (e instanceof SolanaMWAWalletLibError) {
+          console.error(e.name, e.code, e.message);
+        } else {
+          console.error(e);
+        }
       }
     }
     const listener = initializeMWAEventListener(
@@ -129,7 +133,7 @@ export default function MobileWalletAdapterEntrypointBottomSheet() {
     );
     initializeMWASession();
     return () => listener.remove();
-  }, []);
+  }, [config, handleRequest, handleSessionEvent]);
 
   useEffect(() => {
     const initClientTrustUseCase = async () => {
