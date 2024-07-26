@@ -88,6 +88,7 @@ public class ProtocolContract {
     // RESULT_ACCOUNTS optionally includes a RESULT_SUPPORTED_FEATURES
 
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
+    public static final String RESULT_WALLET_ICON = "wallet_icon"; // type: String (data URI)
 
     public static final String RESULT_SIGN_IN = "sign_in_result"; // type JSON object
     public static final String RESULT_SIGN_IN_ADDRESS = "address"; // type: String (address)

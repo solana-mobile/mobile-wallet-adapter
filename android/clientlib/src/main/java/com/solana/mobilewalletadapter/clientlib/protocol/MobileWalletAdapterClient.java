@@ -145,6 +145,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public final String accountLabel;
         @Nullable
         public final Uri walletUriBase;
+        @NonNull
+        public final Uri walletIcon;
         @NonNull @Size(min = 1)
         public final AuthorizedAccount[] accounts;
         @Nullable
@@ -153,8 +155,10 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         private AuthorizationResult(@NonNull String authToken,
                                     @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                                     @Nullable Uri walletUriBase,
+                                    @NonNull Uri walletIcon,
                                     @Nullable SignInResult signInResult) {
             this.authToken = authToken;
+            this.walletIcon = walletIcon;
             this.walletUriBase = walletUriBase;
             this.accounts = accounts;
             this.signInResult = signInResult;
@@ -174,7 +178,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
 
         @NonNull
         public AuthorizationResult with(SignInResult signInResult) {
-            return new AuthorizationResult(authToken, accounts, walletUriBase, signInResult);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, walletIcon, signInResult);
         }
 
         public static class AuthorizedAccount {
@@ -247,7 +251,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 Uri walletUriBase
         ) {
             AuthorizedAccount[] accounts = new AuthorizedAccount[] { new AuthorizedAccount(publicKey, accountLabel, null, null) };
-            return new AuthorizationResult(authToken, accounts, walletUriBase, null);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, Uri.EMPTY, null);
         }
 
         @TestOnly @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
@@ -256,7 +260,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 AuthorizedAccount[] accounts,
                 Uri walletUriBase
         ) {
-            return new AuthorizationResult(authToken, accounts, walletUriBase, null);
+            return new AuthorizationResult(authToken, accounts, walletUriBase, Uri.EMPTY, null);
         }
     }
 
@@ -331,6 +335,14 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                         walletUriBaseStr + "'; expected a 'https' URI");
             }
 
+            final Uri walletIcon;
+            try {
+                final String walletIconStr = jo.getString(ProtocolContract.RESULT_WALLET_ICON);
+                walletIcon = Uri.parse(walletIconStr);
+            } catch (JSONException e) {
+                throw new JsonRpc20InvalidResponseException("expected a wallet_icon");
+            }
+
             final JSONObject signInResultJson = jo.has(ProtocolContract.RESULT_SIGN_IN) ?
                     jo.optJSONObject(ProtocolContract.RESULT_SIGN_IN) : null;
             final AuthorizationResult.SignInResult signInResult;
@@ -360,7 +372,7 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                 signInResult = null;
             }
 
-            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase, signInResult);
+            return new AuthorizationResult(authToken, authorizedAccounts, walletUriBase, walletIcon, signInResult);
         }
 
         @Override

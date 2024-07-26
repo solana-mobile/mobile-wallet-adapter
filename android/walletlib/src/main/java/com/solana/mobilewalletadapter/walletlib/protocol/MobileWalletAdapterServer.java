@@ -256,6 +256,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 }
                 o.put(ProtocolContract.RESULT_ACCOUNTS, accounts);
                 o.put(ProtocolContract.RESULT_WALLET_URI_BASE, result.walletUriBase); // OK if null
+                o.put(ProtocolContract.RESULT_WALLET_ICON, result.walletIcon);
                 if (result.signInResult != null) {
                     final JSONObject signInResultJson = new JSONObject();
                     final String address = Base64.encodeToString(result.signInResult.publicKey, Base64.NO_WRAP);
@@ -342,6 +343,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final String authToken;
 
+        @NonNull
+        public final Uri walletIcon;
+
         @Deprecated @NonNull
         public final byte[] publicKey;
 
@@ -378,9 +382,18 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this(authToken, new AuthorizedAccount[] { account }, walletUriBase, signInResult);
         }
 
+        @Deprecated
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                                    @Nullable Uri walletUriBase,
+                                   @Nullable SignInResult signInResult) {
+            this(authToken, accounts, walletUriBase, Uri.EMPTY, signInResult);
+        }
+
+        public AuthorizationResult(@NonNull String authToken,
+                                   @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
+                                   @Nullable Uri walletUriBase,
+                                   @NonNull Uri walletIcon,
                                    @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
@@ -389,6 +402,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.signInResult = signInResult;
             this.publicKey = account.publicKey;
             this.accountLabel = account.accountLabel;
+            this.walletIcon = walletIcon;
         }
 
         @NonNull

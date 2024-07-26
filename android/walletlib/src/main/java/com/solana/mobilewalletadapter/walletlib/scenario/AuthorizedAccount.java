@@ -21,6 +21,9 @@ public class AuthorizedAccount {
     @Nullable
     public final String accountLabel;
     @Nullable
+    public final Uri accountIcon;
+    @Deprecated
+    @Nullable
     public final Uri icon;
     @Nullable
     public final String[] chains;
@@ -29,14 +32,15 @@ public class AuthorizedAccount {
 
     public AuthorizedAccount(@NonNull byte[] publicKey,
                              @Nullable String accountLabel,
-                             @Nullable Uri icon,
+                             @Nullable Uri accountIcon,
                              @Nullable String[] chains,
                              @Nullable String[] features) {
         this.publicKey = publicKey;
         this.displayAddress = null;
         this.displayAddressFormat = null;
         this.accountLabel = accountLabel;
-        this.icon = icon;
+        this.accountIcon = accountIcon;
+        this.icon = accountIcon;
         this.chains = chains;
         this.features = features;
     }
@@ -45,14 +49,15 @@ public class AuthorizedAccount {
                              @Nullable String displayAddress,
                              @Nullable String displayAddressFormat,
                              @Nullable String accountLabel,
-                             @Nullable Uri icon,
+                             @Nullable Uri accountIcon,
                              @Nullable String[] chains,
                              @Nullable String[] features) {
         this.publicKey = publicKey;
         this.displayAddress = displayAddress;
         this.displayAddressFormat = displayAddressFormat;
         this.accountLabel = accountLabel;
-        this.icon = icon;
+        this.accountIcon = accountIcon;
+        this.icon = accountIcon;
         this.chains = chains;
         this.features = features;
     }
