@@ -343,9 +343,6 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         @NonNull
         public final String authToken;
 
-        @NonNull
-        public final Uri walletIcon;
-
         @Deprecated @NonNull
         public final byte[] publicKey;
 
@@ -354,6 +351,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
 
         @Nullable
         public final Uri walletUriBase;
+
+        @Nullable
+        public final Uri walletIcon;
 
         @Deprecated
         @NonNull
@@ -387,13 +387,13 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                                    @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                                    @Nullable Uri walletUriBase,
                                    @Nullable SignInResult signInResult) {
-            this(authToken, accounts, walletUriBase, Uri.EMPTY, signInResult);
+            this(authToken, accounts, walletUriBase, null, signInResult);
         }
 
         public AuthorizationResult(@NonNull String authToken,
                                    @NonNull @Size(min = 1) AuthorizedAccount[] accounts,
                                    @Nullable Uri walletUriBase,
-                                   @NonNull Uri walletIcon,
+                                   @Nullable Uri walletIcon,
                                    @Nullable SignInResult signInResult) {
             this.authToken = authToken;
             this.walletUriBase = walletUriBase;
