@@ -19,7 +19,7 @@ import {
   initializeMWAEventListener,
   MWARequest,
   MWASessionEvent,
-} from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
+} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 const listener: EmitterSubscription = initializeMWAEventListener(
   (request: MWARequest) => { /* ... */ },
@@ -113,7 +113,7 @@ An example of handling an `AuthorizationRequest`:
 ```typescript
 import {
   AuthorizeDappResponse
-} from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
+} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 const response = {
   publicKey: Keypair.generate().publicKey.toBytes(),
@@ -127,7 +127,7 @@ There are a a selection of "fail" responses that you can return to the dApp. The
 ```typescript
 import {
   UserDeclinedResponse
-} from '@solana-mobile/mobile-wallet-adapter-protocol-walletlib';
+} from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 const response = {
   failReason: MWARequestFailReason.UserDeclined,
