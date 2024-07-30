@@ -170,7 +170,7 @@ export type InvalidSignaturesResponse = Readonly<{
 
 /* Authorize Dapp */
 export type AuthorizedAccount = Readonly<{
-    publicKey: Base64EncodedAddress;
+    publicKey: Uint8Array;
     accountLabel?: string;
     icon?: string;
     chains?: IdentifierArray;
