@@ -402,7 +402,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             this.signInResult = signInResult;
             this.publicKey = account.publicKey;
             this.accountLabel = account.accountLabel;
-            this.walletIcon = walletIcon;
+            if (walletIcon != null
+                    && walletIcon.getScheme() != null && walletIcon.getScheme().equals("data")) {
+                this.walletIcon = walletIcon;
+            } else {
+                throw new IllegalArgumentException("wallet icon URI must be a data URI");
+            }
         }
 
         @NonNull
