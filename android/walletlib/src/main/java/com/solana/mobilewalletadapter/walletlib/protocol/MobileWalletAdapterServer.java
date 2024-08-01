@@ -249,8 +249,8 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     if (aa.accountLabel != null) {
                         account.put(ProtocolContract.RESULT_ACCOUNTS_LABEL, aa.accountLabel);
                     }
-                    if (aa.icon != null) {
-                        account.put(ProtocolContract.RESULT_ACCOUNTS_ICON, aa.icon);
+                    if (aa.accountIcon != null) {
+                        account.put(ProtocolContract.RESULT_ACCOUNTS_ICON, aa.accountIcon);
                     }
                     accounts.put(account);
                 }

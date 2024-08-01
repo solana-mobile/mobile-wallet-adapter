@@ -22,13 +22,19 @@ public class AuthorizedAccount {
     public final String accountLabel;
     @Nullable
     public final Uri accountIcon;
-    @Deprecated
-    @Nullable
-    public final Uri icon;
     @Nullable
     public final String[] chains;
     @Nullable
     public final String[] features;
+
+    /**
+     * The account icon URI
+     * @deprecated
+     * Use {@link AuthorizedAccount#accountIcon} instead
+     */
+    @Deprecated
+    @Nullable
+    public final Uri icon;
 
     public AuthorizedAccount(@NonNull byte[] publicKey,
                              @Nullable String accountLabel,
