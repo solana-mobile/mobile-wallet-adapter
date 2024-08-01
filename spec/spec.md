@@ -24,6 +24,7 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0.0   | Initial release version of the Mobile Wallet Adapter specification (identical to pre-release version 0.9.1)                         |
 | 2.0.0   | Mobile Wallet Adapter 2.0 specification release                                                                                     |
+| 2.1.0   | Add optional wallet icon parameter to authorize response                                                                            |
 
 ### Pre-v1.0.0 changelog
 
