@@ -57,7 +57,7 @@ public class LocalWebSocketServerScenarioTest {
         };
 
         PowerConfigProvider powerConfig = () -> false;
-        WalletIconProvider iconProvider = () -> Uri.EMPTY;
+        WalletIconProvider iconProvider = () -> null;
 
         List<SessionProperties.ProtocolVersion> supportedVersions =
                 List.of(SessionProperties.ProtocolVersion.LEGACY);
@@ -100,7 +100,7 @@ public class LocalWebSocketServerScenarioTest {
         };
 
         PowerConfigProvider powerConfig = () -> true;
-        WalletIconProvider iconProvider = () -> Uri.EMPTY;
+        WalletIconProvider iconProvider = () -> null;
 
         List<SessionProperties.ProtocolVersion> supportedVersions =
                 List.of(SessionProperties.ProtocolVersion.LEGACY);

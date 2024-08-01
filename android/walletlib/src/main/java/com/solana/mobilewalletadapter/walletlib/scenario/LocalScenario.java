@@ -113,7 +113,8 @@ public abstract class LocalScenario implements Scenario {
         this.mPowerManager = powerConfigProvider;
 
         Uri walletIcon = iconProvider.getWalletIconDataUri();
-        if (walletIcon.getScheme() != null && walletIcon.getScheme().equals("data")) {
+        if (walletIcon == null ||
+                (walletIcon.getScheme() != null && walletIcon.getScheme().equals("data"))) {
             this.mWalletIcon = walletIcon;
         } else {
             throw new IllegalArgumentException("wallet icon provider returned an invalid icon URI: " +
