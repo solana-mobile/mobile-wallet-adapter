@@ -61,6 +61,21 @@ public class LocalWebSocketServerScenario extends LocalScenario {
         this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
     }
 
+    /*package*/ LocalWebSocketServerScenario(@NonNull Context context,
+                                             @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                             @NonNull AuthIssuerConfig authIssuerConfig,
+                                             @NonNull LocalScenario.Callbacks callbacks,
+                                             @NonNull byte[] associationPublicKey,
+                                             @WebSocketsTransportContract.LocalPortRange int port,
+                                             PowerConfigProvider powerConfigProvider,
+                                             @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                                             @NonNull WalletIconProvider iconProvider) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
+                powerConfigProvider, associationProtocolVersions, iconProvider);
+        this.port = port;
+        this.mWebSocketServer = new LocalWebSocketServer(this, mWebSocketServerCallbacks);
+    }
+
     @Override
     public void start() {
         if (mState != State.NOT_STARTED) {

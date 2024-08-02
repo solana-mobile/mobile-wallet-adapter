@@ -410,9 +410,9 @@ public class AuthRepositoryImpl implements AuthRepository {
             // If no matching account exists, create one
             if (accountRecordQueried == null) {
                 accountId = (int) mAccountsDao.insert(authRecordId, account.publicKey,
-                        account.accountLabel, account.icon, account.chains, account.features);
+                        account.accountLabel, account.accountIcon, account.chains, account.features);
                 accountRecord = new AccountRecord(accountId, authRecordId, account.publicKey,
-                        account.accountLabel, account.icon, account.chains, account.features);
+                        account.accountLabel, account.accountIcon, account.chains, account.features);
             } else {
                 accountRecord = accountRecordQueried;
             }

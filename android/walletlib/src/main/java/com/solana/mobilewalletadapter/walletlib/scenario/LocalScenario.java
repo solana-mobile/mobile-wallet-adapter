@@ -63,6 +63,8 @@ public abstract class LocalScenario implements Scenario {
 
     private final PowerConfigProvider mPowerManager;
 
+    private final Uri mWalletIcon;
+
     @Nullable
     private ScheduledFuture<?> mNoConnectionTimeoutHandler;
     private final ScheduledExecutorService mTimeoutExecutorService =
@@ -84,6 +86,18 @@ public abstract class LocalScenario implements Scenario {
                               @NonNull byte[] associationPublicKey,
                               @NonNull PowerConfigProvider powerConfigProvider,
                               @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions) {
+        this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
+                powerConfigProvider, associationProtocolVersions, new DefaultWalletIconProvider(context));
+    }
+
+    /*package*/ LocalScenario(@NonNull Context context,
+                              @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                              @NonNull AuthIssuerConfig authIssuerConfig,
+                              @NonNull Callbacks callbacks,
+                              @NonNull byte[] associationPublicKey,
+                              @NonNull PowerConfigProvider powerConfigProvider,
+                              @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                              @NonNull WalletIconProvider iconProvider) {
         mCallbacks = callbacks;
         mMobileWalletAdapterConfig = mobileWalletAdapterConfig;
         this.associationProtocolVersions = associationProtocolVersions;
@@ -97,6 +111,15 @@ public abstract class LocalScenario implements Scenario {
         mAuthRepository = new AuthRepositoryImpl(context, authIssuerConfig);
 
         this.mPowerManager = powerConfigProvider;
+
+        Uri walletIcon = iconProvider.getWalletIconDataUri();
+        if (walletIcon == null ||
+                (walletIcon.getScheme() != null && walletIcon.getScheme().equals("data"))) {
+            this.mWalletIcon = walletIcon;
+        } else {
+            throw new IllegalArgumentException("wallet icon provider returned an invalid icon URI: " +
+                    "the wallet icon must be a data URI");
+        }
     }
 
     @Override
@@ -230,7 +253,7 @@ public abstract class LocalScenario implements Scenario {
 
                         final String authToken = mAuthRepository.toAuthToken(authRecord);
                         request.complete(new MobileWalletAdapterServer.AuthorizationResult(authToken,
-                                authorize.accounts, authorize.walletUriBase, authorize.signInResult));
+                                authorize.accounts, authorize.walletUriBase, mWalletIcon, authorize.signInResult));
                     } else {
                         request.completeExceptionally(new MobileWalletAdapterServer.RequestDeclinedException(
                                 "authorize request declined"));
@@ -304,7 +327,7 @@ public abstract class LocalScenario implements Scenario {
                     mIoHandler.post(() -> request.complete(
                             new MobileWalletAdapterServer.AuthorizationResult(
                                     authToken, authRecord.getAuthorizedAccounts(),
-                                    authRecord.walletUriBase, null)));
+                                    authRecord.walletUriBase, mWalletIcon, null)));
                 } catch (ExecutionException e) {
                     final Throwable cause = e.getCause();
                     assert(cause instanceof Exception); // expected to always be an Exception

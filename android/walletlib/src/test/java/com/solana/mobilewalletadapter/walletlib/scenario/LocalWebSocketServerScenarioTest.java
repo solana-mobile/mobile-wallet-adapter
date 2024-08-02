@@ -3,6 +3,7 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 import static org.junit.Assert.*;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.test.core.app.ApplicationProvider;
@@ -56,13 +57,14 @@ public class LocalWebSocketServerScenarioTest {
         };
 
         PowerConfigProvider powerConfig = () -> false;
+        WalletIconProvider iconProvider = () -> null;
 
         List<SessionProperties.ProtocolVersion> supportedVersions =
                 List.of(SessionProperties.ProtocolVersion.LEGACY);
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig, lowPowerNoConnectionCallback,
-                publicKey, port, powerConfig, supportedVersions).start();
+                publicKey, port, powerConfig, supportedVersions, iconProvider).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
@@ -98,13 +100,14 @@ public class LocalWebSocketServerScenarioTest {
         };
 
         PowerConfigProvider powerConfig = () -> true;
+        WalletIconProvider iconProvider = () -> null;
 
         List<SessionProperties.ProtocolVersion> supportedVersions =
                 List.of(SessionProperties.ProtocolVersion.LEGACY);
 
         // when
         new LocalWebSocketServerScenario(context, config, authConfig, lowPowerNoConnectionCallback,
-                publicKey, port, powerConfig, supportedVersions).start();
+                publicKey, port, powerConfig, supportedVersions, iconProvider).start();
         boolean lowPowerNoConnectionCallbackFired = latch.await(200, TimeUnit.MILLISECONDS);
 
         // then
