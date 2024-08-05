@@ -327,7 +327,8 @@ public class SignInWithSolana {
         public JSONObject toJson() throws JSONException {
             JSONObject json = new JSONObject();
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN, domain);
-            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, Base58.encode(addressRaw));
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, 
+                    addressRaw != null ? Base58.encode(addressRaw) : null);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT, statement);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI, uri != null ? uri.toString() : null);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION, version);
