@@ -24,6 +24,7 @@ This specification uses [semantic versioning](https://en.wikipedia.org/wiki/Soft
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0.0   | Initial release version of the Mobile Wallet Adapter specification (identical to pre-release version 0.9.1)                         |
 | 2.0.0   | Mobile Wallet Adapter 2.0 specification release                                                                                     |
+| 2.1.0   | Add optional wallet icon parameter to authorize response                                                                            |
 
 ### Pre-v1.0.0 changelog
 
@@ -422,6 +423,7 @@ where:
         ...
     ],
     “wallet_uri_base”: “<wallet_uri_base>”,
+    “wallet_icon”: “<wallet_icon>”,
     "sign_in_result": {
         “address”: “<address>", 
         "signed_message": "<signed_message>"
@@ -443,6 +445,7 @@ where:
   - `label`: (optional) a human-readable string that describes the account. Wallet endpoints that allow their users to label their accounts may choose to return those labels here to enhance the user experience at the dapp endpoint.
   - `icon`: (optional) a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image of an icon for the account. This may be displayed by the app.
 - `wallet_uri_base`: (optional) if this wallet endpoint has an [endpoint-specific URI](#endpoint-specific-uris) that the dapp endpoint should use for subsequent connections, this member will be included in the result object. The dapp endpoint should use this URI for all subsequent connections where it expects to use this `auth_token`.
+- `wallet_icon`: (optional) a data URI containing a base64-encoded SVG, WebP, PNG, or GIF image of an icon for the wallet. This may be displayed by the app.
 - `sign_in_result`: (optional) if the authorize request included a [Sign In With Solana](https://siws.web3auth.io/spec) sign in payload, the result must be returned here as a value object containing the following:
   - `address`: the address of the account that was signed in. The address of the account may be different from the provided input address, but must be the address of one of the accounts returned in the `accounts` field. 
   - `signed_message`: the base64-encoded signed message payload
