@@ -123,11 +123,10 @@ class MobileWalletAdapter(
                     it.signInResult ?: run {
                         // fallback on signMessages for SIWS result
                         domain = domain ?: identityUri.host
-                        val siwsMesage = prepareMessage(address ?:
-                        Base64.encodeToString(it.accounts.first().publicKey, Base64.NO_WRAP))
+                        val siwsMesage = prepareMessage(addressRaw ?: it.accounts.first().publicKey)
                         val signResult = signMessagesDetached(
                             arrayOf(siwsMesage.encodeToByteArray()),
-                            arrayOf(Base64.decode(address!!, Base64.NO_WRAP))
+                            arrayOf(addressRaw!!)
                         ).messages.first()
                         return@with it.with(SignInResult(
                             signResult.addresses.first(),

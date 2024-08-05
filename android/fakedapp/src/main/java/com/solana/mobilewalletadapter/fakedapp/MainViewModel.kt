@@ -6,7 +6,6 @@ package com.solana.mobilewalletadapter.fakedapp
 
 import android.app.Application
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.StringRes
@@ -83,8 +82,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     authResult.signInResult ?: run {
                         Log.i(TAG, "Sign in failed, no sign in result returned from wallet, falling back on sign message")
                         val publicKey = authResult.accounts.first().publicKey
-                        val address = Base64.encodeToString(publicKey, Base64.NO_WRAP)
-                        val signInMessage = signInPayload.prepareMessage(address)
+                        val signInMessage = signInPayload.prepareMessage(publicKey)
                         client.signMessagesDetached(
                             arrayOf(signInMessage.encodeToByteArray()),
                             arrayOf(publicKey)
@@ -98,8 +96,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             try {
                 Log.d(TAG, "Verifying signature of $signInResult")
-                val address = Base64.encodeToString(signInResult.publicKey, Base64.NO_WRAP)
-                val originalMessage = signInPayload.prepareMessage(address)
+                val originalMessage = signInPayload.prepareMessage(signInResult.publicKey)
                 OffChainMessageSigningUseCase.verify(
                     signInResult.signedMessage,
                     signInResult.signature,

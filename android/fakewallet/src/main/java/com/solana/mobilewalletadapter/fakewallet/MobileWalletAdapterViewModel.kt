@@ -163,8 +163,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
                 Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
 
-                val address = Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)
-                val siwsMessage = request.signInPayload.prepareMessage(address)
+                val siwsMessage = request.signInPayload.prepareMessage(publicKey.encoded)
                 val signResult = try {
                     val messageBytes = siwsMessage.encodeToByteArray()
                     SolanaSigningUseCase.signMessage(messageBytes, listOf(keypair))
@@ -178,7 +177,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                     siwsMessage.encodeToByteArray(), signResult.signature, "ed25519")
 
                 val account = buildAccount(publicKey.encoded, "fakewallet")
-                request.request.completeWithAuthorize(account, null,
+                request.request.completeWithAuthorize(arrayOf(account), null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray(), signInResult)
             } else {
                 request.request.completeWithDecline()
