@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 
+import com.solana.mobilewalletadapter.common.util.Base58;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -18,7 +20,7 @@ public class PayloadTest {
         // given
         SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
                 "service.org",
-                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                Base58.decode("43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj"),
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 Uri.parse("https://service.org/login"),
                 "1",
@@ -58,7 +60,7 @@ public class PayloadTest {
         // given
         SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
                 "service.org",
-                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                Base58.decode("43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj"),
                 null,
                 Uri.parse("https://service.org/login"),
                 "1",
@@ -91,7 +93,7 @@ public class PayloadTest {
         // given
         SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
                 "service.org",
-                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                Base58.decode("43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj"),
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 null,
                 null,
@@ -134,7 +136,7 @@ public class PayloadTest {
 
         SignInWithSolana.Payload expectedPayload = new SignInWithSolana.Payload(
                 "service.org",
-                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                Base58.decode("43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj"),
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 Uri.parse("https://service.org/login"),
                 "1",
@@ -168,7 +170,7 @@ public class PayloadTest {
 
         SignInWithSolana.Payload expectedPayload = new SignInWithSolana.Payload(
                 "service.org",
-                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                Base58.decode("43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj"),
                 null,
                 null,
                 null,
@@ -193,7 +195,7 @@ public class PayloadTest {
         // given
         SignInWithSolana.Payload payload = new SignInWithSolana.Payload(
                 "service.org",
-                "43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj",
+                Base58.decode("43h6BNKzvoV43qBLje5dxn7vhcChZjVEAn8PQLZvMiqj"),
                 "I accept the ServiceOrg Terms of Service: https://service.org/tos",
                 Uri.parse("https://service.org/login"),
                 "1",
