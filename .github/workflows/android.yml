@@ -132,7 +132,7 @@ jobs:
 
       # Caching
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       # Create Genymotion instance
       - name: Start Genymotion Cloud SaaS instance
