@@ -11,6 +11,7 @@ import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { createTheme } from '@mui/material';
 import { ReactNode, useCallback, useMemo } from 'react';
+import { SolanaMobileWalletAdapterRemote } from '@solana-mobile/wallet-adapter-mobile';
 
 const CLUSTER = WalletAdapterNetwork.Devnet;
 const CONNECTION_CONFIG: ConnectionConfig = { commitment: 'processed' };
@@ -35,6 +36,7 @@ function App({ children }: { children: ReactNode }) {
                        * Note that you don't have to include the SolanaMobileWalletAdapter here;
                        * It will be added automatically when this app is running in a compatible mobile context.
                        */
+                      new SolanaMobileWalletAdapterRemote(),
                   ],
         [],
     );
