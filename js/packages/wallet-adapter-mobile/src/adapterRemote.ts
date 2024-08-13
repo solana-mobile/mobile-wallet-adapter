@@ -11,7 +11,7 @@ import { createSignInMessage } from '@solana/wallet-standard-util';
 import type { Transaction, TransactionVersion, VersionedTransaction } from '@solana/web3.js';
 import { Keypair } from '@solana/web3.js';
 
-import { EmbeddedDialogModal } from './embedded-dialog/embeddedModalDialog.js';
+import EmbeddedDialogModal from './embedded-modal/modal.js';
 
 export const SolanaMobileWalletAdapterRemoteWalletName = 'MWA (Remote)' as WalletName<'MWA (Remote)'>;
 

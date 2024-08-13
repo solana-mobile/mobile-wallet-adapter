@@ -4,7 +4,7 @@ import { BluetoothHtml } from './bluetooth-html.js';
 import { QRCodeHtml } from './qrcode-html.js';
 import { css } from './styles.js';
 
-export class EmbeddedDialogModal {
+export default class EmbeddedModal {
     private _title: string;
     private _root: HTMLElement | null = null;
 

@@ -1,5 +1,4 @@
 export const css = `
-/* The Modal (background) */
 .mobile-wallet-adapter-embedded-modal {
     display: flex; /* Use flexbox to center content */
     flex-direction: column;
@@ -14,7 +13,6 @@ export const css = `
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
 
-/* Modal Content/Box */
 .mobile-wallet-adapter-embedded-modal-content {
     background: #10141f;
     padding: 20px;
@@ -32,7 +30,6 @@ export const css = `
     color: #D8D8D8;
 }
 
-/* The Close Button */
 .mobile-wallet-adapter-embedded-modal-close {
     display: flex;
     align-items: center;
@@ -60,7 +57,6 @@ export const css = `
     fill: #fff;
 }
 
-/* Icon Container */
 .icon-container {
     display: flex;
     justify-content: center;
@@ -80,7 +76,6 @@ export const css = `
     font-size: 24px;   
 }
 
-/* Button Group */
 .button-group {
     display: flex;
     width: 100%;
@@ -116,7 +111,7 @@ export const css = `
     background-color: rgba(160, 160, 160, 0.1);
 }
 
-/* Connection Status */
+/* BT Connection Status */
 
 .mobile-wallet-adapter-embedded-modal-connection-status-container {
     margin: 20px 0px 20px 0px;
