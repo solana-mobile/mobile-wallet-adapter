@@ -1,13 +1,14 @@
 package com.solana.mobilewalletadapter.common.signin;
 
 import android.net.Uri;
-import android.os.Build;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.datetime.Iso8601DateTime;
+import com.solana.mobilewalletadapter.common.util.Base58;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,9 +23,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import kotlin.text.Regex;
-import kotlin.text.RegexOption;
-
 public class SignInWithSolana {
 
     public static final String HEADER_TYPE = "sip99";
@@ -35,6 +33,14 @@ public class SignInWithSolana {
         public String domain;
 
         /* Solana address performing the signing */
+        @Nullable
+        public byte[] addressRaw;
+
+        /**
+         * Solana address performing the signing. @deprecated, use {@link addressRaw} instead.
+         * instead.
+         */
+        @Deprecated(forRemoval = true)
         @Nullable
         public String address;
 
@@ -89,12 +95,12 @@ public class SignInWithSolana {
 
         public Payload(@Nullable String domain,
                        @Nullable String statement) {
-            this(domain, null, statement, null, null, null, null,
+            this(domain, (byte[]) null, statement, null, null, null, null,
                     null, null, null, null, null);
         }
 
         public Payload(@Nullable String domain,
-                       @Nullable String address,
+                       @Nullable byte[] address,
                        @Nullable String statement,
                        @Nullable Uri uri,
                        @Nullable String version,
@@ -106,7 +112,8 @@ public class SignInWithSolana {
                        @Nullable String requestId,
                        @Nullable Uri[] resources) {
             this.domain = domain;
-            this.address = address;
+            this.addressRaw = address;
+            this.address = address == null ? null : Base58.encode(address);
             this.statement = statement;
             this.uri = uri;
             this.version = version;
@@ -149,7 +156,45 @@ public class SignInWithSolana {
             this.notBefore = notBefore;
         }
 
+        @Deprecated(forRemoval = true)
+        public Payload(@Nullable String domain,
+                       @Nullable String address,
+                       @Nullable String statement,
+                       @Nullable Uri uri,
+                       @Nullable String version,
+                       @Nullable String chainId,
+                       @Nullable String nonce,
+                       @Nullable String issuedAt,
+                       @Nullable String expirationTime,
+                       @Nullable String notBefore,
+                       @Nullable String requestId,
+                       @Nullable Uri[] resources) {
+            this(domain, (byte[]) null, statement, uri, version, chainId, nonce,
+                    issuedAt, expirationTime, notBefore, requestId, resources);
+
+            if (address == null) return;
+            try { this.addressRaw = Base58.decode(address); } catch (IllegalArgumentException e) {
+                try { this.addressRaw = Base64.decode(address, Base64.DEFAULT); }
+                catch (IllegalArgumentException e2) {
+                    throw new IllegalArgumentException("Failed to decode address: " + address);
+                }
+            }
+            this.address = address;
+        }
+
+        public String prepareMessage(byte[] address) {
+            this.addressRaw = address;
+            return prepareMessage();
+        }
+
+        @Deprecated(forRemoval = true)
         public String prepareMessage(String address) {
+            try { this.addressRaw = Base58.decode(address); } catch (IllegalArgumentException e) {
+                try { this.addressRaw = Base64.decode(address, Base64.DEFAULT); }
+                catch (IllegalArgumentException e2) {
+                    throw new IllegalArgumentException("Failed to decode address: " + address);
+                }
+            }
             this.address = address;
             return prepareMessage();
         }
@@ -158,7 +203,7 @@ public class SignInWithSolana {
             if (domain == null) {
                 throw new IllegalStateException("cannot prepare sign in message, no domain provided");
             }
-            if (address == null) {
+            if (addressRaw == null) {
                 throw new IllegalStateException("cannot prepare sign in message, no address provided");
             }
             return toV1Message();
@@ -166,7 +211,7 @@ public class SignInWithSolana {
 
         private String toV1Message() {
             final String header = domain + " wants you to sign in with your Solana account:";
-            String prefix = String.join("\n", header, address);
+            String prefix = String.join("\n", header, Base58.encode(addressRaw));
 
             final List<String> suffixArray = new ArrayList<>();
 
@@ -240,8 +285,9 @@ public class SignInWithSolana {
 
             final String domain = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN)
                     ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN) : null;
-            final String address = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS)
+            final String addressStr = jsonObject.has(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS)
                     ? jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS) : null;
+            final byte[] address = addressStr != null ? Base58.decode(addressStr) : null;
 
             final String uriString = jsonObject.optString(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI);
             final Uri uri = uriString.isEmpty() ? null : Uri.parse(uriString);
@@ -281,7 +327,8 @@ public class SignInWithSolana {
         public JSONObject toJson() throws JSONException {
             JSONObject json = new JSONObject();
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_DOMAIN, domain);
-            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, address);
+            json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_ADDRESS, 
+                    addressRaw != null ? Base58.encode(addressRaw) : null);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_STATEMENT, statement);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_URI, uri != null ? uri.toString() : null);
             json.put(SignInWithSolanaContract.PAYLOAD_PARAMETER_VERSION, version);
@@ -315,7 +362,7 @@ public class SignInWithSolana {
             if (o == null || getClass() != o.getClass()) return false;
             Payload payload = (Payload) o;
             return Objects.equals(domain, payload.domain)
-                    && Objects.equals(address, payload.address)
+                    && Arrays.equals(addressRaw, payload.addressRaw)
                     && Objects.equals(statement, payload.statement)
                     && Objects.equals(uri, payload.uri)
                     && Objects.equals(version, payload.version)
@@ -330,8 +377,9 @@ public class SignInWithSolana {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(domain, address, statement, uri, version, chainId,
+            int result = Objects.hash(domain, statement, uri, version, chainId,
                     nonce, issuedAt, expirationTime, notBefore, requestId);
+            result = 31 * result + Arrays.hashCode(addressRaw);
             result = 31 * result + Arrays.hashCode(resources);
             return result;
         }
@@ -380,10 +428,11 @@ public class SignInWithSolana {
                     throw new IllegalArgumentException("Failed to parse message: domain not found");
                 }
 
-                String address = payloadMatcher.group(GROUP_ADDRESS);
-                if (address == null) {
+                String addressStr = payloadMatcher.group(GROUP_ADDRESS);
+                if (addressStr == null) {
                     throw new IllegalArgumentException("Failed to parse message: address not found");
                 }
+                byte [] address = Base58.decode(addressStr);
 
                 String statement = payloadMatcher.group(GROUP_STATEMENT);
                 String uriString = payloadMatcher.group(GROUP_URI);
