@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Solana Mobile Inc.
+ * Copyright (c) 2024 Solana Mobile Inc.
  */
 
 package com.solana.mobilewalletadapter.walletlib.association;
@@ -42,7 +42,8 @@ public class RemoteAssociationUri extends AssociationUri {
                                    @NonNull AuthIssuerConfig authIssuerConfig,
                                    @NonNull Scenario.Callbacks callbacks) {
         return new RemoteWebSocketServerScenario(context, mobileWalletAdapterConfig,
-                authIssuerConfig, callbacks, associationPublicKey, reflectorHostAuthority, reflectorId);
+                authIssuerConfig, callbacks, associationPublicKey, associationProtocolVersions,
+                "ws", reflectorHostAuthority, reflectorId);
     }
 
     @NonNull
