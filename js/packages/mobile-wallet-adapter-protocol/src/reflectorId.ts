@@ -4,7 +4,19 @@ declare const tag: unique symbol;
 export type ReflectorId = number & { readonly [tag]: 'ReflectorId' };
 
 export function getRandomReflectorId(): ReflectorId {
-    return assertReflectorId(Math.floor(Math.random()*9007199254740992)); // 0 < id < 2^53 - 1
+    return assertReflectorId(getRandomInt(0, 9007199254740991)); // 0 < id < 2^53 - 1
+}
+
+function getRandomInt(min: number, max: number) {
+    const randomBuffer = new Uint32Array(1);
+
+    window.crypto.getRandomValues(randomBuffer);
+
+    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
+
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(randomNumber * (max - min + 1)) + min;
 }
 
 export function assertReflectorId(id: number): ReflectorId {
