@@ -71,6 +71,7 @@ export type Finality = 'confirmed' | 'finalized' | 'processed';
 
 export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
+    remoteHostAuthority?: string;
 }>;
 
 export interface AuthorizeAPI {
