@@ -26,7 +26,6 @@ import {
     AuthToken,
     Base64EncodedAddress,
     Finality,
-    SignInPayloadWithRequiredFields,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -90,6 +89,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
     private _selectedAddress: Base64EncodedAddress | undefined;
+    private _hostAuthority: string | undefined;
 
     /**
      * @deprecated @param cluster config paramter is deprecated, use @param chain instead
@@ -115,14 +115,25 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         appIdentity: AppIdentity;
         authorizationResultCache: AuthorizationResultCache;
         chain: Chain;
+        remoteHostAuthority: string;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
+    });
+
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
         cluster: Cluster;
+        remoteHostAuthority: string;
         onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._addressSelector = config.addressSelector;
         this._appIdentity = config.appIdentity;
-        this._chain = config.chain ?? config.cluster;
+        this._chain = config.chain ?? this.clusterToChainId(config.cluster);
+        this._hostAuthority = config.remoteHostAuthority;
         this._onWalletNotFound = config.onWalletNotFound;
         if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
@@ -171,6 +182,17 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         } catch (e: any) {
             this.emit('error', e);
             throw e;
+        }
+    }
+
+    private clusterToChainId(cluster: Cluster): Chain {
+        switch (cluster) {
+            case 'mainnet-beta':
+                return 'solana:mainnet';
+            case 'testnet':
+                return 'solana:testnet';
+            case 'devnet':
+                return 'solana:devnet';
         }
     }
 
@@ -307,9 +329,10 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
     private async transact<TReturn>(callback: (wallet: Web3MobileWallet) => TReturn): Promise<TReturn> {
         const walletUriBase = this._authorizationResult?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
+        const remoteConfig = this._hostAuthority ? { remoteHostAuthority: this._hostAuthority } : undefined
         const currentConnectionGeneration = this._connectionGeneration;
         try {
-            return await transact(callback, config);
+            return await transact(callback, { ...config, ...remoteConfig });
         } catch (e) {
             if (this._connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
