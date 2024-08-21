@@ -12,7 +12,7 @@ import generateECDHKeypair from './generateECDHKeypair.js';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.js';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
-import { startSession } from './startSession.js';
+import { startSession, startRemoteSession } from './startSession.js';
 import { AssociationKeypair, MobileWallet, SessionProperties, WalletAssociationConfig } from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
@@ -80,8 +80,15 @@ export async function transact<TReturn>(
 ): Promise<TReturn> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
-    const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
-    const websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
+    const websocketIsRemote = config?.remoteHostAuthority !== undefined;
+    let websocketURL: string;
+    if (websocketIsRemote) {
+        const reflectorId = await startRemoteSession(associationKeypair.publicKey, config?.remoteHostAuthority, config?.baseUri);
+        websocketURL = `wss://${config?.remoteHostAuthority}/reflect?id=${reflectorId}`;
+    } else {
+        const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
+        websocketURL = `ws://localhost:${sessionPort}/solana-wallet`;
+    }
     let connectionStartTime: number;
     const getNextRetryDelayMs = (() => {
         const schedule = [...WEBSOCKET_CONNECTION_CONFIG.retryDelayScheduleMs];
@@ -102,15 +109,24 @@ export async function transact<TReturn>(
                 );
                 return;
             }
-            const { associationKeypair } = state;
             socket.removeEventListener('open', handleOpen);
-            const ecdhKeypair = await generateECDHKeypair();
-            socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
-            state = {
-                __type: 'hello_req_sent',
-                associationPublicKey: associationKeypair.publicKey,
-                ecdhPrivateKey: ecdhKeypair.privateKey,
-            };
+
+            // previous versions of this library and walletlib incorrectly implemented the MWA session 
+            // establishment protocol for local connections. The dapp is supposed to wait for the 
+            // APP_PING message before sending the HELLO_REQ. Instead, the dapp was sending the HELLO_REQ 
+            // immediately upon connection to the websocket server regardless of wether or not an 
+            // APP_PING was sent by the wallet/websocket server. We must continue to support this behavior 
+            // in case the user is using a wallet that has not updated their walletlib implementation. 
+            if (!websocketIsRemote) {
+                const { associationKeypair } = state;
+                const ecdhKeypair = await generateECDHKeypair();
+                socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
+                state = {
+                    __type: 'hello_req_sent',
+                    associationPublicKey: associationKeypair.publicKey,
+                    ecdhPrivateKey: ecdhKeypair.privateKey,
+                };
+            }
         };
         const handleClose = (evt: CloseEvent) => {
             if (evt.wasClean) {
@@ -132,7 +148,7 @@ export async function transact<TReturn>(
                 reject(
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT,
-                        `Failed to connect to the wallet websocket on port ${sessionPort}.`,
+                        `Failed to connect to the wallet websocket at ${websocketURL}.`,
                     ),
                 );
             } else {
@@ -146,6 +162,18 @@ export async function transact<TReturn>(
         const handleMessage = async (evt: MessageEvent<Blob>) => {
             const responseBuffer = await evt.data.arrayBuffer();
             switch (state.__type) {
+                case 'connecting':
+                    if (responseBuffer.byteLength !== 0) {
+                        throw new Error('Encountered unexpected message while connecting');
+                    }
+                    const ecdhKeypair = await generateECDHKeypair();
+                    socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
+                    state = {
+                        __type: 'hello_req_sent',
+                        associationPublicKey: associationKeypair.publicKey,
+                        ecdhPrivateKey: ecdhKeypair.privateKey,
+                    };
+                    break;
                 case 'connected':
                     try {
                         const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
@@ -169,6 +197,17 @@ export async function transact<TReturn>(
                     }
                     break;
                 case 'hello_req_sent': {
+                    // if we receive an APP_PING message (empty message), resend the HELLO_REQ (see above)
+                    if (responseBuffer.byteLength === 0) {
+                        const ecdhKeypair = await generateECDHKeypair();
+                        socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
+                        state = {
+                            __type: 'hello_req_sent',
+                            associationPublicKey: associationKeypair.publicKey,
+                            ecdhPrivateKey: ecdhKeypair.privateKey,
+                        };
+                        break;
+                    }
                     const sharedSecret = await parseHelloRsp(
                         responseBuffer,
                         state.associationPublicKey,

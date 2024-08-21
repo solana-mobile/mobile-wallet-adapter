@@ -1,7 +1,7 @@
 [versions]
 # plugin versions
-androidGradlePlugin = "8.5.1"
-kotlinAndroidPlugin = "2.0.0"
+androidGradlePlugin = "8.5.2"
+kotlinAndroidPlugin = "2.0.10"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
@@ -18,7 +18,7 @@ androidxTest = "1.6.0"
 androidxTestOrchestrator = "1.5.0"
 androidxTestRunner = "1.6.1"
 androidxTestUiautomator = "2.3.0"
-annotation = "1.8.1"
+annotation = "1.8.2"
 bouncycastle = "1.78.1"
 coil = "2.7.0"
 digitalAssetLinksAndroid = "1.0.3"
@@ -26,7 +26,7 @@ espressoCore = "3.6.1"
 javaWebsocket = "1.5.7"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
-kotlinTest = "2.0.0"
+kotlinTest = "2.0.10"
 material = "1.12.0"
 mockitoInline = "5.2.0"
 mockitoKotlin = "4.1.0"

@@ -1,6 +1,7 @@
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
 export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_ASSOCIATION_PORT_OUT_OF_RANGE: 'ERROR_ASSOCIATION_PORT_OUT_OF_RANGE',
+    ERROR_REFLECTOR_ID_OUT_OF_RANGE: 'ERROR_REFLECTOR_ID_OUT_OF_RANGE',
     ERROR_FORBIDDEN_WALLET_BASE_URL: 'ERROR_FORBIDDEN_WALLET_BASE_URL',
     ERROR_SECURE_CONTEXT_REQUIRED: 'ERROR_SECURE_CONTEXT_REQUIRED',
     ERROR_SESSION_CLOSED: 'ERROR_SESSION_CLOSED',
@@ -14,6 +15,9 @@ type SolanaMobileWalletAdapterErrorCodeEnum =
 type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_PORT_OUT_OF_RANGE]: {
         port: number;
+    };
+    [SolanaMobileWalletAdapterErrorCode.ERROR_REFLECTOR_ID_OUT_OF_RANGE]: {
+        id: number;
     };
     [SolanaMobileWalletAdapterErrorCode.ERROR_FORBIDDEN_WALLET_BASE_URL]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_SECURE_CONTEXT_REQUIRED]: undefined;
