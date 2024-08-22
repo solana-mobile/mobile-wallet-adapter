@@ -113,3 +113,18 @@ export async function startRemoteSession(
     await launchAssociation(associationUrl);
     return randomReflectorId;
 }
+
+export async function getRemoteSessionUrl(
+    associationPublicKey: CryptoKey,
+    hostAuthority: string,
+    associationURLBase?: string,
+): Promise<{associationUrl: URL, reflectorId: ReflectorId }> {
+    const randomReflectorId = getRandomReflectorId();
+    const associationUrl = await getRemoteAssociateAndroidIntentURL(
+        associationPublicKey,
+        hostAuthority,
+        randomReflectorId,
+        associationURLBase,
+    );
+    return { associationUrl, reflectorId: randomReflectorId };
+}

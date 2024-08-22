@@ -63,6 +63,17 @@ function isVersionedTransaction(
     return 'version' in transaction;
 }
 
+function clusterToChainId(cluster: Cluster): Chain {
+    switch (cluster) {
+        case 'mainnet-beta':
+            return 'solana:mainnet';
+        case 'testnet':
+            return 'solana:testnet';
+        case 'devnet':
+            return 'solana:devnet';
+    }
+}
+
 export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdapter {
     readonly supportedTransactionVersions: Set<TransactionVersion> = new Set(
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
@@ -132,7 +143,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         this._authorizationResultCache = config.authorizationResultCache;
         this._addressSelector = config.addressSelector;
         this._appIdentity = config.appIdentity;
-        this._chain = config.chain ?? this.clusterToChainId(config.cluster);
+        this._chain = config.chain ?? clusterToChainId(config.cluster);
         this._hostAuthority = config.remoteHostAuthority;
         this._onWalletNotFound = config.onWalletNotFound;
         if (this._readyState !== WalletReadyState.Unsupported) {
@@ -182,17 +193,6 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         } catch (e: any) {
             this.emit('error', e);
             throw e;
-        }
-    }
-
-    private clusterToChainId(cluster: Cluster): Chain {
-        switch (cluster) {
-            case 'mainnet-beta':
-                return 'solana:mainnet';
-            case 'testnet':
-                return 'solana:testnet';
-            case 'devnet':
-                return 'solana:devnet';
         }
     }
 

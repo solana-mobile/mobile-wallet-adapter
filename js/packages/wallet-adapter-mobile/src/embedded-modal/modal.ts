@@ -18,12 +18,14 @@ export default class EmbeddedModal {
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.connect = this.connect.bind(this);
+
+        this._root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
     }
 
-    async init() {
+    async init(qrCode: string) {
         console.log('Injecting modal');
         this.injectStyles();
-        this.injectQRCodeHTML();
+        this.injectQRCodeHTML(qrCode);
     }
 
     setConnectionStatus(status: 'not-connected' | 'connecting' | 'connected') {
@@ -50,21 +52,23 @@ export default class EmbeddedModal {
         document.head.appendChild(styleElement);
     }
 
-    private async populateQRCode() {
+    private async populateQRCode(qrUrl: string) {
         const qrcodeContainer = document.getElementById('mobile-wallet-adapter-embedded-modal-qr-code-container');
-        // console.log(QRCode);
         if (qrcodeContainer) {
-            // new QRCode(qrcodeContainer, 'http://jindo.dev.naver.com/collie');
-            const qrCodeElement = await QRCode.toCanvas('https://google.com', { width: 400 });
-            qrcodeContainer.appendChild(qrCodeElement);
+            const qrCodeElement = await QRCode.toCanvas(qrUrl, { width: 400 });
+            if (qrcodeContainer.firstElementChild !== null) {
+                qrcodeContainer.replaceChild(qrCodeElement, qrcodeContainer.firstElementChild);
+            } else qrcodeContainer.appendChild(qrCodeElement);
         } else {
             console.error('QRCode Container not found');
         }
     }
 
-    private injectQRCodeHTML() {
+    private injectQRCodeHTML(qrCode: string) {
         // Check if the HTML has already been injected
         if (document.getElementById('mobile-wallet-adapter-embedded-root-ui')) {
+            if (!this._root) this._root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
+            this.populateQRCode(qrCode);
             return;
         }
 
@@ -73,12 +77,13 @@ export default class EmbeddedModal {
         this._root.id = 'mobile-wallet-adapter-embedded-root-ui';
         this._root.className = 'mobile-wallet-adapter-embedded-modal';
         this._root.innerHTML = QRCodeHtml;
+        this._root.style.display = 'none';
 
         // Append the modal to the body
         document.body.appendChild(this._root);
 
         // Render the QRCode
-        this.populateQRCode();
+        this.populateQRCode(qrCode);
 
         this.attachEventListeners();
     }
@@ -111,6 +116,7 @@ export default class EmbeddedModal {
     }
 
     open() {
+        console.debug('Modal open');
         if (this._root) {
             this._root.style.display = 'flex';
             this.setConnectionStatus('not-connected'); // Reset status when opening
@@ -118,6 +124,7 @@ export default class EmbeddedModal {
     }
 
     close() {
+        console.debug('Modal close');
         if (this._root) {
             this._root.style.display = 'none';
             this.setConnectionStatus('not-connected'); // Reset status when closing
