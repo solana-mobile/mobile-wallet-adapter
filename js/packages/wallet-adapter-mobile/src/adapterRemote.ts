@@ -1,5 +1,6 @@
 import {
     BaseSignInMessageSignerWalletAdapter,
+    isVersionedTransaction,
     WalletConnectionError,
     WalletDisconnectedError,
     WalletName,
@@ -11,44 +12,34 @@ import {
     WalletSignMessageError,
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
-import {
-    Connection,
-    PublicKey,
-    SendOptions,
+import { type SolanaSignInInput, type SolanaSignInOutput } from '@solana/wallet-standard-features';
+import { 
+    PublicKey, 
     Transaction as LegacyTransaction,
-    TransactionSignature,
-    TransactionVersion,
+    TransactionVersion, 
     VersionedTransaction,
+    Connection,
+    SendOptions,
+    TransactionSignature,
 } from '@solana/web3.js';
-import {
-    AppIdentity,
-    AuthorizationResult,
-    AuthToken,
-    Base64EncodedAddress,
+import EmbeddedDialogModal from './embedded-modal/modal.js';
+import { 
+    AppIdentity, 
+    AuthorizationResult, 
+    AuthToken, 
+    Base64EncodedAddress, 
     Finality,
+    Chain,
+    SignInPayload,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { Chain, Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { transact,Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-
-import { toUint8Array } from './base64Utils.js';
-import getIsSupported from './getIsSupported.js';
-import { SolanaSignInInput, SolanaSignInOutput } from '@solana/wallet-standard-features';
+import { toUint8Array } from 'js-base64';
+import { AddressSelector, AuthorizationResultCache } from './adapter.js';
 import type { WalletAccount } from '@wallet-standard/core';
-import { SignInPayload } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { transactRemote, Web3MobileWallet, Web3RemoteMobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 
-export interface AuthorizationResultCache {
-    clear(): Promise<void>;
-    get(): Promise<AuthorizationResult | undefined>;
-    set(authorizationResult: AuthorizationResult): Promise<void>;
-}
-
-export interface AddressSelector {
-    select(addresses: Base64EncodedAddress[]): Promise<Base64EncodedAddress>;
-}
-
-export const SolanaMobileWalletAdapterWalletName = 'Mobile Wallet Adapter' as WalletName;
+export const SolanaMobileWalletAdapterRemoteWalletName = 'MWA (Remote)' as WalletName<'MWA (Remote)'>;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 
@@ -57,33 +48,55 @@ function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
     return new PublicKey(publicKeyByteArray);
 }
 
-function isVersionedTransaction(
-    transaction: LegacyTransaction | VersionedTransaction,
-): transaction is VersionedTransaction {
-    return 'version' in transaction;
-}
+/**
+ * Determine the mobile operating system.
+ * Returns true if running on a mobile operating system, or false otherwise.
+ *
+ * @returns {boolean}
+ */
+function isMobileOperatingSystem() {
+    var userAgent = navigator.userAgent;
 
-function clusterToChainId(cluster: Cluster): Chain {
-    switch (cluster) {
-        case 'mainnet-beta':
-            return 'solana:mainnet';
-        case 'testnet':
-            return 'solana:testnet';
-        case 'devnet':
-            return 'solana:devnet';
+    // Windows Phone must come first because its UA also contains "Android"
+    if (/windows phone/i.test(userAgent)) {
+        return true;
     }
+
+    if (/android/i.test(userAgent)) {
+        return true;
+    }
+
+    // iOS detection from: http://stackoverflow.com/a/9039885/177710
+    if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
+        return true;
+    }
+
+    return false;
 }
 
-export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdapter {
+function getIsSupported() {
+    return (
+        typeof window !== 'undefined' &&
+        window.isSecureContext &&
+        typeof document !== 'undefined' &&
+        !isMobileOperatingSystem()
+    );
+}
+
+/**
+ * This burner wallet adapter is unsafe to use and is only included to provide an easy way for applications to test
+ * Wallet Adapter without using a third-party wallet.
+ */
+export class SolanaMobileWalletAdapterRemote extends BaseSignInMessageSignerWalletAdapter {
     readonly supportedTransactionVersions: Set<TransactionVersion> = new Set(
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
         ['legacy', 0],
     );
-    name = SolanaMobileWalletAdapterWalletName;
+    name = SolanaMobileWalletAdapterRemoteWalletName;
     url = 'https://solanamobile.com/wallets';
     icon =
         'data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjI4IiB3aWR0aD0iMjgiIHZpZXdCb3g9Ii0zIDAgMjggMjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI0RDQjhGRiI+PHBhdGggZD0iTTE3LjQgMTcuNEgxNXYyLjRoMi40di0yLjRabTEuMi05LjZoLTIuNHYyLjRoMi40VjcuOFoiLz48cGF0aCBkPSJNMjEuNiAzVjBoLTIuNHYzaC0zLjZWMGgtMi40djNoLTIuNHY2LjZINC41YTIuMSAyLjEgMCAxIDEgMC00LjJoMi43VjNINC41QTQuNSA0LjUgMCAwIDAgMCA3LjVWMjRoMjEuNnYtNi42aC0yLjR2NC4ySDIuNFYxMS41Yy41LjMgMS4yLjQgMS44LjVoNy41QTYuNiA2LjYgMCAwIDAgMjQgOVYzaC0yLjRabTAgNS43YTQuMiA0LjIgMCAxIDEtOC40IDBWNS40aDguNHYzLjNaIi8+PC9nPjwvc3ZnPg==';
-
+    
     private _addressSelector: AddressSelector;
     private _appIdentity: AppIdentity;
     private _authorizationResult: AuthorizationResult | undefined;
@@ -96,30 +109,12 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
      */
     private _connectionGeneration = 0;
     private _chain: Chain;
-    private _onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
+    private _onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterRemote) => Promise<void>;
     private _publicKey: PublicKey | undefined;
     private _readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
     private _selectedAddress: Base64EncodedAddress | undefined;
-    private _hostAuthority: string | undefined;
-
-    /**
-     * @deprecated @param cluster config paramter is deprecated, use @param chain instead
-     */
-    constructor(config: {
-        addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
-        cluster: Cluster;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
-    });
-
-    constructor(config: {
-        addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
-        chain: Chain;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
-    });
+    private _hostAuthority: string;
+    private _wallet: Web3RemoteMobileWallet | undefined;
 
     constructor(config: {
         addressSelector: AddressSelector;
@@ -127,23 +122,13 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         authorizationResultCache: AuthorizationResultCache;
         chain: Chain;
         remoteHostAuthority: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
-    });
-
-    constructor(config: {
-        addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
-        chain: Chain;
-        cluster: Cluster;
-        remoteHostAuthority: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterRemote) => Promise<void>;
     }) {
         super();
         this._authorizationResultCache = config.authorizationResultCache;
         this._addressSelector = config.addressSelector;
         this._appIdentity = config.appIdentity;
-        this._chain = config.chain ?? clusterToChainId(config.cluster);
+        this._chain = config.chain;
         this._hostAuthority = config.remoteHostAuthority;
         this._onWalletNotFound = config.onWalletNotFound;
         if (this._readyState !== WalletReadyState.Unsupported) {
@@ -196,11 +181,6 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         }
     }
 
-    /** @deprecated Use `autoConnect()` instead. */
-    async autoConnect_DO_NOT_USE_OR_YOU_WILL_BE_FIRED(): Promise<void> {
-        return await this.autoConnect();
-    }
-
     async autoConnect(): Promise<void> {
         if (this.connecting || this.connected) {
             return;
@@ -251,7 +231,9 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
                 this.handleAuthorizationResult(cachedAuthorizationResult);
                 return cachedAuthorizationResult;
             }
+            if (this._wallet) delete this._wallet;
             return await this.transact(async (wallet) => {
+                this._wallet = wallet;
                 const authorizationResult = await wallet.authorize({
                     chain: this._chain,
                     identity: this._appIdentity,
@@ -317,23 +299,41 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
     }
 
     async disconnect(): Promise<void> {
+        // TODO: figure out why this call throws "TypeError: _a.terminateSession is not a function"
+        //  even though the session termination is actually executed (websocket closes). 
+        try { this._wallet?.terminateSession(); } catch (e) {}
         this._authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         this._connecting = false;
         this._connectionGeneration++;
         delete this._authorizationResult;
         delete this._publicKey;
         delete this._selectedAddress;
+        delete this._wallet;
         this.emit('disconnect');
     }
 
-    private async transact<TReturn>(callback: (wallet: Web3MobileWallet) => TReturn): Promise<TReturn> {
+    private async transact<TReturn>(callback: (wallet: Web3RemoteMobileWallet) => TReturn): Promise<TReturn> {
         const walletUriBase = this._authorizationResult?.wallet_uri_base;
-        const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
-        const remoteConfig = this._hostAuthority ? { remoteHostAuthority: this._hostAuthority } : undefined
+        const baseConfig = walletUriBase ? { baseUri: walletUriBase } : undefined;
+        const remoteConfig = { ...baseConfig, remoteHostAuthority: this._hostAuthority };
         const currentConnectionGeneration = this._connectionGeneration;
+        const modal = new EmbeddedDialogModal('MWA QR');
+
+        if (this._wallet) {
+            return callback(this._wallet);
+        }
+        
         try {
-            return await transact(callback, { ...config, ...remoteConfig });
+            const { associationUrl, result: promise } = await transactRemote(async (wallet) => {
+                const result = await callback(wallet);
+                modal.close();
+                return result;
+            }, remoteConfig);
+            modal.init(associationUrl.toString());
+            modal.open();
+            return await promise;
         } catch (e) {
+            modal.close();
             if (this._connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
             }
