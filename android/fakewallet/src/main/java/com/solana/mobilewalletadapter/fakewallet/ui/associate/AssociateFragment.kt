@@ -18,8 +18,6 @@ import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterViewModel.MobileWalletAdapterServiceRequest
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.FragmentAssociateBinding
-import com.solana.mobilewalletadapter.fakewallet.ui.authorizedapp.SignInFragment
-import com.solana.mobilewalletadapter.fakewallet.ui.authorizedapp.SignInFragmentDirections
 import kotlinx.coroutines.launch
 
 class AssociateFragment : Fragment() {
@@ -65,6 +63,13 @@ class AssociateFragment : Fragment() {
                     }
                 }
             }
+        }
+
+        viewBinding.buttonEndSession.visibility =
+            if (activityViewModel.isConnectionRemote()) View.VISIBLE else View.GONE
+
+        viewBinding.buttonEndSession.setOnClickListener {
+            activityViewModel.endSession()
         }
     }
 }

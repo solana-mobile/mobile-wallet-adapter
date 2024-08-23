@@ -19,7 +19,14 @@ public class WebSocketsTransportContract {
     @IntRange(from=WEBSOCKETS_LOCAL_PORT_MIN, to=WEBSOCKETS_LOCAL_PORT_MAX)
     public @interface LocalPortRange {}
 
-    public static final String WEBSOCKETS_RELECTOR_SCHEME = "wss";
+    public static final String WEBSOCKETS_REFLECTOR_SCHEME = "wss";
+    public static final String WEBSOCKETS_REFLECTOR_PATH = "/reflect";
+    public static final String WEBSOCKETS_REFLECTOR_ID_QUERY = "id";
+    public static final long WEBSOCKETS_REFLECTOR_ID_MIN = 0;
+    public static final long WEBSOCKETS_REFLECTOR_ID_MAX = 9007199254740991L; // 2^53 - 1
+    @Retention(RetentionPolicy.SOURCE)
+    @IntRange(from=WEBSOCKETS_REFLECTOR_ID_MIN, to=WEBSOCKETS_REFLECTOR_ID_MAX)
+    public @interface ReflectorIdRange {}
 
     public static final String WEBSOCKETS_PROTOCOL = "com.solana.mobilewalletadapter.v1";
 

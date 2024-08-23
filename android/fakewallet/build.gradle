@@ -99,6 +99,7 @@ dependencies {
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.espresso.core
     androidTestImplementation libs.androidx.test.uiautomator
+    androidTestImplementation libs.java.websocket
     androidTestImplementation libs.web3.solana
     androidTestImplementation project(path: ':clientlib')
 

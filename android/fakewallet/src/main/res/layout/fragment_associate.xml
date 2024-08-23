@@ -11,7 +11,19 @@
     android:layout_height="match_parent"
     tools:context=".ui.associate.AssociateFragment">
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/label_session_active"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginBottom="40dp"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@id/view_progress_indicator"
+        android:text="@string/label_session_active"
+        android:textSize="22sp" />
+
     <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/view_progress_indicator"
         android:layout_width="50dp"
         android:layout_height="50dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -19,5 +31,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:indeterminate="true" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/button_end_session"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/view_progress_indicator"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/label_terminate_session"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
