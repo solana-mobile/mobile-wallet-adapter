@@ -34,6 +34,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     private var clientTrustUseCase: ClientTrustUseCase? = null
     private var scenario: Scenario? = null
 
+    fun isConnectionRemote(): Boolean = scenario is RemoteWebSocketServerScenario
+    fun endSession() {
+        scenario?.close()
+    }
+
     fun processLaunch(intent: Intent?, callingPackage: String?): Boolean {
         if (intent == null) {
             Log.e(TAG, "No Intent available")

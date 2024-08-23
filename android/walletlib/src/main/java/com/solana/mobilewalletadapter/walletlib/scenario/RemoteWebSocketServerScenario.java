@@ -236,7 +236,9 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
             Log.d(TAG, "Disconnected during normal operation");
         }
         mState = State.CLOSED;
+        mCallbacks.onScenarioComplete();
         destroyResourcesOnClose();
+        mCallbacks.onScenarioTeardownComplete();
         notifyCloseCompleted();
     }
 

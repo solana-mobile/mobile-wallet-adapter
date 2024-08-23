@@ -43,7 +43,7 @@ public class ReflectorWebSocket implements MessageSender {
                               @NonNull MessageReceiver messageReceiver,
                               @Nullable StateCallbacks stateCallbacks,
                               @IntRange(from=0) int connectTimeoutMs) {
-        Log.v(TAG, "MobileWalletAdapterWebSocket-ctor");
+        Log.v(TAG, "ReflectorWebSocket-ctor");
         mUri = uri;
         mMessageReceiver = messageReceiver;
         mStateCallbacks = stateCallbacks;

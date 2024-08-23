@@ -89,6 +89,7 @@ public class LocalWebSocketServer extends WebSocketServer {
         final MessageReceiver mr = mScenario.createMessageReceiver();
         ws.messageReceiver = mr;
         mr.receiverConnected(ws);
+        conn.send(new byte[0]); // send APP_PING
     }
 
     @Override
