@@ -131,17 +131,16 @@ export class SolanaMobileWalletAdapterRemote extends BaseSignInMessageSignerWall
         this._chain = config.chain;
         this._hostAuthority = config.remoteHostAuthority;
         this._onWalletNotFound = config.onWalletNotFound;
-        this.declareWalletAsInstalled();
-        // if (this._readyState !== WalletReadyState.Unsupported) {
-        //     this._authorizationResultCache.get().then((authorizationResult) => {
-        //         if (authorizationResult) {
-        //             // Having a prior authorization result is, right now, the best
-        //             // indication that a mobile wallet is installed. There is no API
-        //             // we can use to test for whether the association URI is supported.
-        //             this.declareWalletAsInstalled();
-        //         }
-        //     });
-        // }
+        if (this._readyState !== WalletReadyState.Unsupported) {
+            this._authorizationResultCache.get().then((authorizationResult) => {
+                if (authorizationResult) {
+                    // Having a prior authorization result is, right now, the best
+                    // indication that a mobile wallet is installed. There is no API
+                    // we can use to test for whether the association URI is supported.
+                    this.declareWalletAsInstalled();
+                }
+            });
+        }
     }
 
     get publicKey(): PublicKey | null {
