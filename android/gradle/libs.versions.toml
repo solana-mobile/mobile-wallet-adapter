@@ -1,7 +1,7 @@
 [versions]
 # plugin versions
 androidGradlePlugin = "8.5.2"
-kotlinAndroidPlugin = "2.0.10"
+kotlinAndroidPlugin = "2.0.20"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
@@ -26,7 +26,6 @@ espressoCore = "3.6.1"
 javaWebsocket = "1.5.7"
 junit = "4.13.2"
 kotlinxCoroutines = "1.8.1"
-kotlinTest = "2.0.10"
 material = "1.12.0"
 mockitoInline = "5.2.0"
 mockitoKotlin = "4.1.0"
@@ -69,8 +68,8 @@ core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidxTest" }
 digital-asset-links-android = { module = "com.solanamobile:digital-asset-links-android", version.ref = "digitalAssetLinksAndroid" }
 java-websocket = { module = "org.java-websocket:Java-WebSocket", version.ref = "javaWebsocket" }
 junit = { module = "junit:junit", version.ref = "junit" }
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinTest" }
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinAndroidPlugin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinAndroidPlugin" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
