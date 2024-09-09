@@ -22,6 +22,7 @@
         "@solana-mobile/mobile-wallet-adapter-protocol": "link:../../js/packages/mobile-wallet-adapter-protocol",
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "link:../../js/packages/mobile-wallet-adapter-protocol-web3js",
         "@solana-mobile/wallet-adapter-mobile": "link:../../js/packages/wallet-adapter-mobile",
+        "@solana-mobile/wallet-standard-mobile": "link:../../js/packages/wallet-standard-mobile",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-adapter-react": "^0.15.35",
         "@solana/wallet-adapter-react-ui": "^0.9.34",
@@ -36,6 +37,7 @@
         "@solana-mobile/mobile-wallet-adapter-protocol": "link:../../js/packages/mobile-wallet-adapter-protocol",
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "link:../../js/packages/mobile-wallet-adapter-protocol-web3js",
         "@solana-mobile/wallet-adapter-mobile": "link:../../js/packages/wallet-adapter-mobile",
+        "@solana-mobile/wallet-standard-mobile": "link:../../js/packages/wallet-standard-mobile",
         "postcss": "^8.4.31"
     },
     "devDependencies": {
