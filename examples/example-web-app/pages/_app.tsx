@@ -12,6 +12,25 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { createTheme } from '@mui/material';
 import { ReactNode, useCallback, useMemo } from 'react';
 
+import { registerMwa } from '@solana-mobile/wallet-standard-mobile';
+import { createDefaultAddressSelector, createDefaultAuthorizationResultCache, createDefaultWalletNotFoundHandler } from '@solana-mobile/wallet-standard-mobile';
+
+function getUriForAppIdentity() {
+    const location = globalThis.location;
+    if (!location) return;
+    return `${location.protocol}//${location.host}`;
+}
+
+registerMwa({
+    addressSelector: createDefaultAddressSelector(),
+    appIdentity: {
+        uri: getUriForAppIdentity(),
+    },
+    authorizationResultCache: createDefaultAuthorizationResultCache(),
+    chain: 'solana:testnet',
+    onWalletNotFound: createDefaultWalletNotFoundHandler(),
+})
+
 const CLUSTER = WalletAdapterNetwork.Devnet;
 const CONNECTION_CONFIG: ConnectionConfig = { commitment: 'processed' };
 const ENDPOINT = /*#__PURE__*/ clusterApiUrl(CLUSTER);
