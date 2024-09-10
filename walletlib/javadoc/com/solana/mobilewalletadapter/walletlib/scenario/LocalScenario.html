@@ -51,7 +51,7 @@ loadScripts(document, 'script');</script>
 </ul>
 <ul class="sub-nav-list">
 <li>Detail:&nbsp;</li>
-<li><a href="#field-detail">Field</a>&nbsp;|&nbsp;</li>
+<li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor-detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method-detail">Method</a></li>
 </ul>
@@ -72,7 +72,9 @@ loadScripts(document, 'script');</script>
 <h1 title="Class LocalScenario" class="title">Class LocalScenario</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
+<div class="inheritance"><a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">com.solana.mobilewalletadapter.walletlib.scenario.BaseScenario</a>
 <div class="inheritance">com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario</div>
+</div>
 </div>
 <section class="class-description" id="class-description">
 <dl class="notes">
@@ -85,8 +87,7 @@ loadScripts(document, 'script');</script>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public abstract class </span><span class="element-name type-name-label">LocalScenario</span>
-<span class="extends-implements">extends <a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements <a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></span></div>
+<span class="extends-implements">extends <a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -109,33 +110,9 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <li>
 <section class="field-summary" id="field-summary">
 <h2>Field Summary</h2>
-<div class="caption"><span>Fields</span></div>
-<div class="summary-table three-column-summary">
-<div class="table-header col-first">Modifier and Type</div>
-<div class="table-header col-second">Field</div>
-<div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><code>final <a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</code></div>
-<div class="col-second even-row-color"><code><a href="#associationProtocolVersions" class="member-name-link">associationProtocolVersions</a></code></div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>final byte[]</code></div>
-<div class="col-second odd-row-color"><code><a href="#associationPublicKey" class="member-name-link">associationPublicKey</a></code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>protected final <a href="../authorization/AuthRepository.html" title="interface in com.solana.mobilewalletadapter.walletlib.authorization">AuthRepository</a></code></div>
-<div class="col-second even-row-color"><code><a href="#mAuthRepository" class="member-name-link">mAuthRepository</a></code></div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>protected final <a href="LocalScenario.Callbacks.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario.Callbacks</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#mCallbacks" class="member-name-link">mCallbacks</a></code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>protected final <a href="https://d.android.com/reference/android/os/Handler.html" title="class or interface in android.os" class="external-link">Handler</a></code></div>
-<div class="col-second even-row-color"><code><a href="#mIoHandler" class="member-name-link">mIoHandler</a></code></div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>protected final <a href="https://d.android.com/reference/android/os/Looper.html" title="class or interface in android.os" class="external-link">Looper</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#mIoLooper" class="member-name-link">mIoLooper</a></code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>protected final <a href="../protocol/MobileWalletAdapterConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterConfig</a></code></div>
-<div class="col-second even-row-color"><code><a href="#mMobileWalletAdapterConfig" class="member-name-link">mMobileWalletAdapterConfig</a></code></div>
-<div class="col-last even-row-color">&nbsp;</div>
-</div>
+<div class="inherited-list">
+<h3 id="fields-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.BaseScenario">Fields inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></h3>
+<code><a href="BaseScenario.html#associationProtocolVersions">associationProtocolVersions</a>, <a href="BaseScenario.html#associationPublicKey">associationPublicKey</a>, <a href="BaseScenario.html#mActiveAuthorization">mActiveAuthorization</a>, <a href="BaseScenario.html#mAuthRepository">mAuthRepository</a>, <a href="BaseScenario.html#mCallbacks">mCallbacks</a>, <a href="BaseScenario.html#mIoHandler">mIoHandler</a>, <a href="BaseScenario.html#mIoLooper">mIoLooper</a>, <a href="BaseScenario.html#mLock">mLock</a>, <a href="BaseScenario.html#mMobileWalletAdapterConfig">mMobileWalletAdapterConfig</a></code></div>
 </section>
 </li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
@@ -162,26 +139,14 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <section class="method-summary" id="method-summary">
 <h2>Method Summary</h2>
 <div id="method-summary-table">
-<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab3" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab3', 3)" class="table-tab">Abstract Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
 <div id="method-summary-table.tabpanel" role="tabpanel" aria-labelledby="method-summary-table-tab0">
 <div class="summary-table three-column-summary">
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>abstract void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#close()" class="member-name-link">close</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.solana.mobilewalletadapter.common.protocol.MessageReceiver</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#createMessageReceiver()" class="member-name-link">createMessageReceiver</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#finalize()" class="member-name-link">finalize</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getAssociationProtocolVersions()" class="member-name-link">getAssociationProtocolVersions</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>byte[]</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getAssociationPublicKey()" class="member-name-link">getAssociationPublicKey</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.solana.mobilewalletadapter.common.protocol.MessageReceiver</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#createMessageReceiver()" class="member-name-link">createMessageReceiver</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#start()" class="member-name-link">start</a>()</code></div>
@@ -189,6 +154,9 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 </div>
 </div>
 </div>
+<div class="inherited-list">
+<h3 id="methods-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.BaseScenario">Methods inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></h3>
+<code><a href="BaseScenario.html#close()">close</a>, <a href="BaseScenario.html#finalize()">finalize</a>, <a href="BaseScenario.html#getAssociationProtocolVersions()">getAssociationProtocolVersions</a>, <a href="BaseScenario.html#getAssociationPublicKey()">getAssociationPublicKey</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://d.android.com/reference/java/lang/Object.html#clone--" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://d.android.com/reference/java/lang/Object.html#equals-java.lang.Object-" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://d.android.com/reference/java/lang/Object.html#getClass--" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://d.android.com/reference/java/lang/Object.html#hashCode--" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notify--" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notifyAll--" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://d.android.com/reference/java/lang/Object.html#toString--" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait--" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-int-" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -198,63 +166,6 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 </section>
 <section class="details">
 <ul class="details-list">
-<!-- ============ FIELD DETAIL =========== -->
-<li>
-<section class="field-details" id="field-detail">
-<h2>Field Details</h2>
-<ul class="member-list">
-<li>
-<section class="detail" id="associationPublicKey">
-<h3>associationPublicKey</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">public final</span>&nbsp;<span class="return-type">byte[]</span>&nbsp;<span class="element-name">associationPublicKey</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="associationProtocolVersions">
-<h3>associationProtocolVersions</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</span>&nbsp;<span class="element-name">associationProtocolVersions</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="mMobileWalletAdapterConfig">
-<h3>mMobileWalletAdapterConfig</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">protected final</span>&nbsp;<span class="return-type"><a href="../protocol/MobileWalletAdapterConfig.html" title="class in com.solana.mobilewalletadapter.walletlib.protocol">MobileWalletAdapterConfig</a></span>&nbsp;<span class="element-name">mMobileWalletAdapterConfig</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="mIoLooper">
-<h3>mIoLooper</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">protected final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/android/os/Looper.html" title="class or interface in android.os" class="external-link">Looper</a></span>&nbsp;<span class="element-name">mIoLooper</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="mIoHandler">
-<h3>mIoHandler</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">protected final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/android/os/Handler.html" title="class or interface in android.os" class="external-link">Handler</a></span>&nbsp;<span class="element-name">mIoHandler</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="mCallbacks">
-<h3>mCallbacks</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">protected final</span>&nbsp;<span class="return-type"><a href="LocalScenario.Callbacks.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario.Callbacks</a></span>&nbsp;<span class="element-name">mCallbacks</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="mAuthRepository">
-<h3>mAuthRepository</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">protected final</span>&nbsp;<span class="return-type"><a href="../authorization/AuthRepository.html" title="interface in com.solana.mobilewalletadapter.walletlib.authorization">AuthRepository</a></span>&nbsp;<span class="element-name">mAuthRepository</span></div>
-</section>
-</li>
-</ul>
-</section>
-</li>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <li>
 <section class="constructor-details" id="constructor-detail">
@@ -284,33 +195,14 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="getAssociationPublicKey()">
-<h3>getAssociationPublicKey</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">byte[]</span>&nbsp;<span class="element-name">getAssociationPublicKey</span>()</div>
+<section class="detail" id="start()">
+<h3>start</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">start</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code><a href="Scenario.html#getAssociationPublicKey()">getAssociationPublicKey</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="getAssociationProtocolVersions()">
-<h3>getAssociationProtocolVersions</h3>
-<div class="member-signature"><span class="annotations">@NonNull
-</span><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion&gt;</span>&nbsp;<span class="element-name">getAssociationProtocolVersions</span>()</div>
-<dl class="notes">
+<dd><code><a href="Scenario.html#start()">start</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
 <dt>Specified by:</dt>
-<dd><code><a href="Scenario.html#getAssociationProtocolVersions()">getAssociationProtocolVersions</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="finalize()">
-<h3>finalize</h3>
-<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">finalize</span>()</div>
-<dl class="notes">
-<dt>Overrides:</dt>
-<dd><code><a href="https://d.android.com/reference/java/lang/Object.html#finalize--" title="class or interface in java.lang" class="external-link">finalize</a></code>&nbsp;in class&nbsp;<code><a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></code></dd>
+<dd><code><a href="BaseScenario.html#start()">start</a></code>&nbsp;in class&nbsp;<code><a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></code></dd>
 </dl>
 </section>
 </li>
@@ -318,30 +210,6 @@ implements <a href="Scenario.html" title="interface in com.solana.mobilewalletad
 <section class="detail" id="createMessageReceiver()">
 <h3>createMessageReceiver</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.solana.mobilewalletadapter.common.protocol.MessageReceiver</span>&nbsp;<span class="element-name">createMessageReceiver</span>()</div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code><a href="Scenario.html#createMessageReceiver()">createMessageReceiver</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="start()">
-<h3>start</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">start</span>()</div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code><a href="Scenario.html#start()">start</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="close()">
-<h3>close</h3>
-<div class="member-signature"><span class="modifiers">public abstract</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">close</span>()</div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code><a href="Scenario.html#close()">close</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
-</dl>
 </section>
 </li>
 </ul>

@@ -2,5 +2,6 @@ com.solana.mobilewalletadapter.walletlib.association
 com.solana.mobilewalletadapter.walletlib.authorization
 com.solana.mobilewalletadapter.walletlib.protocol
 com.solana.mobilewalletadapter.walletlib.scenario
+com.solana.mobilewalletadapter.walletlib.transport.websockets
 com.solana.mobilewalletadapter.walletlib.transport.websockets.server
 com.solana.mobilewalletadapter.walletlib.util
