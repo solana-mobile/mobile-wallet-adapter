@@ -8,6 +8,10 @@
     <!-- Main activity strings -->
     <string name="label_hello_world">I\'m a wallet!</string>
 
+    <!-- Associate fragment strings -->
+    <string name="label_session_active">Session active, awaiting requests from dApp…</string>
+    <string name="label_terminate_session">End Session</string>
+
     <!-- Authorize dapp fragment strings -->
     <string name="label_authorize_dapp">Authorize dapp</string>
     <string name="label_verification_state">Status:</string>

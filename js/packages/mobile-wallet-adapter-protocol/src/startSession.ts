@@ -1,6 +1,7 @@
 import { AssociationPort, getRandomAssociationPort } from './associationPort.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
-import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL.js';
+import getAssociateAndroidIntentURL, { getRemoteAssociateAndroidIntentURL } from './getAssociateAndroidIntentURL.js';
+import { assertReflectorId, getRandomReflectorId, ReflectorId } from './reflectorId.js';
 
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
 const Browser = {
@@ -49,16 +50,7 @@ function launchUrlThroughHiddenFrame(url: URL) {
     _frame.contentWindow!.location.href = url.toString();
 }
 
-export async function startSession(
-    associationPublicKey: CryptoKey,
-    associationURLBase?: string,
-): Promise<AssociationPort> {
-    const randomAssociationPort = getRandomAssociationPort();
-    const associationUrl = await getAssociateAndroidIntentURL(
-        associationPublicKey,
-        randomAssociationPort,
-        associationURLBase,
-    );
+async function launchAssociation(associationUrl: URL) {
     if (associationUrl.protocol === 'https:') {
         // The association URL is an Android 'App Link' or iOS 'Universal Link'.
         // These are regular web URLs that are designed to launch an app if it
@@ -90,5 +82,49 @@ export async function startSession(
             );
         }
     }
+}
+
+export async function startSession(
+    associationPublicKey: CryptoKey,
+    associationURLBase?: string,
+): Promise<AssociationPort> {
+    const randomAssociationPort = getRandomAssociationPort();
+    const associationUrl = await getAssociateAndroidIntentURL(
+        associationPublicKey,
+        randomAssociationPort,
+        associationURLBase,
+    );
+    await launchAssociation(associationUrl);
     return randomAssociationPort;
+}
+
+export async function startRemoteSession(
+    associationPublicKey: CryptoKey,
+    hostAuthority: string,
+    associationURLBase?: string,
+): Promise<ReflectorId> {
+    const randomReflectorId = getRandomReflectorId();
+    const associationUrl = await getRemoteAssociateAndroidIntentURL(
+        associationPublicKey,
+        hostAuthority,
+        randomReflectorId,
+        associationURLBase,
+    );
+    await launchAssociation(associationUrl);
+    return randomReflectorId;
+}
+
+export async function getRemoteSessionUrl(
+    associationPublicKey: CryptoKey,
+    hostAuthority: string,
+    associationURLBase?: string,
+): Promise<{associationUrl: URL, reflectorId: ReflectorId }> {
+    const randomReflectorId = getRandomReflectorId();
+    const associationUrl = await getRemoteAssociateAndroidIntentURL(
+        associationPublicKey,
+        hostAuthority,
+        randomReflectorId,
+        associationURLBase,
+    );
+    return { associationUrl, reflectorId: randomReflectorId };
 }

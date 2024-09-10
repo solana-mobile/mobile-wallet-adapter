@@ -7,7 +7,6 @@ package com.solana.mobilewalletadapter.fakewallet
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,7 +32,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         _mobileWalletAdapterServiceEvents.asSharedFlow() // expose as event stream, rather than a stateful object
 
     private var clientTrustUseCase: ClientTrustUseCase? = null
-    private var scenario: LocalScenario? = null
+    private var scenario: Scenario? = null
+
+    fun isConnectionRemote(): Boolean = scenario is RemoteWebSocketServerScenario
+    fun endSession() {
+        scenario?.close()
+    }
 
     fun processLaunch(intent: Intent?, callingPackage: String?): Boolean {
         if (intent == null) {
@@ -48,9 +52,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         if (associationUri == null) {
             Log.e(TAG, "Unsupported association URI '${intent.data}'")
             return false
-        } else if (associationUri !is LocalAssociationUri) {
-            Log.w(TAG, "Current implementation of fakewallet does not support remote clients")
-            return false
         }
 
         clientTrustUseCase = ClientTrustUseCase(
@@ -60,7 +61,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             associationUri
         )
 
-        scenario = if (BuildConfig.PROTOCOL_VERSION == SessionProperties.ProtocolVersion.LEGACY) {
+        scenario = if (BuildConfig.PROTOCOL_VERSION == SessionProperties.ProtocolVersion.LEGACY
+            && associationUri is LocalAssociationUri) {
             // manually create the scenario here so we can override the association protocol version
             // this forces ProtocolVersion.LEGACY to simulate a wallet using walletlib 1.x (for testing)
             LocalWebSocketServerScenario(

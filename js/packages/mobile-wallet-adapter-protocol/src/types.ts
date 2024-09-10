@@ -73,6 +73,10 @@ export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
+export type RemoteWalletAssociationConfig = WalletAssociationConfig & Readonly<{
+    remoteHostAuthority: string;
+}>;
+
 export interface AuthorizeAPI {
     /**
      * @deprecated Replaced by updated authorize() method, which adds MWA 2.0 spec support.
@@ -149,6 +153,13 @@ export interface MobileWallet
         SignMessagesAPI,
         SignTransactionsAPI,
         SignAndSendTransactionsAPI {}
+
+export interface TerminateSessionAPI {
+    terminateSession(): void
+}
+
+export interface RemoteMobileWallet
+    extends MobileWallet, TerminateSessionAPI {}
 
 // optional features
 export const SolanaSignTransactions = 'solana:signTransactions'
