@@ -89,6 +89,9 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color"><code>static @interface&nbsp;</code></div>
 <div class="col-second even-row-color"><code><a href="WebSocketsTransportContract.LocalPortRange.html" class="type-name-link" title="annotation interface in com.solana.mobilewalletadapter.common">WebSocketsTransportContract.LocalPortRange</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>static @interface&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="WebSocketsTransportContract.ReflectorIdRange.html" class="type-name-link" title="annotation interface in com.solana.mobilewalletadapter.common">WebSocketsTransportContract.ReflectorIdRange</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -119,8 +122,20 @@ loadScripts(document, 'script');</script>
 <div class="col-first odd-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second odd-row-color"><code><a href="#WEBSOCKETS_PROTOCOL" class="member-name-link">WEBSOCKETS_PROTOCOL</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>static final long</code></div>
+<div class="col-second even-row-color"><code><a href="#WEBSOCKETS_REFLECTOR_ID_MAX" class="member-name-link">WEBSOCKETS_REFLECTOR_ID_MAX</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>static final long</code></div>
+<div class="col-second odd-row-color"><code><a href="#WEBSOCKETS_REFLECTOR_ID_MIN" class="member-name-link">WEBSOCKETS_REFLECTOR_ID_MIN</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#WEBSOCKETS_RELECTOR_SCHEME" class="member-name-link">WEBSOCKETS_RELECTOR_SCHEME</a></code></div>
+<div class="col-second even-row-color"><code><a href="#WEBSOCKETS_REFLECTOR_ID_QUERY" class="member-name-link">WEBSOCKETS_REFLECTOR_ID_QUERY</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#WEBSOCKETS_REFLECTOR_PATH" class="member-name-link">WEBSOCKETS_REFLECTOR_PATH</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><code>static final <a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#WEBSOCKETS_REFLECTOR_SCHEME" class="member-name-link">WEBSOCKETS_REFLECTOR_SCHEME</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
@@ -214,14 +229,70 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="WEBSOCKETS_RELECTOR_SCHEME">
-<h3>WEBSOCKETS_RELECTOR_SCHEME</h3>
-<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">WEBSOCKETS_RELECTOR_SCHEME</span></div>
+<section class="detail" id="WEBSOCKETS_REFLECTOR_SCHEME">
+<h3>WEBSOCKETS_REFLECTOR_SCHEME</h3>
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">WEBSOCKETS_REFLECTOR_SCHEME</span></div>
 <dl class="notes">
 <dt>See Also:</dt>
 <dd>
 <ul class="see-list">
-<li><a href="../../../../constant-values.html#com.solana.mobilewalletadapter.common.WebSocketsTransportContract.WEBSOCKETS_RELECTOR_SCHEME">Constant Field Values</a></li>
+<li><a href="../../../../constant-values.html#com.solana.mobilewalletadapter.common.WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_SCHEME">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="WEBSOCKETS_REFLECTOR_PATH">
+<h3>WEBSOCKETS_REFLECTOR_PATH</h3>
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">WEBSOCKETS_REFLECTOR_PATH</span></div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="see-list">
+<li><a href="../../../../constant-values.html#com.solana.mobilewalletadapter.common.WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_PATH">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="WEBSOCKETS_REFLECTOR_ID_QUERY">
+<h3>WEBSOCKETS_REFLECTOR_ID_QUERY</h3>
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">WEBSOCKETS_REFLECTOR_ID_QUERY</span></div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="see-list">
+<li><a href="../../../../constant-values.html#com.solana.mobilewalletadapter.common.WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_QUERY">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="WEBSOCKETS_REFLECTOR_ID_MIN">
+<h3>WEBSOCKETS_REFLECTOR_ID_MIN</h3>
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">long</span>&nbsp;<span class="element-name">WEBSOCKETS_REFLECTOR_ID_MIN</span></div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="see-list">
+<li><a href="../../../../constant-values.html#com.solana.mobilewalletadapter.common.WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MIN">Constant Field Values</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="WEBSOCKETS_REFLECTOR_ID_MAX">
+<h3>WEBSOCKETS_REFLECTOR_ID_MAX</h3>
+<div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">long</span>&nbsp;<span class="element-name">WEBSOCKETS_REFLECTOR_ID_MAX</span></div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd>
+<ul class="see-list">
+<li><a href="../../../../constant-values.html#com.solana.mobilewalletadapter.common.WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MAX">Constant Field Values</a></li>
 </ul>
 </dd>
 </dl>
