@@ -28,6 +28,7 @@ registerMwa({
     },
     authorizationResultCache: createDefaultAuthorizationResultCache(),
     chain: 'solana:testnet',
+    remoteHostAuthority: '4.tcp.us-cal-1.ngrok.io:15762',
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
 })
 
