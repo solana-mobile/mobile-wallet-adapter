@@ -1,5 +1,4 @@
 # Mobile Wallet Adapter
-
 [![Release (latest by date)](https://img.shields.io/github/v/release/solana-mobile/mobile-wallet-adapter)](https://github.com/solana-mobile/mobile-wallet-adapter/releases/latest)
 [![Android CI](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/android.yml/badge.svg)](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/android.yml)
 [![Sample App: clientlib-ktx](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/example-ktx.yml/badge.svg)](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/example-ktx.yml)
