@@ -12,9 +12,6 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AccountRecordsDao extends DbContentProvider<AccountRecord>
         implements AccountRecordsDaoInterface, AccountRecordsSchema {
 
@@ -41,6 +38,18 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
         accountContentValues.put(COLUMN_ACCOUNTS_CHAINS, chains != null ? serialize(chains) : null);
         accountContentValues.put(COLUMN_ACCOUNTS_FEATURES, features != null ? serialize(features) : null);
         return super.insert(TABLE_ACCOUNTS, accountContentValues);
+    }
+
+    @Override
+    public long updateParentId(long oldParentId, long newParentId) {
+        final ContentValues accountContentValues = new ContentValues(1);
+        accountContentValues.put(COLUMN_ACCOUNTS_PARENT_ID, newParentId);
+        return super.update(
+                TABLE_ACCOUNTS,
+                accountContentValues,
+                COLUMN_ACCOUNTS_PARENT_ID + "=?",
+                new String[] { String.valueOf(oldParentId) }
+        );
     }
 
     @Nullable

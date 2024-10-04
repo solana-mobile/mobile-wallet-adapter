@@ -15,6 +15,9 @@ import java.util.List;
                 @Nullable String accountLabel, @Nullable Uri accountIcon,
                 @Nullable String[] chains, @Nullable String[] features);
 
+    @IntRange(from = 0)
+    long updateParentId(long oldParentId, long newParentId);
+
 //    @Nullable
 //    List<AccountRecord> query(int parentId);
 
