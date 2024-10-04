@@ -41,7 +41,7 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
     }
 
     @Override
-    public long migrateAccountsParent(long oldParentId, long newParentId) {
+    public long updateParentId(long oldParentId, long newParentId) {
         final ContentValues accountContentValues = new ContentValues(1);
         accountContentValues.put(COLUMN_ACCOUNTS_PARENT_ID, newParentId);
         return super.update(

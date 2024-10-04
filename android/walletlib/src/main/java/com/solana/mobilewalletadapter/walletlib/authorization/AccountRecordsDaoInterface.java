@@ -16,7 +16,7 @@ import java.util.List;
                 @Nullable String[] chains, @Nullable String[] features);
 
     @IntRange(from = 0)
-    long migrateAccountsParent(long oldParentId, long newParentId);
+    long updateParentId(long oldParentId, long newParentId);
 
 //    @Nullable
 //    List<AccountRecord> query(int parentId);

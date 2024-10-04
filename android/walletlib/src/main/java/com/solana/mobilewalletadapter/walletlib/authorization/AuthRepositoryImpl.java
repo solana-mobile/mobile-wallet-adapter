@@ -444,7 +444,7 @@ public class AuthRepositoryImpl implements AuthRepository {
         } else {
             final int id = (int) mAuthorizationsDao.insert(authRecord.identity.getId(), now,
                     authRecord.chain, authRecord.walletUriBaseId, authRecord.scope);
-            mAccountsDao.migrateAccountsParent(authRecord.id, id);
+            mAccountsDao.updateParentId(authRecord.id, id);
             reissued = new AuthRecord(id, authRecord.identity, authRecord.accounts,
                     authRecord.chain, authRecord.scope, authRecord.walletUriBase,
                     authRecord.walletUriBaseId, now,
