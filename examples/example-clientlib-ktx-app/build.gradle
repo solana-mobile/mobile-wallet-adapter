@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlin_version = '2.0.20'
+        kotlin_version = '2.0.21'
         compose_version = '1.7.3'
         compose_material_version = '1.7.3'
     }
