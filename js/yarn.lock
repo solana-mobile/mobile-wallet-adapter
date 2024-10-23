@@ -1166,6 +1166,11 @@
     "@rollup/pluginutils" "^3.1.0"
     magic-string "^0.25.7"
 
+"@rollup/plugin-virtual@^3.0.1":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-virtual/-/plugin-virtual-3.0.2.tgz#17e17eeecb4c9fa1c0a6e72c9e5f66382fddbb82"
+  integrity sha512-10monEYsBp3scM4/ND4LNH5Rxvh3e/cVeL3jWTgZ2SrQ+BmUoQcopVQvnaMcOnykb1VkxUFuDAN+0FnpTFRy2A==
+
 "@rollup/pluginutils@^3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@rollup/pluginutils/-/pluginutils-3.1.0.tgz#706b4524ee6dc8b103b3c995533e5ad680c02b9b"
@@ -1613,29 +1618,29 @@ acorn@8.1.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.1.0.tgz#52311fd7037ae119cbb134309e901aa46295b3fe"
   integrity sha512-LWCF/Wn0nfHOmJ9rzQApGnxnvgfROzGilS8936rqN/lfcYkY9MYZzdMqN+2NJ4SlTc+m5HiSa+kNfDtI64dwUA==
 
-acorn@^7.1.0:
-  version "7.4.1"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
-  integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
-
 acorn@^8.7.1:
   version "8.7.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.7.1.tgz#0197122c843d1bf6d0a5e83220a788f278f63c30"
   integrity sha512-Xx54uLJQZ19lKygFXOWsscKUbsBZW0CPykPhVQdhIeIwrbPmJzqeASDInc8nKBnp/JT6igTs82qPXz069H8I/A==
+
+acorn@^8.8.1:
+  version "8.13.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.13.0.tgz#2a30d670818ad16ddd6a35d3842dacec9e5d7ca3"
+  integrity sha512-8zSiw54Oxrdym50NlZ9sUusyO1Z1ZchgRLWRaK6c86XJFClyCgFKetdowBg5bKxyp/u+CDBJG4Mpp0m3HLZl9w==
 
 add-stream@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/add-stream/-/add-stream-1.0.0.tgz#6a7990437ca736d5e1288db92bd3266d5f5cb2aa"
   integrity sha512-qQLMr+8o0WC4FZGQTcJiKBVC59JylcPSrTtk6usvmIDFUOCKegapy1VHQwRbFMOFyb/inzUVqHs+eMYKDM1YeQ==
 
-agadoo@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/agadoo/-/agadoo-2.0.0.tgz#1fbbcf429ce5e71df3d93855a915252b277667ed"
-  integrity sha512-68aFhseH51ZBKYKkQNxwDi1hJwTnywBjHWg068qFnMkpXShhOazNzJUPRvaLQjrqhT3EOUth5G9mt1A0/dGhOw==
+agadoo@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/agadoo/-/agadoo-3.0.0.tgz#df4f1d2f17a81580ef7e9f3450807cd2fd3bede1"
+  integrity sha512-gq+fjT3Ilrhb88Jf+vYMjdO/+3znYfa7vJ4IMLPFsBPUxglnr40Ed3yCLrW6IABdJAedB94b2BkqR6I04lh3dg==
   dependencies:
-    acorn "^7.1.0"
-    rollup "^1"
-    rollup-plugin-virtual "^1.0.1"
+    "@rollup/plugin-virtual" "^3.0.1"
+    acorn "^8.8.1"
+    rollup "^3.5.0"
 
 agent-base@6, agent-base@^6.0.2:
   version "6.0.2"
@@ -5273,24 +5278,17 @@ rollup-plugin-ts@^3.0.2:
     ts-clone-node "^1.0.0"
     tslib "^2.4.0"
 
-rollup-plugin-virtual@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-virtual/-/rollup-plugin-virtual-1.0.1.tgz#8227c94c605b981adfe433ea74de3551e42ffeb4"
-  integrity sha512-HCTBpV8MwP5lNzZrHD2moVxHIToHU1EkzkKGVj6Z0DcgUfxrxrZmeQirQeLz2yhnkJqRjwiVywK9CS8jDYakrw==
-
-rollup@^1:
-  version "1.32.1"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-1.32.1.tgz#4480e52d9d9e2ae4b46ba0d9ddeaf3163940f9c4"
-  integrity sha512-/2HA0Ec70TvQnXdzynFffkjA6XN+1e2pEv/uKS5Ulca40g2L7KuOE3riasHoNVHOsFD5KKZgDsMk1CP3Tw9s+A==
-  dependencies:
-    "@types/estree" "*"
-    "@types/node" "*"
-    acorn "^7.1.0"
-
 rollup@^2.75.6:
   version "2.79.2"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.79.2.tgz#f150e4a5db4b121a21a747d762f701e5e9f49090"
   integrity sha512-fS6iqSPZDs3dr/y7Od6y5nha8dW1YnbgtsyotCVvoFGKbERG++CVRFv1meyGDE1SNItQA8BrnCw7ScdAhRJ3XQ==
+  optionalDependencies:
+    fsevents "~2.3.2"
+
+rollup@^3.5.0:
+  version "3.29.5"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-3.29.5.tgz#8a2e477a758b520fb78daf04bca4c522c1da8a54"
+  integrity sha512-GVsDdsbJzzy4S/v3dqWPJ7EfvZJfCHiDqe80IyrF59LYuP+e6U1LJoUqeuqRbwAWoMNoXivMNeNAOf5E22VA1w==
   optionalDependencies:
     fsevents "~2.3.2"
 
