@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.funkatronics.encoders.Base58
+import com.funkatronics.encoders.Base64
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
@@ -118,10 +119,19 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         viewModelScope.launch {
             if (authorized) {
                 val accounts = (0 until numAccounts).map {
-                    val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
-                    val publicKey = keypair.public as Ed25519PublicKeyParameters
-                    Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
-                    buildAccount(publicKey.encoded, "fakewallet account $it")
+                    val publicKeyBytes = request.request.addresses?.get(it)?.let { address ->
+                        val keypair = getApplication<FakeWalletApplication>().keyRepository
+                            .getKeypair(Base64.decode(address)) ?: return@let null
+                        val publicKey = keypair.public as Ed25519PublicKeyParameters
+                        Log.d(TAG, "Reusing known keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+                        publicKey.encoded
+                    } ?: run {
+                        val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
+                        val publicKey = keypair.public as Ed25519PublicKeyParameters
+                        Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+                        publicKey.encoded
+                    }
+                    buildAccount(publicKeyBytes, "fakewallet account $it")
                 }
                 request.request.completeWithAuthorize(accounts.toTypedArray(), null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray(), null)
