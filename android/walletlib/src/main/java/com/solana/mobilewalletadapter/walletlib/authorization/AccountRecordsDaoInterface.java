@@ -18,11 +18,11 @@ import java.util.List;
     @IntRange(from = 0)
     long updateParentId(long oldParentId, long newParentId);
 
-//    @Nullable
-//    List<AccountRecord> query(int parentId);
-
     @Nullable
     AccountRecord query(@NonNull byte[] publicKey);
+
+    @Nullable
+    AccountRecord query(long parentId, @NonNull byte[] publicKey);
 
     void deleteUnreferencedAccounts();
 }

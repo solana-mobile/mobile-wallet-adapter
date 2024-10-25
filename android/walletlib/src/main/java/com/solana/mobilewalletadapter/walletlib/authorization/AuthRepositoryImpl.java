@@ -403,11 +403,11 @@ public class AuthRepositoryImpl implements AuthRepository {
         final List<AccountRecord> accountRecords = new ArrayList<>();
         for (AuthorizedAccount account: accounts) {
 
-            final AccountRecord accountRecordQueried = mAccountsDao.query(account.publicKey);
+            final AccountRecord accountRecordQueried = mAccountsDao.query(authRecordId, account.publicKey);
 
             final int accountId;
             final AccountRecord accountRecord;
-            // If no matching account exists, create one
+            // If no matching account record exists, create one
             if (accountRecordQueried == null) {
                 accountId = (int) mAccountsDao.insert(authRecordId, account.publicKey,
                         account.accountLabel, account.accountIcon, account.chains, account.features);
