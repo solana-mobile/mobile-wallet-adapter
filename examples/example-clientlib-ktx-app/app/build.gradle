@@ -7,13 +7,13 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
     namespace 'com.solanamobile.ktxclientsample'
 
     defaultConfig {
         applicationId "com.solanamobile.ktxclientsample"
         minSdk 27
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
