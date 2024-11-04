@@ -136,10 +136,9 @@ jobs:
 
       # Create Genymotion instance
       - name: Start Genymotion Cloud SaaS instance
-        uses:  genymobile/genymotion-saas-github-action@v0.4
+        uses:  genymobile/genymotion-saas-github-action@v1
         with:
-          email: ${{ secrets.GMSAAS_EMAIL }}
-          password: ${{ secrets.GMSAAS_PASSWORD }}
+          api_token: ${{ secrets.GMSAAS_API_KEY }
           recipe_uuid: ${{ matrix.recipe_uuid }}
 
       # Run the tests
