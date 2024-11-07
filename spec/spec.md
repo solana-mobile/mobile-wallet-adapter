@@ -566,7 +566,7 @@ where:
 
 - `max_transactions_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_transactions`](#sign_transactions) or [`sign_and_send_transactions`](#sign_and_send_transactions) request. If absent, the implementation doesn't publish a specific limit for this parameter.
 - `max_messages_per_request`: (optional) if present, the max number of transaction payloads which can be signed by a single [`sign_messages`](#sign_messages) request. If absent, the implementation doesn't publish a specific limit for this parameter.
-- `supported_transaction_versions`: the Solana network transaction formats supported by this wallet endpoint. Allowed values are those defined for [`TransactionVersion`](https://solana-labs.github.io/solana-web3.js/modules.html#TransactionVersion) (for e.g., `"legacy"`, `0`, etc).
+- `supported_transaction_versions`: the Solana network transaction formats supported by this wallet endpoint. Allowed values are those defined for [`TransactionVersion`](https://solana-labs.github.io/solana-web3.js/v1.x/modules.html#TransactionVersion) (for e.g., `"legacy"`, `0`, etc).
 - `features`: a list of [feature identifiers](#feature-identifiers) for the [optional features](#optional-features) supported by this wallet endpoint. [Mandatory features](#mandatory-features) should not be included in this list because all valid wallet endpoints must implement these features. Dapp endpoints can assume that mandatory features are supported by the wallet. 
 
 ###### Errors
