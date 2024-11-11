@@ -1,5 +1,5 @@
-package com.exampleapp
- 
+package com.mobilewalletadapterreactnative;
+
 import android.app.Application
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication

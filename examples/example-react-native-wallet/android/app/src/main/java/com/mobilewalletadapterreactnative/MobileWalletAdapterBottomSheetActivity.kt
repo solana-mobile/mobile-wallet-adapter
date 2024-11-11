@@ -6,6 +6,8 @@ import android.view.WindowManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.ReactRootView
+import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
+import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
 
@@ -33,22 +35,6 @@ class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
      * (Paper).
      */
     override protected fun createReactActivityDelegate(): ReactActivityDelegate {
-        return MainActivityDelegate(this, mainComponentName)
-    }
-
-    class MainActivityDelegate(val activity: ReactActivity?, mainComponentName: String?) :
-            ReactActivityDelegate(activity, mainComponentName) {
-
-        override protected fun createRootView(): ReactRootView {
-            val reactRootView = ReactRootView(getContext())
-            // If you opted-in for the New Architecture, we enable the Fabric Renderer.
-            reactRootView.setIsFabric(false)
-
-            return reactRootView
-        }
-
-        // If you opted-in for the New Architecture, we enable Concurrent Root (i.e. React 18).
-        // More on this on https://reactjs.org/blog/2022/03/29/react-v18.html
-        override protected fun isConcurrentRootEnabled() = false
+        return DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
     }
 }
