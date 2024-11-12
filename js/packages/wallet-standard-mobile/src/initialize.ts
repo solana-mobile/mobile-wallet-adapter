@@ -20,9 +20,9 @@ export function registerMwa(config: {
 }) {
     if (getIsLocalAssociationSupported()) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
-    } if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
+    } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
         registerWallet(new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }))
     } else {
-        // currently not supported (iOS)
+        // currently not supported (non-Android mobile device)
     }
 }
