@@ -1,6 +1,5 @@
 import QRCode from 'qrcode';
 
-import { BluetoothHtml } from './bluetooth-html.js';
 import { QRCodeHtml } from './qrcode-html.js';
 import { css } from './styles.js';
 
@@ -14,7 +13,6 @@ export default class EmbeddedModal {
         // Bind methods to ensure `this` context is correct
         this.init = this.init.bind(this);
         this.injectQRCodeHTML = this.injectQRCodeHTML.bind(this);
-        this.injectBluetoothHTML = this.injectBluetoothHTML.bind(this);
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
         this.connect = this.connect.bind(this);
@@ -84,21 +82,6 @@ export default class EmbeddedModal {
 
         // Render the QRCode
         this.populateQRCode(qrCode);
-
-        this.attachEventListeners();
-    }
-
-    private injectBluetoothHTML() {
-        // Check if the HTML has already been injected
-        if (document.getElementById('mobile-wallet-adapter-embedded-root-ui')) {
-            return;
-        }
-
-        this._root = document.createElement('div');
-        this._root.id = 'mobile-wallet-adapter-embedded-root-ui';
-        this._root.className = 'mobile-wallet-adapter-embedded-modal';
-        this._root.innerHTML = BluetoothHtml;
-        document.body.appendChild(this._root);
 
         this.attachEventListeners();
     }
