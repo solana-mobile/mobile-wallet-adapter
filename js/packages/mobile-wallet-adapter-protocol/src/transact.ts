@@ -455,11 +455,14 @@ export async function transactRemote<TReturn>(
                     try {
                         resolve(await callback(new Proxy(wallet as RemoteMobileWallet, {
                             get<TMethodName extends keyof RemoteMobileWallet>(target: RemoteMobileWallet, p: TMethodName) {
-                                if (p === 'terminateSession') {
-                                    disposeSocket();
-                                    socket.close();
-                                    return;
-                                } else return target[p]
+                                if (p === 'terminateSession' && target[p] == null) {
+                                    target['terminateSession'] = async function () {
+                                        disposeSocket();
+                                        socket.close();
+                                        return;
+                                    };
+                                }
+                                return target[p];
                             },
                         })))
                     } catch (e) {
