@@ -12,6 +12,6 @@ export function getIsRemoteAssociationSupported() {
         typeof window !== 'undefined' &&
         window.isSecureContext &&
         typeof document !== 'undefined' &&
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     );
 }

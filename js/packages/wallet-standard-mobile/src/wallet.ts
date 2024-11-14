@@ -746,9 +746,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     }
 
     #disconnect: StandardDisconnectMethod = async () => {
-        // TODO: figure out why this call throws "TypeError: _a.terminateSession is not a function"
-        //  even though the session termination is actually executed (websocket closes). 
-        try { this.#wallet?.terminateSession(); } catch (e) {}
+        this.#wallet?.terminateSession();
         this.#authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         this.#connecting = false;
         this.#connectionGeneration++;
