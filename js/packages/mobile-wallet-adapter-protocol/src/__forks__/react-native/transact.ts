@@ -1,8 +1,9 @@
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
-import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
-import { MobileWallet, SessionProperties,WalletAssociationConfig } from '../../types.js';
+import NativeSolanaMobileWalletAdapter from '../../codegenSpec/NativeSolanaMobileWalletAdapter.js';
 import createMobileWalletProxy from '../../createMobileWalletProxy.js';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
+import { MobileWallet, SessionProperties, WalletAssociationConfig } from '../../types.js';
 
 type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };
 
@@ -15,9 +16,9 @@ const LINKING_ERROR =
     '- You are not using Expo managed workflow\n';
 
 const SolanaMobileWalletAdapter =
-    Platform.OS === 'android' && NativeModules.SolanaMobileWalletAdapter
-        ? NativeModules.SolanaMobileWalletAdapter
-        : new Proxy(
+    Platform.OS === 'android' && NativeSolanaMobileWalletAdapter
+        ? NativeSolanaMobileWalletAdapter
+        : (new Proxy(
               {},
               {
                   get() {
@@ -28,7 +29,7 @@ const SolanaMobileWalletAdapter =
                       );
                   },
               },
-          );
+          ) as typeof NativeSolanaMobileWalletAdapter);
 
 function getErrorMessage(e: ReactNativeError): string {
     switch (e.code) {
@@ -72,15 +73,13 @@ export async function transact<TReturn>(
     try {
         const sessionProperties: SessionProperties = await SolanaMobileWalletAdapter.startSession(config);
         didSuccessfullyConnect = true;
-        const wallet = createMobileWalletProxy(sessionProperties.protocol_version, 
-            async (method, params) => {
-                try {
-                    return SolanaMobileWalletAdapter.invoke(method, params);
-                } catch (e) {
-                    return handleError(e);
-                }
+        const wallet = createMobileWalletProxy(sessionProperties.protocol_version, async (method, params) => {
+            try {
+                return SolanaMobileWalletAdapter.invoke(method, params);
+            } catch (e) {
+                return handleError(e);
             }
-        );
+        });
         return await callback(wallet);
     } catch (e) {
         return handleError(e);
