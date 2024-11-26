@@ -163,7 +163,7 @@ if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
 fi
 
 # Collect all arguments for the java command, stacking in reverse order:
-#   * args from the command linegit 
+#   * args from the command line
 #   * the main class name
 #   * -classpath
 #   * -D...appname settings
