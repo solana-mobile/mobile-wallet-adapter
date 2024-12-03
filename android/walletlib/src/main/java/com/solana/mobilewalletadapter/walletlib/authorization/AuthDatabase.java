@@ -38,14 +38,15 @@ import java.util.List;
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 5) {
+        if (oldVersion > newVersion) {
+            // The documentation for this method does not explicitly state this cannot occur 
+            // (newVersion < oldVersion). We cannot downgrade so recreate the database instead.
+            Log.w(TAG, "Database downgrade detected; DB downgrade is not supported");
+            recreateDatabase(db);
+        } else if (oldVersion < 5) {
             Log.w(TAG, "Old database schema detected; pre-v1.0.0, no DB schema backward compatibility is implemented");
-            db.execSQL("DROP TABLE IF EXISTS " + IdentityRecordSchema.TABLE_IDENTITIES);
-            db.execSQL("DROP TABLE IF EXISTS " + AuthorizationsSchema.TABLE_AUTHORIZATIONS);
-            db.execSQL("DROP TABLE IF EXISTS " + PublicKeysSchema.TABLE_PUBLIC_KEYS);
-            db.execSQL("DROP TABLE IF EXISTS " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE);
-            onCreate(db);
-        } else {
+            recreateDatabase(db);
+        } else try {
             // first migrate from public keys to accounts if necessary
             if (oldVersion == 5) {
                 Log.w(TAG, "Old database schema detected; pre-v2.0.0, migrating public keys to account records");
@@ -87,28 +88,6 @@ import java.util.List;
 
             // migrate to multi account structure
             Log.w(TAG, "Old database schema detected; pre-v2.1.0, migrating to multi account structure");
-
-//            try (final Cursor cursor = db.rawQuery("SELECT " +
-//                            AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ID +
-//                            ", " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
-//                            ", " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_ID +
-//                            ", " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_PUBLIC_KEY_RAW +
-//                            ", " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_LABEL +
-//                            " FROM " + AuthorizationsSchema.TABLE_AUTHORIZATIONS +
-//                            " INNER JOIN " + AccountRecordsSchema.TABLE_ACCOUNTS +
-//                            " ON " + AuthorizationsSchema.TABLE_AUTHORIZATIONS + '.' + AuthorizationsSchema.COLUMN_AUTHORIZATIONS_ACCOUNT_ID +
-//                            " = " + AccountRecordsSchema.TABLE_ACCOUNTS + '.' + AccountRecordsSchema.COLUMN_ACCOUNTS_ID,
-//                    null)) {
-//                AccountRecordsDao accountRecordsDao = new AccountRecordsDao(db);
-//                while (cursor.moveToNext()) {
-//                    final int parentId = cursor.getInt(0);
-//                    final int accountId = cursor.getInt(1);
-//                    ContentValues values = new ContentValues();
-//                    values.put(AccountRecordsSchema.COLUMN_ACCOUNTS_PARENT_ID, parentId);
-//                    accountRecordsDao.update(AccountRecordsSchema.TABLE_ACCOUNTS, values,
-//                            AccountRecordsSchema.COLUMN_ACCOUNTS_ID + "=" + accountId, null);
-//                }
-//            }
 
             // migrate to multi account structure
             // first add parent id column to accounts table
@@ -165,7 +144,19 @@ import java.util.List;
                     authorizationMigrationTable);
 
             db.execSQL("DROP TABLE IF EXISTS " + authorizationMigrationTable);
+        } catch (Throwable ignored) {
+            Log.w(TAG, "Database migration failed, recreating database");
+            recreateDatabase(db);
         }
+    }
+
+    private void recreateDatabase(SQLiteDatabase db) {
+        db.execSQL("DROP TABLE IF EXISTS " + IdentityRecordSchema.TABLE_IDENTITIES);
+        db.execSQL("DROP TABLE IF EXISTS " + AuthorizationsSchema.TABLE_AUTHORIZATIONS);
+        db.execSQL("DROP TABLE IF EXISTS " + PublicKeysSchema.TABLE_PUBLIC_KEYS);
+        db.execSQL("DROP TABLE IF EXISTS " + WalletUriBaseSchema.TABLE_WALLET_URI_BASE);
+        db.execSQL("DROP TABLE IF EXISTS " + AccountRecordsSchema.TABLE_ACCOUNTS);
+        onCreate(db);
     }
 
     @NonNull
