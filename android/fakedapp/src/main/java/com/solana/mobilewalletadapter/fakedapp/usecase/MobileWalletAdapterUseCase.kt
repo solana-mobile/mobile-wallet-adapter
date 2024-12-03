@@ -53,6 +53,7 @@ object MobileWalletAdapterUseCase {
             identity: DappIdentity,
             chain: String?,
             signInPayload: SignInWithSolana.Payload?,
+            publicKeys: List<ByteArray>?,
             protocolVersion: ProtocolVersion = ProtocolVersion.V1
         ): MobileWalletAdapterClient.AuthorizationResult = coroutineScope {
             try {
@@ -60,7 +61,7 @@ object MobileWalletAdapterUseCase {
                     if (protocolVersion == ProtocolVersion.V1) {
                         client.authorize(
                             identity.uri, identity.iconRelativeUri, identity.name, chain,
-                            null, null, null, signInPayload
+                            null, null, publicKeys?.toTypedArray(), signInPayload
                         ).get()!!
                     } else {
                         val cluster = when (chain) {

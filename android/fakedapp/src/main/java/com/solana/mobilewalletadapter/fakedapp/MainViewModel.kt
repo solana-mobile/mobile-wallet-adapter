@@ -462,7 +462,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         signInPayload: SignInWithSolana.Payload? = null
     ): MobileWalletAdapterClient.AuthorizationResult {
         val result = try {
-            client.authorize(identity, chain, signInPayload, uiState.value.sessionProtocolVersion!!)
+            client.authorize(identity, chain, signInPayload,
+                uiState.value.accounts?.map { it.publicKey },
+                uiState.value.sessionProtocolVersion!!)
         } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
             _uiState.update {
                 it.copy(

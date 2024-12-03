@@ -462,6 +462,74 @@ class MainActivityTest {
     }
 
     @Test
+    fun authorizationFlow_SuccessfulReauthorizeSingleAccountMultiAuth() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identity1Uri = Uri.parse("https://test1.com")
+        val identity1Name = "Test 1"
+        val identity2Uri = Uri.parse("https://test2.com")
+        val identity2Name = "Test 2"
+        val iconUri = Uri.parse("favicon.ico")
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        // simulate client side scenarios
+        val localAssociation1 = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent1 = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation1.port,
+            localAssociation1.session
+        )
+
+        val localAssociation2 = LocalAssociationScenario(Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
+        val associationIntent2 = LocalAssociationIntentCreator.createAssociationIntent(
+            null,
+            localAssociation2.port,
+            localAssociation2.session
+        )
+
+        // when
+        ActivityScenario.launch<MainActivity>(associationIntent1)
+
+        // First, simulate client 1 authorizing
+        // trigger authorization from client 1
+        var mwaClient = localAssociation1.start().get()
+        val authorization1 = mwaClient.authorize(identity1Uri, iconUri, identity1Name, chain,
+            null, null, null, null)
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val accounts = authorization1.get().accounts.map { it.publicKey }
+        localAssociation1.close().get()
+
+        // Now, authorize client 2 for the same account (publickey) that was used with client 1
+        ActivityScenario.launch<MainActivity>(associationIntent2)
+
+        // trigger authorization from client 2
+        mwaClient = localAssociation2.start().get()
+        val authorization2 = mwaClient.authorize(identity2Uri, iconUri, identity2Name, chain,
+            null, null, accounts.toTypedArray(), null)
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization2.get()
+
+        // reauthorize - this is needed to trigger the auth lookup
+        val reauthResult = mwaClient.authorize(identity2Uri, iconUri, identity2Name, chain,
+            authResult.authToken, null, accounts.toTypedArray(), null).get()
+
+        // then
+        assertNotNull(reauthResult)
+        assertTrue(reauthResult.authToken == authResult.authToken)
+    }
+
+    @Test
     fun signingFlow_SuccessfulSignMessagesMultiAccount() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())

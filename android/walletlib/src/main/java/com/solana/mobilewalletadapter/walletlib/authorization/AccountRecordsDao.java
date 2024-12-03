@@ -71,6 +71,26 @@ public class AccountRecordsDao extends DbContentProvider<AccountRecord>
         }
     }
 
+    @Nullable
+    @Override
+    public AccountRecord query(long parentId, @NonNull byte[] publicKey) {
+        final SQLiteDatabase.CursorFactory accountCursorFactory = (db1, masterQuery, editTable, query) -> {
+            query.bindBlob(1, publicKey);
+            return new SQLiteCursor(masterQuery, editTable, query);
+        };
+        try (final Cursor cursor = super.queryWithFactory(accountCursorFactory,
+                TABLE_ACCOUNTS,
+                ACCOUNTS_COLUMNS,
+                COLUMN_ACCOUNTS_PUBLIC_KEY_RAW + "=? AND " +
+                        COLUMN_ACCOUNTS_PARENT_ID + "=?" + parentId,
+                null)) {
+            if (!cursor.moveToNext()) {
+                return null;
+            }
+            return cursorToEntity(cursor);
+        }
+    }
+
     @Override
     public void deleteUnreferencedAccounts() {
         final SQLiteStatement deleteUnreferencedAccounts = super.compileStatement(
