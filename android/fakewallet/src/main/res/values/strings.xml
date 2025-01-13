@@ -7,6 +7,7 @@
 
     <!-- Main activity strings -->
     <string name="label_hello_world">I\'m a wallet!</string>
+    <string name="label_start_remote_connection">Start Remote Connection</string>
 
     <!-- Associate fragment strings -->
     <string name="label_session_active">Session active, awaiting requests from dApp…</string>
@@ -62,4 +63,9 @@
         work properly when the device battery save mode is active. Please turn off battery
         saver or plug in your phone and try again.
     </string>
+
+    <!-- Scan QR Code fragment strings -->
+    <string name="str_scan_mwa_qr_code">Scan MWA Connection QR Code</string>
+    <string name="str_invalid_barcode">Invalid QR Code</string>
+    <string name="label_try_again">Scan MWA Connection QR Code</string>
 </resources>
