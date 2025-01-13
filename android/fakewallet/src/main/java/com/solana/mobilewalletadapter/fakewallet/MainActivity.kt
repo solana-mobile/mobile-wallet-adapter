@@ -4,9 +4,11 @@
 
 package com.solana.mobilewalletadapter.fakewallet
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.solana.mobilewalletadapter.fakewallet.databinding.ActivityMainBinding
+import com.solana.mobilewalletadapter.fakewallet.ui.scanqr.ScanQRActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -16,5 +18,9 @@ class MainActivity : AppCompatActivity() {
 
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        viewBinding.buttonStartRemote.setOnClickListener {
+            startActivity(Intent(applicationContext, ScanQRActivity::class.java))
+        }
     }
 }
