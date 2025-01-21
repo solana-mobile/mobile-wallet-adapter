@@ -1,11 +1,11 @@
 [versions]
 # plugin versions
-androidGradlePlugin = "8.7.3"
+androidGradlePlugin = "8.8.0"
 kotlinAndroidPlugin = "2.1.0"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
-androidxActivityKtx = "1.9.3"
+androidxActivityKtx = "1.10.0"
 androidxAppcompat = "1.7.0"
 androidxConstraintLayout = "2.2.0"
 androidxCoreKtx = "1.15.0"
@@ -25,7 +25,7 @@ digitalAssetLinksAndroid = "1.0.4"
 espressoCore = "3.6.1"
 javaWebsocket = "1.6.0"
 junit = "4.13.2"
-kotlinxCoroutines = "1.9.0"
+kotlinxCoroutines = "1.10.1"
 material = "1.12.0"
 mockitoInline = "5.2.0"
 mockitoKotlin = "4.1.0"
@@ -34,6 +34,7 @@ nvWebsocketClient = "2.14"
 robolectric = "4.14.1"
 slf4jAndroid = "1.7.36"
 web3Core = "0.3.0-beta4"
+zxingAndroidEmbedded = "4.3.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidxActivityKtx" }
@@ -80,6 +81,7 @@ nv-websocket-client = { module = "com.neovisionaries:nv-websocket-client", versi
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 slf4j-android = { module = "org.slf4j:slf4j-android", version.ref = "slf4jAndroid" }
 web3-solana = { module = "com.solanamobile:web3-solana", version.ref = "web3Core" }
+zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
