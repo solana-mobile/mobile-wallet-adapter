@@ -120,6 +120,7 @@ dependencies {
     implementation libs.bcprov.jdk18on
     implementation libs.kotlinx.coroutines.android
     implementation libs.multimult
+    implementation libs.zxing.android.embedded
     implementation project(path: ':walletlib')
     kapt libs.androidx.room.compiler
 }
