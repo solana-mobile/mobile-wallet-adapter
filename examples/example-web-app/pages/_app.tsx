@@ -12,25 +12,14 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { createTheme } from '@mui/material';
 import { ReactNode, useCallback, useMemo } from 'react';
 
-import { registerMwa } from '@solana-mobile/wallet-standard-mobile';
-import { createDefaultAddressSelector, createDefaultAuthorizationResultCache, createDefaultWalletNotFoundHandler } from '@solana-mobile/wallet-standard-mobile';
+import { SolanaMobileWalletAdapter } from '@solana-mobile/wallet-adapter-mobile';
+import { createDefaultAddressSelector, createDefaultAuthorizationResultCache } from '@solana-mobile/wallet-adapter-mobile';
 
 function getUriForAppIdentity() {
     const location = globalThis.location;
     if (!location) return;
     return `${location.protocol}//${location.host}`;
 }
-
-registerMwa({
-    addressSelector: createDefaultAddressSelector(),
-    appIdentity: {
-        uri: getUriForAppIdentity(),
-    },
-    authorizationResultCache: createDefaultAuthorizationResultCache(),
-    chain: 'solana:testnet',
-    remoteHostAuthority: '4.tcp.us-cal-1.ngrok.io:15762',
-    onWalletNotFound: createDefaultWalletNotFoundHandler(),
-})
 
 const CLUSTER = WalletAdapterNetwork.Devnet;
 const CONNECTION_CONFIG: ConnectionConfig = { commitment: 'processed' };
@@ -54,7 +43,30 @@ function App({ children }: { children: ReactNode }) {
                       /**
                        * Note that you don't have to include the SolanaMobileWalletAdapter here;
                        * It will be added automatically when this app is running in a compatible mobile context.
+                       * 
+                       * However, it is recommended to manually include the SolanaSolanaMobileWalletAdapter 
+                       * here so that you can provide Dapp identity parameters and a walletNotFoundHandler for 
+                       * the best UX. The adapter will overwrite any existing SolanaMobileWalletAdapter. 
                        */
+                      new SolanaMobileWalletAdapter({
+                        addressSelector: createDefaultAddressSelector(),
+                        appIdentity: {
+                            uri: getUriForAppIdentity(),
+                        },
+                        authorizationResultCache: createDefaultAuthorizationResultCache(),
+                        chain: 'solana:testnet',
+                        onWalletNotFound: async (mobileWalletAdapter: SolanaMobileWalletAdapter) => {
+                            if (typeof window !== 'undefined') {
+                                const userAgent = window.navigator.userAgent.toLowerCase();
+                                if (userAgent.includes('wv')) { // Android WebView
+                                    // Example: MWA is not supported in this browser so we inform the user
+                                    enqueueSnackbar('Mobile Wallet Adapter is not supported on this browser!', { variant: 'error' });
+                                } else { // Browser, user does not have a wallet installed. 
+                                    window.location.assign(mobileWalletAdapter.url);
+                                }
+                            }
+                        },
+                      }),
                   ],
         [],
     );
