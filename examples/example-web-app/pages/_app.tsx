@@ -44,7 +44,7 @@ function App({ children }: { children: ReactNode }) {
                        * Note that you don't have to include the SolanaMobileWalletAdapter here;
                        * It will be added automatically when this app is running in a compatible mobile context.
                        * 
-                       * However, it is recommended to manually include the SolanaSolanaMobileWalletAdapter 
+                       * However, it is recommended to manually include the SolanaMobileWalletAdapter 
                        * here so that you can provide Dapp identity parameters and a walletNotFoundHandler for 
                        * the best UX. The adapter will overwrite any existing SolanaMobileWalletAdapter. 
                        */
