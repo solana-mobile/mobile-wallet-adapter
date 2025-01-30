@@ -1,4 +1,4 @@
-name: JavaScript Agadoo
+name: JavaScript Pre-Publish
 
 on:
   push:
