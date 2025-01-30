@@ -1,0 +1,49 @@
+name: JavaScript Pre-Publish
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ '.github/**', 'js/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ '.github/**', 'js/**' ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: 'js/yarn.lock'
+
+      - name: '[js] Install yarn dependencies'
+        working-directory: 'js/'
+        run: yarn install --frozen-lockfile
+      - name: '[js] Lint'
+        working-directory: 'js/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[js] Build'
+        working-directory: 'js/'
+        run: yarn build
+
+      - name: '[mobile-wallet-adapter-protocol] Pre-Publish'
+        working-directory: 'js/packages/mobile-wallet-adapter-protocol'
+        run: yarn prepublishOnly
+
+      - name: '[mobile-wallet-adapter-protocol-web3js] Pre-Publish'
+        working-directory: 'js/packages/mobile-wallet-adapter-protocol-web3js'
+        run: yarn prepublishOnly
+
+      - name: '[wallet-adapter-mobile] Pre-Publish'
+        working-directory: 'js/packages/wallet-adapter-mobile'
+        run: yarn prepublishOnly
