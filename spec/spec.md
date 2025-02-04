@@ -148,7 +148,12 @@ WebSockets is a mandatory transport protocol for mobile-wallet-adapter implement
 
 A WebSocket client API is available in all major browsers, enabling web-based dapps (both mobile and desktop) to use this transport.
 
-When connecting to a [Local URI](#local-uri), the dapp endpoint must request, and the wallet endpoint must respond with, the `com.solana.mobilewalletadapter.v1` WebSocket subprotocol. When connecting to a [Remote URI](#remote-uri), the both the dapp and wallet endpoints must request, and the reflector server must respond with, both the `com.solana.mobilewalletadapter.v1` and `com.solana.mobilewalletadapter.v1.reflector` WebSocket subprotocols.
+Three WebSocket subprotocols are used to establish transport behaviors between endpoints. 
+1. The `com.solana.mobilewalletadapter.v1` subprotocol indicates that the server supports binary WebSocket data frames. When This protocol is in use, endpoints can send and receive payloads as raw unencoded binary using a binary data frame.
+1. The `com.solana.mobilewalletadapter.v1.base64` subprotocol indicates that the server supports UTF-8 text WebSocket data frames. When This protocol is in use, endpoints can send and receive paylaods as Base64 encoded text using a UTF-8 text data frame.
+1. The `com.solana.mobilewalletadapter.v1.reflector` subprotocol is used by WebSocket reflectors when connecting to a [Remote URI](#remote-uri).
+
+When connecting to a [Local URI](#local-uri), the dapp endpoint must request both the `com.solana.mobilewalletadapter.v1` and `com.solana.mobilewalletadapter.v1.base64` WebSocket subprotocols. The wallet endpoint must respond with one or both of the `com.solana.mobilewalletadapter.v1` and `com.solana.mobilewalletadapter.v1.base64` WebSocket subprotocols to indicate to the dapp endpoint whether it supports either the binary or base64 encoded data frames, or both. When connecting to a [Remote URI](#remote-uri), the both the dapp and wallet endpoints must request, and the reflector server must respond with, the `com.solana.mobilewalletadapter.v1.reflector` WebSocket subprotocol in addition to one or both of the `com.solana.mobilewalletadapter.v1` and `com.solana.mobilewalletadapter.v1.base64` subprotocols.
 
 When the wallet endpoint is acting as a WebSocket server, it must send periodic [`PING`](https://datatracker.ietf.org/doc/html/rfc6455#section-5.5.2) frames to the dapp endpoint.
 
