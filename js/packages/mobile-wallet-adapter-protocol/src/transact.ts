@@ -1,3 +1,5 @@
+import { decode } from 'js-base64';
+import { encode } from './base64Utils.js';
 import createHelloReq from './createHelloReq.js';
 import createMobileWalletProxy from './createMobileWalletProxy.js';
 import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
@@ -29,7 +31,9 @@ const WEBSOCKET_CONNECTION_CONFIG = {
     retryDelayScheduleMs: [150, 150, 200, 500, 500, 750, 750, 1000],
     timeoutMs: 30000,
 } as const;
-const WEBSOCKET_PROTOCOL = 'com.solana.mobilewalletadapter.v1';
+const WEBSOCKET_PROTOCOL_BINARY = 'com.solana.mobilewalletadapter.v1';
+const WEBSOCKET_PROTOCOL_BASE64 = 'com.solana.mobilewalletadapter.v1.base64';
+type PROTOCOL_ENCODING = 'binary' | 'base64';
 
 type JsonResponsePromises<T> = Record<
     number,
@@ -278,7 +282,7 @@ export async function transact<TReturn>(
             if (connectionStartTime === undefined) {
                 connectionStartTime = Date.now();
             }
-            socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL]);
+            socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL_BINARY]);
             socket.addEventListener('open', handleOpen);
             socket.addEventListener('close', handleClose);
             socket.addEventListener('error', handleError);
@@ -311,6 +315,7 @@ export async function transactRemote<TReturn>(
     })();
     let nextJsonRpcMessageId = 1;
     let lastKnownInboundSequenceNumber = 0;
+    let encoding: PROTOCOL_ENCODING;
     let state: State = { __type: 'disconnected' };
     return { associationUrl, result: new Promise((resolve, reject) => {
         let socket: WebSocket;
@@ -323,6 +328,11 @@ export async function transactRemote<TReturn>(
                         `Got \`${state.__type}\`.`,
                 );
                 return;
+            }
+            if (socket.protocol.includes(WEBSOCKET_PROTOCOL_BASE64)) {
+                encoding = 'base64';
+            } else {
+                encoding = 'binary';
             }
             socket.removeEventListener('open', handleOpen);
         };
@@ -358,14 +368,26 @@ export async function transactRemote<TReturn>(
             }
         };
         const handleMessage = async (evt: MessageEvent<Blob>) => {
-            const responseBuffer = await evt.data.arrayBuffer();
+            let decodedBytes: ArrayBuffer;
+            if (encoding == 'base64') {
+                // TODO: test on react native, see if we need decode fork
+                decodedBytes = Buffer.from(await evt.data.text(), 'base64');
+            } else {
+                decodedBytes = await evt.data.arrayBuffer();
+            }
+            const responseBuffer = decodedBytes;
             switch (state.__type) {
                 case 'connecting':
                     if (responseBuffer.byteLength !== 0) {
                         throw new Error('Encountered unexpected message while connecting');
                     }
                     const ecdhKeypair = await generateECDHKeypair();
-                    socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
+                    const binaryMsg = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
+                    if (encoding == 'base64') {
+                        socket.send(encode(new TextDecoder().decode(binaryMsg)));
+                    } else {
+                        socket.send(binaryMsg);
+                    }
                     state = {
                         __type: 'hello_req_sent',
                         associationPublicKey: associationKeypair.publicKey,
@@ -415,17 +437,20 @@ export async function transactRemote<TReturn>(
                     const wallet = createMobileWalletProxy(sessionProperties.protocol_version,
                         async (method, params) => {
                             const id = nextJsonRpcMessageId++;
-                            socket.send(
-                                await encryptJsonRpcMessage(
-                                    {
-                                        id,
-                                        jsonrpc: '2.0' as const,
-                                        method,
-                                        params: params ?? {},
-                                    }, 
-                                    sharedSecret,
-                                ),
-                            );
+                            const binaryMsg = await encryptJsonRpcMessage(
+                                {
+                                    id,
+                                    jsonrpc: '2.0' as const,
+                                    method,
+                                    params: params ?? {},
+                                }, 
+                                sharedSecret,
+                            )
+                            if (encoding == 'base64') {
+                                socket.send(encode(new TextDecoder().decode(binaryMsg)));
+                            } else {
+                                socket.send(binaryMsg);
+                            }
                             return new Promise((resolve, reject) => {
                                 jsonRpcResponsePromises[id] = {
                                     resolve(result) {
@@ -481,7 +506,8 @@ export async function transactRemote<TReturn>(
             if (connectionStartTime === undefined) {
                 connectionStartTime = Date.now();
             }
-            socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL]);
+            socket = new WebSocket(websocketURL, 
+                [WEBSOCKET_PROTOCOL_BINARY, WEBSOCKET_PROTOCOL_BASE64]);
             socket.addEventListener('open', handleOpen);
             socket.addEventListener('close', handleClose);
             socket.addEventListener('error', handleError);
