@@ -19,7 +19,8 @@
         "./package.json": "./package.json",
         ".": {
             "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
+            "require": "./lib/cjs/index.js",
+            "types": "./lib/types/index.d.ts"
         }
     },
     "files": [
