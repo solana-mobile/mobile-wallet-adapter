@@ -29,16 +29,18 @@ object JSONSerializationUtils {
     }
 
     @Throws(JSONException::class)
-    private fun convertArrayToJson(readableArray: ReadableArray): JSONArray {
+    private fun convertArrayToJson(readableArray: ReadableArray?): JSONArray {
         val array = JSONArray()
-        for (i in 0 until readableArray.size()) {
-            when (readableArray.getType(i)) {
-                ReadableType.Array -> array.put(convertArrayToJson(readableArray.getArray(i)))
-                ReadableType.Boolean -> array.put(readableArray.getBoolean(i))
-                ReadableType.Map -> array.put(convertMapToJson(readableArray.getMap(i)))
-                ReadableType.Null -> {}
-                ReadableType.Number -> array.put(readableArray.getDouble(i))
-                ReadableType.String -> array.put(readableArray.getString(i))
+        readableArray?.let {
+            for (i in 0 until readableArray.size()) {
+                when (readableArray.getType(i)) {
+                    ReadableType.Array -> array.put(convertArrayToJson(readableArray.getArray(i)))
+                    ReadableType.Boolean -> array.put(readableArray.getBoolean(i))
+                    ReadableType.Map -> array.put(convertMapToJson(readableArray.getMap(i)))
+                    ReadableType.Null -> {}
+                    ReadableType.Number -> array.put(readableArray.getDouble(i))
+                    ReadableType.String -> array.put(readableArray.getString(i))
+                }
             }
         }
         return array
