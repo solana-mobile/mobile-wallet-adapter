@@ -48,6 +48,9 @@ jobs:
       - name: '[Example App] Install yarn dependencies'
         working-directory: 'examples/example-react-native-app/'
         run: yarn install --frozen-lockfile
+      - name: '[Example App] TypeScript Compile'
+        working-directory: 'examples/example-react-native-app/'
+        run: npx tsc
       - name: '[Example App] Lint'
         working-directory: 'examples/example-react-native-app/'
         run: yarn lint
@@ -59,6 +62,9 @@ jobs:
       - name: '[Example Wallet] Install yarn dependencies'
         working-directory: 'examples/example-react-native-wallet/'
         run: yarn install --frozen-lockfile
+      - name: '[Example Wallet] TypeScript Compile'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: npx tsc
       - name: '[Example Wallet] Lint'
         working-directory: 'examples/example-react-native-wallet/'
         run: yarn lint
