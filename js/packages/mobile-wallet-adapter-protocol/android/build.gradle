@@ -144,7 +144,7 @@ def kotlin_version = getExtOrDefault('kotlinVersion')
 dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"  // From node_modules
-  implementation "com.solanamobile:mobile-wallet-adapter-clientlib:2.0.5"
+  implementation "com.solanamobile:mobile-wallet-adapter-clientlib:2.0.6"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0"
 }
