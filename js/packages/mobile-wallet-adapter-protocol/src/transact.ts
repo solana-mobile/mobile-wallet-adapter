@@ -46,6 +46,8 @@ type State =
     | { __type: 'disconnected' }
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
 
+type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: ArrayBuffer }; 
+
 function assertSecureContext() {
     if (typeof window === 'undefined' || window.isSecureContext !== true) {
         throw new SolanaMobileWalletAdapterError(
@@ -76,6 +78,27 @@ function assertSecureEndpointSpecificURI(walletUriBase: string) {
 function getSequenceNumberFromByteArray(byteArray: ArrayBuffer): number {
     const view = new DataView(byteArray);
     return view.getUint32(0, /* littleEndian */ false);
+}
+
+function decodeVarLong(byteArray: ArrayBuffer): { value: number, offset: number} {
+    var bytes = new Uint8Array(byteArray), 
+        l = byteArray.byteLength,
+        limit = 10,
+        value = 0, 
+        offset = 0, 
+        b;
+    do {
+        if (offset >= l || offset > limit) throw new RangeError('Failed to decode varint');
+        b = bytes[offset++];
+        value |= (b & 0x7F) << (7 * offset);
+    } while (b >= 0x80);
+
+    return { value, offset };
+}
+
+function getReflectorIdFromByteArray(byteArray: ArrayBuffer): ArrayBuffer {
+    let { value: length, offset } = decodeVarLong(byteArray);
+    return byteArray.slice(offset, offset + length);
 }
 
 export async function transact<TReturn>(
@@ -306,7 +329,7 @@ export async function transactRemote<TReturn>(
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const { associationUrl, reflectorId } = await getRemoteSessionUrl(associationKeypair.publicKey, config.remoteHostAuthority, config?.baseUri);
-    const websocketURL = `wss://${config?.remoteHostAuthority}/reflect?id=${reflectorId}`;
+    const websocketURL = `wss://${config?.remoteHostAuthority}/reflect`;
 
     let connectionStartTime: number;
     const getNextRetryDelayMs = (() => {
@@ -316,7 +339,7 @@ export async function transactRemote<TReturn>(
     let nextJsonRpcMessageId = 1;
     let lastKnownInboundSequenceNumber = 0;
     let encoding: PROTOCOL_ENCODING;
-    let state: State = { __type: 'disconnected' };
+    let state: RemoteState = { __type: 'disconnected' };
     return { associationUrl, result: new Promise((resolve, reject) => {
         let socket: WebSocket;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -378,8 +401,18 @@ export async function transactRemote<TReturn>(
             const responseBuffer = decodedBytes;
             switch (state.__type) {
                 case 'connecting':
-                    if (responseBuffer.byteLength !== 0) {
+                    if (responseBuffer.byteLength == 0) {
                         throw new Error('Encountered unexpected message while connecting');
+                    }
+                    const reflectorId = getReflectorIdFromByteArray(responseBuffer);
+                    state = {
+                        __type: 'reflector_id_received',
+                        reflectorId: reflectorId
+                    };
+                    break;
+                case 'reflector_id_received':
+                    if (responseBuffer.byteLength !== 0) {
+                        throw new Error('Encountered unexpected message while awaiting reflection');
                     }
                     const ecdhKeypair = await generateECDHKeypair();
                     const binaryMsg = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
