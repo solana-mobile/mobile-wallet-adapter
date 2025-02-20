@@ -257,6 +257,18 @@ Bluetooth LE session establishment is not defined in this version of the mobile-
 
 ## Session establishment
 
+### REFLECTOR_PING
+
+#### Direction
+
+Dapp and wallet endpoint to WebSocket reflector server
+
+#### Description
+
+When a WebSocket reflector server is in use, there is an additional requirement that the server be notified when a client has successfully established a connection. The WebSocket protocol begins with a [HTTP upgrade handshake](https://datatracker.ietf.org/doc/html/rfc6455#section-1.2) between the client and server. After completinng the handshake, the server must then wait for the client to receive this response and complete thier connection establishment. Requiring clients to immediately send a ping to the server once they are ready to receive messages provides a deterministic way for the server to be notified when it can proceed with the remaining session establishment messages ([`REFLECTOR_ID`](#reflector_id) and [`APP_PING`](#app_ping)).
+
+A `REFLECTOR_PING` is an empty message sent from an endpoints to the WebSocket server immedaitely after it has successfully established a connection to the reflector. Once this message has been received, the endpoint is considered connected and any further `REFLECTOR_PING` messages from this endpoint should be ignored.
+
 ### REFLECTOR_ID
 
 #### Direction
