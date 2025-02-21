@@ -218,7 +218,7 @@ where:
 
 - `association_token` is as described above
 - `host_authority` is the address of a publicly routable WebSocket server implementing the reflector protocol
-- `reflector_unique_id` is a URL encoded byte sequence generated securely at random by the reflector server
+- `reflector_unique_id` is the base64url encoded [reflector ID](#reflector_id) byte sequence generated securely at random by the reflector server
 - `version` is the major version of the protocol that the client supports, as described above
 
 The dapp endpoint should attempt to connect to the WebSocket address `wss://<host_authority>/reflect`. On connection, the dapp endpoint must wait for the server to respond with a [`REFLECTOR_ID`](#reflector_id) message before proceeding to association. 
@@ -1012,17 +1012,22 @@ and
 wss://<host_authority>/reflect?id=<reflector_unique_id>
 ```
 
+Where `reflector_unique_id` is the base64url encoded [reflector ID](#reflector_id) byte sequence specified by the server and provided to the wallet endpoint during [association](#association).
+
 The reflector will maintain two data sets:
 
 1. Half open reflections - this set contains endpoint connections which are waiting for their corresponding counterparty to connect, along with the connection established time
 1. Fully open reflections - this set contains endpoint connections for which the corresponding counterparty has connected, along with the reflection established time
 
-On a new connection, the reflector will take the following action:
+On a new connection, the reflector will take the following actions:
 
-- If a `reflector_unique_id` parameter is provided:
-    - If there is an entry in the fully open reflections data set for the specified `reflector_unique_id`, the connection will be closed immediately
+First, after completing the connection handshake, the server must wait for the endpoint to notfiy that it is ready to receive websocket frames via the [`REFLECTOR_PING`](#reflector_ping) message before proceeding.
+
+Once the [`REFLECTOR_PING`](#reflector_ping) message has been received from the endpoint:
+- If a `reflector_unique_id` parameter was provided:
+    - If there is an entry in the fully open reflections data set for the specified `reflector_unique_id`, the connection will be closed immediately.
     - If there is an entry in the half open reflections data set for the specified `reflector_unique_id`, that entry will be removed and a new entry added to the fully open reflections data set for the connection pair. Reflection will be started for this connection pair.
-- Otherwise, if a `reflector_unique_id` is not provided, a new `reflector_unique_id` will be generated and an entry will be added to the half open reflections data set for this connection. A [`REFLECTOR_ID`](#reflector_id) message should be sent immediately to the connected endpoint containing the `reflector_unique_id` assigned to this connection . All incoming data on this connection will be silently discarded.
+- Otherwise, if a `reflector_unique_id` was not provided, a new `reflector_unique_id` will be generated and an entry will be added to the half open reflections data set for this connection. A [`REFLECTOR_ID`](#reflector_id) message should be sent immediately to the connected endpoint containing the `reflector_unique_id` assigned to this connection . All incoming data on this connection will be silently discarded.
 
 When reflection begins, the reflector will send an [`APP_PING`](#app_ping) message to each connection, and then begin transmitting all messages received from each connection to the other connection in the pair.
 
