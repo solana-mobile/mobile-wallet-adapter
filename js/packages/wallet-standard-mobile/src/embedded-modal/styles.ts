@@ -104,6 +104,7 @@ export const css = `
 
 .mobile-wallet-adapter-embedded-modal-subtitle {
     margin: auto;
+    margin-right: 60px;
     padding: 20px;
     color: #6E8286;
 }
@@ -116,7 +117,7 @@ export const css = `
     margin: auto;
     padding-left: 20px;
     padding-right: 20px;
-    border-radius: 24px;
+    border-radius: 18px;
     color: #A8B6B8;
     align-items: center;
 }

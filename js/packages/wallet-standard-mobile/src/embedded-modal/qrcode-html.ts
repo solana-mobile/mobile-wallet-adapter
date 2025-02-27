@@ -28,7 +28,7 @@ export const QRCodeHtml = `
 		<div class="mobile-wallet-adapter-embedded-modal-divider"><hr></div>
 		<div>
 			<div class="mobile-wallet-adapter-embedded-modal-subtitle">
-				Follow the instructions on your device. When you are finished, this screen will update.
+				Follow the instructions on your device. When you're finished, this screen will update.
 			</div>
 			<div class="mobile-wallet-adapter-embedded-modal-progress-badge">
 				<div>
