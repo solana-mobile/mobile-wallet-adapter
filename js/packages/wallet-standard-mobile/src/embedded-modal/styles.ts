@@ -1,58 +1,53 @@
 export const css = `
 .mwa-modal-container {
-    display: flex;
-    flex-direction: column;       
-    flex-wrap: wrap;
-    max-width: 780px;
-    top: 15%;
-    left: 0;
-    right: 0;
-    margin: auto;
+    display: flex; /* Use flexbox to center content */
     justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
-    background: #ffffff;
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.mwa-modal-card {
+    display: flex;
+    flex-direction: column;
+    margin: auto 20px;
+    max-width: 780px;
     padding: 20px;
     border-radius: 24px;
+    background: #ffffff;
     font-family: Arial, Verdana, sans-serif;
 }
 
-.mwa-modal-container> div:nth-child(2) {
+.mwa-modal-card> div:nth-child(2) {
     display: flex; 
     /*border: 1px solid blue;*/
     margin-top: 40px;
     padding: 10px;
 }
 
-.mwa-modal-container > div:nth-child(2) > div:first-child {
+.mwa-modal-card > div:nth-child(2) > div:first-child {
     display: flex;
     flex-direction: column;
     flex: 2;
-    /*border: 1px solid orange;*/
     margin-right: 30px;
 }
 
-.mwa-modal-container > div:nth-child(2) > div:nth-child(2) {
+.mwa-modal-card > div:nth-child(2) > div:nth-child(2) {
     display: flex;
     flex-direction: column;
     flex: 1;
-    /*border: 1px solid orange;*/
     margin-left: auto;
 }
 
-.mwa-modal-container > div:nth-child(4) {
+.mwa-modal-card > div:nth-child(4) {
     display: flex;
     padding: 10px;
-    /*border: 1px solid red;*/
 }
-
-/*.mwa-modal-container > div:nth-child(4) > div:first-child {*/
-/*    border: 1px solid magenta;*/
-/*}*/
-
-/*.mwa-modal-container > div:nth-child(4) > div:nth-child(2) {*/
-/*    border: 1px solid pink;*/
-/*}*/
 
 .mwa-modal-close {
     display: flex;
@@ -82,10 +77,9 @@ export const css = `
 .mwa-modal-icon {}
 
 .mwa-modal-title {
-    margin-top: 40px;
     color: #000000;
-    font-size: 40px;
-    font-weight: bold;
+    font-size: 2.5em;
+    font-weight: 600;
 }
 
 .mwa-modal-qr-label {
@@ -94,14 +88,13 @@ export const css = `
 }
 
 .mwa-modal-qr-code-container {
-    /*border: 1px solid red;*/
+    margin-left: auto;
 }
 
 .mwa-modal-divider {
     margin-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
-    /*margin-bottom: 10px;*/
 }
 
 .mwa-modal-divider hr {
@@ -136,33 +129,35 @@ export const css = `
     margin-right: auto;
 }
 
-/* Medium screens */
-@media all and (max-width: 500px) {
-    .mwa-modal-container {
+/* Smaller screens */
+@media all and (max-width: 600px) {
+    .mwa-modal-card {
         text-align: center;
     }
-    .mwa-modal-container> div:nth-child(2) {
+    .mwa-modal-card> div:nth-child(2) {
         flex-direction: column;
     }
-    .mwa-modal-container> div:nth-child(2) > div:first-child {
+    .mwa-modal-card> div:nth-child(2) > div:first-child {
         margin: auto;
     }
-    .mwa-modal-container > div:nth-child(2) > div:nth-child(2) {
+    .mwa-modal-card > div:nth-child(2) > div:nth-child(2) {
         margin: auto;
         flex: 2 auto;
     }
-    .mwa-modal-container> div:nth-child(4) {
+    .mwa-modal-card> div:nth-child(4) {
         flex-direction: column;
     }
     .mwa-modal-icon {
         display: none;
     }
     .mwa-modal-title {
-        margin-top: 0px;
-        font-size: 24px;
+        font-size: 1.5em;
     }
     .mwa-modal-qr-label {
         text-align: center;
+    }
+    .mwa-modal-qr-code-container {
+        margin: auto;
     }
 }
 
@@ -200,8 +195,8 @@ export const css = `
 
 .spinner {
     position: relative;
-    width: 24px;
-    height: 24px;
+    width: 1.5em;
+    height: 1.5em;
     margin: auto;
     animation: spin 10s linear infinite;
 }
@@ -219,8 +214,8 @@ export const css = `
     position: absolute;
     top: 0;
     overflow: hidden;
-    width: 12px;
-    height: 24px;
+    width: .75em;
+    height: 1.5em;
 }
 .left, .leftWrapper {
     left: 0;
@@ -232,10 +227,10 @@ export const css = `
     right: 0;
 }
 .circle {
-    border: 2px solid #A8B6B8;
-    width: 20px; /* 24px - 2*2px border */
-    height: 20px; /* 24px - 2*2px border */
-    border-radius: 12px;
+    border: .125em solid #A8B6B8;
+    width: 1.25em; /* 1.5em - 2*0.125em border */
+    height: 1.25em; /* 1.5em - 2*0.125em border */
+    border-radius: 0.75em; /* 0.5*1.5em spinner size 8 */
 }
 .left {
     transform-origin: 100% 50%;

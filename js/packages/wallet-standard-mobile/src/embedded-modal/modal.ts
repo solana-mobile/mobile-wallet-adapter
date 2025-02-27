@@ -51,9 +51,9 @@ export default class EmbeddedModal {
     }
 
     private async populateQRCode(qrUrl: string) {
-        const qrcodeContainer = document.getElementById('mobile-wallet-adapter-embedded-modal-qr-code-container');
+        const qrcodeContainer = document.getElementById('mwa-modal-qr-code-container');
         if (qrcodeContainer) {
-            const qrCodeElement = await QRCode.toCanvas(qrUrl, { width: 400 });
+            const qrCodeElement = await QRCode.toCanvas(qrUrl, { width: 200, margin: 0 });
             if (qrcodeContainer.firstElementChild !== null) {
                 qrcodeContainer.replaceChild(qrCodeElement, qrcodeContainer.firstElementChild);
             } else qrcodeContainer.appendChild(qrCodeElement);
@@ -73,7 +73,7 @@ export default class EmbeddedModal {
         // Create a container for the modal
         this._root = document.createElement('div');
         this._root.id = 'mobile-wallet-adapter-embedded-root-ui';
-        this._root.className = 'mobile-wallet-adapter-embedded-modal';
+        this._root.className = 'mwa-modal';
         this._root.innerHTML = QRCodeHtml;
         this._root.style.display = 'none';
 
@@ -89,7 +89,7 @@ export default class EmbeddedModal {
     private attachEventListeners() {
         if (!this._root) return;
 
-        const closeBtn = this._root.querySelector('#mobile-wallet-adapter-embedded-modal-close');
+        const closeBtn = this._root.querySelector('#mwa-modal-close');
         const cancelBtn = this._root.querySelector('#cancel-btn');
         const connectBtn = this._root.querySelector('#connect-btn');
 
