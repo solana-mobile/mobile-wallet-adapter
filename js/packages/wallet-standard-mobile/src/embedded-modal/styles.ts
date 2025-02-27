@@ -26,8 +26,7 @@ export const css = `
 
 .mobile-wallet-adapter-embedded-modal-card> div:nth-child(2) {
     display: flex; 
-    /*border: 1px solid blue;*/
-    margin-top: 40px;
+    margin-top: 10px;
     padding: 10px;
 }
 
@@ -35,6 +34,7 @@ export const css = `
     display: flex;
     flex-direction: column;
     flex: 2;
+    margin-top: auto;
     margin-right: 30px;
 }
 
@@ -208,8 +208,6 @@ export const css = `
     bottom: 0;
     left: 0;
     right: 0;
-    /*border: 2px solid #D4D7DC;*/
-    /*border-radius: 12px;*/
 }
 .right, .rightWrapper, .left, .leftWrapper {
     position: absolute;
