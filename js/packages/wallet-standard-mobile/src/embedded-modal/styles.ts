@@ -1,11 +1,19 @@
 export const css = `
 .mwa-modal-container {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 24px;
     display: flex;
     flex-direction: column;       
     flex-wrap: wrap;
+    max-width: 780px;
+    top: 15%;
+    left: 0;
+    right: 0;
+    margin: auto;
+    justify-content: center; /* Center horizontally */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 24px;
     font-family: Arial, Verdana, sans-serif;
 }
 
@@ -71,6 +79,8 @@ export const css = `
     fill: #fff;
 }
 
+.mwa-modal-icon {}
+
 .mwa-modal-title {
     margin-top: 40px;
     color: #000000;
@@ -124,6 +134,36 @@ export const css = `
 
 .mwa-modal-progress-badge > div:nth-child(2) {
     margin-right: auto;
+}
+
+/* Medium screens */
+@media all and (max-width: 500px) {
+    .mwa-modal-container {
+        text-align: center;
+    }
+    .mwa-modal-container> div:nth-child(2) {
+        flex-direction: column;
+    }
+    .mwa-modal-container> div:nth-child(2) > div:first-child {
+        margin: auto;
+    }
+    .mwa-modal-container > div:nth-child(2) > div:nth-child(2) {
+        margin: auto;
+        flex: 2 auto;
+    }
+    .mwa-modal-container> div:nth-child(4) {
+        flex-direction: column;
+    }
+    .mwa-modal-icon {
+        display: none;
+    }
+    .mwa-modal-title {
+        margin-top: 0px;
+        font-size: 24px;
+    }
+    .mwa-modal-qr-label {
+        text-align: center;
+    }
 }
 
 /* Spinner */
