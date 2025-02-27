@@ -10,6 +10,7 @@ export const css = `
     width: 100%; /* Full width */
     height: 100%; /* Full height */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    overflow-y: auto; /* enable scrolling */
 }
 
 .mwa-modal-card {
