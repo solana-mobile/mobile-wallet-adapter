@@ -1,5 +1,5 @@
 export const css = `
-.mwa-modal-container {
+.mobile-wallet-adapter-embedded-modal-container {
     display: flex; /* Use flexbox to center content */
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */
@@ -13,7 +13,7 @@ export const css = `
     overflow-y: auto; /* enable scrolling */
 }
 
-.mwa-modal-card {
+.mobile-wallet-adapter-embedded-modal-card {
     display: flex;
     flex-direction: column;
     margin: auto 20px;
@@ -24,33 +24,33 @@ export const css = `
     font-family: Arial, Verdana, sans-serif;
 }
 
-.mwa-modal-card> div:nth-child(2) {
+.mobile-wallet-adapter-embedded-modal-card> div:nth-child(2) {
     display: flex; 
     /*border: 1px solid blue;*/
     margin-top: 40px;
     padding: 10px;
 }
 
-.mwa-modal-card > div:nth-child(2) > div:first-child {
+.mobile-wallet-adapter-embedded-modal-card > div:nth-child(2) > div:first-child {
     display: flex;
     flex-direction: column;
     flex: 2;
     margin-right: 30px;
 }
 
-.mwa-modal-card > div:nth-child(2) > div:nth-child(2) {
+.mobile-wallet-adapter-embedded-modal-card > div:nth-child(2) > div:nth-child(2) {
     display: flex;
     flex-direction: column;
     flex: 1;
     margin-left: auto;
 }
 
-.mwa-modal-card > div:nth-child(4) {
+.mobile-wallet-adapter-embedded-modal-card > div:nth-child(4) {
     display: flex;
     padding: 10px;
 }
 
-.mwa-modal-close {
+.mobile-wallet-adapter-embedded-modal-close {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,53 +62,53 @@ export const css = `
     border-radius: 50%;
 }
 
-.mwa-modal-close:focus-visible {
+.mobile-wallet-adapter-embedded-modal-close:focus-visible {
     outline-color: red;
 }
 
-.mwa-modal-close svg {
+.mobile-wallet-adapter-embedded-modal-close svg {
     fill: #546266;
     transition: fill 200ms ease 0s;
 }
 
-.mwa-modal-close:hover svg {
+.mobile-wallet-adapter-embedded-modal-close:hover svg {
     fill: #fff;
 }
 
-.mwa-modal-icon {}
+.mobile-wallet-adapter-embedded-modal-icon {}
 
-.mwa-modal-title {
+.mobile-wallet-adapter-embedded-modal-title {
     color: #000000;
     font-size: 2.5em;
     font-weight: 600;
 }
 
-.mwa-modal-qr-label {
+.mobile-wallet-adapter-embedded-modal-qr-label {
     text-align: right;
     color: #000000;
 }
 
-.mwa-modal-qr-code-container {
+.mobile-wallet-adapter-embedded-modal-qr-code-container {
     margin-left: auto;
 }
 
-.mwa-modal-divider {
+.mobile-wallet-adapter-embedded-modal-divider {
     margin-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
 }
 
-.mwa-modal-divider hr {
+.mobile-wallet-adapter-embedded-modal-divider hr {
     border-top: 1px solid #D9DEDE;
 }
 
-.mwa-modal-subtitle {
+.mobile-wallet-adapter-embedded-modal-subtitle {
     margin: auto;
     padding: 20px;
     color: #6E8286;
 }
 
-.mwa-modal-progress-badge {
+.mobile-wallet-adapter-embedded-modal-progress-badge {
     display: flex;
     background: #F7F8F8;
     height: 56px;
@@ -121,43 +121,43 @@ export const css = `
     align-items: center;
 }
 
-.mwa-modal-progress-badge > div:first-child {
+.mobile-wallet-adapter-embedded-modal-progress-badge > div:first-child {
     margin-left: auto;
     margin-right: 20px;
 }
 
-.mwa-modal-progress-badge > div:nth-child(2) {
+.mobile-wallet-adapter-embedded-modal-progress-badge > div:nth-child(2) {
     margin-right: auto;
 }
 
 /* Smaller screens */
 @media all and (max-width: 600px) {
-    .mwa-modal-card {
+    .mobile-wallet-adapter-embedded-modal-card {
         text-align: center;
     }
-    .mwa-modal-card> div:nth-child(2) {
+    .mobile-wallet-adapter-embedded-modal-card> div:nth-child(2) {
         flex-direction: column;
     }
-    .mwa-modal-card> div:nth-child(2) > div:first-child {
+    .mobile-wallet-adapter-embedded-modal-card> div:nth-child(2) > div:first-child {
         margin: auto;
     }
-    .mwa-modal-card > div:nth-child(2) > div:nth-child(2) {
+    .mobile-wallet-adapter-embedded-modal-card > div:nth-child(2) > div:nth-child(2) {
         margin: auto;
         flex: 2 auto;
     }
-    .mwa-modal-card> div:nth-child(4) {
+    .mobile-wallet-adapter-embedded-modal-card> div:nth-child(4) {
         flex-direction: column;
     }
-    .mwa-modal-icon {
+    .mobile-wallet-adapter-embedded-modal-icon {
         display: none;
     }
-    .mwa-modal-title {
+    .mobile-wallet-adapter-embedded-modal-title {
         font-size: 1.5em;
     }
-    .mwa-modal-qr-label {
+    .mobile-wallet-adapter-embedded-modal-qr-label {
         text-align: center;
     }
-    .mwa-modal-qr-code-container {
+    .mobile-wallet-adapter-embedded-modal-qr-code-container {
         margin: auto;
     }
 }
