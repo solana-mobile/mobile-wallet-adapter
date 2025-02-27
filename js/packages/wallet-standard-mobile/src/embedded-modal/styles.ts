@@ -155,6 +155,9 @@ export const css = `
     .mobile-wallet-adapter-embedded-modal-title {
         font-size: 1.5em;
     }
+    .mobile-wallet-adapter-embedded-modal-subtitle {
+        margin-right: unset;
+    }
     .mobile-wallet-adapter-embedded-modal-qr-label {
         text-align: center;
     }
