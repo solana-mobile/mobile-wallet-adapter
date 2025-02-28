@@ -22,6 +22,12 @@ export const css = `
     border-radius: 24px;
     background: #ffffff;
     font-family: Arial, Verdana, sans-serif;
+    transform: translateY(-200%);
+    animation: slide-in 0.5s forwards;
+}
+
+@keyframes slide-in {
+    100% { transform: translateY(0%); }
 }
 
 .mobile-wallet-adapter-embedded-modal-card> div:nth-child(2) {
