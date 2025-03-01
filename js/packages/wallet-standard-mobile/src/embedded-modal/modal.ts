@@ -15,7 +15,8 @@ export default class EmbeddedModal {
         this.injectQRCodeHTML = this.injectQRCodeHTML.bind(this);
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
-        this.connect = this.connect.bind(this);
+        this._connect = this._connect.bind(this);
+        this._handleKeyDown = this._handleKeyDown.bind(this);
 
         this._root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
     }
@@ -53,7 +54,7 @@ export default class EmbeddedModal {
     private async populateQRCode(qrUrl: string) {
         const qrcodeContainer = document.getElementById('mobile-wallet-adapter-embedded-modal-qr-code-container');
         if (qrcodeContainer) {
-            const qrCodeElement = await QRCode.toCanvas(qrUrl, { width: 400 });
+            const qrCodeElement = await QRCode.toCanvas(qrUrl, { width: 200, margin: 0 });
             if (qrcodeContainer.firstElementChild !== null) {
                 qrcodeContainer.replaceChild(qrCodeElement, qrcodeContainer.firstElementChild);
             } else qrcodeContainer.appendChild(qrCodeElement);
@@ -89,18 +90,17 @@ export default class EmbeddedModal {
     private attachEventListeners() {
         if (!this._root) return;
 
-        const closeBtn = this._root.querySelector('#mobile-wallet-adapter-embedded-modal-close');
-        const cancelBtn = this._root.querySelector('#cancel-btn');
         const connectBtn = this._root.querySelector('#connect-btn');
+        connectBtn?.addEventListener('click', this._connect);
 
-        closeBtn?.addEventListener('click', () => this.close());
-        cancelBtn?.addEventListener('click', () => this.close());
-        connectBtn?.addEventListener('click', () => this.connect());
+        const closers = [...this._root.querySelectorAll('[data-modal-close]')];
+        closers.forEach(closer => closer?.addEventListener('click', this.close));
     }
 
     open() {
         console.debug('Modal open');
         if (this._root) {
+            document.addEventListener('keydown', this._handleKeyDown);
             this._root.style.display = 'flex';
             this.setConnectionStatus('not-connected'); // Reset status when opening
         }
@@ -109,12 +109,13 @@ export default class EmbeddedModal {
     close() {
         console.debug('Modal close');
         if (this._root) {
+            document.removeEventListener('keydown', this._handleKeyDown);
             this._root.style.display = 'none';
             this.setConnectionStatus('not-connected'); // Reset status when closing
         }
     }
 
-    private connect() {
+    private _connect() {
         console.log('Connecting...');
         // Mock connection
         this.setConnectionStatus('connecting');
@@ -124,5 +125,9 @@ export default class EmbeddedModal {
             this.setConnectionStatus('connected');
             console.log('Connected!');
         }, 5000); // 5 seconds delay
+    }
+
+    private _handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Escape') this.close();
     }
 }
