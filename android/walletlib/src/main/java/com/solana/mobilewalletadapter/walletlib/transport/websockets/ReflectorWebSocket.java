@@ -4,6 +4,7 @@
 
 package com.solana.mobilewalletadapter.walletlib.transport.websockets;
 
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.IntRange;
@@ -22,8 +23,8 @@ import org.java_websocket.protocols.Protocol;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.List;
 
 public class ReflectorWebSocket implements MessageSender {
     private static final String TAG = ReflectorWebSocket.class.getSimpleName();
@@ -60,8 +61,9 @@ public class ReflectorWebSocket implements MessageSender {
 
         try {
             mWebSocketClient = new WebSocketClient(mUri,
-                    new Draft_6455(Collections.emptyList(), Collections.singletonList(
-                            new Protocol(WebSocketsTransportContract.WEBSOCKETS_PROTOCOL))),
+                    new Draft_6455(Collections.emptyList(), List.of(
+                            new Protocol(WebSocketsTransportContract.WEBSOCKETS_PROTOCOL),
+                            new Protocol(WebSocketsTransportContract.WEBSOCKETS_BASE64_PROTOCOL))),
                     null, mConnectTimeoutMs) {
                 @Override
                 public void onOpen(ServerHandshake handshakeData) {
@@ -89,7 +91,8 @@ public class ReflectorWebSocket implements MessageSender {
                         }
 
                         Log.v(TAG, "onTextMessage");
-                        mMessageReceiver.receiverMessageReceived(message.getBytes(StandardCharsets.UTF_8));
+                        byte[] binary = Base64.decode(message, Base64.DEFAULT);
+                        mMessageReceiver.receiverMessageReceived(binary);
                     }
                 }
 
@@ -204,7 +207,11 @@ public class ReflectorWebSocket implements MessageSender {
         if (mState != State.CONNECTED) {
             throw new IOException("Send failed; not connected");
         }
-        mWebSocketClient.send(message);
+        if (mWebSocketClient.getProtocol().acceptProvidedProtocol(WebSocketsTransportContract.WEBSOCKETS_BASE64_PROTOCOL)) {
+            mWebSocketClient.send(Base64.encodeToString(message, Base64.DEFAULT));
+        } else {
+            mWebSocketClient.send(message);
+        }
     }
 
     public interface StateCallbacks {

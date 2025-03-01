@@ -5,6 +5,7 @@
 package com.solana.mobilewalletadapter.walletlib.scenario;
 
 import android.content.Context;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
@@ -36,10 +37,13 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 150, 150, 200, 500, 500, 750, 750, 1000 }; // == 30s, which allows time for a user to choose a wallet from the disambiguation dialog, and for that wallet to start
     private static final int CONNECT_TIMEOUT_MS = 30000;
 
-    @WebSocketsTransportContract.ReflectorIdRange
-    public final long reflectorId;
+    public final byte[] reflectorIdBytes;
     @NonNull
     private final URI mWebSocketUri;
+
+    @Deprecated(forRemoval = true)
+    @WebSocketsTransportContract.ReflectorIdRange
+    public final long reflectorId = 0;
 
     // All access to these members must be protected by mLock
     private final Object mLock = new Object();
@@ -50,6 +54,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     private NotifyingCompletableFuture<Boolean> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
     private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
+    @Deprecated(forRemoval = true)
     public RemoteWebSocketServerScenario(@NonNull Context context,
                                          @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                          @NonNull AuthIssuerConfig authIssuerConfig,
@@ -57,6 +62,44 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                                          @NonNull byte[] associationPublicKey,
                                          @NonNull String hostAuthority,
                                          @WebSocketsTransportContract.ReflectorIdRange long reflectorId) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, List.of());
+        throw new UnsupportedOperationException("numeric reflector ID's are no longer supported, reflector ID must be a byte array");
+    }
+
+    @Deprecated(forRemoval = true)
+    public RemoteWebSocketServerScenario(@NonNull Context context,
+                                         @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                         @NonNull AuthIssuerConfig authIssuerConfig,
+                                         @NonNull Callbacks callbacks,
+                                         @NonNull byte[] associationPublicKey,
+                                         @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                                         @NonNull String hostAuthority,
+                                         @WebSocketsTransportContract.ReflectorIdRange long reflectorId) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, associationProtocolVersions);
+        throw new UnsupportedOperationException("numeric reflector ID's are no longer supported, reflector ID must be a byte array");
+    }
+
+    @Deprecated(forRemoval = true)
+    public RemoteWebSocketServerScenario(@NonNull Context context,
+                                         @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                         @NonNull AuthIssuerConfig authIssuerConfig,
+                                         @NonNull Callbacks callbacks,
+                                         @NonNull byte[] associationPublicKey,
+                                         @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
+                                         @NonNull String scheme,
+                                         @NonNull String hostAuthority,
+                                         @WebSocketsTransportContract.ReflectorIdRange long reflectorId) {
+        super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey, associationProtocolVersions);
+        throw new UnsupportedOperationException("numeric reflector ID's are no longer supported, reflector ID must be a byte array");
+    }
+
+    public RemoteWebSocketServerScenario(@NonNull Context context,
+                                         @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
+                                         @NonNull AuthIssuerConfig authIssuerConfig,
+                                         @NonNull Callbacks callbacks,
+                                         @NonNull byte[] associationPublicKey,
+                                         @NonNull String hostAuthority,
+                                         @NonNull byte[] reflectorId) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
                 List.of(), hostAuthority, reflectorId);
     }
@@ -68,7 +111,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                                          @NonNull byte[] associationPublicKey,
                                          @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
                                          @NonNull String hostAuthority,
-                                         @WebSocketsTransportContract.ReflectorIdRange long reflectorId) {
+                                         @NonNull byte[] reflectorId) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
                 WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_SCHEME, hostAuthority, reflectorId, associationProtocolVersions, new DefaultWalletIconProvider(context));
     }
@@ -81,7 +124,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                                          @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
                                          @NonNull String scheme,
                                          @NonNull String hostAuthority,
-                                         @WebSocketsTransportContract.ReflectorIdRange long reflectorId) {
+                                         @NonNull byte[] reflectorId) {
         this(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
                 scheme, hostAuthority, reflectorId, associationProtocolVersions, new DefaultWalletIconProvider(context));
 
@@ -94,15 +137,17 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                                               @NonNull byte[] associationPublicKey,
                                               @NonNull String scheme,
                                               @NonNull String hostAuthority,
-                                              @WebSocketsTransportContract.ReflectorIdRange long reflectorId,
+                                              @NonNull byte[] reflectorId,
                                               @NonNull List<SessionProperties.ProtocolVersion> associationProtocolVersions,
                                               @NonNull WalletIconProvider iconProvider) {
         super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
                 associationProtocolVersions, iconProvider);
-        this.reflectorId = reflectorId;
+        this.reflectorIdBytes = reflectorId;
+        String reflectorIdUrl = Base64.encodeToString(reflectorId, Base64.URL_SAFE + Base64.NO_WRAP);
+
         try {
             mWebSocketUri = new URI(scheme, hostAuthority, WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_PATH,
-                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_QUERY + "=" + reflectorId, null);
+                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_QUERY + "=" + reflectorIdUrl, null);
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("Failed assembling a WebSocket URI", e);
         }

@@ -29,6 +29,7 @@ public class WebSocketsTransportContract {
     public @interface ReflectorIdRange {}
 
     public static final String WEBSOCKETS_PROTOCOL = "com.solana.mobilewalletadapter.v1";
+    public static final String WEBSOCKETS_BASE64_PROTOCOL = "com.solana.mobilewalletadapter.v1.base64";
 
     private WebSocketsTransportContract() {}
 }
