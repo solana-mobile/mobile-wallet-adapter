@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.bitcoinj.core.Base58
+import org.bitcoinj.base.Base58
 import javax.inject.Inject
 
 data class SampleViewState(
