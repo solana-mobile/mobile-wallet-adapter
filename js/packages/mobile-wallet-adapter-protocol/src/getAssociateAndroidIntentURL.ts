@@ -2,8 +2,8 @@ import arrayBufferToBase64String from './arrayBufferToBase64String.js';
 import { assertAssociationPort } from './associationPort.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
 import getStringWithURLUnsafeBase64CharactersReplaced from './getStringWithURLUnsafeBase64CharactersReplaced.js';
-import { assertReflectorId } from './reflectorId.js';
 import { ProtocolVersion } from './types.js';
+import { fromUint8Array } from './base64Utils.js';
 
 const INTENT_NAME = 'solana-wallet';
 
@@ -60,19 +60,19 @@ export default async function getAssociateAndroidIntentURL(
 export async function getRemoteAssociateAndroidIntentURL(
     associationPublicKey: CryptoKey,
     hostAuthority: string,
-    putativeId: number,
+    reflectorId: Uint8Array,
     associationURLBase?: string,
     protocolVersions: ProtocolVersion[] = ['v1'],
 ): Promise<URL> {
-    const reflectorId = assertReflectorId(putativeId);
     const exportedKey = await crypto.subtle.exportKey('raw', associationPublicKey);
     const encodedKey = arrayBufferToBase64String(exportedKey);
     const url = getIntentURL('v1/associate/remote', associationURLBase);
     url.searchParams.set('association', getStringWithURLUnsafeBase64CharactersReplaced(encodedKey));
     url.searchParams.set('reflector', `${hostAuthority}`);
-    url.searchParams.set('id', `${reflectorId}`);
+    url.searchParams.set('id', `${fromUint8Array(reflectorId, true)}`);
     protocolVersions.forEach( (version) => {
         url.searchParams.set('v', version);
     })
+    console.log("association Url: " + url);
     return url;
 }
