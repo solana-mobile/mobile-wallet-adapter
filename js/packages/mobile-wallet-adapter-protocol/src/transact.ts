@@ -391,50 +391,36 @@ export async function transactRemote<TReturn>(
         const handleMessage = async (evt: MessageEvent<string | Blob>) => {
             let decodedBytes: ArrayBuffer;
             if (encoding == 'base64') { // base64 encoding
-                const message = await evt.data as string;
-                decodedBytes = toUint8Array(message);
-                console.log(`received base64 message: ${message}`);
+                try {
+                    const message = await evt.data as string;
+                    decodedBytes = toUint8Array(message).buffer;
+                    console.log(`received base64 message: (${decodedBytes.byteLength} bytes) ${message}`);
+                } catch (_) { 
+                    const bytes = await (evt.data as Blob).arrayBuffer();
+                    decodedBytes = toUint8Array(new TextDecoder().decode(bytes)).buffer;
+                }
             } else {
                 decodedBytes = await (evt.data as Blob).arrayBuffer();
             }
             const responseBuffer = decodedBytes;
-            switch (state.__type) {
-                case 'connecting':
-                    if (responseBuffer.byteLength == 0) {
-                        throw new Error('Encountered unexpected message while connecting');
-                    }
-                    const reflectorId = getReflectorIdFromByteArray(responseBuffer);
-                    state = {
-                        __type: 'reflector_id_received',
-                        reflectorId: reflectorId
-                    };
-                    console.log(`reflector id received: ${Buffer.from(reflectorId).toString('base64')}`)
-                    const associationUrl = await getRemoteAssociateAndroidIntentURL(
-                        associationKeypair.publicKey, 
-                        config.remoteHostAuthority, 
-                        reflectorId,
-                        config?.baseUri
-                    );
-                    resolve({ associationUrl, socket, disposeSocket });
-                    break;
-                case 'reflector_id_received':
-                    if (responseBuffer.byteLength !== 0) {
-                        throw new Error('Encountered unexpected message while awaiting reflection');
-                    }
-                    const ecdhKeypair = await generateECDHKeypair();
-                    const binaryMsg = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
-                    if (encoding == 'base64') {
-                        socket.send(fromUint8Array(binaryMsg));
-                    } else {
-                        socket.send(binaryMsg);
-                    }
-                    state = {
-                        __type: 'hello_req_sent',
-                        associationPublicKey: associationKeypair.publicKey,
-                        ecdhPrivateKey: ecdhKeypair.privateKey,
-                    };
-                    console.log(`hello_req sent 2`);
-                    break;
+            if (state.__type === 'connecting') {
+                if (responseBuffer.byteLength == 0) {
+                    throw new Error('Encountered unexpected message while connecting');
+                }
+                // const reflectorId = getReflectorIdFromByteArray(responseBuffer);
+                const reflectorId = new Uint8Array(responseBuffer);
+                state = {
+                    __type: 'reflector_id_received',
+                    reflectorId: reflectorId
+                };
+                console.log(`reflector id received: (${reflectorId.length}) ${Buffer.from(reflectorId).toString('base64')}`)
+                const associationUrl = await getRemoteAssociateAndroidIntentURL(
+                    associationKeypair.publicKey, 
+                    config.remoteHostAuthority, 
+                    reflectorId,
+                    config?.baseUri
+                );
+                resolve({ associationUrl, socket, disposeSocket });
             }
         };
         let disposeSocket: () => void;
@@ -469,9 +455,14 @@ export async function transactRemote<TReturn>(
         socket.addEventListener('message', async (evt: MessageEvent<string | Blob>) => {
             let decodedBytes: ArrayBuffer;
             if (encoding == 'base64') { // base64 encoding
-                const message = await evt.data as string;
-                decodedBytes = toUint8Array(message);
-                console.log(`received base64 message: ${message}`);
+                try {
+                    const message = await evt.data as string;
+                    decodedBytes = toUint8Array(message).buffer;
+                    console.log(`received base64 message: (${decodedBytes.byteLength} bytes) ${message}`);
+                } catch (_) { 
+                    const bytes = await (evt.data as Blob).arrayBuffer();
+                    decodedBytes = toUint8Array(new TextDecoder().decode(bytes)).buffer;
+                }
             } else {
                 decodedBytes = await (evt.data as Blob).arrayBuffer();
             }
