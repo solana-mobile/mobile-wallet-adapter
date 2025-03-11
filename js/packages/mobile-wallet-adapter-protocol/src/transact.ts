@@ -396,6 +396,7 @@ export async function transactRemote<TReturn>(
                     decodedBytes = toUint8Array(message).buffer;
                     console.log(`received base64 message: (${decodedBytes.byteLength} bytes) ${message}`);
                 } catch (_) { 
+                    // TODO: workaround for current reflector implementation, remove when fixed
                     const bytes = await (evt.data as Blob).arrayBuffer();
                     decodedBytes = toUint8Array(new TextDecoder().decode(bytes)).buffer;
                 }
@@ -407,6 +408,7 @@ export async function transactRemote<TReturn>(
                 if (responseBuffer.byteLength == 0) {
                     throw new Error('Encountered unexpected message while connecting');
                 }
+                // TODO: workaround for current reflector implementation, remove when fixed
                 // const reflectorId = getReflectorIdFromByteArray(responseBuffer);
                 const reflectorId = new Uint8Array(responseBuffer);
                 state = {
@@ -460,6 +462,7 @@ export async function transactRemote<TReturn>(
                     decodedBytes = toUint8Array(message).buffer;
                     console.log(`received base64 message: (${decodedBytes.byteLength} bytes) ${message}`);
                 } catch (_) { 
+                    // TODO: workaround for current reflector implementation, remove when fixed
                     const bytes = await (evt.data as Blob).arrayBuffer();
                     decodedBytes = toUint8Array(new TextDecoder().decode(bytes)).buffer;
                 }
