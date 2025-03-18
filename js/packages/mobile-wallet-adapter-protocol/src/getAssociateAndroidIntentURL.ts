@@ -73,6 +73,5 @@ export async function getRemoteAssociateAndroidIntentURL(
     protocolVersions.forEach( (version) => {
         url.searchParams.set('v', version);
     })
-    console.log("association Url: " + url);
     return url;
 }
