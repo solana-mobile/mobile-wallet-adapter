@@ -339,6 +339,14 @@ export async function transactRemote<TReturn>(
     let lastKnownInboundSequenceNumber = 0;
     let encoding: PROTOCOL_ENCODING;
     let state: RemoteState = { __type: 'disconnected' };
+    let decodeBytes = async (evt: MessageEvent<string | Blob>) => {
+        if (encoding == 'base64') { // base64 encoding
+            const message = await evt.data as string;
+            return toUint8Array(message).buffer;
+        } else {
+            return await (evt.data as Blob).arrayBuffer();
+        }
+    };
     const { associationUrl, socket, disposeSocket } = await new Promise<{ associationUrl: URL, socket: WebSocket, disposeSocket: () => void }>((resolve, reject) => {
         let socket: WebSocket;
         const handleOpen = async () => {
@@ -389,28 +397,12 @@ export async function transactRemote<TReturn>(
             }
         };
         const handleMessage = async (evt: MessageEvent<string | Blob>) => {
-            let decodedBytes: ArrayBuffer;
-            if (encoding == 'base64') { // base64 encoding
-                try {
-                    const message = await evt.data as string;
-                    decodedBytes = toUint8Array(message).buffer;
-                    console.log(`received base64 message: (${decodedBytes.byteLength} bytes) ${message}`);
-                } catch (_) { 
-                    // TODO: workaround for current reflector implementation, remove when fixed
-                    const bytes = await (evt.data as Blob).arrayBuffer();
-                    decodedBytes = toUint8Array(new TextDecoder().decode(bytes)).buffer;
-                }
-            } else {
-                decodedBytes = await (evt.data as Blob).arrayBuffer();
-            }
-            const responseBuffer = decodedBytes;
+            const responseBuffer = await decodeBytes(evt);
             if (state.__type === 'connecting') {
                 if (responseBuffer.byteLength == 0) {
                     throw new Error('Encountered unexpected message while connecting');
                 }
-                // TODO: workaround for current reflector implementation, remove when fixed
-                // const reflectorId = getReflectorIdFromByteArray(responseBuffer);
-                const reflectorId = new Uint8Array(responseBuffer);
+                const reflectorId = getReflectorIdFromByteArray(responseBuffer);
                 state = {
                     __type: 'reflector_id_received',
                     reflectorId: reflectorId
@@ -455,21 +447,7 @@ export async function transactRemote<TReturn>(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
         socket.addEventListener('message', async (evt: MessageEvent<string | Blob>) => {
-            let decodedBytes: ArrayBuffer;
-            if (encoding == 'base64') { // base64 encoding
-                try {
-                    const message = await evt.data as string;
-                    decodedBytes = toUint8Array(message).buffer;
-                    console.log(`received base64 message: (${decodedBytes.byteLength} bytes) ${message}`);
-                } catch (_) { 
-                    // TODO: workaround for current reflector implementation, remove when fixed
-                    const bytes = await (evt.data as Blob).arrayBuffer();
-                    decodedBytes = toUint8Array(new TextDecoder().decode(bytes)).buffer;
-                }
-            } else {
-                decodedBytes = await (evt.data as Blob).arrayBuffer();
-            }
-            const responseBuffer = decodedBytes;
+            const responseBuffer = await decodeBytes(evt);
             switch (state.__type) {
                 case 'reflector_id_received':
                     if (responseBuffer.byteLength !== 0) {
