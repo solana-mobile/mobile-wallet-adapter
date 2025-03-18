@@ -113,13 +113,7 @@ public class ReflectorWebSocket implements MessageSender {
                         Log.v(TAG, "onBinaryMessage");
                         byte[] binary = new byte[bytes.remaining()];
                         bytes.get(binary);
-                        // dirty workaround in the case where the server incorrectly sends
-                        // a binary frame when text frames are supposed to be in use
-                        if (mWebSocketClient.getProtocol().acceptProvidedProtocol(WebSocketsTransportContract.WEBSOCKETS_BASE64_PROTOCOL)) {
-                            mMessageReceiver.receiverMessageReceived(Base64.decode(binary, Base64.DEFAULT));
-                        } else {
-                            mMessageReceiver.receiverMessageReceived(binary);
-                        }
+                        mMessageReceiver.receiverMessageReceived(binary);
                     }
                 }
 
@@ -133,9 +127,11 @@ public class ReflectorWebSocket implements MessageSender {
                         }
 
                         Log.v(TAG, "onDisconnected");
+                        if (mState != State.CONNECTED) {
+                            mMessageReceiver.receiverDisconnected();
+                        }
                         mState = State.CLOSED;
                         mWebSocketClient = null;
-                        mMessageReceiver.receiverDisconnected();
                         if (mStateCallbacks != null) {
                             mStateCallbacks.onConnectionClosed();
                         }
