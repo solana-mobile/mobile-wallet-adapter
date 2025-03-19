@@ -412,6 +412,7 @@ export async function transactRemote<TReturn>(
                     reflectorId,
                     config?.baseUri
                 );
+                socket.removeEventListener('message', handleMessage);
                 resolve({ associationUrl, socket, disposeSocket });
             }
         };
