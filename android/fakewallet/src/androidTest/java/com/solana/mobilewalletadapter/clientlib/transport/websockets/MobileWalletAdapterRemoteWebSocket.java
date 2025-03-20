@@ -1,8 +1,4 @@
-/*
- * Copyright (c) 2024 Solana Mobile Inc.
- */
-
-package com.solana.mobilewalletadapter.walletlib.transport.websockets;
+package com.solana.mobilewalletadapter.clientlib.transport.websockets;
 
 import android.util.Base64;
 import android.util.Log;
@@ -14,6 +10,7 @@ import androidx.annotation.Nullable;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MessageSender;
+import com.solana.util.Varint;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_6455;
@@ -26,8 +23,8 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
-public class ReflectorWebSocket implements MessageSender {
-    private static final String TAG = ReflectorWebSocket.class.getSimpleName();
+public class MobileWalletAdapterRemoteWebSocket implements MessageSender {
+    private static final String TAG = MobileWalletAdapterRemoteWebSocket.class.getSimpleName();
 
     @NonNull
     private final URI mUri;
@@ -40,7 +37,7 @@ public class ReflectorWebSocket implements MessageSender {
     private State mState = State.NOT_CONNECTED;
     private WebSocketClient mWebSocketClient;
 
-    public ReflectorWebSocket(@NonNull URI uri,
+    public MobileWalletAdapterRemoteWebSocket(@NonNull URI uri,
                               @NonNull MessageReceiver messageReceiver,
                               @Nullable StateCallbacks stateCallbacks,
                               @IntRange(from=0) int connectTimeoutMs) {
@@ -67,7 +64,7 @@ public class ReflectorWebSocket implements MessageSender {
                     null, mConnectTimeoutMs) {
                 @Override
                 public void onOpen(ServerHandshake handshakeData) {
-                    synchronized (ReflectorWebSocket.this) {
+                    synchronized (this) {
                         assert(mState == State.CONNECTING || mState == State.CLOSED);
                         if (mState != State.CONNECTING) {
                             return;
@@ -83,10 +80,14 @@ public class ReflectorWebSocket implements MessageSender {
 
                 @Override
                 public void onMessage(String message) {
-                    synchronized (ReflectorWebSocket.this) {
-                        assert(mState == State.CONNECTED || mState == State.REFLECTION_ESTABLISHED ||
-                                mState == State.CLOSING);
-                        if (mState == State.CONNECTED && message.isEmpty()) {
+                    synchronized (this) {
+                        assert(mState == State.CONNECTED || mState == State.REFLECTOR_ID_RECEIVED ||
+                                mState == State.REFLECTION_ESTABLISHED || mState == State.CLOSING);
+                        if (mState == State.CONNECTED && !message.isEmpty()) {
+                            doReflectorIdReceived(Base64.decode(message, Base64.DEFAULT));
+                            return;
+                        }
+                        if (mState == State.REFLECTOR_ID_RECEIVED && message.isEmpty()) {
                             doReflectionEstablished();
                             return;
                         }
@@ -102,10 +103,14 @@ public class ReflectorWebSocket implements MessageSender {
 
                 @Override
                 public void onMessage(ByteBuffer bytes) {
-                    synchronized (ReflectorWebSocket.this) {
-                        assert(mState == State.CONNECTED || mState == State.REFLECTION_ESTABLISHED ||
-                                mState == State.CLOSING);
-                        if (mState == State.CONNECTED && !bytes.hasRemaining()) {
+                    synchronized (this) {
+                        assert(mState == State.CONNECTED || mState == State.REFLECTOR_ID_RECEIVED ||
+                                mState == State.REFLECTION_ESTABLISHED || mState == State.CLOSING);
+                        if (mState == State.CONNECTED && bytes.hasRemaining()) {
+                            doReflectorIdReceived(bytes.array());
+                            return;
+                        }
+                        if (mState == State.REFLECTOR_ID_RECEIVED && !bytes.hasRemaining()) {
                             doReflectionEstablished();
                             return;
                         }
@@ -122,7 +127,7 @@ public class ReflectorWebSocket implements MessageSender {
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    synchronized (ReflectorWebSocket.this) {
+                    synchronized (this) {
                         assert(mState == State.CONNECTED || mState == State.REFLECTION_ESTABLISHED ||
                                 mState == State.CLOSING || mState == State.CLOSED);
                         if (mState == State.CLOSED) {
@@ -143,9 +148,10 @@ public class ReflectorWebSocket implements MessageSender {
 
                 @Override
                 public void onError(Exception ex) {
-                    synchronized (ReflectorWebSocket.this) {
-                        assert(mState == State.CONNECTING || mState == State.REFLECTION_ESTABLISHED ||
-                                mState == State.CONNECTED || mState == State.CLOSING || mState == State.CLOSED);
+                    synchronized (this) {
+                        assert(mState == State.CONNECTING || mState == State.REFLECTOR_ID_RECEIVED ||
+                                mState == State.REFLECTION_ESTABLISHED || mState == State.CONNECTED ||
+                                mState == State.CLOSING || mState == State.CLOSED);
 
                         Log.w(TAG, "WebSockets error", ex);
                         switch (mState) {
@@ -227,24 +233,38 @@ public class ReflectorWebSocket implements MessageSender {
         }
     }
 
+    private void doReflectorIdReceived(byte[] reflectorIdMessage) {
+        int length = (int) Varint.INSTANCE.decode(reflectorIdMessage);
+        byte[] reflectorId = new byte[length];
+        System.arraycopy(reflectorIdMessage, reflectorIdMessage.length - length,
+                reflectorId, 0, length);
+        mState = State.REFLECTOR_ID_RECEIVED;
+        if (mStateCallbacks != null) {
+            mStateCallbacks.onReflectorIdReceived(reflectorId);
+        }
+    }
+
     private void doReflectionEstablished() {
         Log.v(TAG, "onReflectionEstablished");
         mState = State.REFLECTION_ESTABLISHED;
         if (mStateCallbacks != null) {
             mStateCallbacks.onReflectionEstablished();
         }
-        mMessageReceiver.receiverConnected(ReflectorWebSocket.this);
+        mMessageReceiver.receiverConnected(this);
     }
 
     public interface StateCallbacks {
         /** Invoked when this WebSocket connects successfully to the server */
         void onConnected();
 
-        /** Invoked when this WebSocket fails attempting to connect to the server */
-        void onConnectionFailed();
+        /** Invoked when this WebSocket successfully receives the REFLECTOR_ID message from the server */
+        void onReflectorIdReceived(byte[] reflectorId);
+
+        /** Invoked when this WebSocket successfully establishes reflection from the server */
+        void onReflectionEstablished();
 
         /** Invoked when this WebSocket fails attempting to connect to the server */
-        void onReflectionEstablished();
+        void onConnectionFailed();
 
         /**
          * Invoked when this WebSocket connection to the server is terminated.
@@ -254,6 +274,8 @@ public class ReflectorWebSocket implements MessageSender {
     }
 
     private enum State {
-        NOT_CONNECTED, CONNECTING, CONNECTED, REFLECTION_ESTABLISHED, CLOSING, CLOSED
+        NOT_CONNECTED, CONNECTING, CONNECTED,
+        REFLECTOR_ID_RECEIVED, REFLECTION_ESTABLISHED,
+        CLOSING, CLOSED
     }
 }
