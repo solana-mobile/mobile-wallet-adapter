@@ -65,10 +65,10 @@ class AssociateFragment : Fragment() {
             }
         }
 
-        viewBinding.buttonEndSession.visibility =
+        viewBinding.btnEndSession.visibility =
             if (activityViewModel.isConnectionRemote()) View.VISIBLE else View.GONE
 
-        viewBinding.buttonEndSession.setOnClickListener {
+        viewBinding.btnEndSession.setOnClickListener {
             activityViewModel.endSession()
         }
     }

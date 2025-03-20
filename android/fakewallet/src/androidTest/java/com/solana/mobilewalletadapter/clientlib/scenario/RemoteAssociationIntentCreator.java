@@ -15,7 +15,6 @@ import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
 import com.solana.mobilewalletadapter.common.AssociationContract;
-import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
 import java.util.Set;
@@ -27,7 +26,7 @@ public class RemoteAssociationIntentCreator {
     @NonNull
     public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
                                                  @NonNull String hostAuthority,
-                                                 @WebSocketsTransportContract.ReflectorIdRange long reflectorId,
+                                                 @NonNull byte[] reflectorId,
                                                  @NonNull MobileWalletAdapterSession session) {
         final byte[] associationPublicKey = session.getEncodedAssociationPublicKey();
         final String associationToken = Base64.encodeToString(associationPublicKey,
@@ -43,7 +42,7 @@ public class RemoteAssociationIntentCreator {
         final Intent intent = new Intent()
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(null, "", 0, "", Set.of()));
+                .setData(createAssociationUri(null, "", new byte[1], "", Set.of()));
         final ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return (resolveInfo != null);
     }
@@ -51,7 +50,7 @@ public class RemoteAssociationIntentCreator {
     @NonNull
     private static Uri createAssociationUri(@Nullable Uri endpointPrefix,
                                             @NonNull String hostAuthority,
-                                            @WebSocketsTransportContract.ReflectorIdRange long reflectorId,
+                                            @NonNull byte[] reflectorId,
                                             @NonNull String associationToken,
                                             @NonNull Set<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
         if (endpointPrefix != null && (!"https".equals(endpointPrefix.getScheme()) || !endpointPrefix.isHierarchical())) {
@@ -75,7 +74,7 @@ public class RemoteAssociationIntentCreator {
                 .appendQueryParameter(AssociationContract.REMOTE_PARAMETER_REFLECTOR_HOST_AUTHORITY,
                         hostAuthority)
                 .appendQueryParameter(AssociationContract.REMOTE_PARAMETER_REFLECTOR_ID,
-                        Long.toString(reflectorId));
+                        Base64.encodeToString(reflectorId, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
 
         for (SessionProperties.ProtocolVersion version : supportedProtocolVersions) {
             if (version != SessionProperties.ProtocolVersion.LEGACY)

@@ -42,6 +42,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -198,24 +199,24 @@ class MainActivityTest {
         val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
 
         // simulate remote reflector server
-        val port = 8881
+        val port = 8800 + Random.nextInt(0, 100)
         val server = WebSocketReflectorServer(port)
         server.init()
 
         // simulate client side scenario
-//        val hostAuthority = "0.tcp.us-cal-1.ngrok.io:13926" // use external server
         val hostAuthority = "localhost:$port"
-        val remoteAssociation = RemoteAssociationScenario("ws", hostAuthority, Scenario.DEFAULT_CLIENT_TIMEOUT_MS)
-        val associationIntent = RemoteAssociationIntentCreator.createAssociationIntent(
-            null,
-            remoteAssociation.hostAuthority,
-            remoteAssociation.reflectorId,
-            remoteAssociation.session
-        )
+        val remoteAssociation = RemoteAssociationScenario("ws", hostAuthority,
+            Scenario.DEFAULT_CLIENT_TIMEOUT_MS) { scenario, reflectorId ->
+            val associationIntent = RemoteAssociationIntentCreator.createAssociationIntent(
+                null,
+                scenario.hostAuthority,
+                reflectorId,
+                scenario.session
+            )
+            ActivityScenario.launch<MainActivity>(associationIntent)
+        }
 
         // when
-        ActivityScenario.launch<MainActivity>(associationIntent)
-
         // trigger authorization from client
         val authorization = remoteAssociation.start().get().run {
             authorize(identityUri, iconUri, identityName, chain, null, null, null, null)

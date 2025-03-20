@@ -4,7 +4,6 @@
 
 package com.solana.mobilewalletadapter.clientlib.scenario;
 
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
@@ -13,7 +12,7 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient;
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterSession;
-import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterWebSocket;
+import com.solana.mobilewalletadapter.clientlib.transport.websockets.MobileWalletAdapterRemoteWebSocket;
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.util.NotifyOnCompleteFuture;
@@ -21,12 +20,9 @@ import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class RemoteAssociationScenario extends Scenario {
@@ -35,8 +31,6 @@ public class RemoteAssociationScenario extends Scenario {
     private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 150, 150, 200, 500, 500, 750, 750, 1000 }; // == 30s, which allows time for a user to choose a wallet from the disambiguation dialog, and for that wallet to start
     private static final int CONNECT_TIMEOUT_MS = 30000;
 
-    @WebSocketsTransportContract.ReflectorIdRange
-    private final long mReflectorId;
     @NonNull
     private final String mHostAuthority;
     @NonNull
@@ -47,14 +41,15 @@ public class RemoteAssociationScenario extends Scenario {
     private State mState = State.NOT_STARTED;
     private int mConnectionAttempts = 0;
     private MobileWalletAdapterSession mMobileWalletAdapterSession; // valid in all states except State.CLOSED
-    private MobileWalletAdapterWebSocket mMobileWalletAdapterWebSocket;
+    private MobileWalletAdapterRemoteWebSocket mMobileWalletAdapterWebSocket;
     private ScheduledExecutorService mConnectionBackoffExecutor; // valid in State.CONNECTING
     private NotifyingCompletableFuture<MobileWalletAdapterClient> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
     private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
-    public long getReflectorId() {
-        return mReflectorId;
+    public interface ReflectorIdCallback {
+        void reflectorIdReceived(RemoteAssociationScenario scenario, byte[] reflectorId);
     }
+    private ReflectorIdCallback mReflectorIdCallback;
 
     public String getHostAuthority() {
         return mHostAuthority;
@@ -65,35 +60,21 @@ public class RemoteAssociationScenario extends Scenario {
     }
 
     public RemoteAssociationScenario(@NonNull String hostAuthority,
-                                     @IntRange(from = 0) int clientTimeoutMs) {
-        this(WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_SCHEME, hostAuthority, clientTimeoutMs);
+                                     @IntRange(from = 0) int clientTimeoutMs,
+                                     @NonNull ReflectorIdCallback reflectorIdCallback) {
+        this(WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_SCHEME, hostAuthority, clientTimeoutMs, reflectorIdCallback);
     }
 
+    // Only for testing
     public RemoteAssociationScenario(@NonNull String scheme, @NonNull String hostAuthority,
-                                     @IntRange(from = 0) int clientTimeoutMs) {
+                                     @IntRange(from = 0) int clientTimeoutMs,
+                                     @NonNull ReflectorIdCallback reflectorIdCallback) {
         super(clientTimeoutMs);
 
         mHostAuthority = hostAuthority;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mReflectorId = ThreadLocalRandom.current().nextLong(
-                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MIN,
-                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MAX);
-        } else {
-            Random rng = new SecureRandom();
-            long bound = WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MAX -
-                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MIN + 1;
-            long bits, val;
-            do {
-                bits = (rng.nextLong() << 1) >>> 1;
-                val = bits % bound;
-            } while (bits-val+(bound-1) < 0L);
-            mReflectorId = val + WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_MIN;
-        }
-
         try {
             mWebSocketUri = new URI(scheme, hostAuthority,
-                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_PATH,
-                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_ID_QUERY + "=" + mReflectorId, null);
+                    WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_PATH, null, null);
         } catch (URISyntaxException e) {
             throw new UnsupportedOperationException("Failed assembling a WebSocket URI", e);
         }
@@ -101,6 +82,8 @@ public class RemoteAssociationScenario extends Scenario {
         mMobileWalletAdapterSession = new MobileWalletAdapterSession(
                 mMobileWalletAdapterClient,
                 mSessionStateCallbacks);
+
+        mReflectorIdCallback = reflectorIdCallback;
 
         Log.v(TAG, "Creating remote association scenario for " + mWebSocketUri);
     }
@@ -213,7 +196,7 @@ public class RemoteAssociationScenario extends Scenario {
     private void doTryConnect() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
-        mMobileWalletAdapterWebSocket = new MobileWalletAdapterWebSocket(mWebSocketUri,
+        mMobileWalletAdapterWebSocket = new MobileWalletAdapterRemoteWebSocket(mWebSocketUri,
                 mMobileWalletAdapterSession, mWebSocketStateCallbacks, CONNECT_TIMEOUT_MS);
         mMobileWalletAdapterWebSocket.connect(); // [async]
     }
@@ -222,8 +205,8 @@ public class RemoteAssociationScenario extends Scenario {
     private void doConnected() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
-        Log.v(TAG, "WebSocket connection established, waiting for session establishment");
-        mState = State.ESTABLISHING_SESSION;
+        Log.v(TAG, "WebSocket connection established, waiting for reflector ID");
+        mState = State.AWAITING_REFLECTOR_ID;
         mConnectionBackoffExecutor.shutdownNow();
         mConnectionBackoffExecutor = null;
     }
@@ -263,6 +246,25 @@ public class RemoteAssociationScenario extends Scenario {
         mState = State.CLOSED;
         destroyResourcesOnClose();
         notifyCloseCompleted();
+    }
+
+    @GuardedBy("mLock")
+    private void doReflectorIdReceived(byte[] reflectorId) {
+        assert(mState == State.AWAITING_REFLECTOR_ID || mState == State.CLOSING);
+        if (mState == State.CLOSING) return;
+        Log.v(TAG, "WebSocket reflector Id received, waiting for reflection");
+        mState = State.REFLECTOR_ID_RECEIVED;
+        if (mReflectorIdCallback != null) {
+            mReflectorIdCallback.reflectorIdReceived(this, reflectorId);
+        }
+    }
+
+    @GuardedBy("mLock")
+    private void doReflectionEstablished() {
+        assert(mState == State.REFLECTOR_ID_RECEIVED || mState == State.CLOSING);
+        if (mState == State.CLOSING) return;
+        Log.v(TAG, "WebSocket reflection established, waiting for session establishment");
+        mState = State.ESTABLISHING_SESSION;
     }
 
     @GuardedBy("mLock")
@@ -337,11 +339,25 @@ public class RemoteAssociationScenario extends Scenario {
         }
     }
 
-    private final MobileWalletAdapterWebSocket.StateCallbacks mWebSocketStateCallbacks = new MobileWalletAdapterWebSocket.StateCallbacks() {
+    private final MobileWalletAdapterRemoteWebSocket.StateCallbacks mWebSocketStateCallbacks = new MobileWalletAdapterRemoteWebSocket.StateCallbacks() {
         @Override
         public void onConnected() {
             synchronized (mLock) {
                 doConnected();
+            }
+        }
+
+        @Override
+        public void onReflectorIdReceived(byte[] reflectorId) {
+            synchronized (mLock) {
+                doReflectorIdReceived(reflectorId);
+            }
+        }
+
+        @Override
+        public void onReflectionEstablished() {
+            synchronized (mLock) {
+                doReflectionEstablished();
             }
         }
 
@@ -384,7 +400,8 @@ public class RemoteAssociationScenario extends Scenario {
     };
 
     private enum State {
-        NOT_STARTED, CONNECTING, ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
+        NOT_STARTED, CONNECTING, AWAITING_REFLECTOR_ID, REFLECTOR_ID_RECEIVED,
+        ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
     }
 
     public static class ConnectionFailedException extends RuntimeException {

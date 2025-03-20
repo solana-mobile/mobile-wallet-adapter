@@ -4,12 +4,14 @@
 
 package com.solana.mobilewalletadapter.walletlib.transport.websockets.server;
 
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.MessageSender;
+import com.solana.util.Varint;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.WebSocketAdapter;
@@ -32,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,11 +47,11 @@ public class WebSocketReflectorServer extends WebSocketServer {
     private State mState = State.NOT_INITIALIZED;
 
     @NonNull
-    private final Map<Long, ReflectorWebSocket> mHalfOpenConnections = new HashMap<>();
+    private final Map<String, ReflectorWebSocket> mHalfOpenConnections = new HashMap<>();
     @NonNull
-    private final List<Long> mFullOpenConnections = new ArrayList<>(1);
+    private final List<String> mFullOpenConnections = new ArrayList<>(1);
 
-    private final Pattern idPattern = Pattern.compile("id=([0-9]*)");
+    private final Pattern idPattern = Pattern.compile("id=([A-Za-z0-9-_]*={0,3})");
 
     public WebSocketReflectorServer() { this(8080); }
 
@@ -91,24 +94,50 @@ public class WebSocketReflectorServer extends WebSocketServer {
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         Log.d(TAG, "reflector WebSocket opened: " + handshake.getResourceDescriptor());
         final URI uri = URI.create(handshake.getResourceDescriptor());
-        Matcher matcher = idPattern.matcher(uri.getQuery());
-        if (matcher.find()) {
-            long id = Long.parseLong(matcher.group(1));
-            final ReflectorWebSocket ws = (ReflectorWebSocket) conn;
+        final ReflectorWebSocket ws = (ReflectorWebSocket) conn;
+        final String query = uri.getQuery();
+        String id;
+        if (query == null) {
+            // create id for new connection
+            byte[] idBytes = new byte[32];
+            new Random().nextBytes(idBytes);
+            id = Base64.encodeToString(idBytes, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
             ws.id = id;
-            if (mFullOpenConnections.contains(id)) {
-                Log.d(TAG, "reflector WebSocket connection already exists for id: " + id + ", closing");
-                conn.close();
-            } else if(!mHalfOpenConnections.containsKey(id)) {
-                Log.d(TAG, "reflector WebSocket new half open connection: " + id);
-                mHalfOpenConnections.put(id, ws);
+            mHalfOpenConnections.put(id, ws);
+            Log.d(TAG, "reflector WebSocket new half open connection: " + id);
+
+            // send REFLECTOR_ID message to client
+            byte[] reflectorIdLength = Varint.INSTANCE.encode(32);
+            byte[] reflectorIdPayload = new byte[reflectorIdLength.length + idBytes.length];
+            System.arraycopy(reflectorIdLength, 0, reflectorIdPayload, 0, reflectorIdLength.length);
+            System.arraycopy(idBytes, 0, reflectorIdPayload, reflectorIdLength.length, idBytes.length);
+            ws.send(reflectorIdPayload);
+        } else {
+            Matcher matcher = idPattern.matcher(query);
+            if (matcher.find()) {
+                id = matcher.group(1);
+                ws.id = id;
+                if (mFullOpenConnections.contains(id)) {
+                    Log.d(TAG, "reflector WebSocket connection already exists for id: " + id + ", closing");
+                    conn.close();
+                } else if (mHalfOpenConnections.containsKey(id)) {
+                    Log.d(TAG, "reflector WebSocket new fully open connection: " + id);
+                    ReflectorWebSocket other = mHalfOpenConnections.get(id);
+                    other.reflect = ws;
+                    ws.reflect = other;
+                    mHalfOpenConnections.remove(id);
+                    mFullOpenConnections.add(id);
+
+                    // Send APP_PING (empty message) to both clients
+                    ws.send("");
+                    other.send("");
+                } else {
+                    Log.d(TAG, "reflector WebSocket invalid id: " + id);
+                    conn.close();
+                }
             } else {
-                Log.d(TAG, "reflector WebSocket new fully open connection: " + id);
-                ReflectorWebSocket other = mHalfOpenConnections.get(id);
-                mHalfOpenConnections.remove(id);
-                mFullOpenConnections.add(id);
-                ws.reflect = other;
-                other.reflect = ws;
+                Log.d(TAG, "reflector WebSocket invalid query: " + query);
+                conn.close();
             }
         }
     }
@@ -183,7 +212,7 @@ public class WebSocketReflectorServer extends WebSocketServer {
     }
 
     private static class ReflectorWebSocket extends WebSocketImpl implements MessageSender {
-        private long id; // valid only after opened
+        private String id; // valid only after opened
         private WebSocket reflect; // valid only after full connection established
 
         public ReflectorWebSocket(WebSocketAdapter a, Draft d) {

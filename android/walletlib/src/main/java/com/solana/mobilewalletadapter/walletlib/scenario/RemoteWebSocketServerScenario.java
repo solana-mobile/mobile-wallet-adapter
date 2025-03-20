@@ -143,7 +143,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         super(context, mobileWalletAdapterConfig, authIssuerConfig, callbacks, associationPublicKey,
                 associationProtocolVersions, iconProvider);
         this.reflectorIdBytes = reflectorId;
-        String reflectorIdUrl = Base64.encodeToString(reflectorId, Base64.URL_SAFE + Base64.NO_WRAP);
+        String reflectorIdUrl = Base64.encodeToString(reflectorId,
+                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
 
         try {
             mWebSocketUri = new URI(scheme, hostAuthority, WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_PATH,
