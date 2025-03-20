@@ -33,7 +33,7 @@
         android:indeterminate="true" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button_end_session"
+        android:id="@+id/btn_end_session"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/view_progress_indicator"

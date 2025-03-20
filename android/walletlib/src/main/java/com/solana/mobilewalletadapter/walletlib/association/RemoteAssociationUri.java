@@ -6,6 +6,7 @@ package com.solana.mobilewalletadapter.walletlib.association;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
@@ -19,13 +20,15 @@ public class RemoteAssociationUri extends AssociationUri {
     @NonNull
     public final String reflectorHostAuthority;
 
-    public final long reflectorId;
+    @Deprecated(forRemoval = true)
+    public final long reflectorId = -1;
+    public final byte[] reflectorIdBytes;
 
     public RemoteAssociationUri(@NonNull Uri uri) {
         super(uri);
         validate(uri);
         reflectorHostAuthority = parseReflectorHostAuthority(uri);
-        reflectorId = parseReflectorId(uri);
+        reflectorIdBytes = parseReflectorId(uri);
     }
 
     private static void validate(@NonNull Uri uri) {
@@ -42,7 +45,7 @@ public class RemoteAssociationUri extends AssociationUri {
                                    @NonNull AuthIssuerConfig authIssuerConfig,
                                    @NonNull Scenario.Callbacks callbacks) {
         return new RemoteWebSocketServerScenario(context, mobileWalletAdapterConfig,
-                authIssuerConfig, callbacks, associationPublicKey, reflectorHostAuthority, reflectorId);
+                authIssuerConfig, callbacks, associationPublicKey, reflectorHostAuthority, reflectorIdBytes);
     }
 
     @NonNull
@@ -56,18 +59,18 @@ public class RemoteAssociationUri extends AssociationUri {
         return reflectorHostAuthority;
     }
 
-    private static long parseReflectorId(@NonNull Uri uri) {
+    private static byte[] parseReflectorId(@NonNull Uri uri) {
         final String reflectorIdStr = uri.getQueryParameter(
                 AssociationContract.REMOTE_PARAMETER_REFLECTOR_ID);
         if (reflectorIdStr == null) {
             throw new IllegalArgumentException("Reflector ID parameter must be specified");
         }
 
-        final long reflectorId;
+        final byte[] reflectorId;
         try {
-            reflectorId = Long.parseLong(reflectorIdStr, 10);
+            reflectorId = Base64.decode(reflectorIdStr, Base64.URL_SAFE);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Reflector ID parameter must be a long", e);
+            throw new IllegalArgumentException("Reflector ID parameter must be a base64 url encoded byte sequence", e);
         }
 
         return reflectorId;
