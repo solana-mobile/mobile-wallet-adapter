@@ -192,6 +192,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                         destroyResourcesOnClose();
                     }
                     break;
+                case AWAITING_REFLECTION: 
                 case ESTABLISHING_SESSION:
                     mState = State.CLOSING;
                     notifySessionEstablishmentFailed("Scenario closed during session establishment");
@@ -244,7 +245,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
         Log.v(TAG, "WebSocket connection established, waiting for session establishment");
-        mState = State.ESTABLISHING_SESSION;
+        mState = State.AWAITING_REFLECTION;
         mConnectionBackoffExecutor.shutdownNow();
         mConnectionBackoffExecutor = null;
     }
@@ -272,9 +273,18 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     }
 
     @GuardedBy("mLock")
+    private void doReflectionEstablished() {
+        assert(mState == State.AWAITING_REFLECTION || mState == State.CLOSING);
+        if (mState == State.CLOSING) return;
+        Log.v(TAG, "WebSocket reflection established, waiting for session establishment");
+        mState = State.ESTABLISHING_SESSION;
+    }
+
+    @GuardedBy("mLock")
     private void doDisconnected() {
-        assert(mState == State.CONNECTING || mState == State.ESTABLISHING_SESSION || mState == State.STARTED || mState == State.CLOSING);
-        if (mState == State.CONNECTING || mState == State.ESTABLISHING_SESSION) {
+        assert(mState == State.CONNECTING || mState == State.AWAITING_REFLECTION ||
+                mState == State.ESTABLISHING_SESSION || mState == State.STARTED || mState == State.CLOSING);
+        if (mState == State.CONNECTING || mState == State.AWAITING_REFLECTION || mState == State.ESTABLISHING_SESSION) {
             Log.w(TAG, "Disconnected before session established");
             mState = State.CLOSING;
             notifySessionEstablishmentFailed("Disconnected before session established");
@@ -331,6 +341,13 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         }
 
         @Override
+        public void onReflectionEstablished() {
+            synchronized (mLock) {
+                doReflectionEstablished();
+            }
+        }
+
+        @Override
         public void onConnectionClosed() {
             synchronized (mLock) {
                 doDisconnected();
@@ -377,7 +394,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
             };
 
     private enum State {
-        NOT_STARTED, CONNECTING, ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
+        NOT_STARTED, CONNECTING, AWAITING_REFLECTION, ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
     }
 
     public static class ConnectionFailedException extends RuntimeException {

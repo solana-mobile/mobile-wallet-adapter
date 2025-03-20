@@ -75,6 +75,9 @@ public class ReflectorWebSocket implements MessageSender {
 
                         Log.v(TAG, "onConnected");
                         mState = State.CONNECTED;
+                        if (mStateCallbacks != null) {
+                            mStateCallbacks.onConnected();
+                        }
                     }
                 }
 
@@ -228,7 +231,7 @@ public class ReflectorWebSocket implements MessageSender {
         Log.v(TAG, "onReflectionEstablished");
         mState = State.REFLECTION_ESTABLISHED;
         if (mStateCallbacks != null) {
-            mStateCallbacks.onConnected();
+            mStateCallbacks.onReflectionEstablished();
         }
         mMessageReceiver.receiverConnected(ReflectorWebSocket.this);
     }
@@ -239,6 +242,9 @@ public class ReflectorWebSocket implements MessageSender {
 
         /** Invoked when this WebSocket fails attempting to connect to the server */
         void onConnectionFailed();
+
+        /** Invoked when this WebSocket fails attempting to connect to the server */
+        void onReflectionEstablished();
 
         /**
          * Invoked when this WebSocket connection to the server is terminated.
