@@ -362,7 +362,6 @@ export async function transactRemote<TReturn>(
             } else {
                 encoding = 'binary';
             }
-            console.log(`socket protocol: ${socket.protocol}`);
             socket.removeEventListener('open', handleOpen);
         };
         const handleClose = (evt: CloseEvent) => {
@@ -407,13 +406,13 @@ export async function transactRemote<TReturn>(
                     __type: 'reflector_id_received',
                     reflectorId: reflectorId
                 };
-                console.log(`reflector id received: (${reflectorId.length}) ${Buffer.from(reflectorId).toString('base64')}`)
                 const associationUrl = await getRemoteAssociateAndroidIntentURL(
                     associationKeypair.publicKey, 
                     config.remoteHostAuthority, 
                     reflectorId,
                     config?.baseUri
                 );
+                socket.removeEventListener('message', handleMessage);
                 resolve({ associationUrl, socket, disposeSocket });
             }
         };
@@ -465,7 +464,6 @@ export async function transactRemote<TReturn>(
                         associationPublicKey: associationKeypair.publicKey,
                         ecdhPrivateKey: ecdhKeypair.privateKey,
                     };
-                    console.log(`hello_req sent`);
                     break;
                 case 'connected':
                     try {
