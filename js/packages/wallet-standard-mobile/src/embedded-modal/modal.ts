@@ -1,5 +1,5 @@
 const modalHtml = `
-<div class="mobile-wallet-adapter-embedded-modal-container">
+<div class="mobile-wallet-adapter-embedded-modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div data-modal-close style="position: absolute; width: 100%; height: 100%;"></div>
 	<div class="mobile-wallet-adapter-embedded-modal-card">
 		<div>
@@ -78,51 +78,80 @@ const fonts = `
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 `;
 
+interface ModalEventsListeners {
+    /**
+     * Listener that will be called when the modal is closed, either by the user or programmatically.
+     *
+     * @param event the event tied to the close event, or undefined if the modal was closed programmatically.
+     */
+    close(event?: Event): void;
+}
+
+type ModalEventsNames = keyof ModalEventsListeners;
+
 export default abstract class EmbeddedModal {
-    private _root: HTMLElement | null = null;
+    #root: HTMLElement | null = null;
+    #eventListeners: { [E in ModalEventsNames]?: ModalEventsListeners[E][] } = {};
+    #listenersAttached = false;
 
     protected dom: ShadowRoot | null = null;
 
     protected abstract contentStyles: string;
     protected abstract contentHtml: string;
 
-    private _onCloseListeners: (() => void)[] = [];
-
     constructor() {
         // Bind methods to ensure `this` context is correct
         this.init = this.init.bind(this);
-        this.injectHTML = this.injectHTML.bind(this);
-        this.open = this.open.bind(this);
-        this.close = this.close.bind(this);
-        this._handleKeyDown = this._handleKeyDown.bind(this);
 
-        this._root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
+        this.#root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
     }
 
     async init() {
         console.log('Injecting modal');
-        this.injectHTML();
+        this.#injectHTML();
     }
 
-    addOnCloseListener(listener: () => void) {
-        this._onCloseListeners.push(listener);
+    open = () => {
+        console.debug('Modal open');
+        this.#attachEventListeners();
+        if (this.#root) {
+            this.#root.style.display = 'flex';
+        }
     }
 
-    private injectHTML() {
+    close = (event: Event | undefined = undefined) => {
+        console.debug('Modal close');
+        this.#removeEventListeners();
+        if (this.#root) {
+            this.#root.style.display = 'none';
+        }
+        this.#eventListeners['close']?.forEach((listener) => listener(event));
+    }
+
+    addEventListener<E extends ModalEventsNames>(event: E, listener: ModalEventsListeners[E]) {
+        this.#eventListeners[event]?.push(listener) || (this.#eventListeners[event] = [listener]);
+        return (): void => this.removeEventListener(event, listener);
+    }
+
+    removeEventListener<E extends ModalEventsNames>(event: E, listener: (ModalEventsListeners[E])): void {
+        this.#eventListeners[event] = this.#eventListeners[event]?.filter((existingListener) => listener !== existingListener);
+    }
+
+    #injectHTML() {
         // Check if the HTML has already been injected
         if (document.getElementById('mobile-wallet-adapter-embedded-root-ui')) {
-            if (!this._root) this._root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
+            if (!this.#root) this.#root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
             return;
         }
 
         // Create a container for the modal
-        this._root = document.createElement('div');
-        this._root.id = 'mobile-wallet-adapter-embedded-root-ui';
-        this._root.innerHTML = modalHtml;
-        this._root.style.display = 'none';
+        this.#root = document.createElement('div');
+        this.#root.id = 'mobile-wallet-adapter-embedded-root-ui';
+        this.#root.innerHTML = modalHtml;
+        this.#root.style.display = 'none';
 
         // Add modal content
-        const content = this._root.querySelector('.mobile-wallet-adapter-embedded-modal-content');
+        const content = this.#root.querySelector('.mobile-wallet-adapter-embedded-modal-content');
         if (content) content.innerHTML = this.contentHtml;
 
         // Apply styles
@@ -135,49 +164,38 @@ export default abstract class EmbeddedModal {
         host.innerHTML = fonts;
         this.dom = host.attachShadow({ mode: 'closed' });
         this.dom.appendChild(styles);
-        this.dom.appendChild(this._root);
+        this.dom.appendChild(this.#root);
 
         // Append the shadow DOM host to the body
         document.body.appendChild(host);
     }
 
-    private attachEventListeners() {
-        if (!this._root) return;
+    #attachEventListeners() {
+        if (!this.#root || this.#listenersAttached) return;
 
-        const closers = [...this._root.querySelectorAll('[data-modal-close]')];
+        const closers = [...this.#root.querySelectorAll('[data-modal-close]')];
         closers.forEach(closer => closer?.addEventListener('click', this.close));
 
         window.addEventListener('load', this.close);
-        document.addEventListener('keydown', this._handleKeyDown);
+        document.addEventListener('keydown', this.#handleKeyDown);
+
+        this.#listenersAttached = true;
     }
 
-    private removeEventListeners() {
+    #removeEventListeners() {
+        if (!this.#listenersAttached) return;
+
         window.removeEventListener('load', this.close);
-        document.removeEventListener('keydown', this._handleKeyDown);
+        document.removeEventListener('keydown', this.#handleKeyDown);
 
-        if (!this._root) return;
-        const closers = [...this._root.querySelectorAll('[data-modal-close]')];
+        if (!this.#root) return;
+        const closers = [...this.#root.querySelectorAll('[data-modal-close]')];
         closers.forEach(closer => closer?.removeEventListener('click', this.close));
+
+        this.#listenersAttached = false;
     }
 
-    open() {
-        console.debug('Modal open');
-        this.attachEventListeners();
-        if (this._root) {
-            this._root.style.display = 'flex';
-        }
-    }
-
-    close() {
-        console.debug('Modal close');
-        this.removeEventListeners();
-        if (this._root) {
-            this._root.style.display = 'none';
-        }
-        this._onCloseListeners.forEach(listener => listener());
-    }
-
-    private _handleKeyDown(event: KeyboardEvent) {
-        if (event.key === 'Escape') this.close();
+    #handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') this.close(event);
     }
 }

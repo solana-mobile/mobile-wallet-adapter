@@ -21,7 +21,7 @@ import {
     Transaction as LegacyTransaction,
     VersionedTransaction
 } from '@solana/web3.js';
-import EmbeddedDialogModal from './embedded-modal/modal.js';
+import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
     Account,
     AppIdentity,
@@ -30,7 +30,7 @@ import {
     Base64EncodedAddress,
     SignInPayload,
     SolanaMobileWalletAdapterError,
-    SolanaMobileWalletAdapterErrorCode,
+    SolanaMobileWalletAdapterErrorCode
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
@@ -48,7 +48,7 @@ import {
 } from '@wallet-standard/features';
 import { icon } from './icon';
 import { isVersionedTransaction, MWA_SOLANA_CHAINS } from './solana';
-import { transact, transactRemote, Web3MobileWallet, Web3RemoteMobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import { transact, startRemoteScenario, Web3MobileWallet, Web3RemoteMobileWallet, Web3RemoteScenario } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import { 
     WalletConnectionError,
@@ -59,6 +59,7 @@ import {
     WalletSignTransactionError
 } from './errors';
 import base58 from 'bs58';
+import ErrorModal from './embedded-modal/errorModal.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -192,7 +193,6 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         return !!this.#authorizationResult;
     }
 
-    // not needed anymore (doesn't do anything) but leaving for now
     #runWithGuard = async <TReturn>(callback: () => Promise<TReturn>) => {
         try {
             return await callback();
@@ -202,6 +202,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     }
 
     #on: StandardEventsOnMethod = (event, listener) => {
+        console.log('Standard Events #on', event, listener);
         this.#listeners[event]?.push(listener) || (this.#listeners[event] = [listener]);
         return (): void => this.#off(event, listener);
     };
@@ -535,7 +536,8 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     #selectedAddress: Base64EncodedAddress | undefined;
     #hostAuthority: string;
-    #wallet: Web3RemoteMobileWallet | undefined;
+    // #wallet: Web3RemoteMobileWallet | undefined;
+    #session: { close: () => void, wallet: Web3MobileWallet } | undefined;
 
     get version() {
         return this.#version;
@@ -625,10 +627,9 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     }
 
     get connected(): boolean {
-        return !!this.#authorizationResult;
+        return !!this.#session && !!this.#authorizationResult;
     }
 
-    // not needed anymore (doesn't do anything) but leaving for now
     #runWithGuard = async <TReturn>(callback: () => Promise<TReturn>) => {
         try {
             return await callback();
@@ -677,9 +678,8 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
                 this.#handleAuthorizationResult(cachedAuthorizationResult);
                 return cachedAuthorizationResult;
             }
-            if (this.#wallet) this.#wallet = undefined;
+            if (this.#session) this.#session = undefined;
             return await this.#transact(async (wallet) => {
-                this.#wallet = wallet;
                 const mwaAuthorizationResult = await wallet.authorize({
                     chain: this.#chain,
                     identity: this.#appIdentity,
@@ -746,37 +746,43 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     }
 
     #disconnect: StandardDisconnectMethod = async () => {
-        this.#wallet?.terminateSession();
+        this.#session?.close();
         this.#authorizationResultCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         this.#connecting = false;
         this.#connectionGeneration++;
         this.#authorizationResult = undefined;
         this.#selectedAddress = undefined;
-        this.#wallet = undefined;
+        this.#session = undefined;
         this.#emit('change', { accounts: this.accounts });
     };
 
-    #transact = async <TReturn>(callback: (wallet: Web3RemoteMobileWallet) => TReturn) => {
+    #transact = async <TReturn>(callback: (wallet: Web3MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorizationResult?.wallet_uri_base;
         const baseConfig = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const remoteConfig = { ...baseConfig, remoteHostAuthority: this.#hostAuthority };
         const currentConnectionGeneration = this.#connectionGeneration;
-        const modal = new EmbeddedDialogModal('MWA QR');
+        const modal = new RemoteConnectionModal();
 
-        if (this.#wallet) {
-            return callback(this.#wallet);
+        if (this.#session) {
+            return callback(this.#session.wallet);
         }
         
         try {
-            const { associationUrl, result: promise } = await transactRemote(async (wallet) => {
-                const result = await callback(wallet);
-                modal.close();
-                return result;
-            }, remoteConfig);
-            modal.init(associationUrl.toString());
+            const { associationUrl, close, wallet } = await startRemoteScenario(remoteConfig);
+            const removeCloseListener = modal.addEventListener('close', (event: any) => {
+                if (event) {
+                    close();
+                    this.#disconnect();
+                }
+            });
+            modal.initWithQR(associationUrl.toString());
             modal.open();
-            return await promise;
+            this.#session = { close, wallet: await wallet };
+            removeCloseListener();
+            modal.close();
+            return await callback(this.#session.wallet);
         } catch (e) {
+            modal.close();
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
             }
