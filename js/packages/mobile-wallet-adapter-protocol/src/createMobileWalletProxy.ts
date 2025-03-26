@@ -26,6 +26,13 @@ export default function createMobileWalletProxy<
 ): MobileWallet {
     return new Proxy<MobileWallet>({} as MobileWallet, {
         get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
+            // Wrapping a Proxy in a promise results in the Proxy being asked for a 'then' property so must 
+            // return null if 'then' is called on this proxy to let the 'resolve()' call know this is not a promise.
+            // see: https://stackoverflow.com/a/53890904
+            //@ts-ignore
+            if (p === 'then') { 
+                return null;
+            }
             if (target[p] == null) {
                 target[p] = async function (inputParams: Parameters<MobileWallet[TMethodName]>[0]) {
                     const { method, params } = handleMobileWalletRequest(p, inputParams, protocolVersion);
