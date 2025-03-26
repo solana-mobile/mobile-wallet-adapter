@@ -48,7 +48,7 @@ import {
 } from '@wallet-standard/features';
 import { icon } from './icon';
 import { isVersionedTransaction, MWA_SOLANA_CHAINS } from './solana';
-import { transact, startRemoteScenario, Web3MobileWallet, Web3RemoteMobileWallet, Web3RemoteScenario } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import { transact, startRemoteScenario, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import { 
     WalletConnectionError,
@@ -59,7 +59,6 @@ import {
     WalletSignTransactionError
 } from './errors';
 import base58 from 'bs58';
-import ErrorModal from './embedded-modal/errorModal.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -536,7 +535,6 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     #selectedAddress: Base64EncodedAddress | undefined;
     #hostAuthority: string;
-    // #wallet: Web3RemoteMobileWallet | undefined;
     #session: { close: () => void, wallet: Web3MobileWallet } | undefined;
 
     get version() {
@@ -770,10 +768,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         try {
             const { associationUrl, close, wallet } = await startRemoteScenario(remoteConfig);
             const removeCloseListener = modal.addEventListener('close', (event: any) => {
-                if (event) {
-                    close();
-                    this.#disconnect();
-                }
+                if (event) close();
             });
             modal.initWithQR(associationUrl.toString());
             modal.open();
