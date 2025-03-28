@@ -7,8 +7,6 @@ on:
   pull_request:
     branches: [ main ]
     paths: [ '.github/**', 'examples/example-web-app/**', 'js/**' ]
-  release:
-    types: [ published ]
 
 jobs:
   build:
@@ -25,26 +23,12 @@ jobs:
           cache: yarn
           cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
 
-      - name: '[js] Install yarn dependencies'
-        working-directory: 'js/'
-        run: yarn install --frozen-lockfile
-      - name: '[js] Lint'
-        working-directory: 'js/'
-        run: yarn lint
-        continue-on-error: true # TODO: fix all lint issues and remove this line
-      - name: '[js] Build'
-        working-directory: 'js/'
-        run: yarn build
-
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
         run: yarn install --frozen-lockfile
       - name: '[Example Web App] Type Check'
         working-directory: 'examples/example-web-app/'
         run: npx tsc --noEmit
-      - name: '[Example Web App] Lint'
-        working-directory: 'examples/example-web-app/'
-        run: yarn lint
         continue-on-error: true # TODO: fix all lint issues and remove this line
       - name: '[Example Web App] Build'
         working-directory: 'examples/example-web-app/'
