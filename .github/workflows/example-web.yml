@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency: publish-to-gh-pages
-    if: ${{ github.event_name == 'push' }}
+    # if: ${{ github.event_name == 'push' }}
 
     steps:
       - name: Update Example Web App
