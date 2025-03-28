@@ -22,10 +22,14 @@ jobs:
           node-version: 18
           cache: yarn
           cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
-        
+      
+      - name: '[Example Web App] preinstall'
+        working-directory: 'examples/example-web-app/'
+        run: yarn install
+        continue-on-error: true # Workaround: install always fails on first run for some reason
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
-        run: yarn preinstall && yarn install
+        run: yarn install
       - name: '[Example Web App] Type Check'
         working-directory: 'examples/example-web-app/'
         run: npx tsc --noEmit
