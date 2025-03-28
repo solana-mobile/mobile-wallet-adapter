@@ -1,0 +1,74 @@
+name: Publish Exmaple Web App
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ '.github/**', 'examples/example-web-app/**', 'js/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ '.github/**', 'examples/example-web-app/**', 'js/**' ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
+
+      - name: '[js] Install yarn dependencies'
+        working-directory: 'js/'
+        run: yarn install --frozen-lockfile
+      - name: '[js] Lint'
+        working-directory: 'js/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[js] Build'
+        working-directory: 'js/'
+        run: yarn build
+
+      - name: '[Example Web App] Install yarn dependencies'
+        working-directory: 'examples/example-web-app/'
+        run: yarn install --frozen-lockfile
+      - name: '[Example Web App] Type Check'
+        working-directory: 'examples/example-web-app/'
+        run: npx tsc --noEmit
+      - name: '[Example Web App] Lint'
+        working-directory: 'examples/example-web-app/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[Example Web App] Build'
+        working-directory: 'examples/example-web-app/'
+        run: yarn build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: example-web-app
+          path: examples/example-web-app/out/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-to-gh-pages:
+    runs-on: ubuntu-latest
+    needs: generate-spec
+    concurrency: publish-to-gh-pages
+    if: ${{ github.event_name == 'push' }}
+
+    steps:
+      - name: Update Example Web App
+        uses: solana-mobile/gha-commit-artifact-to-branch@v2
+        with:
+          token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
+          branch: gh-pages
+          artifact-name: example-web-app
+          dest: example-web-app
+          commit-message: 'Update Example Web App'
