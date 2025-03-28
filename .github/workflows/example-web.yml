@@ -1,4 +1,4 @@
-name: Publish Exmaple Web App
+name: Publish Example Web App
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
 
   publish-to-gh-pages:
     runs-on: ubuntu-latest
-    needs: generate-spec
+    needs: build
     concurrency: publish-to-gh-pages
     if: ${{ github.event_name == 'push' }}
 
