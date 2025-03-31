@@ -21,7 +21,6 @@ import {
     RemoteMobileWallet, 
     RemoteScenario, 
     RemoteWalletAssociationConfig, 
-    Scenario, 
     SessionProperties, 
     WalletAssociationConfig 
 } from './types.js';

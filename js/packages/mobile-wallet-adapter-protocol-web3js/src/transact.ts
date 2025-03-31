@@ -185,7 +185,6 @@ export async function transactRemote<TReturn>(
             },
         });
         return callback(augmentedAPI);
-        // return callback(augmentWalletAPI(wallet) as Web3RemoteMobileWallet);
     };
     return await baseTransactRemote(augmentedCallback, config);
 }
