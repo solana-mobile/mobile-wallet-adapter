@@ -190,3 +190,12 @@ export type SignInResult = Readonly<{
     signature: Base64EncodedAddress;
     signature_type?: string;
 }>;
+
+export type Scenario = Readonly<{
+    wallet: Promise<MobileWallet>;
+    close: () => void;
+}>;
+
+export type RemoteScenario = Scenario & Readonly<{
+    associationUrl: URL;
+}>;

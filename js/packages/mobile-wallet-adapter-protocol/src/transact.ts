@@ -15,7 +15,15 @@ import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.j
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
-import { AssociationKeypair, MobileWallet, RemoteMobileWallet, RemoteWalletAssociationConfig, SessionProperties, WalletAssociationConfig } from './types.js';
+import { 
+    AssociationKeypair, 
+    MobileWallet, 
+    RemoteMobileWallet, 
+    RemoteScenario, 
+    RemoteWalletAssociationConfig, 
+    SessionProperties, 
+    WalletAssociationConfig 
+} from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
     /**
@@ -326,10 +334,31 @@ export async function transactRemote<TReturn>(
     callback: (wallet: RemoteMobileWallet) => TReturn,
     config: RemoteWalletAssociationConfig,
 ): Promise<{associationUrl: URL, result: Promise<TReturn>}> {
+    return startRemoteScenario(config).then((scenario) => {
+        return { 
+            associationUrl: scenario.associationUrl, 
+            result: scenario.wallet.then((wallet) =>{
+                return callback(new Proxy(wallet as RemoteMobileWallet, {
+                    get<TMethodName extends keyof RemoteMobileWallet>(target: RemoteMobileWallet, p: TMethodName) {
+                        if (p == 'terminateSession') {
+                            return async function () {
+                                scenario.close();
+                                return;
+                            };
+                        } else return target[p];
+                    },
+                }));
+            }), 
+        };
+    });
+}
+
+export async function startRemoteScenario(
+    config: RemoteWalletAssociationConfig,
+): Promise<RemoteScenario> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const websocketURL = `wss://${config?.remoteHostAuthority}/reflect`;
-
     let connectionStartTime: number;
     const getNextRetryDelayMs = (() => {
         const schedule = [...WEBSOCKET_CONNECTION_CONFIG.retryDelayScheduleMs];
@@ -339,6 +368,8 @@ export async function transactRemote<TReturn>(
     let lastKnownInboundSequenceNumber = 0;
     let encoding: PROTOCOL_ENCODING;
     let state: RemoteState = { __type: 'disconnected' };
+    let socket: WebSocket;
+    let disposeSocket: () => void;
     let decodeBytes = async (evt: MessageEvent<string | Blob>) => {
         if (encoding == 'base64') { // base64 encoding
             const message = await evt.data as string;
@@ -347,8 +378,10 @@ export async function transactRemote<TReturn>(
             return await (evt.data as Blob).arrayBuffer();
         }
     };
-    const { associationUrl, socket, disposeSocket } = await new Promise<{ associationUrl: URL, socket: WebSocket, disposeSocket: () => void }>((resolve, reject) => {
-        let socket: WebSocket;
+    // Reflector Connection Phase
+    // here we connect to the reflector and wait for the REFLECTOR_ID message 
+    // so we build the association URL and return that back to the caller
+    const associationUrl = await new Promise<URL>((resolve, reject) => {
         const handleOpen = async () => {
             if (state.__type !== 'connecting') {
                 console.warn(
@@ -395,7 +428,7 @@ export async function transactRemote<TReturn>(
                 attemptSocketConnection();
             }
         };
-        const handleMessage = async (evt: MessageEvent<string | Blob>) => {
+        const handleReflectorIdMessage = async (evt: MessageEvent<string | Blob>) => {
             const responseBuffer = await decodeBytes(evt);
             if (state.__type === 'connecting') {
                 if (responseBuffer.byteLength == 0) {
@@ -412,11 +445,10 @@ export async function transactRemote<TReturn>(
                     reflectorId,
                     config?.baseUri
                 );
-                socket.removeEventListener('message', handleMessage);
-                resolve({ associationUrl, socket, disposeSocket });
+                socket.removeEventListener('message', handleReflectorIdMessage);
+                resolve(associationUrl);
             }
         };
-        let disposeSocket: () => void;
         let retryWaitTimeoutId: number;
         const attemptSocketConnection = () => {
             if (disposeSocket) {
@@ -431,21 +463,29 @@ export async function transactRemote<TReturn>(
             socket.addEventListener('open', handleOpen);
             socket.addEventListener('close', handleClose);
             socket.addEventListener('error', handleError);
-            socket.addEventListener('message', handleMessage);
+            socket.addEventListener('message', handleReflectorIdMessage);
             disposeSocket = () => {
                 window.clearTimeout(retryWaitTimeoutId);
                 socket.removeEventListener('open', handleOpen);
                 socket.removeEventListener('close', handleClose);
                 socket.removeEventListener('error', handleError);
-                socket.removeEventListener('message', handleMessage);
+                socket.removeEventListener('message', handleReflectorIdMessage);
             };
         };
         attemptSocketConnection();
     });
-    return { associationUrl, result: new Promise((resolve, reject) => {
+    // Wallet Connection Phase
+    // here we return the association URL (containing the reflector ID) to the caller + 
+    // a promise that will resolve the MobileWallet object once the wallet connects.
+    let sessionEstablished = false;
+    let handleClose: () => void;
+    return { associationUrl, close: () => {
+        socket.close();
+        handleClose();
+    }, wallet: new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
-        socket.addEventListener('message', async (evt: MessageEvent<string | Blob>) => {
+        const handleMessage = async (evt: MessageEvent<string | Blob>) => {
             const responseBuffer = await decodeBytes(evt);
             switch (state.__type) {
                 case 'reflector_id_received':
@@ -548,24 +588,29 @@ export async function transactRemote<TReturn>(
                                 };
                             });
                         })
+                    sessionEstablished = true;
                     try {
-                        resolve(await callback(new Proxy(wallet as RemoteMobileWallet, {
-                            get<TMethodName extends keyof RemoteMobileWallet>(target: RemoteMobileWallet, p: TMethodName) {
-                                if (p == 'terminateSession') {
-                                    return async function () {
-                                        disposeSocket();
-                                        socket.close();
-                                        return;
-                                    };
-                                } else return target[p];
-                            },
-                        })))
+                        resolve(wallet);
                     } catch (e) {
                         reject(e);
                     }
                     break;
                 }
             }
-        })
+        }
+        socket.addEventListener('message', handleMessage);
+        handleClose = () => {
+            socket.removeEventListener('message', handleMessage);
+            disposeSocket();
+            if (!sessionEstablished) {
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session was closed before connection.`,
+                        { closeEvent: new CloseEvent('socket was closed before connection') },
+                    ),
+                );
+            }
+        };
     })};
 }
