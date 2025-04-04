@@ -1,7 +1,8 @@
 import { AuthorizationResult } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { AuthorizationResultCache } from './wallet';
+import { PublicKey } from '@solana/web3.js';
 
-const CACHE_KEY = 'SolanaMobileWalletAdapterWalletStandardDefaultAuthorizationCache';
+const CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 
 export default function createDefaultAuthorizationResultCache(): AuthorizationResultCache {
     let storage: Storage | null | undefined;
@@ -24,7 +25,18 @@ export default function createDefaultAuthorizationResultCache(): AuthorizationRe
                 return;
             }
             try {
-                return (JSON.parse(storage.getItem(CACHE_KEY) as string) as AuthorizationResult) || undefined;
+                const parsed = JSON.parse(storage.getItem(CACHE_KEY) as string) as AuthorizationResult;
+                if (parsed && parsed.accounts) {
+                    const parsedAccounts = parsed.accounts.map((account) => {
+                        return {
+                            ...account,
+                            publicKey: 'publicKey' in account
+                                ? new Uint8Array(Object.values(account.publicKey)) // Rebuild publicKey for WalletAccount
+                                : new PublicKey(account.address).toBytes(), // Fallback, get publicKey from address
+                        }
+                    })
+                    return { ...parsed, accounts: parsedAccounts }
+                } else return parsed || undefined;
                 // eslint-disable-next-line no-empty
             } catch {}
         },

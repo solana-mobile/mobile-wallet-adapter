@@ -45,6 +45,7 @@
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.1.5",
+        "@solana-mobile/wallet-standard-mobile": "link:../wallet-standard-mobile",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-standard-features": "^1.2.0",
         "js-base64": "^3.7.5",

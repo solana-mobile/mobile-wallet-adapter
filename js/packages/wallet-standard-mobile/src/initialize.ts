@@ -11,7 +11,6 @@ import { IdentifierString } from "@wallet-standard/base";
 import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported } from "./getIsSupported";
 
 export function registerMwa(config: {
-    addressSelector: AddressSelector;
     appIdentity: AppIdentity;
     authorizationResultCache: AuthorizationResultCache;
     chain: IdentifierString;
