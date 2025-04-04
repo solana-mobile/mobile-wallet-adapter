@@ -2,7 +2,7 @@ import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } fr
 import { SolanaMobileWalletAdapterWallet } from './wallet.js';
 import ErrorModal from './embedded-modal/errorModal.js';
 
-async function defaultWalletNotFoundHandler(mwaWallet: SolanaMobileWalletAdapterWallet) {
+export function defaultErrorModalWalletNotFoundHandler() {
     if (typeof window !== 'undefined') {
         const userAgent = window.navigator.userAgent.toLowerCase();
         const errorDialog = new ErrorModal();
@@ -28,5 +28,5 @@ async function defaultWalletNotFoundHandler(mwaWallet: SolanaMobileWalletAdapter
 export default function createDefaultWalletNotFoundHandler(): (
     mobileWalletAdapter: SolanaMobileWalletAdapterWallet,
 ) => Promise<void> {
-    return defaultWalletNotFoundHandler;
+    return async () => { defaultErrorModalWalletNotFoundHandler(); };
 }
