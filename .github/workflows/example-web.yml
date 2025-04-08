@@ -12,6 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env: # Env variables needed during build
+      NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY:  ${{ secrets.URL_REFLECTOR_DEV }}
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency: publish-to-gh-pages
-    if: ${{ github.event_name == 'push' }}
+    # if: ${{ github.event_name == 'push' }}
 
     steps:
       - name: Update Example Web App
