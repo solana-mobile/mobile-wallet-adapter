@@ -15,6 +15,8 @@ import { ReactNode, useCallback, useMemo } from 'react';
 import { registerMwa } from '@solana-mobile/wallet-standard-mobile';
 import { createDefaultAddressSelector, createDefaultAuthorizationResultCache, createDefaultWalletNotFoundHandler } from '@solana-mobile/wallet-standard-mobile';
 
+const REFLECTOR_HOST_AUTHORITY = process.env.NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY ?? undefined;
+
 function getUriForAppIdentity() {
     const location = globalThis.location;
     if (!location) return;
@@ -28,7 +30,7 @@ registerMwa({
     },
     authorizationResultCache: createDefaultAuthorizationResultCache(),
     chain: 'solana:testnet',
-    remoteHostAuthority: '4.tcp.us-cal-1.ngrok.io:15762',
+    remoteHostAuthority: REFLECTOR_HOST_AUTHORITY,
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
 })
 
