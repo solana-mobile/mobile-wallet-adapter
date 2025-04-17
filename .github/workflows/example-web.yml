@@ -24,12 +24,6 @@ jobs:
           node-version: 18
           cache: yarn
           cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
-
-      - name: Install and Build JS Dependencies
-        working-directory: 'js/'
-        run: |
-          yarn install --frozen-lockfile
-          yarn build
       
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
