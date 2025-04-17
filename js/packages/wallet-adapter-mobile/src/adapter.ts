@@ -189,9 +189,6 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         if (this.connecting || this.connected) {
             return;
         }
-        if (autoConnect && !this.#wallet.isAuthorized) {
-            return;
-        }
         return await this.#runWithGuard(async () => {
             if (this.#readyState !== WalletReadyState.Installed && this.#readyState !== WalletReadyState.Loadable) {
                 throw new WalletNotReadyError();

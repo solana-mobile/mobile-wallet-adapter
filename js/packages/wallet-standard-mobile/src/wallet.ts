@@ -224,7 +224,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                 if (cachedAuthorization) {
                     await this.#handleAuthorizationResult(cachedAuthorization);
                 } else {
-                    throw new Error('Wallet not connected');
+                    return { accounts: this.accounts };
                 }
             } else {
                 await this.#performAuthorization();
