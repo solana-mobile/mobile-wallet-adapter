@@ -27,7 +27,7 @@ jobs:
       
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
-        run: yarn install
+        run: yarn install --frozen-lockfile
       - name: '[Example Web App] Type Check'
         working-directory: 'examples/example-web-app/'
         run: npx tsc --noEmit

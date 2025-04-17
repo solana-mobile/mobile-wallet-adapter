@@ -1,9 +1,8 @@
 import { SolanaMobileWalletAdapter } from './adapter.js';
+import { defaultErrorModalWalletNotFoundHandler } from '@solana-mobile/wallet-standard-mobile';
 
 async function defaultWalletNotFoundHandler(mobileWalletAdapter: SolanaMobileWalletAdapter) {
-    if (typeof window !== 'undefined') {
-        window.location.assign(mobileWalletAdapter.url);
-    }
+    return defaultErrorModalWalletNotFoundHandler();
 }
 
 export default function createDefaultWalletNotFoundHandler(): (
