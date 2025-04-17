@@ -11,7 +11,6 @@ import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { createTheme } from '@mui/material';
 import { ReactNode, useCallback, useMemo } from 'react';
-
 import { 
     createDefaultAuthorizationCache, 
     createDefaultChainSelector, 
