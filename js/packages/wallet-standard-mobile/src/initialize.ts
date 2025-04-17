@@ -1,19 +1,20 @@
 import { registerWallet } from "@wallet-standard/wallet";
 import { 
-    AddressSelector, 
-    AuthorizationResultCache, 
+    AuthorizationCache, 
+    ChainSelector, 
     LocalSolanaMobileWalletAdapterWallet, 
     RemoteSolanaMobileWalletAdapterWallet, 
     SolanaMobileWalletAdapterWallet 
 } from "./wallet";
 import { AppIdentity } from "@solana-mobile/mobile-wallet-adapter-protocol";
-import { IdentifierString } from "@wallet-standard/base";
+import { IdentifierArray } from "@wallet-standard/base";
 import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported } from "./getIsSupported";
 
 export function registerMwa(config: {
     appIdentity: AppIdentity;
-    authorizationResultCache: AuthorizationResultCache;
-    chain: IdentifierString;
+    authorizationCache: AuthorizationCache;
+    chains: IdentifierArray;
+    chainSelector: ChainSelector;
     remoteHostAuthority?: string;
     onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
 }) {

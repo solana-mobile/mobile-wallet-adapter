@@ -1,6 +1,6 @@
 import { SOLANA_MAINNET_CHAIN } from "@solana/wallet-standard-chains";
-import createDefaultAddressSelector from "./createDefaultAddressSelector";
-import createDefaultAuthorizationResultCache from "./createDefaultAuthorizationResultCache";
+import createDefaultAuthorizationCache from "./createDefaultAuthorizationCache";
+import createDefaultChainSelector from "./createDefaultChainSelector";
 import createDefaultWalletNotFoundHandler from "./createDefaultWalletNotFoundHandler";
 import { registerMwa } from "./initialize";
 
@@ -11,11 +11,11 @@ function getUriForAppIdentity() {
 }
 
 registerMwa({
-    addressSelector: createDefaultAddressSelector(),
     appIdentity: {
         uri: getUriForAppIdentity(),
     },
-    authorizationResultCache: createDefaultAuthorizationResultCache(),
-    chain: SOLANA_MAINNET_CHAIN,
+    authorizationCache: createDefaultAuthorizationCache(),
+    chains: [SOLANA_MAINNET_CHAIN],
+    chainSelector: createDefaultChainSelector(),
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
 })

@@ -48,15 +48,18 @@ import {
     WalletAccount,
 } from '@wallet-standard/core';
 import {
+    Authorization,
+    createDefaultChainSelector,
     LocalSolanaMobileWalletAdapterWallet,
+    RemoteSolanaMobileWalletAdapterWallet,
 } from '@solana-mobile/wallet-standard-mobile';
 import { fromUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
-    get(): Promise<AuthorizationResult | undefined>;
-    set(authorizationResult: AuthorizationResult): Promise<void>;
+    get(): Promise<AuthorizationResult | Authorization | undefined>;
+    set(authorizationResult: AuthorizationResult | Authorization): Promise<void>;
 }
 
 export interface AddressSelector {
@@ -86,17 +89,15 @@ function chainOrClusterToChainId(chain: Cluster | Chain): IdentifierString {
     }
 }
 
-export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdapter {
+abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdapter {
     readonly supportedTransactionVersions: Set<TransactionVersion> = new Set(
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
         ['legacy', 0],
     );
     name; icon; url;
-    #wallet: LocalSolanaMobileWalletAdapterWallet;
-    #authorizationResultCache: AuthorizationResultCache;
+    #wallet: LocalSolanaMobileWalletAdapterWallet | RemoteSolanaMobileWalletAdapterWallet;
     #connecting = false;
     #readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
-    #chain: IdentifierString;
     #accountSelector: (accounts: readonly WalletAccount[]) => Promise<WalletAccount>;
     #selectedAccount: WalletAccount | undefined;
     #publicKey: PublicKey | undefined;
@@ -118,58 +119,17 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         }
     }
 
-    /**
-     * @deprecated @param cluster config paramter is deprecated, use @param chain instead
-     */
-    constructor(config: {
+    protected constructor(wallet: LocalSolanaMobileWalletAdapterWallet | RemoteSolanaMobileWalletAdapterWallet, config: {
         addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
-        cluster: Cluster;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
-    });
-
-    constructor(config: {
-        addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
         chain: Chain;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
-    });
-
-    constructor(config: {
-        addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
-        chain: Chain;
-        remoteHostAuthority: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
-    });
-
-    constructor(config: {
-        addressSelector: AddressSelector;
-        appIdentity: AppIdentity;
-        authorizationResultCache: AuthorizationResultCache;
-        chain: Chain;
-        cluster: Cluster;
-        remoteHostAuthority: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapter) => Promise<void>;
     }) {
         super();
-        this.#authorizationResultCache = config.authorizationResultCache;
-        this.#chain = chainOrClusterToChainId(config.chain ?? config.cluster);
+        // this.#chain = chainOrClusterToChainId(config.chain);
         this.#accountSelector = async (accounts: readonly WalletAccount[]) => {
             const selectedBase64EncodedAddress = await config.addressSelector.select(accounts.map(({ publicKey }) => fromUint8Array(publicKey)));
             return accounts.find(({ publicKey }) => fromUint8Array(publicKey) === selectedBase64EncodedAddress) ?? accounts[0];
         };
-        this.#wallet = new LocalSolanaMobileWalletAdapterWallet({
-            appIdentity: config.appIdentity,
-            authorizationResultCache: config.authorizationResultCache,
-            chain: this.#chain,
-            onWalletNotFound: async () => {
-                config.onWalletNotFound(this)
-            },
-        });
+        this.#wallet = wallet
         this.#wallet.features[StandardEvents].on('change', this.#handleChangeEvent);
         this.name = this.#wallet.name as WalletName;
         this.icon = this.#wallet.icon;
@@ -246,7 +206,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
     /** @deprecated Use `connect()` or `autoConnect()` instead. */
     async performAuthorization(signInPayload?: SignInPayload): Promise<AuthorizationResult> {
         try {
-            const cachedAuthorizationResult = await this.#authorizationResultCache.get();
+            const cachedAuthorizationResult = await this.#wallet.cachedAuthorizationResult;
             if (cachedAuthorizationResult) {
                 await this.#wallet.features[StandardConnect].connect({ silent: true });
                 return cachedAuthorizationResult;
@@ -255,7 +215,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
             if (signInPayload) {
                 await this.#wallet.features[SolanaSignIn].signIn(signInPayload);
             } else await this.#wallet.features[StandardConnect].connect();
-            const authorizationResult = await this.#authorizationResultCache.get();
+            const authorizationResult = await await this.#wallet.cachedAuthorizationResult;
             return authorizationResult!;
         } catch (e) {
             throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
@@ -356,10 +316,11 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
                         : targetCommitment;
                 }
                 if (SolanaSignAndSendTransaction in this.#wallet.features) {
+                    const chain = chainOrClusterToChainId(this.#wallet.currentAuthorization!.chain);
                     const [signature] = (await this.#wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
                         account,
                         transaction: transaction.serialize(),
-                        chain: this.#chain,
+                        chain: chain,
                         options: options ? {
                             skipPreflight: options.skipPreflight,
                             maxRetries: options.maxRetries
@@ -408,7 +369,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
     }
 
     #assertIsAuthorized() {
-        if (!this.#wallet.connected || !this.#selectedAccount) throw new WalletNotConnectedError()
+        if (!this.#wallet.isAuthorized || !this.#selectedAccount) throw new WalletNotConnectedError()
         return this.#selectedAccount;
     }
     
@@ -448,3 +409,103 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         }
     }
 }
+
+export class LocalSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapter {
+    /**
+     * @deprecated @param cluster config paramter is deprecated, use @param chain instead
+     */
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        cluster: Cluster;
+        onWalletNotFound: (mobileWalletAdapter: LocalSolanaMobileWalletAdapter) => Promise<void>;
+    });
+
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
+        onWalletNotFound: (mobileWalletAdapter: LocalSolanaMobileWalletAdapter) => Promise<void>;
+    });
+
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
+        cluster: Cluster;
+        onWalletNotFound: (mobileWalletAdapter: LocalSolanaMobileWalletAdapter) => Promise<void>;
+    }) {
+        const chain = chainOrClusterToChainId(config.chain ?? config.cluster);
+        super(new LocalSolanaMobileWalletAdapterWallet({
+            appIdentity: config.appIdentity,
+            authorizationCache: {
+                set: config.authorizationResultCache.set,
+                get: async () => {
+                    const authorizationResult = await config.authorizationResultCache.get();
+                    if (authorizationResult && 'chain' in authorizationResult) {
+                        return authorizationResult;
+                    } else if (authorizationResult) {
+                        return {
+                            ...authorizationResult,
+                            chain: chain,
+                        };
+                    } else return undefined;
+                },
+                clear: config.authorizationResultCache.clear,
+            },
+            chains: [chain],
+            chainSelector: createDefaultChainSelector(),
+            onWalletNotFound: async () => {
+                config.onWalletNotFound(this)
+            },
+        }), {
+            addressSelector: config.addressSelector,
+            chain: chain,
+        });
+    }
+}
+
+export class RemoteSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapter {
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
+        remoteHostAuthority: string;
+        onWalletNotFound: (mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => Promise<void>;
+    }) {
+        const chain = chainOrClusterToChainId(config.chain);
+        super(new RemoteSolanaMobileWalletAdapterWallet({
+            appIdentity: config.appIdentity,
+            authorizationCache: {
+                set: config.authorizationResultCache.set,
+                get: async () => {
+                    const authorizationResult = await config.authorizationResultCache.get();
+                    if (authorizationResult && 'chain' in authorizationResult) {
+                        return authorizationResult;
+                    } else if (authorizationResult) {
+                        return {
+                            ...authorizationResult,
+                            chain: chain,
+                        };
+                    } else return undefined;
+                },
+                clear: config.authorizationResultCache.clear,
+            },
+            chains: [chain],
+            chainSelector: createDefaultChainSelector(),
+            remoteHostAuthority: config.remoteHostAuthority,
+            onWalletNotFound: async () => {
+                config.onWalletNotFound(this)
+            },
+        }), {
+            addressSelector: config.addressSelector,
+            chain: chain,
+        });
+    }
+}
+
+export class SolanaMobileWalletAdapter extends LocalSolanaMobileWalletAdapter {}
