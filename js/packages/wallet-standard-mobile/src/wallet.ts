@@ -26,9 +26,11 @@ import {
     AppIdentity,
     AuthorizationResult,
     AuthToken,
+    GetCapabilitiesAPI,
     SignInPayload,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
+    SolanaSignTransactions,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
@@ -48,14 +50,6 @@ import { icon } from './icon';
 import { isVersionedTransaction } from './solana';
 import { transact, startRemoteScenario, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import { fromUint8Array, toUint8Array } from './base64Utils';
-// import { 
-//     WalletConnectionError,
-//     WalletDisconnectedError,
-//     WalletNotConnectedError,
-//     WalletSendTransactionError,
-//     WalletSignMessageError,
-//     WalletSignTransactionError
-// } from './errors';
 import base58 from 'bs58';
 
 export type Authorization = AuthorizationResult & Readonly<{
@@ -106,6 +100,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     #connectionGeneration = 0;
     #chains: IdentifierArray = [];
     #chainSelector: ChainSelector;
+    #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
 
     get version() {
@@ -131,10 +126,9 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     get features(): StandardConnectFeature &
         StandardDisconnectFeature &
         StandardEventsFeature &
-        SolanaSignAndSendTransactionFeature &
-        SolanaSignTransactionFeature &
         SolanaSignMessageFeature &
-        SolanaSignInFeature {
+        SolanaSignInFeature &
+        (SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature) {
         return {
             [StandardConnect]: {
                 version: '1.0.0',
@@ -148,22 +142,6 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                 version: '1.0.0',
                 on: this.#on,
             },
-            // TODO: signAndSendTransaction was an optional feature in MWA 1.x.
-            //  this should be omitted here and only added after confirming wallet support via getCapabilities
-            //  Note: dont forget to emit the StandardEvent 'change' for the updated feature list 
-            [SolanaSignAndSendTransaction]: {
-                version: '1.0.0',
-                supportedTransactionVersions: ['legacy', 0],
-                signAndSendTransaction: this.#signAndSendTransaction,
-            },
-            // TODO: signTransaction is an optional, deprecated feature in MWA 2.0.
-            //  this should be omitted here and only added after confirming wallet support via getCapabilities
-            //  Note: dont forget to emit the StandardEvent 'change' for the updated feature list 
-            [SolanaSignTransaction]: {
-                version: '1.0.0',
-                supportedTransactionVersions: ['legacy', 0],
-                signTransaction: this.#signTransaction,
-            },
             [SolanaSignMessage]: {
                 version: '1.0.0',
                 signMessage: this.#signMessage,
@@ -172,6 +150,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                 version: '1.0.0',
                 signIn: this.#signIn,
             },
+            ...this.#optionalFeatures,
         };
     }
     
@@ -191,6 +170,17 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#chains = config.chains;
         this.#chainSelector = config.chainSelector;
         this.#onWalletNotFound = config.onWalletNotFound;
+        this.#optionalFeatures = {
+            // We are forced to provide either SolanaSignAndSendTransaction or SolanaSignTransaction
+            // because the wallet-adapter compatible wallet-standard wallet requires at least one of them.
+            // MWA 2.0+ wallets must implement signAndSend and pre 2.0 wallets have always provided it so 
+            // this is a safe assumption. We later update the features after we get the wallets capabilities. 
+            [SolanaSignAndSendTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signAndSendTransaction: this.#signAndSendTransaction,
+            },
+        };
     }
 
     get connected(): boolean {
@@ -258,16 +248,20 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
             }
             const selectedChain = await this.#chainSelector.select(this.#chains);
             return await this.#transact(async (wallet) => {
-                const mwaAuthorizationResult = await wallet.authorize({
-                    chain: selectedChain,
-                    identity: this.#appIdentity,
-                    sign_in_payload: signInPayload,
-                });
+                const [capabilities, mwaAuthorizationResult] = await Promise.all([
+                    wallet.getCapabilities(),
+                    wallet.authorize({
+                        chain: selectedChain,
+                        identity: this.#appIdentity,
+                        sign_in_payload: signInPayload,
+                    })
+                ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts)
                 const authorization = { ...mwaAuthorizationResult, accounts, chain: selectedChain};
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 Promise.all([
+                    this.#handleWalletCapabilitiesResult(capabilities),
                     this.#authorizationCache.set(authorization),
                     this.#handleAuthorizationResult(authorization),
                 ]);
@@ -292,6 +286,35 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#authorization = authorization;
         if (didPublicKeysChange) {
             this.#emit('change',{ accounts: this.accounts });
+        }
+    }
+
+    #handleWalletCapabilitiesResult = async (
+        capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
+    ) => {
+        const supportsSignTransaction = capabilities.features.includes(SolanaSignTransactions)
+        const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions 
+        const didCapabilitiesChange = 
+            SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
+            SolanaSignTransaction in this.features !== supportsSignTransaction;
+        this.#optionalFeatures = {
+            ...((supportsSignAndSendTransaction || (!supportsSignAndSendTransaction && !supportsSignTransaction)) && {
+                [SolanaSignAndSendTransaction]: {
+                    version: '1.0.0',
+                    supportedTransactionVersions: ['legacy', 0],
+                    signAndSendTransaction: this.#signAndSendTransaction,
+                },
+            }),
+            ...(supportsSignTransaction && {
+                [SolanaSignTransaction]: {
+                    version: '1.0.0',
+                    supportedTransactionVersions: ['legacy', 0],
+                    signTransaction: this.#signTransaction,
+                },
+            }),
+        } as SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
+        if (didCapabilitiesChange) {
+            this.#emit('change', { features: this.features })
         }
     }
 
@@ -527,6 +550,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     #connectionGeneration = 0;
     #chains: IdentifierArray = [];
     #chainSelector: ChainSelector;
+    #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     #hostAuthority: string;
     #session: { close: () => void, wallet: Web3MobileWallet } | undefined;
@@ -554,10 +578,9 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     get features(): StandardConnectFeature &
         StandardDisconnectFeature &
         StandardEventsFeature &
-        SolanaSignAndSendTransactionFeature &
-        SolanaSignTransactionFeature &
         SolanaSignMessageFeature &
-        SolanaSignInFeature {
+        SolanaSignInFeature &
+        (SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature) {
         return {
             [StandardConnect]: {
                 version: '1.0.0',
@@ -571,22 +594,6 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
                 version: '1.0.0',
                 on: this.#on,
             },
-            // TODO: signAndSendTransaction was an optional feature in MWA 1.x.
-            //  this should be omitted here and only added after confirming wallet support via getCapabilities
-            //  Note: dont forget to emit the StandardEvent 'change' for the updated feature list 
-            [SolanaSignAndSendTransaction]: {
-                version: '1.0.0',
-                supportedTransactionVersions: ['legacy', 0],
-                signAndSendTransaction: this.#signAndSendTransaction,
-            },
-            // TODO: signTransaction is an optional, deprecated feature in MWA 2.0.
-            //  this should be omitted here and only added after confirming wallet support via getCapabilities
-            //  Note: dont forget to emit the StandardEvent 'change' for the updated feature list 
-            [SolanaSignTransaction]: {
-                version: '1.0.0',
-                supportedTransactionVersions: ['legacy', 0],
-                signTransaction: this.#signTransaction,
-            },
             [SolanaSignMessage]: {
                 version: '1.0.0',
                 signMessage: this.#signMessage,
@@ -595,6 +602,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
                 version: '1.0.0',
                 signIn: this.#signIn,
             },
+            ...this.#optionalFeatures,
         };
     }
     
@@ -616,6 +624,17 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         this.#chainSelector = config.chainSelector;
         this.#hostAuthority = config.remoteHostAuthority;
         this.#onWalletNotFound = config.onWalletNotFound;
+        this.#optionalFeatures = {
+            // We are forced to provide either SolanaSignAndSendTransaction or SolanaSignTransaction
+            // because the wallet-adapter compatible wallet-standard wallet requires at least one of them.
+            // MWA 2.0+ wallets must implement signAndSend and pre 2.0 wallets have always provided it so 
+            // this is a safe assumption. We later update the features after we get the wallets capabilities. 
+            [SolanaSignAndSendTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signAndSendTransaction: this.#signAndSendTransaction,
+            },
+        }
     }
 
     get connected(): boolean {
@@ -675,16 +694,20 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
             if (this.#session) this.#session = undefined;
             const selectedChain = await this.#chainSelector.select(this.#chains);
             return await this.#transact(async (wallet) => {
-                const mwaAuthorizationResult = await wallet.authorize({
-                    chain: selectedChain,
-                    identity: this.#appIdentity,
-                    sign_in_payload: signInPayload,
-                });
+                const [capabilities, mwaAuthorizationResult] = await Promise.all([
+                    wallet.getCapabilities(),
+                    wallet.authorize({
+                        chain: selectedChain,
+                        identity: this.#appIdentity,
+                        sign_in_payload: signInPayload,
+                    })
+                ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts)
                 const authorizationResult = { ...mwaAuthorizationResult, accounts, chain: selectedChain };
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 Promise.all([
+                    this.#handleWalletCapabilitiesResult(capabilities),
                     this.#authorizationCache.set(authorizationResult),
                     this.#handleAuthorizationResult(authorizationResult),
                 ]);
@@ -709,6 +732,36 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         this.#authorization = authorization;
         if (didPublicKeysChange) {
             this.#emit('change',{ accounts: this.accounts });
+        }
+    }
+
+    #handleWalletCapabilitiesResult = async (
+        capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
+    ) => {
+        const supportsSignTransaction = capabilities.features.includes(SolanaSignTransactions);
+        const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions || 
+            capabilities.features.includes('solana:signAndSendTransaction');
+        const didCapabilitiesChange = 
+            SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
+            SolanaSignTransaction in this.features !== supportsSignTransaction;
+        this.#optionalFeatures = {
+            ...(supportsSignAndSendTransaction && {
+                [SolanaSignAndSendTransaction]: {
+                    version: '1.0.0',
+                    supportedTransactionVersions: capabilities.supported_transaction_versions,
+                    signAndSendTransaction: this.#signAndSendTransaction,
+                },
+            }),
+            ...(supportsSignTransaction && {
+                [SolanaSignTransaction]: {
+                    version: '1.0.0',
+                    supportedTransactionVersions: capabilities.supported_transaction_versions,
+                    signTransaction: this.#signTransaction,
+                },
+            }),
+        } as SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
+        if (didCapabilitiesChange) {
+            this.#emit('change', { features: this.features });
         }
     }
 

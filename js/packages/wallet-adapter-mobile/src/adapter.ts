@@ -37,6 +37,7 @@ import {
     SolanaSignInOutput,
     SolanaSignMessage,
     SolanaSignTransaction,
+    SolanaSignTransactionFeature,
     SolanaSignTransactionOutput,
 } from '@solana/wallet-standard-features';
 import {
@@ -378,23 +379,27 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
     ): Promise<T[]> {
         const account = this.#assertIsAuthorized();
         try {
-            return this.#wallet.features[SolanaSignTransaction].signTransaction(
-                ...transactions.map((value) => {
-                    return { account, transaction: value.serialize() }
-                }
-            )).then((outputs) => {
-                return outputs.map((output: SolanaSignTransactionOutput) => {
-                    const byteArray = output.signedTransaction;
-                    const numSignatures = byteArray[0];
-                    const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1;
-                    const version = VersionedMessage.deserializeMessageVersion(byteArray.slice(messageOffset, byteArray.length));
-                    if (version === 'legacy') {
-                        return Transaction.from(byteArray) as T;
-                    } else {
-                        return VersionedTransaction.deserialize(byteArray) as T;
+            if (SolanaSignTransaction in this.#wallet.features) {
+                return this.#wallet.features[SolanaSignTransaction].signTransaction(
+                    ...transactions.map((value) => {
+                        return { account, transaction: value.serialize() }
                     }
+                )).then((outputs) => {
+                    return outputs.map((output: SolanaSignTransactionOutput) => {
+                        const byteArray = output.signedTransaction;
+                        const numSignatures = byteArray[0];
+                        const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1;
+                        const version = VersionedMessage.deserializeMessageVersion(byteArray.slice(messageOffset, byteArray.length));
+                        if (version === 'legacy') {
+                            return Transaction.from(byteArray) as T;
+                        } else {
+                            return VersionedTransaction.deserialize(byteArray) as T;
+                        }
+                    })
                 })
-            })
+            } else {
+                throw new Error('Connected wallet does not support signing transactions');
+            }
         } catch (error: any) {
             throw new WalletSignTransactionError(error?.message, error);
         }
