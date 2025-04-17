@@ -12,8 +12,12 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { createTheme } from '@mui/material';
 import { ReactNode, useCallback, useMemo } from 'react';
 
-import { createDefaultChainSelector, registerMwa } from '@solana-mobile/wallet-standard-mobile';
-import { createDefaultAuthorizationCache, createDefaultWalletNotFoundHandler } from '@solana-mobile/wallet-standard-mobile';
+import { 
+    createDefaultAuthorizationCache, 
+    createDefaultChainSelector, 
+    createDefaultWalletNotFoundHandler,
+    registerMwa, 
+} from '@solana-mobile/wallet-standard-mobile';
 
 const REFLECTOR_HOST_AUTHORITY = process.env.NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY ?? undefined;
 
