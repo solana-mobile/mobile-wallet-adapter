@@ -67,5 +67,7 @@
     <!-- Scan QR Code fragment strings -->
     <string name="str_scan_mwa_qr_code">Scan MWA Connection QR Code</string>
     <string name="str_invalid_barcode">Invalid QR Code</string>
-    <string name="label_try_again">Scan MWA Connection QR Code</string>
+    <string name="str_camera_permission_required">Camera permission is required!</string>
+    <string name="label_try_again">Try Again</string>
+    <string name="label_open_settings">Open Settings</string>
 </resources>

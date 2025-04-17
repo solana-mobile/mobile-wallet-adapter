@@ -12,6 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY:  ${{ secrets.URL_REFLECTOR_DEV }}
 
     steps:
       - uses: actions/checkout@v4
