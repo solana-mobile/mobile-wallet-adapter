@@ -29,6 +29,7 @@ function getUriForAppIdentity() {
 registerMwa({
     appIdentity: {
         uri: getUriForAppIdentity(),
+        name: 'Example MWA Web DApp',
     },
     authorizationCache: createDefaultAuthorizationCache(),
     chains: ['solana:devnet'],
