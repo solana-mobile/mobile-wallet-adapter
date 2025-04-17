@@ -185,8 +185,11 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         this.#connect();
     }
 
-    async #connect(silent: boolean = false): Promise<void> {
+    async #connect(autoConnect: boolean = false): Promise<void> {
         if (this.connecting || this.connected) {
+            return;
+        }
+        if (autoConnect && !this.#wallet.isAuthorized) {
             return;
         }
         return await this.#runWithGuard(async () => {
@@ -195,7 +198,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             }
             this.#connecting = true;
             try {
-                await this.#wallet.features[StandardConnect].connect({ silent });
+                await this.#wallet.features[StandardConnect].connect({ silent: autoConnect });
             } catch (e) {
                 throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
             } finally {
