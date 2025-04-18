@@ -330,29 +330,6 @@ export async function transact<TReturn>(
     });
 }
 
-export async function transactRemote<TReturn>(
-    callback: (wallet: RemoteMobileWallet) => TReturn,
-    config: RemoteWalletAssociationConfig,
-): Promise<{associationUrl: URL, result: Promise<TReturn>}> {
-    return startRemoteScenario(config).then((scenario) => {
-        return { 
-            associationUrl: scenario.associationUrl, 
-            result: scenario.wallet.then((wallet) =>{
-                return callback(new Proxy(wallet as RemoteMobileWallet, {
-                    get<TMethodName extends keyof RemoteMobileWallet>(target: RemoteMobileWallet, p: TMethodName) {
-                        if (p == 'terminateSession') {
-                            return async function () {
-                                scenario.close();
-                                return;
-                            };
-                        } else return target[p];
-                    },
-                }));
-            }), 
-        };
-    });
-}
-
 export async function startRemoteScenario(
     config: RemoteWalletAssociationConfig,
 ): Promise<RemoteScenario> {
