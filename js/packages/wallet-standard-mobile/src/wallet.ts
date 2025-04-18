@@ -22,9 +22,9 @@ import {
 } from '@solana/web3.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
-    Account,
-    AppIdentity,
-    AuthorizationResult,
+    type Account,
+    type AppIdentity,
+    type AuthorizationResult,
     AuthToken,
     GetCapabilitiesAPI,
     SignInPayload,
@@ -292,8 +292,8 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     #handleWalletCapabilitiesResult = async (
         capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
     ) => {
-        const supportsSignTransaction = capabilities.features.includes(SolanaSignTransactions)
-        const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions 
+        const supportsSignTransaction = capabilities.features.includes(SolanaSignTransactions);
+        const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions;
         const didCapabilitiesChange = 
             SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
             SolanaSignTransaction in this.features !== supportsSignTransaction;
@@ -314,7 +314,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
             }),
         } as SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
         if (didCapabilitiesChange) {
-            this.#emit('change', { features: this.features })
+            this.#emit('change', { features: this.features });
         }
     }
 

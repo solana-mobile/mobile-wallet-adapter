@@ -48,15 +48,13 @@
         "@solana-mobile/wallet-standard-mobile": "link:../wallet-standard-mobile",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-standard-features": "^1.2.0",
-        "js-base64": "^3.7.5",
-        "qrcode": "^1.5.4"
+        "js-base64": "^3.7.5"
     },
     "optionalDependencies": {
         "@react-native-async-storage/async-storage": "^1.17.7"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.95.3",
-        "@types/qrcode": "^1.5.5",
         "agadoo": "^3.0.0",
         "cross-env": "^7.0.3",
         "shx": "^0.3.4"

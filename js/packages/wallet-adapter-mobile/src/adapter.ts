@@ -37,7 +37,6 @@ import {
     SolanaSignInOutput,
     SolanaSignMessage,
     SolanaSignTransaction,
-    SolanaSignTransactionFeature,
     SolanaSignTransactionOutput,
 } from '@solana/wallet-standard-features';
 import {
