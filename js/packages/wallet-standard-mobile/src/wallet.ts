@@ -28,8 +28,8 @@ import {
     AuthToken,
     GetCapabilitiesAPI,
     SignInPayload,
-    SolanaMobileWalletAdapterError,
-    SolanaMobileWalletAdapterErrorCode,
+    type SolanaMobileWalletAdapterError,
+    type SolanaMobileWalletAdapterErrorCode,
     SolanaSignTransactions,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
@@ -292,7 +292,8 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     #handleWalletCapabilitiesResult = async (
         capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
     ) => {
-        const supportsSignTransaction = capabilities.features.includes(SolanaSignTransactions);
+        // TODO: investigate why using SolanaSignTransactions constant breaks treeshaking
+        const supportsSignTransaction = capabilities.features.includes('solana:signTransactions');//SolanaSignTransactions);
         const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions;
         const didCapabilitiesChange = 
             SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
@@ -738,7 +739,8 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     #handleWalletCapabilitiesResult = async (
         capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
     ) => {
-        const supportsSignTransaction = capabilities.features.includes(SolanaSignTransactions);
+        // TODO: investigate why using SolanaSignTransactions constant breaks treeshaking
+        const supportsSignTransaction = capabilities.features.includes('solana:signTransactions');//SolanaSignTransactions);
         const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions || 
             capabilities.features.includes('solana:signAndSendTransaction');
         const didCapabilitiesChange = 
