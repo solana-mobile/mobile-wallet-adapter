@@ -28,6 +28,7 @@
     },
     "files": [
         "android",
+        "src/codegenSpec",
         "!android/build",
         "lib",
         "LICENSE"
