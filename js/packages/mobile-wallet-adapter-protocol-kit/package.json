@@ -1,0 +1,58 @@
+{
+    "name": "@solana-mobile/mobile-wallet-adapter-protocol-kit",
+    "description": "A convenience wrapper that enables you to call Solana Mobile Stack protocol methods using objects from @solana/kit",
+    "version": "0.1.0",
+    "author": "Marco Martinez <marco.martinez@solana.com>",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/solana-mobile/mobile-wallet-adapter.git"
+    },
+    "license": "Apache-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "main": "lib/cjs/index.js",
+    "react-native": "lib/cjs/index.native.js",
+    "module": "lib/esm/index.js",
+    "types": "lib/types/index.d.ts",
+    "browser": {
+        "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
+        "./lib/esm/index.js": "./lib/esm/index.browser.js"
+    },
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js",
+            "types": "./lib/types/index.d.ts"
+        }
+    },
+    "files": [
+        "lib",
+        "LICENSE"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "clean": "shx rm -rf lib/*",
+        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
+        "prepublishOnly": "agadoo"
+    },
+    "peerDependencies": {
+        "@solana/kit": "^2.1.0"
+    },
+    "dependencies": {
+        "@solana/transactions": "^2.1.0",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.0",
+        "bs58": "^5.0.0",
+        "js-base64": "^3.7.7"
+    },
+    "devDependencies": {
+        "@solana/keys": "^2.1.0",
+        "agadoo": "^3.0.0",
+        "cross-env": "^7.0.3",
+        "shx": "^0.4.0"
+    }
+}
