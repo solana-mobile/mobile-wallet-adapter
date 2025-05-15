@@ -58,12 +58,6 @@ export default function RecordMessageButton({children, message}: Props) {
           authorizeSession(wallet),
           rpc.getLatestBlockhash().send(),
         ]);
-        // const freshAccount = await authorizeSession(wallet);
-        // const latestBlockhash = {
-        //   blockhash: '3oqWyGzJikKW4gKwCVxxAmfgMZitsfEpxqGLZVX1xr8W', 
-        //   lastValidBlockHeight: 318438431n
-        // }
-        // const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
         const mwaTransactionSigner: TransactionSendingSigner = {
           address: selectedAccount?.publicKey ?? freshAccount.publicKey,
           signAndSendTransactions: async (transactions: Transaction[]) => {
