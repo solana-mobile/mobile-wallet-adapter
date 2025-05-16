@@ -13,10 +13,11 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@solana-mobile/mobile-wallet-adapter-protocol": "file:../../js/packages/mobile-wallet-adapter-protocol",
-    "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "file:../../js/packages/mobile-wallet-adapter-protocol-web3js",
-    "@solana/wallet-adapter-base": "^0.9.23",
-    "@solana/wallet-adapter-react": "^0.15.35",
-    "@solana/web3.js": "^1.95.4",
+    "@solana-mobile/mobile-wallet-adapter-protocol-kit": "file:../../js/packages/mobile-wallet-adapter-protocol-kit",
+    "@solana/kit": "^2.1.0",
+    "@solana-program/memo": "^0.7.0",
+    "@wallet-standard/react": "^1.0.1",
+    "bs58": "^5.0.0",
     "js-base64": "^3.7.7",
     "localstorage-polyfill": "^1.0.1",
     "react": "18.3.1",
@@ -58,6 +59,6 @@
     "@types/react": "^18"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.18.0"
   }
 }
