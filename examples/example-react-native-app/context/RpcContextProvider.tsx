@@ -1,4 +1,4 @@
-import { createSolanaRpc, createSolanaRpcSubscriptions, testnet } from '@solana/kit';
+import { createSolanaRpc, createSolanaRpcSubscriptions, Rpc, SolanaRpcApiDevnet } from '@solana/kit';
 import { ReactNode, useContext, useMemo } from 'react';
 
 import { ChainContext } from './ChainContext';
@@ -14,7 +14,7 @@ export function RpcContextProvider({ children }: Props) {
         <RpcContext.Provider
             value={useMemo(
                 () => ({
-                    rpc: createSolanaRpc(solanaRpcUrl),
+                    rpc: createSolanaRpc(solanaRpcUrl) as Rpc<SolanaRpcApiDevnet>,
                     rpcSubscriptions: createSolanaRpcSubscriptions(solanaRpcSubscriptionsUrl),
                 }),
                 [solanaRpcSubscriptionsUrl, solanaRpcUrl],
