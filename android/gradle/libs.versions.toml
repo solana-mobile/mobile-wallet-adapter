@@ -1,7 +1,7 @@
 [versions]
 # plugin versions
 androidGradlePlugin = "8.9.2"
-kotlinAndroidPlugin = "2.1.10"
+kotlinAndroidPlugin = "2.1.21"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
