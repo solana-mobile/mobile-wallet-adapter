@@ -93,6 +93,11 @@ const config: RollupOptions[] = [
         format: 'cjs',
         runtime: 'react-native',
     }),
+    createConfig({
+        bundleName: 'index.native.js',
+        format: 'esm',
+        runtime: 'react-native',
+    }),
 ];
 
 export default config;

@@ -21,8 +21,14 @@
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js",
+            "import": {
+                "react-native": "./lib/esm/index.native.js",
+                "default": "./lib/esm/index.js"
+            },
+            "require": {
+                "react-native": "./lib/cjs/index.native.js",
+                "default": "./lib/cjs/index.js"
+            },
             "types": "./lib/types/index.d.ts"
         }
     },
