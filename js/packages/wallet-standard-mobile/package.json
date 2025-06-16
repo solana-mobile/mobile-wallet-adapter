@@ -37,11 +37,8 @@
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
-    "peerDependencies": {
-        "@solana/web3.js": "^1.58.0"
-    },
     "dependencies": {
-        "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.0",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.0",
         "@solana/wallet-standard-chains": "^1.1.0",
         "@solana/wallet-standard-features": "^1.2.0",
         "@wallet-standard/base": "^1.0.1",
@@ -51,7 +48,6 @@
         "qrcode": "^1.5.4"
     },
     "devDependencies": {
-        "@solana/web3.js": "^1.95.3",
         "@types/qrcode": "^1.5.5",
         "agadoo": "^3.0.0",
         "cross-env": "^7.0.3",
