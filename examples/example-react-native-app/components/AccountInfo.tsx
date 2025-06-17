@@ -28,7 +28,7 @@ type Props = Readonly<{
 }>;
 
 function getLabelFromAccount(account: Account) {
-  const base58EncodedPublicKey = account.publicKey.toBase58();
+  const base58EncodedPublicKey = account.publicKey;
   if (account.label) {
     return `${account.label} (${base58EncodedPublicKey.slice(0, 8)})`;
   } else {
@@ -43,7 +43,7 @@ export default function AccountInfo({
 }: Props) {
   const {colors} = useTheme();
   const selectedAccountPublicKeyBase58String = useMemo(
-    () => selectedAccount.publicKey.toBase58(),
+    () => selectedAccount.publicKey,
     [selectedAccount],
   );
   const selectedAccountLabel = useMemo(
@@ -56,8 +56,8 @@ export default function AccountInfo({
       <Card.Content>
         <Suspense fallback={<ActivityIndicator />}>
           <View style={styles.balanceRow}>
-            <AccountBalance publicKey={selectedAccount.publicKey} />
-            <FundAccountButton publicKey={selectedAccount.publicKey}>
+            <AccountBalance address={selectedAccount.publicKey} />
+            <FundAccountButton address={selectedAccount.publicKey}>
               Add Funds
             </FundAccountButton>
           </View>
@@ -94,7 +94,7 @@ export default function AccountInfo({
             style={styles.addressMenu}
             visible={menuVisible}>
             {accounts.map(account => {
-              const base58PublicKey = account.publicKey.toBase58();
+              const base58PublicKey = account.publicKey;
               return (
                 <Menu.Item
                   disabled={account.address === selectedAccount.address}
