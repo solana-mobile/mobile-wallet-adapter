@@ -1,5 +1,5 @@
-import React, {createContext, ReactNode, useState} from 'react';
-import {Portal, Snackbar} from 'react-native-paper';
+import React, { createContext, ReactNode, useState } from 'react';
+import { Portal, Snackbar } from 'react-native-paper';
 
 type Props = Readonly<{children: ReactNode}>;
 
