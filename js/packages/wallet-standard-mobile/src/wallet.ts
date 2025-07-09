@@ -810,7 +810,6 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         const baseConfig = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const remoteConfig = { ...baseConfig, remoteHostAuthority: this.#hostAuthority };
         const currentConnectionGeneration = this.#connectionGeneration;
-        const loadingSpinner = new EmbeddedLoadingSpinner();
         const modal = new RemoteConnectionModal();
 
         if (this.#session) {
@@ -818,18 +817,16 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         }
         
         try {
-            // Begin remote connection, show loading spinner while we connect
-            loadingSpinner.init();
-            loadingSpinner.open();
+            // Begin remote connection, show modal with loading anim while we connect
+            modal.init();
+            modal.open();
             const { associationUrl, close, wallet } = await startRemoteScenario(remoteConfig);
 
-            // Reflector is now connected, close loading spinner and show connection modal
-            loadingSpinner.close();
+            // Reflector is now connected, update the connection modal with qr code
             const removeCloseListener = modal.addEventListener('close', (event: any) => {
                 if (event) close();
             });
-            modal.initWithQR(associationUrl.toString());
-            modal.open();
+            modal.populateQRCode(associationUrl.toString());
 
             // Wait for the wallet to be connected, then close the connection modal and proceed
             this.#session = { close, wallet: await wallet };
