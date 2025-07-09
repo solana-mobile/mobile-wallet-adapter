@@ -28,8 +28,8 @@ import {
     SignInPayload,
     type SolanaMobileWalletAdapterError,
     type SolanaMobileWalletAdapterErrorCode,
+    startScenario,
     startRemoteScenario,
-    transact,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
@@ -355,11 +355,15 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         try {
             // Begin local connection, show loading spinner while we connect
             loadingSpinner.init();
+            const { wallet, close } = await startScenario(config);
+            loadingSpinner.addEventListener('close', (event) => { if (event) close() });
             loadingSpinner.open();
-            const result = await transact(callback, config);
+            const result = await callback(await wallet);
             loadingSpinner.close();
+            close();
             return result;
         } catch (e) {
+            loadingSpinner.close();
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
             }

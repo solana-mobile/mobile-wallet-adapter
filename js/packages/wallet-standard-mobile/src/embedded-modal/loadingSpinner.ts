@@ -172,7 +172,7 @@ export default class EmbeddedLoadingSpinner {
         if (!this.#root || this.#listenersAttached) return;
 
         const closers = [...this.#root.querySelectorAll('[data-modal-close]')];
-        closers.forEach(closer => closer?.addEventListener('click', this.close));
+        closers.forEach(closer => closer?.addEventListener('click', (event) => { this.close(event); }));
 
         window.addEventListener('load', this.close);
         document.addEventListener('keydown', this.#handleKeyDown);
