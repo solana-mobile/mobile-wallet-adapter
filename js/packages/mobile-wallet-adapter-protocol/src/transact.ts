@@ -21,6 +21,7 @@ import {
     RemoteMobileWallet, 
     RemoteScenario, 
     RemoteWalletAssociationConfig, 
+    Scenario, 
     SessionProperties, 
     WalletAssociationConfig 
 } from './types.js';
@@ -113,6 +114,17 @@ export async function transact<TReturn>(
     callback: (wallet: MobileWallet) => TReturn,
     config?: WalletAssociationConfig,
 ): Promise<TReturn> {
+    const { wallet, close } = await startScenario(config);
+    try {
+        return await callback(await wallet);
+    } finally {
+        close();
+    }
+}
+
+export async function startScenario(
+    config?: WalletAssociationConfig,
+): Promise<Scenario> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
@@ -125,8 +137,13 @@ export async function transact<TReturn>(
     let nextJsonRpcMessageId = 1;
     let lastKnownInboundSequenceNumber = 0;
     let state: State = { __type: 'disconnected' };
-    return new Promise((resolve, reject) => {
-        let socket: WebSocket;
+    let socket: WebSocket;
+    let sessionEstablished = false;
+    let handleForceClose: () => void;
+    return { close: () => {
+        socket.close();
+        handleForceClose();
+    }, wallet: new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
         const handleOpen = async () => {
@@ -291,16 +308,27 @@ export async function transact<TReturn>(
                                 };
                             });
                         })
+                    sessionEstablished = true;
                     try {
-                        resolve(await callback(wallet));
+                        resolve(wallet);
                     } catch (e) {
                         reject(e);
-                    } finally {
-                        disposeSocket();
-                        socket.close();
                     }
                     break;
                 }
+            }
+        };
+        handleForceClose = () => {
+            socket.removeEventListener('message', handleMessage);
+            disposeSocket();
+            if (!sessionEstablished) {
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session was closed before connection.`,
+                        { closeEvent: new CloseEvent('socket was closed before connection') },
+                    ),
+                );
             }
         };
         let disposeSocket: () => void;
@@ -327,7 +355,7 @@ export async function transact<TReturn>(
             };
         };
         attemptSocketConnection();
-    });
+    })};
 }
 
 export async function startRemoteScenario(
