@@ -1,6 +1,6 @@
 import { AuthorizationResult } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { Authorization, AuthorizationCache } from './wallet';
-import { PublicKey } from '@solana/web3.js';
+import base58 from 'bs58';
 
 const CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 
@@ -32,7 +32,7 @@ export default function createDefaultAuthorizationCache(): AuthorizationCache {
                             ...account,
                             publicKey: 'publicKey' in account
                                 ? new Uint8Array(Object.values(account.publicKey)) // Rebuild publicKey for WalletAccount
-                                : new PublicKey(account.address).toBytes(), // Fallback, get publicKey from address
+                                : base58.decode(account.address), // Fallback, get publicKey from address
                         }
                     })
                     return { ...parsed, accounts: parsedAccounts }

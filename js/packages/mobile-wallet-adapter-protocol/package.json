@@ -1,31 +1,42 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-protocol",
     "description": "An implementation of the Solana Mobile Mobile Wallet Adapter protocol. Use this to open a session with a mobile wallet app, and to issue API calls to it.",
-    "version": "2.2.0",
+    "version": "2.2.2",
     "author": "Steven Luscher <steven.luscher@solanamobile.com>",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/solana-mobile/mobile-wallet-adapter.git"
     },
     "license": "Apache-2.0",
-    "type": "module",
-    "sideEffects": false,
-    "main": "lib/cjs/index.js",
-    "react-native": "lib/cjs/index.native.js",
-    "module": "lib/esm/index.js",
-    "types": "lib/types/index.d.ts",
+    "exports": {
+        "edge-light": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "workerd": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "browser": {
+            "import": "./lib/cjs/index.browser.js",
+            "require": "./lib/esm/index.browser.js"
+        },
+        "node": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "react-native": "./lib/cjs/index.native.js",
+        "types": "./lib/types/index.d.ts"
+    },
     "browser": {
         "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
         "./lib/esm/index.js": "./lib/esm/index.browser.js"
     },
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js",
-            "types": "./lib/types/index.d.ts"
-        }
-    },
+    "main": "lib/cjs/index.js",
+    "module": "lib/esm/index.js",
+    "react-native": "lib/cjs/index.native.js",
+    "types": "lib/types/index.d.ts",
+    "type": "module",
     "files": [
         "android",
         "src/codegenSpec",
@@ -33,6 +44,7 @@
         "lib",
         "LICENSE"
     ],
+    "sideEffects": false,
     "publishConfig": {
         "access": "public"
     },
@@ -57,7 +69,6 @@
         "shx": "^0.3.4"
     },
     "peerDependencies": {
-        "@solana/web3.js": "^1.58.0",
         "react-native": ">0.69"
     },
     "codegenConfig": {

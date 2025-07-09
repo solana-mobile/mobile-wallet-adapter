@@ -16,10 +16,6 @@ import {
     type SolanaSignTransactionFeature,
     type SolanaSignTransactionMethod,
 } from '@solana/wallet-standard-features';
-import { 
-    Transaction as LegacyTransaction,
-    VersionedTransaction
-} from '@solana/web3.js';
 import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
@@ -28,9 +24,12 @@ import {
     type AuthorizationResult,
     AuthToken,
     GetCapabilitiesAPI,
+    MobileWallet,
     SignInPayload,
     type SolanaMobileWalletAdapterError,
     type SolanaMobileWalletAdapterErrorCode,
+    startRemoteScenario,
+    transact,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
@@ -47,8 +46,6 @@ import {
     type StandardEventsOnMethod,
 } from '@wallet-standard/features';
 import { icon } from './icon';
-import { isVersionedTransaction } from './solana';
-import { transact, startRemoteScenario, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
 
@@ -319,7 +316,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         }
     }
 
-    #performReauthorization = async (wallet: Web3MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
+    #performReauthorization = async (wallet: MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
         try {
             const mwaAuthorizationResult = await wallet.authorize({
                 auth_token: authToken,
@@ -350,7 +347,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#emit('change', { accounts: this.accounts });
     };
 
-    #transact = async <TReturn>(callback: (wallet: Web3MobileWallet) => TReturn) => {
+    #transact = async <TReturn>(callback: (wallet: MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
@@ -401,16 +398,17 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         });
     }
 
-    #performSignTransactions = async <T extends LegacyTransaction | VersionedTransaction>(
-        transactions: T[]
+    #performSignTransactions = async(
+        transactions: Uint8Array[]
     ) => {
         const { authToken, chain } = this.#assertIsAuthorized();
         try {
+            const base64Transactions = transactions.map((tx) => { return fromUint8Array(tx) });
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
-                const signedTransactions = await wallet.signTransactions({
-                    transactions,
-                });
+                const signedTransactions = (await wallet.signTransactions({
+                    payloads: base64Transactions,
+                })).signed_payloads.map(toUint8Array);
                 return signedTransactions;
             });
         } catch (e) {
@@ -419,7 +417,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     }
 
     #performSignAndSendTransaction = async (
-        transaction: VersionedTransaction,
+        transaction: Uint8Array,
         options?: SolanaSignAndSendTransactionOptions | undefined,
     ) => {
         const { authToken, chain } = this.#assertIsAuthorized();
@@ -430,10 +428,11 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                     this.#performReauthorization(wallet, authToken, chain)
                 ]);
                 if (capabilities.supports_sign_and_send_transactions) {
-                    const signatures = await wallet.signAndSendTransactions({
+                    const base64Transaction = fromUint8Array(transaction);
+                    const signatures = (await wallet.signAndSendTransactions({
                         ...options,
-                        transactions: [transaction],
-                    });
+                        payloads: [base64Transaction],
+                    })).signatures.map(toUint8Array);
                     return signatures[0];
                 } else {
                     throw new Error('connected wallet does not support signAndSendTransaction')
@@ -449,42 +448,31 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         const outputs: SolanaSignAndSendTransactionOutput[] = [];
 
         for (const input of inputs) {
-            const transaction = VersionedTransaction.deserialize(input.transaction);
-            const signature = (await this.#performSignAndSendTransaction(transaction, input.options))
-            outputs.push({ signature: base58.decode(signature) })
+            const signature = await this.#performSignAndSendTransaction(input.transaction, input.options)
+            outputs.push({ signature })
         }
 
         return outputs;
     };
 
     #signTransaction: SolanaSignTransactionMethod = async (...inputs) => {
-        const transactions = inputs.map(({ transaction }) => VersionedTransaction.deserialize(transaction));
-        const signedTransactions = await this.#performSignTransactions(transactions);
-        return signedTransactions.map((signedTransaction) => {
-            const serializedTransaction = isVersionedTransaction(signedTransaction)
-                ? signedTransaction.serialize()
-                : new Uint8Array(
-                        (signedTransaction as LegacyTransaction).serialize({
-                            requireAllSignatures: false,
-                            verifySignatures: false,
-                        })
-                    );
-
-            return { signedTransaction: serializedTransaction };
-        });
+        return (await this.#performSignTransactions(inputs.map(({ transaction }) => transaction)))
+            .map((signedTransaction) => {
+                return { signedTransaction }
+            });
     };
 
     #signMessage: SolanaSignMessageMethod = async (...inputs) => {
         const { authToken, chain } = this.#assertIsAuthorized();
         const addresses = inputs.map(({ account }) => fromUint8Array(account.publicKey))
-        const messages = inputs.map(({ message }) => message);
+        const messages = inputs.map(({ message }) => fromUint8Array(message));
         try {
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
-                const signedMessages = await wallet.signMessages({
+                const signedMessages = (await wallet.signMessages({
                     addresses: addresses,
                     payloads: messages,
-                });
+                })).signed_payloads.map(toUint8Array);
                 return signedMessages.map((signedMessage) => { 
                     return { signedMessage: signedMessage, signature: signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES) }
                 });
@@ -560,7 +548,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     #hostAuthority: string;
-    #session: { close: () => void, wallet: Web3MobileWallet } | undefined;
+    #session: { close: () => void, wallet: MobileWallet } | undefined;
 
     get version() {
         return this.#version;
@@ -773,7 +761,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         }
     }
 
-    #performReauthorization = async (wallet: Web3MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
+    #performReauthorization = async (wallet: MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
         try {
             const mwaAuthorizationResult = await wallet.authorize({
                 auth_token: authToken,
@@ -805,7 +793,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         this.#emit('change', { accounts: this.accounts });
     };
 
-    #transact = async <TReturn>(callback: (wallet: Web3MobileWallet) => TReturn) => {
+    #transact = async <TReturn>(callback: (wallet: MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const baseConfig = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const remoteConfig = { ...baseConfig, remoteHostAuthority: this.#hostAuthority };
@@ -873,16 +861,16 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         });
     }
 
-    #performSignTransactions = async <T extends LegacyTransaction | VersionedTransaction>(
-        transactions: T[]
+    #performSignTransactions = async(
+        transactions: Uint8Array[]
     ) => {
         const { authToken, chain } = this.#assertIsAuthorized();
         try {
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
-                const signedTransactions = await wallet.signTransactions({
-                    transactions,
-                });
+                const signedTransactions = (await wallet.signTransactions({
+                    payloads: transactions.map(fromUint8Array),
+                })).signed_payloads.map(toUint8Array);
                 return signedTransactions;
             });
         } catch (e) {
@@ -891,7 +879,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     }
 
     #performSignAndSendTransaction = async (
-        transaction: VersionedTransaction,
+        transaction: Uint8Array,
         options?: SolanaSignAndSendTransactionOptions | undefined,
     ) => {
         const { authToken, chain } = this.#assertIsAuthorized();
@@ -902,10 +890,10 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
                     this.#performReauthorization(wallet, authToken, chain)
                 ]);
                 if (capabilities.supports_sign_and_send_transactions) {
-                    const signatures = await wallet.signAndSendTransactions({
+                    const signatures = (await wallet.signAndSendTransactions({
                         ...options,
-                        transactions: [transaction],
-                    });
+                        payloads: [fromUint8Array(transaction)],
+                    })).signatures.map(toUint8Array);
                     return signatures[0];
                 } else {
                     throw new Error('connected wallet does not support signAndSendTransaction')
@@ -919,42 +907,31 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
     #signAndSendTransaction: SolanaSignAndSendTransactionMethod = async (...inputs) => {
         const outputs: SolanaSignAndSendTransactionOutput[] = [];
         for (const input of inputs) {
-            const transaction = VersionedTransaction.deserialize(input.transaction);
-            const signature = (await this.#performSignAndSendTransaction(transaction, input.options))
-            outputs.push({ signature: base58.decode(signature) })
+            const signature = (await this.#performSignAndSendTransaction(input.transaction, input.options))
+            outputs.push({ signature })
         }
 
         return outputs;
     };
 
     #signTransaction: SolanaSignTransactionMethod = async (...inputs) => {
-        const transactions = inputs.map(({ transaction }) => VersionedTransaction.deserialize(transaction));
-        const signedTransactions = await this.#performSignTransactions(transactions);
-        return signedTransactions.map((signedTransaction) => {
-            const serializedTransaction = isVersionedTransaction(signedTransaction)
-                ? signedTransaction.serialize()
-                : new Uint8Array(
-                        (signedTransaction as LegacyTransaction).serialize({
-                            requireAllSignatures: false,
-                            verifySignatures: false,
-                        })
-                    );
-
-            return { signedTransaction: serializedTransaction };
-        });
+        return (await this.#performSignTransactions(inputs.map(({ transaction }) => transaction)))
+            .map((signedTransaction) => {
+                return { signedTransaction }
+            });
     };
 
     #signMessage: SolanaSignMessageMethod = async (...inputs) => {
         const { authToken, chain } = this.#assertIsAuthorized();
         const addresses = inputs.map(({ account }) => fromUint8Array(account.publicKey))
-        const messages = inputs.map(({ message }) => message);
+        const messages = inputs.map(({ message }) => fromUint8Array(message));
         try {
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
-                const signedMessages = await wallet.signMessages({
+                const signedMessages = (await wallet.signMessages({
                     addresses: addresses,
                     payloads: messages,
-                });
+                })).signed_payloads.map(toUint8Array);
                 return signedMessages.map((signedMessage) => { 
                     return { signedMessage: signedMessage, signature: signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES) }
                 });
