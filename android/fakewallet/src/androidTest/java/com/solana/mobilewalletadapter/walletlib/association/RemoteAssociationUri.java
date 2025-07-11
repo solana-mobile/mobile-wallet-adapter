@@ -42,9 +42,14 @@ public class RemoteAssociationUri extends AssociationUri {
                                    @NonNull MobileWalletAdapterConfig mobileWalletAdapterConfig,
                                    @NonNull AuthIssuerConfig authIssuerConfig,
                                    @NonNull Scenario.Callbacks callbacks) {
-        return new RemoteWebSocketServerScenario(context, mobileWalletAdapterConfig,
-                authIssuerConfig, callbacks, associationPublicKey, associationProtocolVersions,
-                "ws", reflectorHostAuthority, reflectorIdBytes);
+        if (callbacks instanceof RemoteWebSocketServerScenario.Callbacks) {
+            return new RemoteWebSocketServerScenario(context, mobileWalletAdapterConfig,
+                    authIssuerConfig, (RemoteWebSocketServerScenario.Callbacks) callbacks,
+                    associationPublicKey, associationProtocolVersions,
+                    "ws", reflectorHostAuthority, reflectorIdBytes);
+        } else {
+            throw new IllegalArgumentException("callbacks must implement " + RemoteWebSocketServerScenario.Callbacks.class.getName());
+        }
     }
 
     @NonNull

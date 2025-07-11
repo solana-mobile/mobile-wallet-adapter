@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class ReflectorWebSocket implements MessageSender {
@@ -123,14 +124,21 @@ public class ReflectorWebSocket implements MessageSender {
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
                     synchronized (ReflectorWebSocket.this) {
-                        assert(mState == State.CONNECTED || mState == State.REFLECTION_ESTABLISHED ||
-                                mState == State.CLOSING || mState == State.CLOSED);
+                        assert(mState != State.NOT_CONNECTED);
                         if (mState == State.CLOSED) {
+                            return;
+                        }
+                        if (mState == State.CONNECTING) {
+                            mState = State.CLOSED;
+                            mWebSocketClient = null;
+                            if (mStateCallbacks != null) {
+                                mStateCallbacks.onServerRejectedConnection();
+                            }
                             return;
                         }
 
                         Log.v(TAG, "onDisconnected");
-                        if (mState != State.CONNECTED) {
+                        if (mState == State.REFLECTION_ESTABLISHED || mState == State.CLOSING) {
                             mMessageReceiver.receiverDisconnected();
                         }
                         mState = State.CLOSED;
@@ -144,8 +152,7 @@ public class ReflectorWebSocket implements MessageSender {
                 @Override
                 public void onError(Exception ex) {
                     synchronized (ReflectorWebSocket.this) {
-                        assert(mState == State.CONNECTING || mState == State.REFLECTION_ESTABLISHED ||
-                                mState == State.CONNECTED || mState == State.CLOSING || mState == State.CLOSED);
+                        assert(mState != State.NOT_CONNECTED);
 
                         Log.w(TAG, "WebSockets error", ex);
                         switch (mState) {
@@ -242,6 +249,9 @@ public class ReflectorWebSocket implements MessageSender {
 
         /** Invoked when this WebSocket fails attempting to connect to the server */
         void onConnectionFailed();
+
+        /** Invoked when the server rejects the websocket upgrade request */
+        void onServerRejectedConnection();
 
         /** Invoked when this WebSocket fails attempting to connect to the server */
         void onReflectionEstablished();
