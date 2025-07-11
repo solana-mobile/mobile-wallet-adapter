@@ -30,10 +30,20 @@ class MobileWalletAdapterActivity : AppCompatActivity() {
                     } else if (request is MobileWalletAdapterServiceRequest.LowPowerNoConnection) {
                         // should use dialog fragment, etc. but this is a quick demo
                         AlertDialog.Builder(this@MobileWalletAdapterActivity)
-                            .setTitle(R.string.low_power_mode_warning_title)
+                            .setTitle(R.string.label_low_power_mode_warning)
                             .setMessage(R.string.str_low_power_mode_warning_dsc)
                             .setPositiveButton(android.R.string.ok) { _, _ ->
                                 Log.w(TAG, "Connection failed due to device low power mode, returning to dapp.")
+                                finish()
+                            }
+                            .show()
+                    } else if (request is MobileWalletAdapterServiceRequest.SessionEstablishmentFailed) {
+                        // should use dialog fragment, etc. but this is a quick demo
+                        AlertDialog.Builder(this@MobileWalletAdapterActivity)
+                            .setTitle(R.string.label_failed_session_establishment)
+                            .setMessage(R.string.str_failed_session_establishment)
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                Log.w(TAG, "Session could not be established, returning to dapp.")
                                 finish()
                             }
                             .show()

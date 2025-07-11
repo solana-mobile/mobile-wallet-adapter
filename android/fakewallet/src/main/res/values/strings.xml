@@ -57,11 +57,18 @@
     <string name="str_verification_not_verifiable">Client not verifiable</string>
 
     <!-- No connection due to low power warning strings-->
-    <string name="low_power_mode_warning_title">Low Power Mode</string>
+    <string name="label_low_power_mode_warning">Low Power Mode</string>
     <string name="str_low_power_mode_warning_dsc">
         Your device is currently in power saving mode. Incoming wallet connections will not
         work properly when the device battery save mode is active. Please turn off battery
         saver or plug in your phone and try again.
+    </string>
+
+    <!-- Failed session establishment warning strings-->
+    <string name="label_failed_session_establishment">Connection Failed</string>
+    <string name="str_failed_session_establishment">
+        Could not establish a session with the dapp, the connection failed.
+        Check your network connection
     </string>
 
     <!-- Scan QR Code fragment strings -->

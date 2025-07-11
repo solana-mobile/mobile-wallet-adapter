@@ -26,7 +26,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,7 +50,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     private int mConnectionAttempts = 0;
     private ReflectorWebSocket mReflectorWebSocket;
     private ScheduledExecutorService mConnectionBackoffExecutor; // valid in State.CONNECTING
-    private NotifyingCompletableFuture<Boolean> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
     private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
     @Deprecated(forRemoval = true)
@@ -162,12 +160,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
             }
 
             mState = State.CONNECTING;
-            startDeferredFuture();
-
-            // Delay the first connect to allow the association intent receiver to start the WebSocket
-            // server
-            mConnectionBackoffExecutor = Executors.newScheduledThreadPool(1);
-            mConnectionBackoffExecutor.schedule(this::doTryConnect, CONNECT_BACKOFF_SCHEDULE_MS[0], TimeUnit.MILLISECONDS);
+            doTryConnect();
         }
     }
 
@@ -222,15 +215,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                 mSessionStateCallbacks);
     }
 
-    @NonNull
-    @GuardedBy("mLock")
-    private NotifyingCompletableFuture<Boolean> startDeferredFuture() {
-        assert(mState == State.CONNECTING && mSessionEstablishedFuture == null);
-        final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
-        mSessionEstablishedFuture = future;
-        return future;
-    }
-
     @GuardedBy("mLock")
     private void doTryConnect() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
@@ -251,10 +235,10 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     }
 
     @GuardedBy("mLock")
-    private void doConnectionFailed() {
+    private void doConnectionFailed(boolean retry) {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) return;
-        if (++mConnectionAttempts < CONNECT_MAX_ATTEMPTS) {
+        if (retry && ++mConnectionAttempts < CONNECT_MAX_ATTEMPTS) {
             final int delay = CONNECT_BACKOFF_SCHEDULE_MS[
                     mConnectionAttempts < CONNECT_BACKOFF_SCHEDULE_MS.length ?
                             mConnectionAttempts :
@@ -309,8 +293,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
 
     @GuardedBy("mLock")
     private void notifySessionEstablishmentFailed(@NonNull String message) {
-        mSessionEstablishedFuture.completeExceptionally(new ConnectionFailedException(message));
-        mSessionEstablishedFuture = null;
+        Log.w(TAG, "Session establishment failed: " + message);
+        ((Callbacks) mCallbacks).onSessionEstablishmentFailed();
     }
 
     @GuardedBy("mLock")
@@ -336,7 +320,14 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         @Override
         public void onConnectionFailed() {
             synchronized (mLock) {
-                doConnectionFailed();
+                doConnectionFailed(true);
+            }
+        }
+
+        @Override
+        public void onServerRejectedConnection() {
+            synchronized (mLock) {
+                doConnectionFailed(false);
             }
         }
 
@@ -397,7 +388,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         NOT_STARTED, CONNECTING, AWAITING_REFLECTION, ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
     }
 
-    public static class ConnectionFailedException extends RuntimeException {
-        public ConnectionFailedException(@NonNull String message) { super(message); }
+    public interface Callbacks extends Scenario.Callbacks {
+        void onSessionEstablishmentFailed();
     }
 }

@@ -477,8 +477,11 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    private inner class MobileWalletAdapterScenarioCallbacks : LocalScenario.Callbacks {
-        override fun onScenarioReady() = Unit
+    private inner class MobileWalletAdapterScenarioCallbacks
+        : LocalScenario.Callbacks, RemoteWebSocketServerScenario.Callbacks {
+        override fun onScenarioReady() {
+            Log.d(TAG, "Scenario Ready")
+        }
         override fun onScenarioServingClients() = Unit
         override fun onScenarioServingComplete() {
             viewModelScope.launch(Dispatchers.Main) {
@@ -486,8 +489,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.None)
             }
         }
-        override fun onScenarioComplete() = Unit
-        override fun onScenarioError() = Unit
+        override fun onScenarioComplete() {
+            Log.d(TAG, "Scenario Complete")
+        }
+        override fun onScenarioError() {
+            Log.d(TAG, "Scenario Error")
+        }
         override fun onScenarioTeardownComplete() {
             viewModelScope.launch {
                 // No need to cancel any outstanding request; the scenario is torn down, and so
@@ -608,12 +615,21 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.LowPowerNoConnection)
             }
         }
+
+        override fun onSessionEstablishmentFailed() {
+            viewModelScope.launch {
+                // No need to cancel any outstanding request; the scenario is torn down, and so
+                // cancelling a request that originated from it isn't actionable
+                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionEstablishmentFailed)
+            }
+        }
     }
 
     sealed interface MobileWalletAdapterServiceRequest {
         object None : MobileWalletAdapterServiceRequest
         object SessionTerminated : MobileWalletAdapterServiceRequest
         object LowPowerNoConnection : MobileWalletAdapterServiceRequest
+        object SessionEstablishmentFailed : MobileWalletAdapterServiceRequest
 
         sealed class MobileWalletAdapterRemoteRequest(open val request: ScenarioRequest) : MobileWalletAdapterServiceRequest
         sealed class AuthorizationRequest(
