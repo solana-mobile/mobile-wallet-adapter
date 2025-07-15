@@ -25,6 +25,7 @@ import com.solana.mobilewalletadapter.walletlib.transport.websockets.ReflectorWe
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -166,6 +167,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
             mState = State.CONNECTING;
             future = startDeferredFuture();
             doTryConnect();
+
+            mConnectionBackoffExecutor = Executors.newScheduledThreadPool(1);
         }
 
         return future;
