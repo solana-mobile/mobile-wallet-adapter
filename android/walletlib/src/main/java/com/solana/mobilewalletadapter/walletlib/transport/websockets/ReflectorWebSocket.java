@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 public class ReflectorWebSocket implements MessageSender {
@@ -126,14 +125,6 @@ public class ReflectorWebSocket implements MessageSender {
                     synchronized (ReflectorWebSocket.this) {
                         assert(mState != State.NOT_CONNECTED);
                         if (mState == State.CLOSED) {
-                            return;
-                        }
-                        if (mState == State.CONNECTING) {
-                            mState = State.CLOSED;
-                            mWebSocketClient = null;
-                            if (mStateCallbacks != null) {
-                                mStateCallbacks.onServerRejectedConnection();
-                            }
                             return;
                         }
 
@@ -249,9 +240,6 @@ public class ReflectorWebSocket implements MessageSender {
 
         /** Invoked when this WebSocket fails attempting to connect to the server */
         void onConnectionFailed();
-
-        /** Invoked when the server rejects the websocket upgrade request */
-        void onServerRejectedConnection();
 
         /** Invoked when this WebSocket fails attempting to connect to the server */
         void onReflectionEstablished();
