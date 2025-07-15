@@ -10,11 +10,11 @@ import androidx.annotation.NonNull;
 
 import com.solana.mobilewalletadapter.common.WebSocketsTransportContract;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.LocalWebSocketServer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LocalWebSocketServerScenario extends LocalScenario {
@@ -77,13 +77,13 @@ public class LocalWebSocketServerScenario extends LocalScenario {
     }
 
     @Override
-    public void start() {
+    public NotifyingCompletableFuture<Boolean> startAsync() {
         if (mState != State.NOT_STARTED) {
             throw new IllegalStateException("Already started");
         }
         mState = State.RUNNING;
         mWebSocketServer.init();
-        super.start();
+        return super.startAsync();
     }
 
     @Override

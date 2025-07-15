@@ -7,12 +7,14 @@ package com.solana.mobilewalletadapter.walletlib.scenario;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.solana.mobilewalletadapter.common.protocol.MessageReceiver;
 import com.solana.mobilewalletadapter.common.protocol.MobileWalletAdapterSessionCommon;
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
+import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture;
 import com.solana.mobilewalletadapter.walletlib.authorization.AuthIssuerConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConfig;
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServer;
@@ -32,6 +34,7 @@ public abstract class LocalScenario extends BaseScenario {
 
     @Nullable
     private ScheduledFuture<?> mNoConnectionTimeoutHandler;
+    private NotifyingCompletableFuture<Boolean> mSessionEstablishedFuture;
     private final ScheduledExecutorService mTimeoutExecutorService =
             Executors.newSingleThreadScheduledExecutor();
 
@@ -70,8 +73,15 @@ public abstract class LocalScenario extends BaseScenario {
     }
 
     @Override
-    public void start() {
+    public NotifyingCompletableFuture<Boolean> startAsync() {
+        final NotifyingCompletableFuture<Boolean> future;
+
         mIoHandler.post(this::startNoConnectionTimer);
+        synchronized (mLock) {
+            future = startDeferredFuture();
+        }
+
+        return future;
     }
 
     @Override
@@ -105,6 +115,20 @@ public abstract class LocalScenario extends BaseScenario {
         }
     }
 
+    @NonNull
+    @GuardedBy("mLock")
+    private NotifyingCompletableFuture<Boolean> startDeferredFuture() {
+        final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
+        mSessionEstablishedFuture = future;
+        return future;
+    }
+
+    @GuardedBy("mLock")
+    private void notifySessionEstablishmentSucceeded() {
+        mSessionEstablishedFuture.complete(true);
+        mSessionEstablishedFuture = null;
+    }
+
     private final MobileWalletAdapterSessionCommon.StateCallbacks mSessionStateCallbacks =
             new MobileWalletAdapterSessionCommon.StateCallbacks() {
                 private final AtomicInteger mClientCount = new AtomicInteger();
@@ -114,6 +138,9 @@ public abstract class LocalScenario extends BaseScenario {
                     Log.d(TAG, "MobileWalletAdapter session established");
                     if (mClientCount.incrementAndGet() == 1) {
                         mIoHandler.post(LocalScenario.this::stopNoConnectionTimer);
+                        synchronized (mLock) {
+                            notifySessionEstablishmentSucceeded();
+                        }
                         mIoHandler.post(mAuthRepository::start);
                         mIoHandler.post(mCallbacks::onScenarioServingClients);
                     }

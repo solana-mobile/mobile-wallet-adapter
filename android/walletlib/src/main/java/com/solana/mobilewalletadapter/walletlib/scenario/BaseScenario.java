@@ -120,10 +120,21 @@ public abstract class BaseScenario implements Scenario {
     }
 
     @Override
-    public abstract void start();
+    public void start() {
+        startAsync();
+    }
+
+    @Override
+    public abstract NotifyingCompletableFuture<Boolean> startAsync();
 
     @Override
     public abstract void close();
+
+    public static class ConnectionFailedException extends RuntimeException {
+        public ConnectionFailedException(@NonNull String message) {
+            super(message);
+        }
+    }
 
     /*package*/ final MobileWalletAdapterServer.MethodHandlers mMethodHandlers =
             new MobileWalletAdapterServer.MethodHandlers() {

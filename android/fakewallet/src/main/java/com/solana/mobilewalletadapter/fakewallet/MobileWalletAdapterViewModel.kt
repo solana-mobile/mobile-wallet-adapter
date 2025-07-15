@@ -34,6 +34,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     private var clientTrustUseCase: ClientTrustUseCase? = null
     private var scenario: Scenario? = null
+    private var sessionInProgress: Boolean = false
 
     fun isConnectionRemote(): Boolean = scenario is RemoteWebSocketServerScenario
     fun endSession() {
@@ -62,6 +63,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             associationUri
         )
 
+        sessionInProgress = false
         scenario = if (BuildConfig.PROTOCOL_VERSION == SessionProperties.ProtocolVersion.LEGACY
             && associationUri is LocalAssociationUri) {
             // manually create the scenario here so we can override the association protocol version
@@ -97,7 +99,15 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks()
             )
-        }.also { it.start() }
+        }.also {
+            viewModelScope.launch {
+                runCatching {
+                    it.startAsync().get()
+                }.getOrElse {
+                    _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionEstablishmentFailed)
+                }
+            }
+        }
 
         return true
     }
@@ -477,10 +487,10 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
     }
 
-    private inner class MobileWalletAdapterScenarioCallbacks
-        : LocalScenario.Callbacks, RemoteWebSocketServerScenario.Callbacks {
+    private inner class MobileWalletAdapterScenarioCallbacks : LocalScenario.Callbacks {
         override fun onScenarioReady() {
             Log.d(TAG, "Scenario Ready")
+            sessionInProgress = true
         }
         override fun onScenarioServingClients() = Unit
         override fun onScenarioServingComplete() {
@@ -496,6 +506,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             Log.d(TAG, "Scenario Error")
         }
         override fun onScenarioTeardownComplete() {
+            if (!sessionInProgress) return
+            sessionInProgress = false
             viewModelScope.launch {
                 // No need to cancel any outstanding request; the scenario is torn down, and so
                 // cancelling a request that originated from it isn't actionable
@@ -613,14 +625,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             Log.w(TAG, "Device is in power save mode and no connection was made. The connection was likely suppressed by power save mode.")
             viewModelScope.launch {
                 _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.LowPowerNoConnection)
-            }
-        }
-
-        override fun onSessionEstablishmentFailed() {
-            viewModelScope.launch {
-                // No need to cancel any outstanding request; the scenario is torn down, and so
-                // cancelling a request that originated from it isn't actionable
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionEstablishmentFailed)
             }
         }
     }
