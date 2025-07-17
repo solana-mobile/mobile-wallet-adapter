@@ -488,8 +488,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     }
 
     private inner class MobileWalletAdapterScenarioCallbacks : LocalScenario.Callbacks {
-        override fun onScenarioReady() { sessionInProgress = true }
-        override fun onScenarioServingClients() = Unit
+        override fun onScenarioReady() = Unit
+        override fun onScenarioServingClients() { sessionInProgress = true }
         override fun onScenarioServingComplete() {
             viewModelScope.launch(Dispatchers.Main) {
                 scenario?.close()

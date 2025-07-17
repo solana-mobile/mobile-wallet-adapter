@@ -290,6 +290,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         Log.d(TAG, "Session established, scenario ready for use");
         mState = State.STARTED;
         notifySessionEstablishmentSucceeded();
+        mCallbacks.onScenarioReady();
     }
 
     @GuardedBy("mLock")
