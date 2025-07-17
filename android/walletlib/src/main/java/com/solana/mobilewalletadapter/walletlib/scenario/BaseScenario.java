@@ -38,9 +38,6 @@ public abstract class BaseScenario implements Scenario {
     @NonNull
     final public List<SessionProperties.ProtocolVersion> associationProtocolVersions;
 
-    @Nullable
-    public String activeSessionId = null;
-
     @NonNull
     protected final MobileWalletAdapterConfig mMobileWalletAdapterConfig;
     @NonNull
@@ -56,6 +53,9 @@ public abstract class BaseScenario implements Scenario {
     @Nullable
     @GuardedBy("mLock")
     protected AuthRecord mActiveAuthorization = null;
+    @Nullable
+    @GuardedBy("mLock")
+    protected String mActiveSessionId = null;
     @Nullable
     @GuardedBy("mLock")
     private NotifyingCompletableFuture<String> mSessionEstablishedFuture;
@@ -125,7 +125,7 @@ public abstract class BaseScenario implements Scenario {
     @Nullable
     @GuardedBy("mLock")
     public String getActiveSessionId() {
-        return activeSessionId;
+        return mActiveSessionId;
     }
 
     @Override
@@ -144,9 +144,9 @@ public abstract class BaseScenario implements Scenario {
 
     @GuardedBy("mLock")
     protected void notifySessionEstablishmentSucceeded() {
-        assert (activeSessionId == null && mSessionEstablishedFuture != null);
-        activeSessionId = UUID.randomUUID().toString();
-        mSessionEstablishedFuture.complete(activeSessionId);
+        assert (mActiveSessionId == null && mSessionEstablishedFuture != null);
+        mActiveSessionId = UUID.randomUUID().toString();
+        mSessionEstablishedFuture.complete(mActiveSessionId);
         mSessionEstablishedFuture = null;
     }
 

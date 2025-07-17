@@ -103,7 +103,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             )
         }.also {
             sessionId = null
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 runCatching {
                     sessionId = it.startAsync().get()
                 }.getOrElse {
