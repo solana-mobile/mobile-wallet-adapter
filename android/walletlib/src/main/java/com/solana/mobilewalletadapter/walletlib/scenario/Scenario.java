@@ -27,9 +27,9 @@ public interface Scenario {
      * once the scenario has successfully established a session.
      * </p>
      *
-     * @return a Future that completes when the session is established
+     * @return a Future that completes with a session UUID when the session is established.
      */
-    NotifyingCompletableFuture<Boolean> startAsync();
+    NotifyingCompletableFuture<String> startAsync();
     void close();
 
     /**

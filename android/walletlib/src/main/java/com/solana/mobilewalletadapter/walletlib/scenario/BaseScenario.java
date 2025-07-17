@@ -125,7 +125,7 @@ public abstract class BaseScenario implements Scenario {
     }
 
     @Override
-    public abstract NotifyingCompletableFuture<Boolean> startAsync();
+    public abstract NotifyingCompletableFuture<String> startAsync();
 
     @Override
     public abstract void close();

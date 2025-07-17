@@ -77,7 +77,7 @@ public class LocalWebSocketServerScenario extends LocalScenario {
     }
 
     @Override
-    public NotifyingCompletableFuture<Boolean> startAsync() {
+    public NotifyingCompletableFuture<String> startAsync() {
         if (mState != State.NOT_STARTED) {
             throw new IllegalStateException("Already started");
         }

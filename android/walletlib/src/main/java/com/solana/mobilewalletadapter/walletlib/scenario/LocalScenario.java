@@ -21,6 +21,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterSession;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -34,7 +35,7 @@ public abstract class LocalScenario extends BaseScenario {
 
     @Nullable
     private ScheduledFuture<?> mNoConnectionTimeoutHandler;
-    private NotifyingCompletableFuture<Boolean> mSessionEstablishedFuture;
+    private NotifyingCompletableFuture<String> mSessionEstablishedFuture;
     private final ScheduledExecutorService mTimeoutExecutorService =
             Executors.newSingleThreadScheduledExecutor();
 
@@ -73,8 +74,8 @@ public abstract class LocalScenario extends BaseScenario {
     }
 
     @Override
-    public NotifyingCompletableFuture<Boolean> startAsync() {
-        final NotifyingCompletableFuture<Boolean> future;
+    public NotifyingCompletableFuture<String> startAsync() {
+        final NotifyingCompletableFuture<String> future;
 
         mIoHandler.post(this::startNoConnectionTimer);
         synchronized (mLock) {
@@ -117,15 +118,16 @@ public abstract class LocalScenario extends BaseScenario {
 
     @NonNull
     @GuardedBy("mLock")
-    private NotifyingCompletableFuture<Boolean> startDeferredFuture() {
-        final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
+    private NotifyingCompletableFuture<String> startDeferredFuture() {
+        final NotifyingCompletableFuture<String> future = new NotifyingCompletableFuture<>();
         mSessionEstablishedFuture = future;
         return future;
     }
 
     @GuardedBy("mLock")
     private void notifySessionEstablishmentSucceeded() {
-        mSessionEstablishedFuture.complete(true);
+        String sessionId = UUID.randomUUID().toString();
+        mSessionEstablishedFuture.complete(sessionId);
         mSessionEstablishedFuture = null;
     }
 

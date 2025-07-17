@@ -25,6 +25,7 @@ import com.solana.mobilewalletadapter.walletlib.transport.websockets.ReflectorWe
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     private int mConnectionAttempts = 0;
     private ReflectorWebSocket mReflectorWebSocket;
     private ScheduledExecutorService mConnectionBackoffExecutor; // valid in State.CONNECTING
-    private NotifyingCompletableFuture<Boolean> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
+    private NotifyingCompletableFuture<String> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
 
     @Deprecated(forRemoval = true)
     public RemoteWebSocketServerScenario(@NonNull Context context,
@@ -156,8 +157,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         startAsync();
     }
 
-    public NotifyingCompletableFuture<Boolean> startAsync() {
-        final NotifyingCompletableFuture<Boolean> future;
+    public NotifyingCompletableFuture<String> startAsync() {
+        final NotifyingCompletableFuture<String> future;
 
         synchronized (mLock) {
             if (mState != State.NOT_STARTED) {
@@ -227,9 +228,9 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
 
     @NonNull
     @GuardedBy("mLock")
-    private NotifyingCompletableFuture<Boolean> startDeferredFuture() {
+    private NotifyingCompletableFuture<String> startDeferredFuture() {
         assert(mState == State.CONNECTING && mSessionEstablishedFuture == null);
-        final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
+        final NotifyingCompletableFuture<String> future = new NotifyingCompletableFuture<>();
         mSessionEstablishedFuture = future;
         return future;
     }
@@ -324,7 +325,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
 
     @GuardedBy("mLock")
     private void notifySessionEstablishmentSucceeded() {
-        mSessionEstablishedFuture.complete(true);
+        String sessionId = UUID.randomUUID().toString();
+        mSessionEstablishedFuture.complete(sessionId);
         mSessionEstablishedFuture = null;
     }
 
