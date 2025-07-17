@@ -50,7 +50,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     private int mConnectionAttempts = 0;
     private ReflectorWebSocket mReflectorWebSocket;
     private ScheduledExecutorService mConnectionBackoffExecutor; // valid in State.CONNECTING
-    private NotifyingCompletableFuture<String> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
 
     @Deprecated(forRemoval = true)
     public RemoteWebSocketServerScenario(@NonNull Context context,
@@ -152,11 +151,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         }
     }
 
-    @Override
-    public void start() {
-        startAsync();
-    }
-
     public NotifyingCompletableFuture<String> startAsync() {
         final NotifyingCompletableFuture<String> future;
 
@@ -166,7 +160,7 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
             }
 
             mState = State.CONNECTING;
-            future = startDeferredFuture();
+            future = super.startAsync();
             doTryConnect();
 
             mConnectionBackoffExecutor = Executors.newScheduledThreadPool(1);
@@ -224,15 +218,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                 this,
                 new MobileWalletAdapterServer(mMobileWalletAdapterConfig, mIoLooper, mMethodHandlers),
                 mSessionStateCallbacks);
-    }
-
-    @NonNull
-    @GuardedBy("mLock")
-    private NotifyingCompletableFuture<String> startDeferredFuture() {
-        assert(mState == State.CONNECTING && mSessionEstablishedFuture == null);
-        final NotifyingCompletableFuture<String> future = new NotifyingCompletableFuture<>();
-        mSessionEstablishedFuture = future;
-        return future;
     }
 
     @GuardedBy("mLock")
@@ -321,20 +306,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
             mConnectionBackoffExecutor.shutdownNow();
             mConnectionBackoffExecutor = null;
         }
-    }
-
-    @GuardedBy("mLock")
-    private void notifySessionEstablishmentSucceeded() {
-        activeSessionId = UUID.randomUUID().toString();
-        mSessionEstablishedFuture.complete(activeSessionId);
-        mSessionEstablishedFuture = null;
-    }
-
-    @GuardedBy("mLock")
-    private void notifySessionEstablishmentFailed(@NonNull String message) {
-        Log.w(TAG, "Session establishment failed: " + message);
-        mSessionEstablishedFuture.completeExceptionally(new ConnectionFailedException(message));
-        mSessionEstablishedFuture = null;
     }
 
     @NonNull

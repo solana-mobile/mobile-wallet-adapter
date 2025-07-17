@@ -26,6 +26,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -55,6 +56,9 @@ public abstract class BaseScenario implements Scenario {
     @Nullable
     @GuardedBy("mLock")
     protected AuthRecord mActiveAuthorization = null;
+    @Nullable
+    @GuardedBy("mLock")
+    private NotifyingCompletableFuture<String> mSessionEstablishedFuture;
 
     private final Uri mWalletIcon;
 
@@ -119,6 +123,7 @@ public abstract class BaseScenario implements Scenario {
 
     @Override
     @Nullable
+    @GuardedBy("mLock")
     public String getActiveSessionId() {
         return activeSessionId;
     }
@@ -128,13 +133,46 @@ public abstract class BaseScenario implements Scenario {
         mIoLooper.quitSafely();
     }
 
+    @NonNull
+    @GuardedBy("mLock")
+    private NotifyingCompletableFuture<String> startDeferredFuture() {
+        assert mSessionEstablishedFuture == null;
+        final NotifyingCompletableFuture<String> future = new NotifyingCompletableFuture<>();
+        mSessionEstablishedFuture = future;
+        return future;
+    }
+
+    @GuardedBy("mLock")
+    protected void notifySessionEstablishmentSucceeded() {
+        assert (activeSessionId == null && mSessionEstablishedFuture != null);
+        activeSessionId = UUID.randomUUID().toString();
+        mSessionEstablishedFuture.complete(activeSessionId);
+        mSessionEstablishedFuture = null;
+    }
+
+    @GuardedBy("mLock")
+    protected void notifySessionEstablishmentFailed(@NonNull String message) {
+        assert mSessionEstablishedFuture != null;
+        Log.w(TAG, "Session establishment failed: " + message);
+        mSessionEstablishedFuture.completeExceptionally(new ConnectionFailedException(message));
+        mSessionEstablishedFuture = null;
+    }
+
     @Override
     public void start() {
         startAsync();
     }
 
     @Override
-    public abstract NotifyingCompletableFuture<String> startAsync();
+    public  NotifyingCompletableFuture<String> startAsync() {
+        final NotifyingCompletableFuture<String> future;
+
+        synchronized (mLock) {
+            future = startDeferredFuture();
+        }
+
+        return future;
+    }
 
     @Override
     public abstract void close();

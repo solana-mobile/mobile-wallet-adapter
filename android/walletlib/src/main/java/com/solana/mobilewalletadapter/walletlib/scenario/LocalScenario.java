@@ -35,7 +35,6 @@ public abstract class LocalScenario extends BaseScenario {
 
     @Nullable
     private ScheduledFuture<?> mNoConnectionTimeoutHandler;
-    private NotifyingCompletableFuture<String> mSessionEstablishedFuture;
     private final ScheduledExecutorService mTimeoutExecutorService =
             Executors.newSingleThreadScheduledExecutor();
 
@@ -75,14 +74,8 @@ public abstract class LocalScenario extends BaseScenario {
 
     @Override
     public NotifyingCompletableFuture<String> startAsync() {
-        final NotifyingCompletableFuture<String> future;
-
         mIoHandler.post(this::startNoConnectionTimer);
-        synchronized (mLock) {
-            future = startDeferredFuture();
-        }
-
-        return future;
+        return super.startAsync();
     }
 
     @Override
@@ -114,21 +107,6 @@ public abstract class LocalScenario extends BaseScenario {
             mNoConnectionTimeoutHandler.cancel(true);
             mNoConnectionTimeoutHandler = null;
         }
-    }
-
-    @NonNull
-    @GuardedBy("mLock")
-    private NotifyingCompletableFuture<String> startDeferredFuture() {
-        final NotifyingCompletableFuture<String> future = new NotifyingCompletableFuture<>();
-        mSessionEstablishedFuture = future;
-        return future;
-    }
-
-    @GuardedBy("mLock")
-    private void notifySessionEstablishmentSucceeded() {
-        activeSessionId = UUID.randomUUID().toString();
-        mSessionEstablishedFuture.complete(activeSessionId);
-        mSessionEstablishedFuture = null;
     }
 
     private final MobileWalletAdapterSessionCommon.StateCallbacks mSessionStateCallbacks =
