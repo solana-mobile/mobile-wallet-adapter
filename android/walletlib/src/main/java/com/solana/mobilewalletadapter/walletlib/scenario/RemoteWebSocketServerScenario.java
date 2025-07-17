@@ -325,8 +325,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
 
     @GuardedBy("mLock")
     private void notifySessionEstablishmentSucceeded() {
-        String sessionId = UUID.randomUUID().toString();
-        mSessionEstablishedFuture.complete(sessionId);
+        activeSessionId = UUID.randomUUID().toString();
+        mSessionEstablishedFuture.complete(activeSessionId);
         mSessionEstablishedFuture = null;
     }
 

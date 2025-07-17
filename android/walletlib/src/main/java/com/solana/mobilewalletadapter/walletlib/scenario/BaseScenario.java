@@ -37,6 +37,9 @@ public abstract class BaseScenario implements Scenario {
     @NonNull
     final public List<SessionProperties.ProtocolVersion> associationProtocolVersions;
 
+    @Nullable
+    public String activeSessionId = null;
+
     @NonNull
     protected final MobileWalletAdapterConfig mMobileWalletAdapterConfig;
     @NonNull
@@ -112,6 +115,12 @@ public abstract class BaseScenario implements Scenario {
     @NonNull
     public List<SessionProperties.ProtocolVersion> getAssociationProtocolVersions() {
         return associationProtocolVersions;
+    }
+
+    @Override
+    @Nullable
+    public String getActiveSessionId() {
+        return activeSessionId;
     }
 
     @Override
