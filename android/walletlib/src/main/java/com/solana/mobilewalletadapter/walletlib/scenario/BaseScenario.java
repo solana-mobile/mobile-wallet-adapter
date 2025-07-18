@@ -122,13 +122,6 @@ public abstract class BaseScenario implements Scenario {
     }
 
     @Override
-    @Nullable
-    @GuardedBy("mLock")
-    public String getActiveSessionId() {
-        return mActiveSessionId;
-    }
-
-    @Override
     protected void finalize() {
         mIoLooper.quitSafely();
     }

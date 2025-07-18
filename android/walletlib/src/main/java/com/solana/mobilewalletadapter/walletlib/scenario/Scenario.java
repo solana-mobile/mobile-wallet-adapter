@@ -21,18 +21,6 @@ public interface Scenario {
     MessageReceiver createMessageReceiver();
 
     /**
-     * Get the active session ID, or null if there s no active session
-     * <p>
-     * This method will only return a valid session ID after the scenario
-     * has been started and before the has been closed or terminated.
-     *
-     * @return a unique identifer string for the currently active session,
-     *   or null if there is no active session
-     */
-    @Nullable
-    String getActiveSessionId();
-
-    /**
      * Start the scenario, asynchronously
      * <p>
      * This method starts the connection process but returns immediately with a
