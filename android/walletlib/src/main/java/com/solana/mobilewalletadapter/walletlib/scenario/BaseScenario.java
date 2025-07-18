@@ -58,7 +58,7 @@ public abstract class BaseScenario implements Scenario {
     protected String mActiveSessionId = null;
     @Nullable
     @GuardedBy("mLock")
-    private NotifyingCompletableFuture<String> mSessionEstablishedFuture;
+    private NotifyingCompletableFuture<String> mSessionEstablishedFuture = null;
 
     private final Uri mWalletIcon;
 
@@ -168,6 +168,7 @@ public abstract class BaseScenario implements Scenario {
         final NotifyingCompletableFuture<String> future;
 
         synchronized (mLock) {
+            mActiveSessionId = null;
             future = startDeferredFuture();
         }
 

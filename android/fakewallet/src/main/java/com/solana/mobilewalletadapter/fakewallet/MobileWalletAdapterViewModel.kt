@@ -73,11 +73,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             LocalWebSocketServerScenario(
                 getApplication<FakeWalletApplication>().applicationContext,
                 MobileWalletAdapterConfig(
-                    true,
                     10,
                     10,
                     arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS
+                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
+                    arrayOf(
+                        ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS,
+                        ProtocolContract.FEATURE_ID_SIGN_IN_WITH_SOLANA
+                    )
                 ),
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks(),
@@ -502,12 +505,15 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         override fun onScenarioComplete() = Unit
         override fun onScenarioError() = Unit
         override fun onScenarioTeardownComplete() {
-            if (sessionId == null) return
-            sessionId = null
             viewModelScope.launch {
-                // No need to cancel any outstanding request; the scenario is torn down, and so
-                // cancelling a request that originated from it isn't actionable
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionTerminated)
+                if (sessionId != null) {
+                    // No need to cancel any outstanding request; the scenario is torn down, and so
+                    // cancelling a request that originated from it isn't actionable
+                    _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionTerminated)
+                } else {
+                    // Scenario has been torn down but we never established a session, cancel any previous request
+                    cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SessionEstablishmentFailed)
+                }
             }
         }
 

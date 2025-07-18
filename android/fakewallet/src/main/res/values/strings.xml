@@ -68,7 +68,7 @@
     <string name="label_failed_session_establishment">Connection Failed</string>
     <string name="str_failed_session_establishment">
         Could not establish a session with the dapp, the connection failed.
-        Check your network connection
+        Check your network connection and try again.
     </string>
 
     <!-- Scan QR Code fragment strings -->
