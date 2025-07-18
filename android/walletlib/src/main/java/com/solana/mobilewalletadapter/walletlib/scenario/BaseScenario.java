@@ -26,6 +26,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterServ
 import com.solana.mobilewalletadapter.walletlib.util.LooperThread;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -52,6 +53,12 @@ public abstract class BaseScenario implements Scenario {
     @Nullable
     @GuardedBy("mLock")
     protected AuthRecord mActiveAuthorization = null;
+    @Nullable
+    @GuardedBy("mLock")
+    protected String mActiveSessionId = null;
+    @Nullable
+    @GuardedBy("mLock")
+    private NotifyingCompletableFuture<String> mSessionEstablishedFuture = null;
 
     private final Uri mWalletIcon;
 
@@ -119,11 +126,56 @@ public abstract class BaseScenario implements Scenario {
         mIoLooper.quitSafely();
     }
 
+    @NonNull
+    @GuardedBy("mLock")
+    private NotifyingCompletableFuture<String> startDeferredFuture() {
+        assert mSessionEstablishedFuture == null;
+        final NotifyingCompletableFuture<String> future = new NotifyingCompletableFuture<>();
+        mSessionEstablishedFuture = future;
+        return future;
+    }
+
+    @GuardedBy("mLock")
+    protected void notifySessionEstablishmentSucceeded() {
+        assert (mActiveSessionId == null && mSessionEstablishedFuture != null);
+        mActiveSessionId = UUID.randomUUID().toString();
+        mSessionEstablishedFuture.complete(mActiveSessionId);
+        mSessionEstablishedFuture = null;
+    }
+
+    @GuardedBy("mLock")
+    protected void notifySessionEstablishmentFailed(@NonNull String message) {
+        assert mSessionEstablishedFuture != null;
+        Log.w(TAG, "Session establishment failed: " + message);
+        mSessionEstablishedFuture.completeExceptionally(new ConnectionFailedException(message));
+        mSessionEstablishedFuture = null;
+    }
+
     @Override
-    public abstract void start();
+    public void start() {
+        startAsync();
+    }
+
+    @Override
+    public  NotifyingCompletableFuture<String> startAsync() {
+        final NotifyingCompletableFuture<String> future;
+
+        synchronized (mLock) {
+            mActiveSessionId = null;
+            future = startDeferredFuture();
+        }
+
+        return future;
+    }
 
     @Override
     public abstract void close();
+
+    public static class ConnectionFailedException extends RuntimeException {
+        public ConnectionFailedException(@NonNull String message) {
+            super(message);
+        }
+    }
 
     /*package*/ final MobileWalletAdapterServer.MethodHandlers mMethodHandlers =
             new MobileWalletAdapterServer.MethodHandlers() {

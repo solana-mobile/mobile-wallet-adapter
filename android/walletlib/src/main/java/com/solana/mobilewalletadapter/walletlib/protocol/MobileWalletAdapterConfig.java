@@ -45,7 +45,8 @@ public class MobileWalletAdapterConfig {
                                      @NonNull @Size(min = 1) Object[] supportedTransactionVersions,
                                      @IntRange(from = 0) long noConnectionWarningTimeoutMs) {
         this(maxTransactionsPerSigningRequest, maxMessagesPerSigningRequest,
-                supportedTransactionVersions, noConnectionWarningTimeoutMs, new String[] {});
+                supportedTransactionVersions, noConnectionWarningTimeoutMs,
+                new String[] { ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS });
         if (!supportsSignAndSendTransactions)
             throw new IllegalArgumentException("signAndSendTransactions is required in MWA 2.0");
     }

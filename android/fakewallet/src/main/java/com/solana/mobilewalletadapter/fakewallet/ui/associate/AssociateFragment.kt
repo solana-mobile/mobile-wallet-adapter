@@ -60,6 +60,8 @@ class AssociateFragment : Fragment() {
                             Unit
                         is MobileWalletAdapterServiceRequest.LowPowerNoConnection ->
                             Unit
+                        is MobileWalletAdapterServiceRequest.SessionEstablishmentFailed ->
+                            Unit
                     }
                 }
             }
