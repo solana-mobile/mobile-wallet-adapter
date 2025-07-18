@@ -96,6 +96,9 @@ loadScripts(document, 'script');</script>
 <div class="inherited-list">
 <h2 id="nested-classes-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.LocalScenario">Nested classes/interfaces inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="LocalScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario</a></h2>
 <code><a href="LocalScenario.Callbacks.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario.Callbacks</a></code></div>
+<div class="inherited-list">
+<h2 id="nested-classes-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.BaseScenario">Nested classes/interfaces inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></h2>
+<code><a href="BaseScenario.ConnectionFailedException.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario.ConnectionFailedException</a></code></div>
 </section>
 </li>
 <!-- =========== FIELD SUMMARY =========== -->
@@ -113,7 +116,7 @@ loadScripts(document, 'script');</script>
 </div>
 <div class="inherited-list">
 <h3 id="fields-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.BaseScenario">Fields inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></h3>
-<code><a href="BaseScenario.html#associationProtocolVersions">associationProtocolVersions</a>, <a href="BaseScenario.html#associationPublicKey">associationPublicKey</a>, <a href="BaseScenario.html#mActiveAuthorization">mActiveAuthorization</a>, <a href="BaseScenario.html#mAuthRepository">mAuthRepository</a>, <a href="BaseScenario.html#mCallbacks">mCallbacks</a>, <a href="BaseScenario.html#mIoHandler">mIoHandler</a>, <a href="BaseScenario.html#mIoLooper">mIoLooper</a>, <a href="BaseScenario.html#mLock">mLock</a>, <a href="BaseScenario.html#mMobileWalletAdapterConfig">mMobileWalletAdapterConfig</a></code></div>
+<code><a href="BaseScenario.html#associationProtocolVersions">associationProtocolVersions</a>, <a href="BaseScenario.html#associationPublicKey">associationPublicKey</a>, <a href="BaseScenario.html#mActiveAuthorization">mActiveAuthorization</a>, <a href="BaseScenario.html#mActiveSessionId">mActiveSessionId</a>, <a href="BaseScenario.html#mAuthRepository">mAuthRepository</a>, <a href="BaseScenario.html#mCallbacks">mCallbacks</a>, <a href="BaseScenario.html#mIoHandler">mIoHandler</a>, <a href="BaseScenario.html#mIoLooper">mIoLooper</a>, <a href="BaseScenario.html#mLock">mLock</a>, <a href="BaseScenario.html#mMobileWalletAdapterConfig">mMobileWalletAdapterConfig</a></code></div>
 </section>
 </li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
@@ -156,9 +159,11 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#close()" class="member-name-link">close</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#start()" class="member-name-link">start</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#startAsync()" class="member-name-link">startAsync</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Start the scenario, asynchronously</div>
+</div>
 </div>
 </div>
 </div>
@@ -167,7 +172,7 @@ loadScripts(document, 'script');</script>
 <code><a href="LocalScenario.html#createMessageReceiver()">createMessageReceiver</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-com.solana.mobilewalletadapter.walletlib.scenario.BaseScenario">Methods inherited from class&nbsp;com.solana.mobilewalletadapter.walletlib.scenario.<a href="BaseScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">BaseScenario</a></h3>
-<code><a href="BaseScenario.html#finalize()">finalize</a>, <a href="BaseScenario.html#getAssociationProtocolVersions()">getAssociationProtocolVersions</a>, <a href="BaseScenario.html#getAssociationPublicKey()">getAssociationPublicKey</a></code></div>
+<code><a href="BaseScenario.html#finalize()">finalize</a>, <a href="BaseScenario.html#getAssociationProtocolVersions()">getAssociationProtocolVersions</a>, <a href="BaseScenario.html#getAssociationPublicKey()">getAssociationPublicKey</a>, <a href="BaseScenario.html#notifySessionEstablishmentFailed(java.lang.String)">notifySessionEstablishmentFailed</a>, <a href="BaseScenario.html#notifySessionEstablishmentSucceeded()">notifySessionEstablishmentSucceeded</a>, <a href="BaseScenario.html#start()">start</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://d.android.com/reference/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://d.android.com/reference/java/lang/Object.html#clone--" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://d.android.com/reference/java/lang/Object.html#equals-java.lang.Object-" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://d.android.com/reference/java/lang/Object.html#getClass--" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://d.android.com/reference/java/lang/Object.html#hashCode--" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notify--" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://d.android.com/reference/java/lang/Object.html#notifyAll--" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://d.android.com/reference/java/lang/Object.html#toString--" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait--" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://d.android.com/reference/java/lang/Object.html#wait-long-int-" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -239,14 +244,25 @@ loadScripts(document, 'script');</script>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="start()">
-<h3>start</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">start</span>()</div>
+<section class="detail" id="startAsync()">
+<h3>startAsync</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture&lt;<a href="https://d.android.com/reference/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">startAsync</span>()</div>
+<div class="block"><span class="descfrm-type-label">Description copied from interface:&nbsp;<code><a href="Scenario.html#startAsync()">Scenario</a></code></span></div>
+<div class="block">Start the scenario, asynchronously
+ <p>
+ This method starts the connection process but returns immediately with a
+ <code>NotifyingCompletableFuture</code>. The returned future will be completed
+ once the scenario has successfully established a session.
+ <p>
+ If session establishment fails for any reason, the Future will throw an
+ <a href="https://d.android.com/reference/java/util/concurrent/ExecutionException.html" title="class or interface in java.util.concurrent" class="external-link"><code>ExecutionException</code></a> with the cause of the failure.</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code><a href="Scenario.html#start()">start</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
+<dd><code><a href="Scenario.html#startAsync()">startAsync</a></code>&nbsp;in interface&nbsp;<code><a href="Scenario.html" title="interface in com.solana.mobilewalletadapter.walletlib.scenario">Scenario</a></code></dd>
 <dt>Overrides:</dt>
-<dd><code><a href="LocalScenario.html#start()">start</a></code>&nbsp;in class&nbsp;<code><a href="LocalScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario</a></code></dd>
+<dd><code><a href="LocalScenario.html#startAsync()">startAsync</a></code>&nbsp;in class&nbsp;<code><a href="LocalScenario.html" title="class in com.solana.mobilewalletadapter.walletlib.scenario">LocalScenario</a></code></dd>
+<dt>Returns:</dt>
+<dd>a Future that completes with a session UUID when the session is established.</dd>
 </dl>
 </section>
 </li>
