@@ -1,12 +1,12 @@
 buildscript {
     ext {
-        kotlin_version = '2.1.21'
-        compose_version = '1.8.2'
+        kotlin_version = '2.2.0'
+        compose_version = '1.8.3'
         compose_material_version = '1.7.8'
     }
 
     dependencies {
-        classpath "com.google.dagger:hilt-android-gradle-plugin:2.56.2"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:2.57"
     }
 }
 
