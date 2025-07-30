@@ -176,6 +176,11 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                 supportedTransactionVersions: ['legacy', 0],
                 signAndSendTransaction: this.#signAndSendTransaction,
             },
+            [SolanaSignTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signTransaction: this.#signTransaction,
+            },
         };
     }
 
