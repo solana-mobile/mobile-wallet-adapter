@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import com.facebook.react.bridge.*
+import com.facebook.react.jstasks.HeadlessJsTaskConfig
+import com.facebook.react.jstasks.HeadlessJsTaskContext
 import com.solana.mobilewalletadapter.clientlib.protocol.JsonRpc20Client
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import org.json.JSONObject
+
 
 class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         SolanaMobileWalletAdapterSpec(reactContext), CoroutineScope {
@@ -36,10 +39,12 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         private const val ASSOCIATION_TIMEOUT_MS = 10000
         private const val CLIENT_TIMEOUT_MS = 90000
         private const val REQUEST_LOCAL_ASSOCIATION = 0
+        private const val MWA_HEADLESS_TASK_KEY = "MWA_HEADLESS_TASK_KEY"
 
         // Used to ensure that you can't start more than one session at a time.
         private val mutex: Mutex = Mutex()
         private var sessionState: SessionState? = null
+        private var currentTaskId: Int? = null 
         private var associationResultCallback: ((Int) -> Unit)? = null
     }
 
@@ -91,8 +96,20 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                                 )
                         )
                         localAssociation.close()
+                        cleanup()
                     }
                 }
+
+                val taskConfig = 
+                        HeadlessJsTaskConfig(
+                            taskKey = MWA_HEADLESS_TASK_KEY,
+                            timeout = 0,
+                            data = Arguments.createMap(),
+                            isAllowedInForeground = true
+                        )
+                val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
+                currentTaskId = headlessJsTaskContext.startTask(taskConfig)
+
                 currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
                         ?: throw NullPointerException(
                                 "Could not find a current activity from which to launch a local association"
@@ -192,7 +209,19 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     }
 
     private fun cleanup() {
+        currentTaskId?.let { taskId ->
+            try {
+                val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
+                if (headlessJsTaskContext.isTaskRunning(taskId)) {
+                    headlessJsTaskContext.finishTask(taskId)
+                }
+            } catch (e: Exception) {
+                Log.w(NAME, "Failed to finish headless task during cleanup", e)
+            }
+        }
+        
         sessionState = null
+        currentTaskId = null 
         associationResultCallback = null
         if (mutex.isLocked) {
             mutex.unlock()
