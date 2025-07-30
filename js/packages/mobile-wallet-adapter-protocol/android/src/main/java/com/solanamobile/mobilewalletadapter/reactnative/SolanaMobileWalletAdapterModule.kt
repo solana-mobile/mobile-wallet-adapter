@@ -29,7 +29,6 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     data class SessionState(
             val client: MobileWalletAdapterClient,
             val localAssociation: LocalAssociationScenario,
-            val taskID: Int?,
     )
 
     override val coroutineContext =
@@ -45,6 +44,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         // Used to ensure that you can't start more than one session at a time.
         private val mutex: Mutex = Mutex()
         private var sessionState: SessionState? = null
+        private var currentTaskId: Int? = null 
         private var associationResultCallback: ((Int) -> Unit)? = null
     }
 
@@ -96,6 +96,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                                 )
                         )
                         localAssociation.close()
+                        cleanup()
                     }
                 }
 
@@ -107,7 +108,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                             isAllowedInForeground = true
                         )
                 val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
-                val taskID = headlessJsTaskContext.startTask(taskConfig)
+                currentTaskId = headlessJsTaskContext.startTask(taskConfig)
 
                 currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
                         ?: throw NullPointerException(
@@ -117,7 +118,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                         localAssociation
                                 .start()
                                 .get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
-                sessionState = SessionState(client, localAssociation, taskID)
+                sessionState = SessionState(client, localAssociation)
                 val sessionPropertiesMap: WritableMap = WritableNativeMap()
                 sessionPropertiesMap.putString(
                         "protocol_version",
@@ -208,8 +209,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     }
 
     private fun cleanup() {
-        // Clean up headless task if it exists
-        sessionState?.taskID?.let { taskId ->
+        currentTaskId?.let { taskId ->
             try {
                 val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
                 if (headlessJsTaskContext.isTaskRunning(taskId)) {
@@ -221,6 +221,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         }
         
         sessionState = null
+        currentTaskId = null 
         associationResultCallback = null
         if (mutex.isLocked) {
             mutex.unlock()
