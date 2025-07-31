@@ -33,7 +33,6 @@ import {
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
 
 import WalletProvider from '../components/WalletProvider';
-import {useWallet} from '@solana/wallet-adapter-react/lib/types/useWallet';
 import {Keypair} from '@solana/web3.js';
 
 interface SendResponseButtonProps {
