@@ -40,11 +40,10 @@ import {
   VerificationFailed,
   VerificationSucceeded,
 } from '../utils/ClientTrustUseCase';
-import {
-  SolanaSignInWithSolana,
-  SolanaSignTransactions,
-} from '@solana-mobile/mobile-wallet-adapter-protocol';
 import SignInScreen from '../bottomsheets/SignInScreen';
+
+const SolanaSignTransactions = 'solana:signTransactions'
+const SolanaSignInWithSolana = 'solana:signInWithSolana'
 
 type SignPayloadsRequest = SignTransactionsRequest | SignMessagesRequest;
 

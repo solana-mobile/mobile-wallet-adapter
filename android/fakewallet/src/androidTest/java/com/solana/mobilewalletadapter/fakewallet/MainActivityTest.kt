@@ -779,7 +779,7 @@ class MainActivityTest {
         uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "associate")), WINDOW_CHANGE_TIMEOUT)
 
         // then
-        onView(withText(R.string.low_power_mode_warning_title)).check(doesNotExist()).inRoot(isDialog())
+        onView(withText(R.string.label_low_power_mode_warning)).check(doesNotExist()).inRoot(isDialog())
     }
 
     @Test
@@ -801,7 +801,7 @@ class MainActivityTest {
         uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "associate")), WINDOW_CHANGE_TIMEOUT)
 
         // then
-        onView(withText(R.string.low_power_mode_warning_title))
+        onView(withText(R.string.label_low_power_mode_warning))
             .inRoot(isDialog())
             .check(matches(isDisplayed()))
     }
