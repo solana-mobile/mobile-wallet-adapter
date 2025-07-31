@@ -13,10 +13,9 @@ import {useWallet} from '../components/WalletProvider';
 import MWABottomsheetHeader from '../components/MWABottomsheetHeader';
 import { VerificationInProgress, VerificationState } from '../utils/ClientTrustUseCase';
 import { useClientTrust } from "../components/ClientTrustProvider";
-import { SolanaSignInInputWithRequiredFields, createSignInMessage, createSignInMessageText } from "@solana/wallet-standard-util";
+import { SolanaSignInInputWithRequiredFields, createSignInMessageText } from "@solana/wallet-standard-util";
 import { SolanaSigningUseCase } from "../utils/SolanaSigningUseCase";
-import { Base64, encode } from "js-base64";
-import { sign } from "@solana/web3.js/src/utils/ed25519";
+import { Base64 } from "js-base64";
 
 interface SignInScreenProps {
   request: AuthorizeDappRequest;
