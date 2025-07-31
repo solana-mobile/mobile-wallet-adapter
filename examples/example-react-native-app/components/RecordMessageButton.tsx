@@ -54,13 +54,13 @@ export default function RecordMessageButton({children, message}: Props) {
       message: string,
     ): Promise<[string, Promise<void>]> => {
       // Workaround, fetching the blockhash within transact never resolves
-      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+      // const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
       const [transaction, signature] = await transact(async wallet => {
-        const freshAccount = await authorizeSession(wallet);
-        // const [freshAccount, { value: latestBlockhash }] = await Promise.all([
-        //   authorizeSession(wallet),
-        //   rpc.getLatestBlockhash().send(),
-        // ]);
+        // const freshAccount = await authorizeSession(wallet);
+        const [freshAccount, { value: latestBlockhash }] = await Promise.all([
+          authorizeSession(wallet),
+          rpc.getLatestBlockhash().send(),
+        ]);
         const mwaTransactionSigner: TransactionSendingSigner = {
           address: selectedAccount?.publicKey ?? freshAccount.publicKey,
           signAndSendTransactions: async (transactions: Transaction[]) => {
@@ -117,7 +117,7 @@ export default function RecordMessageButton({children, message}: Props) {
                 const [signature, confirmationPromise] = result;
                 // TODO figure out why this confirmationPromise throws an 
                 // error about AbortController.throwIfAborted being undefined
-                // await confirmationPromise;
+                await confirmationPromise;
                 setSnackbarProps({
                   action: {
                     label: 'View',
