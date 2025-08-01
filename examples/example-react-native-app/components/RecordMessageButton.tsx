@@ -53,20 +53,22 @@ export default function RecordMessageButton({children, message}: Props) {
     async (
       message: string,
     ): Promise<[string, Promise<void>]> => {
-      // Workaround, fetching the blockhash within transact never resolves
-      // const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
       const [transaction, signature] = await transact(async wallet => {
-        // const freshAccount = await authorizeSession(wallet);
+        // Authorize session (get account) and fetch latest blockhash
         const [freshAccount, { value: latestBlockhash }] = await Promise.all([
           authorizeSession(wallet),
           rpc.getLatestBlockhash().send(),
         ]);
+        
+        // create an MWA transaction signer
         const mwaTransactionSigner: TransactionSendingSigner = {
           address: selectedAccount?.publicKey ?? freshAccount.publicKey,
           signAndSendTransactions: async (transactions: Transaction[]) => {
             return await wallet.signAndSendTransactions({ transactions });
           }
         };
+
+        // Build memo transaction
         const memoInstruction = getAddMemoInstruction({ memo: message });
         const memoTransactionMessage = pipe(
           createTransactionMessage({ version: 0 }),
@@ -74,9 +76,12 @@ export default function RecordMessageButton({children, message}: Props) {
           (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
           (tx) => appendTransactionMessageInstruction(memoInstruction, tx)
         );
+
+        // Sign transaction with MWA signer and prepare outputs
         const signature = await signAndSendTransactionMessageWithSigners(memoTransactionMessage);
         const transaction = compileTransaction(memoTransactionMessage);
         const signaturesMap: SignaturesMap = { [memoTransactionMessage.feePayer.address]: signature }
+
         return [{ 
           messageBytes: transaction.messageBytes, 
           signatures: signaturesMap,
@@ -91,7 +96,9 @@ export default function RecordMessageButton({children, message}: Props) {
         rpc,
         rpcSubscriptions,
       });
-      return [signature, waitForRecentTransactionConfirmation({ 
+
+      // Return transaction signature and a promise that resolves when the transaction is confirmed
+      return [signature, waitForRecentTransactionConfirmation({
         commitment: 'confirmed',
         transaction: transaction,
         getBlockHeightExceedencePromise,
@@ -117,7 +124,7 @@ export default function RecordMessageButton({children, message}: Props) {
                 const [signature, confirmationPromise] = result;
                 // TODO figure out why this confirmationPromise throws an 
                 // error about AbortController.throwIfAborted being undefined
-                await confirmationPromise;
+                // await confirmationPromise;
                 setSnackbarProps({
                   action: {
                     label: 'View',
@@ -139,6 +146,7 @@ export default function RecordMessageButton({children, message}: Props) {
                   'Failed to record message:' +
                   (err instanceof Error ? err.message : err),
               });
+              console.error('Failed to record message:', err);
             } finally {
               setRecordingInProgress(false);
             }
