@@ -1,27 +1,31 @@
-import {useConnection} from '@solana/wallet-adapter-react';
-import {LAMPORTS_PER_SOL, PublicKey} from '@solana/web3.js';
-import React, {useCallback, useMemo} from 'react';
-import {StyleSheet, View} from 'react-native';
-import {Headline, Text} from 'react-native-paper';
+import type { Address } from '@solana/addresses';
+import React, { useCallback, useContext, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Headline, Text } from 'react-native-paper';
 import useSWR from 'swr';
 
+import { RpcContext } from '../context/RpcContext';
+
+const LAMPORTS_PER_SOL = 1000000000;
+
 type Props = Readonly<{
-  publicKey: PublicKey;
+  address: Address;
 }>;
 
-export default function AccountBalance({publicKey}: Props) {
-  const {connection} = useConnection();
+export default function AccountBalance({address}: Props) {
+  const { rpc } = useContext(RpcContext);
   const balanceFetcher = useCallback(
-    async function ([_, selectedPublicKey]: [
+    async function ([_, selectedAddress]: [
       'accountBalance',
-      PublicKey,
+      Address,
     ]): Promise<number> {
-      return await connection.getBalance(selectedPublicKey);
+      const { value: balance } = await rpc.getBalance(selectedAddress).send();
+      return Number(balance);
     },
-    [connection],
+    [rpc],
   );
   const {data: lamports} = useSWR(
-    ['accountBalance', publicKey],
+    ['accountBalance', address],
     balanceFetcher,
     {
       suspense: true,
