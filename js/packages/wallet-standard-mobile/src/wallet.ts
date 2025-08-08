@@ -170,14 +170,20 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#chainSelector = config.chainSelector;
         this.#onWalletNotFound = config.onWalletNotFound;
         this.#optionalFeatures = {
-            // We are forced to provide either SolanaSignAndSendTransaction or SolanaSignTransaction
-            // because the wallet-adapter compatible wallet-standard wallet requires at least one of them.
-            // MWA 2.0+ wallets must implement signAndSend and pre 2.0 wallets have always provided it so 
-            // this is a safe assumption. We later update the features after we get the wallets capabilities. 
+            // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
+            // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
+            // 2025, all MWA wallets support both signAndSendTransaction and signTransaction so its safe
+            // assume both are supported here. The features will be updated based on the actual connected 
+            // wallets capabilities during connection regardless, so this is safe. 
             [SolanaSignAndSendTransaction]: {
                 version: '1.0.0',
                 supportedTransactionVersions: ['legacy', 0],
                 signAndSendTransaction: this.#signAndSendTransaction,
+            },
+            [SolanaSignTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signTransaction: this.#signTransaction,
             },
         };
     }
@@ -621,14 +627,20 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         this.#hostAuthority = config.remoteHostAuthority;
         this.#onWalletNotFound = config.onWalletNotFound;
         this.#optionalFeatures = {
-            // We are forced to provide either SolanaSignAndSendTransaction or SolanaSignTransaction
-            // because the wallet-adapter compatible wallet-standard wallet requires at least one of them.
-            // MWA 2.0+ wallets must implement signAndSend and pre 2.0 wallets have always provided it so 
-            // this is a safe assumption. We later update the features after we get the wallets capabilities. 
+            // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
+            // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
+            // 2025, all MWA wallets support both signAndSendTransaction and signTransaction so its safe
+            // assume both are supported here. The features will be updated based on the actual connected 
+            // wallets capabilities during connection regardless, so this is safe. 
             [SolanaSignAndSendTransaction]: {
                 version: '1.0.0',
                 supportedTransactionVersions: ['legacy', 0],
                 signAndSendTransaction: this.#signAndSendTransaction,
+            },
+            [SolanaSignTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signTransaction: this.#signTransaction,
             },
         }
     }
