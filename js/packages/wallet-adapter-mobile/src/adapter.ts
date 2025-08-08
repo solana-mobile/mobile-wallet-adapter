@@ -448,15 +448,7 @@ export class LocalSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapte
             authorizationCache: {
                 set: config.authorizationResultCache.set,
                 get: async () => {
-                    const authorizationResult = await config.authorizationResultCache.get();
-                    if (authorizationResult && 'chain' in authorizationResult) {
-                        return authorizationResult;
-                    } else if (authorizationResult) {
-                        return {
-                            ...authorizationResult,
-                            chain: chain,
-                        };
-                    } else return undefined;
+                    return await config.authorizationResultCache.get() as Authorization | undefined;
                 },
                 clear: config.authorizationResultCache.clear,
             },
@@ -487,15 +479,7 @@ export class RemoteSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapt
             authorizationCache: {
                 set: config.authorizationResultCache.set,
                 get: async () => {
-                    const authorizationResult = await config.authorizationResultCache.get();
-                    if (authorizationResult && 'chain' in authorizationResult) {
-                        return authorizationResult;
-                    } else if (authorizationResult) {
-                        return {
-                            ...authorizationResult,
-                            chain: chain,
-                        };
-                    } else return undefined;
+                    return await config.authorizationResultCache.get() as Authorization | undefined;
                 },
                 clear: config.authorizationResultCache.clear,
             },
