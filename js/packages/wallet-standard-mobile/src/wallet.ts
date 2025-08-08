@@ -48,14 +48,17 @@ import { icon } from './icon';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
 
+type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI["getCapabilities"]>>;
+
 export type Authorization = AuthorizationResult & Readonly<{
     chain: IdentifierString;
+    capabilities: WalletCapabilities;
 }>
 
 export interface AuthorizationCache {
     clear(): Promise<void>;
     get(): Promise<Authorization | undefined>;
-    set(authorizationResult: Authorization): Promise<void>;
+    set(authorization: Authorization): Promise<void>;
 }
 
 export interface ChainSelector {
@@ -167,14 +170,20 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#chainSelector = config.chainSelector;
         this.#onWalletNotFound = config.onWalletNotFound;
         this.#optionalFeatures = {
-            // We are forced to provide either SolanaSignAndSendTransaction or SolanaSignTransaction
-            // because the wallet-adapter compatible wallet-standard wallet requires at least one of them.
-            // MWA 2.0+ wallets must implement signAndSend and pre 2.0 wallets have always provided it so 
-            // this is a safe assumption. We later update the features after we get the wallets capabilities. 
+            // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
+            // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
+            // 2025, all MWA wallets support both signAndSendTransaction and signTransaction so its safe
+            // assume both are supported here. The features will be updated based on the actual connected 
+            // wallets capabilities during connection regardless, so this is safe. 
             [SolanaSignAndSendTransaction]: {
                 version: '1.0.0',
                 supportedTransactionVersions: ['legacy', 0],
                 signAndSendTransaction: this.#signAndSendTransaction,
+            },
+            [SolanaSignTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signTransaction: this.#signTransaction,
             },
         };
     }
@@ -218,6 +227,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
             if (silent) {
                 const cachedAuthorization = await this.#authorizationCache.get();
                 if (cachedAuthorization) {
+                    await this.#handleWalletCapabilitiesResult(cachedAuthorization.capabilities);
                     await this.#handleAuthorizationResult(cachedAuthorization);
                 } else {
                     return { accounts: this.accounts };
@@ -254,7 +264,8 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                 ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts)
-                const authorization = { ...mwaAuthorizationResult, accounts, chain: selectedChain};
+                const authorization = { ...mwaAuthorizationResult, 
+                    accounts, chain: selectedChain, capabilities: capabilities};
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 Promise.all([
                     this.#handleWalletCapabilitiesResult(capabilities),
@@ -317,15 +328,18 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
 
     #performReauthorization = async (wallet: MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
         try {
-            const mwaAuthorizationResult = await wallet.authorize({
-                auth_token: authToken,
-                identity: this.#appIdentity,
-                chain: chain
-            });
+            const [capabilities, mwaAuthorizationResult] = await Promise.all([
+                this.#authorization?.capabilities ?? await wallet.getCapabilities(),
+                wallet.authorize({
+                    auth_token: authToken,
+                    identity: this.#appIdentity,
+                    chain: chain
+                })
+            ]);
             
             const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts)
             const authorization = { ...mwaAuthorizationResult, 
-                accounts: accounts, chain: chain
+                accounts: accounts, chain: chain, capabilities: capabilities
             };
             // TODO: Evaluate whether there's any threat to not `awaiting` this expression
             Promise.all([
@@ -613,14 +627,20 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         this.#hostAuthority = config.remoteHostAuthority;
         this.#onWalletNotFound = config.onWalletNotFound;
         this.#optionalFeatures = {
-            // We are forced to provide either SolanaSignAndSendTransaction or SolanaSignTransaction
-            // because the wallet-adapter compatible wallet-standard wallet requires at least one of them.
-            // MWA 2.0+ wallets must implement signAndSend and pre 2.0 wallets have always provided it so 
-            // this is a safe assumption. We later update the features after we get the wallets capabilities. 
+            // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
+            // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
+            // 2025, all MWA wallets support both signAndSendTransaction and signTransaction so its safe
+            // assume both are supported here. The features will be updated based on the actual connected 
+            // wallets capabilities during connection regardless, so this is safe. 
             [SolanaSignAndSendTransaction]: {
                 version: '1.0.0',
                 supportedTransactionVersions: ['legacy', 0],
                 signAndSendTransaction: this.#signAndSendTransaction,
+            },
+            [SolanaSignTransaction]: {
+                version: '1.0.0',
+                supportedTransactionVersions: ['legacy', 0],
+                signTransaction: this.#signTransaction,
             },
         }
     }
@@ -692,7 +712,8 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
                 ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts)
-                const authorizationResult = { ...mwaAuthorizationResult, accounts, chain: selectedChain };
+                const authorizationResult = { ...mwaAuthorizationResult, 
+                    accounts, chain: selectedChain, capabilities: capabilities };
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 Promise.all([
                     this.#handleWalletCapabilitiesResult(capabilities),
@@ -756,15 +777,18 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
 
     #performReauthorization = async (wallet: MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
         try {
-            const mwaAuthorizationResult = await wallet.authorize({
-                auth_token: authToken,
-                identity: this.#appIdentity,
-            });
+            const [capabilities, mwaAuthorizationResult] = await Promise.all([
+                this.#authorization?.capabilities ?? await wallet.getCapabilities(),
+                wallet.authorize({
+                    auth_token: authToken,
+                    identity: this.#appIdentity,
+                    chain: chain
+                })
+            ]);
             
             const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts)
             const authorization = { ...mwaAuthorizationResult, 
-                accounts: accounts, chain: chain
-            };
+                accounts: accounts, chain: chain, capabilities: capabilities };
             // TODO: Evaluate whether there's any threat to not `awaiting` this expression
             Promise.all([
                 this.#authorizationCache.set(authorization),
@@ -971,4 +995,3 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         }
     }
 }
-
