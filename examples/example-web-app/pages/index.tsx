@@ -7,6 +7,7 @@ import FundAccountButton from '../components/FundAccountButton';
 import type { NextPage } from 'next';
 import RecordMessageButton from '../components/RecordMessageButton';
 import SignInButton from '../components/SignInButton';
+import SignMemoTransactionButton from '../components/SignMemoTransactionButton';
 import SignMessageButton from '../components/SignMessageButton';
 import { styled } from '@mui/material/styles';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -50,6 +51,7 @@ const Home: NextPage = () => {
                     value={memoText}
                 />
                 <RecordMessageButton message={memoText}>Record Message</RecordMessageButton>
+                <SignMemoTransactionButton message={memoText}>Sign Tx</SignMemoTransactionButton>
                 <SignMessageButton message={memoText}>Sign Message</SignMessageButton>
                 <FundAccountButton>Fund Account (devnet)</FundAccountButton>
                 {publicKey ? (
