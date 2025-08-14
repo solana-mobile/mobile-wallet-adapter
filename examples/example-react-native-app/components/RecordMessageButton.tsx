@@ -122,8 +122,8 @@ export default function RecordMessageButton({children, message}: Props) {
               const result = await recordMessageGuarded(message);
               if (result) {
                 const [signature, confirmationPromise] = result;
-                // TODO figure out why this confirmationPromise throws an 
-                // error about AbortController.throwIfAborted being undefined
+                // TODO AbortController and AbortSignal are not fully implemented in RN so
+                // transaction confirmation with kit does not work. Need to find a polyfill
                 // await confirmationPromise;
                 setSnackbarProps({
                   action: {
