@@ -1,7 +1,7 @@
-import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import {fromUint8Array} from 'js-base64';
-import React, {useContext, useState} from 'react';
-import {StyleSheet, View} from 'react-native';
+import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-kit';
+import { fromUint8Array } from 'js-base64';
+import React, { useContext, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import {
   Button,
   Dialog,
@@ -13,7 +13,7 @@ import {
 
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
-import {SnackbarContext} from './SnackbarProvider';
+import { SnackbarContext } from '../context/SnackbarProvider';
 
 type Props = Readonly<{
   children?: React.ReactNode;

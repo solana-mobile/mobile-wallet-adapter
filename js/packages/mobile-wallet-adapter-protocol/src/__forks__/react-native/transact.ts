@@ -1,9 +1,18 @@
-import { Platform } from 'react-native';
+import { Platform, AppRegistry } from 'react-native';
 
 import NativeSolanaMobileWalletAdapter from '../../codegenSpec/NativeSolanaMobileWalletAdapter.js';
 import createMobileWalletProxy from '../../createMobileWalletProxy.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
 import { MobileWallet, SessionProperties, WalletAssociationConfig } from '../../types.js';
+
+AppRegistry.registerHeadlessTask('SolanaMobileWalletAdapterSessionBackgroundTask', () => {
+    return async() => {
+        // This is a no-op task that is used to keep the app alive while the session is active.
+        // The actual session management is handled in the native module.
+        // This is necessary for the React Native Android implementation to work correctly.
+        // The task is started before startActivityResult and stopped when the activity result callback is triggered
+    }
+});
 
 type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };
 
