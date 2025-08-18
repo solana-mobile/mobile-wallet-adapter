@@ -20,7 +20,7 @@ jobs:
 
     steps:
       # Setup
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -115,7 +115,7 @@ jobs:
 
     steps:
       # Setup
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

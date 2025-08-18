@@ -16,7 +16,7 @@ jobs:
       NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY:  ${{ secrets.URL_REFLECTOR_DEV }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: set up Node
         uses: actions/setup-node@v4
