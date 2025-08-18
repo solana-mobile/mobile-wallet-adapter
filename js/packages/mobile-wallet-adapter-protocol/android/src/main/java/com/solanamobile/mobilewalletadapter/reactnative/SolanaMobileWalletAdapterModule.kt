@@ -80,6 +80,17 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
         launch {
             mutex.lock()
             Log.d(TAG, "startSession with config $config")
+            var sessionTaskId: Int? = null
+            val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
+            val finishHeadlessTask = { taskId: Int? ->
+                try {
+                    if (taskId != null && headlessJsTaskContext.isTaskRunning(taskId)) {
+                        headlessJsTaskContext.finishTask(taskId)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to finish headless JS task", e)
+                }
+            }
             try {
                 val uriPrefix = config?.getString("baseUri")?.let { Uri.parse(it) }
                 val localAssociation =
@@ -92,9 +103,9 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                         localAssociation.port,
                         localAssociation.session
                     )
-                val headlessJsTaskContext =
-                    HeadlessJsTaskContext.getInstance(reactApplicationContext)
-                var sessionTaskId = headlessJsTaskContext.startTask(sessionBackgroundTaskConfig)
+                withContext(Dispatchers.Main) {
+                    sessionTaskId = headlessJsTaskContext.startTask(sessionBackgroundTaskConfig)
+                }
                 associationResultCallback = { resultCode ->
                     if (resultCode == Activity.RESULT_CANCELED) {
                         Log.d(TAG, "Local association cancelled by user, ending session")
@@ -108,13 +119,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                     }
 
                     // stop the headless js task, regardless if the association was successful or not
-                    try {
-                        if (headlessJsTaskContext.isTaskRunning(sessionTaskId)) {
-                            headlessJsTaskContext.finishTask(sessionTaskId)
-                        }
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to finish headless task during cleanup", e)
-                    }
+                    finishHeadlessTask(sessionTaskId)
                 }
                 currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
                     ?: throw NullPointerException(
@@ -134,22 +139,27 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 promise.resolve(sessionPropertiesMap)
             } catch (e: ActivityNotFoundException) {
                 Log.e(TAG, "Found no installed wallet that supports the mobile wallet protocol", e)
+                finishHeadlessTask(sessionTaskId)
                 cleanup()
                 promise.reject("ERROR_WALLET_NOT_FOUND", e)
             } catch (e: TimeoutException) {
                 Log.e(TAG, "Timed out waiting for local association to be ready", e)
+                finishHeadlessTask(sessionTaskId)
                 cleanup()
                 promise.reject("Timed out waiting for local association to be ready", e)
             } catch (e: InterruptedException) {
                 Log.w(TAG, "Interrupted while waiting for local association to be ready", e)
+                finishHeadlessTask(sessionTaskId)
                 cleanup()
                 promise.reject(e)
             } catch (e: ExecutionException) {
                 Log.e(TAG, "Failed establishing local association with wallet", e.cause)
+                finishHeadlessTask(sessionTaskId)
                 cleanup()
                 promise.reject(e)
             } catch (e: Throwable) {
                 Log.e(TAG, "Failed to start session", e)
+                finishHeadlessTask(sessionTaskId)
                 cleanup()
                 promise.reject(e)
             }
