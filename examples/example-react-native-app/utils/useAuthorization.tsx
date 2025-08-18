@@ -1,4 +1,4 @@
-import {PublicKey} from '@solana/web3.js';
+import { type Address, getAddressDecoder } from '@solana/addresses';
 import {
   Account as AuthorizedAccount,
   AuthorizationResult,
@@ -15,7 +15,8 @@ import useSWR from 'swr';
 export type Account = Readonly<{
   address: Base64EncodedAddress;
   label?: string;
-  publicKey: PublicKey;
+  publicKey: Address;
+  publicKeyBytes: Uint8Array
 }>;
 
 type Authorization = Readonly<{
@@ -28,6 +29,7 @@ function getAccountFromAuthorizedAccount(account: AuthorizedAccount): Account {
   return {
     ...account,
     publicKey: getPublicKeyFromAddress(account.address),
+    publicKeyBytes: toUint8Array(account.address),
   };
 }
 
@@ -56,9 +58,10 @@ function getAuthorizationFromAuthorizationResult(
   };
 }
 
-function getPublicKeyFromAddress(address: Base64EncodedAddress): PublicKey {
-  const publicKeyByteArray = toUint8Array(address);
-  return new PublicKey(publicKeyByteArray);
+function getPublicKeyFromAddress(base64Address: Base64EncodedAddress): Address {
+  const publicKeyByteArray = toUint8Array(base64Address);
+  const addressDecoder = getAddressDecoder();
+  return addressDecoder.decode(publicKeyByteArray);
 }
 
 export const APP_IDENTITY = {

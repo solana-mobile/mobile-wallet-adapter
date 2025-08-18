@@ -1,6 +1,6 @@
 import {useCallback, useContext} from 'react';
 
-import {SnackbarContext} from '../components/SnackbarProvider';
+import {SnackbarContext} from '../context/SnackbarProvider';
 
 export default function useGuardedCallback<TArgs extends Array<any>, TReturn>(
   cb: (...args: TArgs) => TReturn,

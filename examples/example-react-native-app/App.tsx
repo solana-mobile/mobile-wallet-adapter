@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ConnectionProvider} from '@solana/wallet-adapter-react';
-import {clusterApiUrl, PublicKey, PublicKeyInitData} from '@solana/web3.js';
-import React, {Suspense} from 'react';
+import { Address } from '@solana/kit';
+import React, { Suspense } from 'react';
 import {
   ActivityIndicator,
   AppState,
@@ -9,17 +8,17 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import {Provider as PaperProvider} from 'react-native-paper';
-import {Cache, SWRConfig} from 'swr';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { Cache, SWRConfig } from 'swr';
 
-import SnackbarProvider from './components/SnackbarProvider';
+import { ChainContextProvider } from './context/ChainContextProvider';
+import { RpcContextProvider } from './context/RpcContextProvider';
+import SnackbarProvider from './context/SnackbarProvider';
 import MainScreen from './screens/MainScreen';
-
-const DEVNET_ENDPOINT = /*#__PURE__*/ clusterApiUrl('devnet');
 
 function cacheReviver(key: string, value: any) {
   if (key === 'publicKey') {
-    return new PublicKey(value as PublicKeyInitData);
+    return value as Address;
   } else {
     return value;
   }
@@ -60,29 +59,29 @@ function asyncStorageProvider() {
 
 export default function App() {
   return (
-    <ConnectionProvider
-      config={{commitment: 'processed'}}
-      endpoint={DEVNET_ENDPOINT}>
-      <SafeAreaView style={styles.shell}>
-        <PaperProvider>
-          <SnackbarProvider>
-            <Suspense
-              fallback={
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator
-                    size="large"
-                    style={styles.loadingIndicator}
-                  />
-                </View>
-              }>
-              <SWRConfig value={{provider: asyncStorageProvider}}>
-                <MainScreen />
-              </SWRConfig>
-            </Suspense>
-          </SnackbarProvider>
-        </PaperProvider>
-      </SafeAreaView>
-    </ConnectionProvider>
+    <ChainContextProvider>
+      <RpcContextProvider>
+        <SafeAreaView style={styles.shell}>
+          <PaperProvider>
+            <SnackbarProvider>
+              <Suspense
+                fallback={
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator
+                      size="large"
+                      style={styles.loadingIndicator}
+                    />
+                  </View>
+                }>
+                <SWRConfig value={{provider: asyncStorageProvider}}>
+                  <MainScreen />
+                </SWRConfig>
+              </Suspense>
+            </SnackbarProvider>
+          </PaperProvider>
+        </SafeAreaView>
+      </RpcContextProvider>
+    </ChainContextProvider>
   );
 }
 

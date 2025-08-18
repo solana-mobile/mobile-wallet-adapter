@@ -3,6 +3,7 @@
   "extends": "@react-native/typescript-config/tsconfig.json",     /* Recommended React Native TSConfig base */
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
 
     /* Completeness */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
