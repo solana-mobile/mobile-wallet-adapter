@@ -514,14 +514,17 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                 throw new Error("Sign in failed, no sign in result returned by wallet");
             }
             const signedInAddress = authorizationResult.sign_in_result.address;
-            const signedInAccount: WalletAccount = {
-                ...authorizationResult.accounts.find(acc => acc.address == signedInAddress) ?? {
-                    address: signedInAddress
-                }, 
-                publicKey: toUint8Array(signedInAddress)
+            const signedInAccount = authorizationResult.accounts.find(acc => acc.address == signedInAddress);
+            const wsWalletAccount: WalletAccount = {
+                ...signedInAccount ?? {
+                    address: base58.encode(toUint8Array(signedInAddress))
+                },
+                publicKey: toUint8Array(signedInAddress),
+                chains: signedInAccount?.chains ?? this.#chains,
+                features: signedInAccount?.features ?? authorizationResult.capabilities.features
             } as WalletAccount;
             return {
-                account: signedInAccount,
+                account: wsWalletAccount,
                 signedMessage: toUint8Array(authorizationResult.sign_in_result.signed_message),
                 signature: toUint8Array(authorizationResult.sign_in_result.signature)
             };
