@@ -1,7 +1,7 @@
 {
     "name": "@solana-mobile/wallet-standard-mobile",
     "description": "A wallet-standard wallet for mobile wallet apps that conform to the Solana Mobile Wallet Adapter protocol",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "author": "Marco Martinez <marco.martinez@solana.com>",
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
