@@ -66,6 +66,7 @@ export interface ChainSelector {
 }
 
 export const SolanaMobileWalletAdapterWalletName = 'Mobile Wallet Adapter';
+export const SolanaMobileWalletAdapterRemoteWalletName = 'Remote Mobile Wallet Adapter';
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 const DEFAULT_FEATURES = [SolanaSignAndSendTransaction, SolanaSignTransaction, SolanaSignMessage, SolanaSignIn] as const;
@@ -538,7 +539,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
 export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWalletAdapterWallet, SolanaMobileWalletAdapterAuthorization {
     readonly #listeners: { [E in StandardEventsNames]?: StandardEventsListeners[E][] } = {};
     readonly #version = '1.0.0' as const; // wallet-standard version
-    readonly #name = SolanaMobileWalletAdapterWalletName;
+    readonly #name = SolanaMobileWalletAdapterRemoteWalletName;
     readonly #url = 'https://solanamobile.com/wallets';
     readonly #icon = icon;
 

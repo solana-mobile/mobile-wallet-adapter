@@ -52,6 +52,8 @@ import {
     createDefaultChainSelector,
     LocalSolanaMobileWalletAdapterWallet,
     RemoteSolanaMobileWalletAdapterWallet,
+    SolanaMobileWalletAdapterWalletName as WalletStandardWalletName,
+    SolanaMobileWalletAdapterRemoteWalletName as WalletStandardRemoteWalletName,
 } from '@solana-mobile/wallet-standard-mobile';
 import { fromUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
@@ -66,7 +68,8 @@ export interface AddressSelector {
     select(addresses: Base64EncodedAddress[]): Promise<Base64EncodedAddress>;
 }
 
-export const SolanaMobileWalletAdapterWalletName = 'Mobile Wallet Adapter' as WalletName;
+export const SolanaMobileWalletAdapterWalletName = WalletStandardWalletName as WalletName;
+export const SolanaMobileWalletAdapterRemoteWalletName = WalletStandardRemoteWalletName as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 
