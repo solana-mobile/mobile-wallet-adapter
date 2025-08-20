@@ -44,6 +44,15 @@ const ENDPOINT = /*#__PURE__*/ clusterApiUrl(CLUSTER);
 
 const theme = /*#__PURE__*/ createTheme();
 
+function isAndroidMobile() {
+    return (
+        typeof window !== 'undefined' &&
+        window.isSecureContext &&
+        typeof document !== 'undefined' &&
+        /android/i.test(navigator.userAgent)
+    );
+}
+
 function App({ children }: { children: ReactNode }) {
     const { enqueueSnackbar } = useSnackbar();
     const handleWalletError = useCallback(
@@ -67,7 +76,7 @@ function App({ children }: { children: ReactNode }) {
     return (
         <ThemeProvider theme={theme}>
             <ConnectionProvider config={CONNECTION_CONFIG} endpoint={ENDPOINT}>
-                <WalletProvider autoConnect={true} onError={handleWalletError} wallets={adapters}>
+                <WalletProvider autoConnect={isAndroidMobile()} onError={handleWalletError} wallets={adapters}>
                     <WalletModalProvider>{children}</WalletModalProvider>
                 </WalletProvider>
             </ConnectionProvider>

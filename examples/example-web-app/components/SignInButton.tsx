@@ -9,7 +9,7 @@ type Props = Readonly<ComponentProps<typeof Button>>;
 
 export default function SignInButton(props: Props) {
     const { connected, signIn } = useWallet();
-    const handleDisconnectClick = useGuardedCallback(async () => {
+    const handleSignInClick = useGuardedCallback(async () => {
         if (signIn) {
             const input: SolanaSignInInput = {
                 domain: window.location.host,
@@ -24,6 +24,6 @@ export default function SignInButton(props: Props) {
             throw new Error('Sign In not available, wallet does not support sign in');
         }
     }, [signIn]);
-    return <Button {...props} disabled={connected} onClick={handleDisconnectClick} />;
+    return <Button {...props} disabled={connected} onClick={handleSignInClick} />;
 }
 
