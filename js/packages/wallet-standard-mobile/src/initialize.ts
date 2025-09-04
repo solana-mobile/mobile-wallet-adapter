@@ -18,6 +18,14 @@ export function registerMwa(config: {
     remoteHostAuthority?: string;
     onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
 }) {
+    if (typeof window === 'undefined') {
+        console.warn(`MWA not registered: no window object`)
+        return
+    }
+    if (!window.isSecureContext) {
+        console.warn(`MWA not registered: secure context required (https)`)
+        return
+    }
     if (getIsLocalAssociationSupported()) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
     } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
