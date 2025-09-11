@@ -79,9 +79,9 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.57.1"
     kapt "com.google.dagger:hilt-compiler:2.57.1"
 
-    implementation 'com.solanamobile:rpc-core:0.2.8'
-    implementation 'com.solanamobile:rpc-solana:0.2.8'
-    implementation 'com.solanamobile:rpc-ktordriver:0.2.8'
+    implementation 'com.solanamobile:rpc-core:0.2.9'
+    implementation 'com.solanamobile:rpc-solana:0.2.9'
+    implementation 'com.solanamobile:rpc-ktordriver:0.2.9'
     implementation 'org.bitcoinj:bitcoinj-core:0.17'
     implementation 'com.squareup.okhttp3:okhttp:5.1.0'
 
