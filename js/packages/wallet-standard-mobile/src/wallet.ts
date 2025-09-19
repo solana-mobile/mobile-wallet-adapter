@@ -47,6 +47,9 @@ import {
 import { icon } from './icon';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
+import createDefaultAuthorizationCache from './createDefaultAuthorizationCache.js';
+import createDefaultChainSelector from './createDefaultChainSelector.js';
+import createDefaultWalletNotFoundHandler from './createDefaultWalletNotFoundHandler.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI["getCapabilities"]>>;
 
@@ -78,6 +81,18 @@ interface SolanaMobileWalletAdapterAuthorization {
     get isAuthorized(): boolean;
     get currentAuthorization(): Authorization | undefined;
     get cachedAuthorizationResult(): Promise<Authorization | undefined>;
+}
+
+export interface LocalSolanaMobileWalletAdapterWalletOptions {
+    appIdentity: AppIdentity;
+    authorizationCache?: AuthorizationCache;
+    chains: IdentifierArray;
+    chainSelector?: ChainSelector;
+    onWalletNotFound?: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+}
+
+export interface RemoteSolanaMobileWalletAdapterWalletOptions extends LocalSolanaMobileWalletAdapterWalletOptions {
+    remoteHostAuthority: string;
 }
 
 export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletAdapterWallet, SolanaMobileWalletAdapterAuthorization {
@@ -157,18 +172,12 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         return this.#authorization?.accounts as WalletAccount[] ?? [];
     }
 
-    constructor(config: {
-        appIdentity: AppIdentity;
-        authorizationCache: AuthorizationCache;
-        chains: IdentifierArray;
-        chainSelector: ChainSelector;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    }) {
-        this.#authorizationCache = config.authorizationCache;
+    constructor(config: LocalSolanaMobileWalletAdapterWalletOptions) {
+        this.#authorizationCache = config.authorizationCache ?? createDefaultAuthorizationCache();
         this.#appIdentity = config.appIdentity;
         this.#chains = config.chains;
-        this.#chainSelector = config.chainSelector;
-        this.#onWalletNotFound = config.onWalletNotFound;
+        this.#chainSelector = config.chainSelector ?? createDefaultChainSelector();
+        this.#onWalletNotFound = config.onWalletNotFound ?? createDefaultWalletNotFoundHandler();
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
             // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
@@ -614,20 +623,13 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         return this.#authorization?.accounts as WalletAccount[] ?? [];
     }
 
-    constructor(config: {
-        appIdentity: AppIdentity;
-        authorizationCache: AuthorizationCache;
-        chains: IdentifierArray;
-        chainSelector: ChainSelector;
-        remoteHostAuthority: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    }) {
-        this.#authorizationCache = config.authorizationCache;
+    constructor(config: RemoteSolanaMobileWalletAdapterWalletOptions) {
+        this.#authorizationCache = config.authorizationCache ?? createDefaultAuthorizationCache();
         this.#appIdentity = config.appIdentity;
         this.#chains = config.chains;
-        this.#chainSelector = config.chainSelector;
+        this.#chainSelector = config.chainSelector ?? createDefaultChainSelector();
         this.#hostAuthority = config.remoteHostAuthority;
-        this.#onWalletNotFound = config.onWalletNotFound;
+        this.#onWalletNotFound = config.onWalletNotFound ?? createDefaultWalletNotFoundHandler();
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
             // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
