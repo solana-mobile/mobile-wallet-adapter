@@ -187,7 +187,7 @@ export type SignInPayloadWithRequiredFields = Partial<SignInPayload> &
 export type SignInResult = Readonly<{
     address: Base64EncodedAddress;
     signed_message: Base64EncodedSignedMessage;
-    signature: Base64EncodedAddress;
+    signature: Base64EncodedSignature;
     signature_type?: string;
 }>;
 
