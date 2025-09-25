@@ -10,14 +10,7 @@ import { AppIdentity } from "@solana-mobile/mobile-wallet-adapter-protocol";
 import { IdentifierArray } from "@wallet-standard/base";
 import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported } from "./getIsSupported";
 
-export function registerMwa(config: {
-    appIdentity: AppIdentity;
-    authorizationCache: AuthorizationCache;
-    chains: IdentifierArray;
-    chainSelector: ChainSelector;
-    remoteHostAuthority?: string;
-    onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-}) {
+export function registerMwa(config: RemoteSolanaMobileWalletAdapterWalletOptions) {
     if (getIsLocalAssociationSupported()) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
     } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
