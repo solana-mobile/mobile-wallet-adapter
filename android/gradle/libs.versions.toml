@@ -33,7 +33,7 @@ multimult = "0.2.4"
 nvWebsocketClient = "2.14"
 robolectric = "4.16"
 slf4jAndroid = "1.7.36"
-web3Core = "0.3.0-beta6"
+web3Core = "0.3.0"
 zxingAndroidEmbedded = "4.3.0"
 
 [libraries]
