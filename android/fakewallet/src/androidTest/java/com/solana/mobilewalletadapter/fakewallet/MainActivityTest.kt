@@ -18,8 +18,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
-import com.solana.mobilewalletadapter.clientlib.scenario.RemoteAssociationIntentCreator
-import com.solana.mobilewalletadapter.clientlib.scenario.RemoteAssociationScenario
+import com.solana.mobilewalletadapter.clientlib.scenario.ReflectorAssociationIntentCreator
+import com.solana.mobilewalletadapter.clientlib.scenario.ReflectorAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
@@ -205,13 +205,16 @@ class MainActivityTest {
 
         // simulate client side scenario
         val hostAuthority = "localhost:$port"
-        val remoteAssociation = RemoteAssociationScenario("ws", hostAuthority,
-            Scenario.DEFAULT_CLIENT_TIMEOUT_MS) { scenario, reflectorId ->
-            val associationIntent = RemoteAssociationIntentCreator.createAssociationIntent(
+        val remoteAssociation = ReflectorAssociationScenario(
+            "ws", hostAuthority,
+            Scenario.DEFAULT_CLIENT_TIMEOUT_MS
+        ) { scenario, reflectorId ->
+            val associationIntent = ReflectorAssociationIntentCreator.createAssociationIntent(
                 null,
                 scenario.hostAuthority,
                 reflectorId,
-                scenario.session
+                scenario.session,
+                true
             )
             ActivityScenario.launch<MainActivity>(associationIntent)
         }
@@ -219,6 +222,56 @@ class MainActivityTest {
         // when
         // trigger authorization from client
         val authorization = remoteAssociation.start().get().run {
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+        server.close()
+
+        // verify that we got an auth token (successful auth)
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulLocalReflectorAuthorization() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        // simulate remote reflector server
+        val port = 8800 + Random.nextInt(0, 100)
+        val server = WebSocketReflectorServer(port)
+        server.init()
+
+        // simulate client side scenario
+        val hostAuthority = "localhost:$port"
+        val localReflectorAssociation = ReflectorAssociationScenario(
+            "ws", hostAuthority,
+            Scenario.DEFAULT_CLIENT_TIMEOUT_MS
+        ) { scenario, reflectorId ->
+            val associationIntent = ReflectorAssociationIntentCreator.createAssociationIntent(
+                null,
+                scenario.hostAuthority,
+                reflectorId,
+                scenario.session,
+                false
+            )
+            ActivityScenario.launch<MainActivity>(associationIntent)
+        }
+
+        // when
+        // trigger authorization from client
+        val authorization = localReflectorAssociation.start().get().run {
             authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
         }
 

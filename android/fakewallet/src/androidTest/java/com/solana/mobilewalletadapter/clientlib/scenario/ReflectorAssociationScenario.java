@@ -25,8 +25,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class RemoteAssociationScenario extends Scenario {
-    private static final String TAG = RemoteAssociationScenario.class.getSimpleName();
+public class ReflectorAssociationScenario extends Scenario {
+    private static final String TAG = ReflectorAssociationScenario.class.getSimpleName();
     private static final int CONNECT_MAX_ATTEMPTS = 34;
     private static final int[] CONNECT_BACKOFF_SCHEDULE_MS = { 150, 150, 200, 500, 500, 750, 750, 1000 }; // == 30s, which allows time for a user to choose a wallet from the disambiguation dialog, and for that wallet to start
     private static final int CONNECT_TIMEOUT_MS = 30000;
@@ -47,7 +47,7 @@ public class RemoteAssociationScenario extends Scenario {
     private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
     public interface ReflectorIdCallback {
-        void reflectorIdReceived(RemoteAssociationScenario scenario, byte[] reflectorId);
+        void reflectorIdReceived(ReflectorAssociationScenario scenario, byte[] reflectorId);
     }
     private ReflectorIdCallback mReflectorIdCallback;
 
@@ -59,16 +59,16 @@ public class RemoteAssociationScenario extends Scenario {
         return mMobileWalletAdapterSession;
     }
 
-    public RemoteAssociationScenario(@NonNull String hostAuthority,
-                                     @IntRange(from = 0) int clientTimeoutMs,
-                                     @NonNull ReflectorIdCallback reflectorIdCallback) {
+    public ReflectorAssociationScenario(@NonNull String hostAuthority,
+                                        @IntRange(from = 0) int clientTimeoutMs,
+                                        @NonNull ReflectorIdCallback reflectorIdCallback) {
         this(WebSocketsTransportContract.WEBSOCKETS_REFLECTOR_SCHEME, hostAuthority, clientTimeoutMs, reflectorIdCallback);
     }
 
     // Only for testing
-    public RemoteAssociationScenario(@NonNull String scheme, @NonNull String hostAuthority,
-                                     @IntRange(from = 0) int clientTimeoutMs,
-                                     @NonNull ReflectorIdCallback reflectorIdCallback) {
+    public ReflectorAssociationScenario(@NonNull String scheme, @NonNull String hostAuthority,
+                                        @IntRange(from = 0) int clientTimeoutMs,
+                                        @NonNull ReflectorIdCallback reflectorIdCallback) {
         super(clientTimeoutMs);
 
         mHostAuthority = hostAuthority;
