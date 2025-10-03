@@ -47,6 +47,7 @@ export type SignInPayload = Readonly<{
 }>;
 
 export type Base64EncodedAddress = string;
+export type Base64EncodedSignature = string;
 type Base64EncodedSignedMessage = string;
 
 /**
@@ -179,7 +180,7 @@ export type AuthorizedAccount = Readonly<{
 export type SignInResult = Readonly<{
     address: Base64EncodedAddress;
     signed_message: Base64EncodedSignedMessage;
-    signature: Base64EncodedAddress;
+    signature: Base64EncodedSignature;
     signature_type?: string;
 }>;
 export type AuthorizeDappCompleteResponse = Readonly<{
