@@ -49,7 +49,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     private val mActivityEventListener: ActivityEventListener =
         object : BaseActivityEventListener() {
             override fun onActivityResult(
-                activity: Activity?,
+                activity: Activity,
                 requestCode: Int,
                 resultCode: Int,
                 data: Intent?
@@ -121,10 +121,11 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                     // stop the headless js task, regardless if the association was successful or not
                     finishHeadlessTask(sessionTaskId)
                 }
-                currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
-                    ?: throw NullPointerException(
-                        "Could not find a current activity from which to launch a local association"
-                    )
+                reactApplicationContext.currentActivity?.apply {
+                    startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
+                } ?: throw NullPointerException(
+                    "Could not find a current activity from which to launch a local association"
+                )
                 val client = localAssociation.start()
                     .get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
                 sessionState = SessionState(client, localAssociation)
