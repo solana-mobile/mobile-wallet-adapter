@@ -87,6 +87,10 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                     if (taskId != null && headlessJsTaskContext.isTaskRunning(taskId)) {
                         headlessJsTaskContext.finishTask(taskId)
                     }
+                    // fix for Expo 52/RN 0.72/0.73 where the older kotlin/gradle toolchain complains 
+                    // about the above if statement being used as an expression. Explicitly returning 
+                    // Unit here tells the compiler that the above if is not an expression
+                    Unit
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to finish headless JS task", e)
                 }
