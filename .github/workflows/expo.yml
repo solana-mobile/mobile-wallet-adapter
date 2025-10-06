@@ -46,7 +46,11 @@ jobs:
       - name: 'Expo Build'
         working-directory: 'js/'
         run: |
-          npx create-expo-app expo-${{ matrix.version }}-app --template blank@sdk-${{ matrix.version }}
+          if [ "${{ matrix.version }}" = "latest" ]; then
+            npx -y create-expo-app expo-${{ matrix.version }}-app --template blank
+          else
+            npx -y create-expo-app expo-${{ matrix.version }}-app --template blank@sdk-${{ matrix.version }}
+          fi
           cd expo-${{ matrix.version }}-app
           npm install file:../packages/mobile-wallet-adapter-protocol
           npx expo prebuild --no-install
