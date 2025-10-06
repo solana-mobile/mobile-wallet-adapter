@@ -32,7 +32,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: '[js] Install yarn dependencies'
         working-directory: 'js/'
