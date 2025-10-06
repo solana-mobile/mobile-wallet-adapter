@@ -1,0 +1,58 @@
+name: Expo Smoke Test
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ '.github/**', 'js/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ '.github/**', 'js/**' ]
+  release:
+    types: [ published ]
+
+jobs:
+  expo-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        version: [ 52, 53, 54, latest]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: 'js/yarn.lock'
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: '[js] Install yarn dependencies'
+        working-directory: 'js/'
+        run: yarn install --frozen-lockfile
+      - name: '[js] Lint'
+        working-directory: 'js/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[js] Build'
+        working-directory: 'js/'
+        run: yarn build
+
+      - name: 'Expo Build'
+        working-directory: 'js/'
+        run: |
+          npx create-expo-app expo-${{ matrix.version }}-app --template blank@sdk-${{ matrix.version }}
+          cd expo-${{ matrix.version }}-app
+          npm install file:../packages/mobile-wallet-adapter-protocol
+          npx expo prebuild --no-install
+          cd android && ./gradlew assembleDebug --no-daemon --stacktrace
