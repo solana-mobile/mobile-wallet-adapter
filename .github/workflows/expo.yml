@@ -37,16 +37,11 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v5
 
-      - name: '[js] Install yarn dependencies'
+      - name: 'Build Project'
         working-directory: 'js/'
-        run: yarn install --frozen-lockfile
-      - name: '[js] Lint'
-        working-directory: 'js/'
-        run: yarn lint
-        continue-on-error: true # TODO: fix all lint issues and remove this line
-      - name: '[js] Build'
-        working-directory: 'js/'
-        run: yarn build
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
 
       - name: 'Expo Build'
         working-directory: 'js/'
