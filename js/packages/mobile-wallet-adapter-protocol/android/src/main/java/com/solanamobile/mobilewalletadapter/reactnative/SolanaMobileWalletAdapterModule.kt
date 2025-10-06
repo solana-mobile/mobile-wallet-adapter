@@ -61,10 +61,10 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
 
     private val sessionBackgroundTaskConfig
         get() = HeadlessJsTaskConfig(
-            taskKey = "SolanaMobileWalletAdapterSessionBackgroundTask",
-            timeout = 0,
-            data = Arguments.createMap(),
-            isAllowedInForeground = true
+            "SolanaMobileWalletAdapterSessionBackgroundTask",
+            Arguments.createMap(),
+            0,
+            true
         )
 
     init {
