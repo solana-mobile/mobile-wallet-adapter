@@ -44,7 +44,7 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
 
-      - name: 'Expo Build'
+      - name: 'Expo Build: mobile-wallet-adapter-protocol'
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
@@ -54,5 +54,18 @@ jobs:
           fi
           cd expo-${{ matrix.version }}-app
           npm install file:../packages/mobile-wallet-adapter-protocol
+          npx expo prebuild --no-install
+          cd android && ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: 'Expo Build: mobile-wallet-adapter-walletlib'
+        working-directory: 'js/'
+        run: |
+          if [ "${{ matrix.version }}" = "latest" ]; then
+            npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank
+          else
+            npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank@sdk-${{ matrix.version }}
+          fi
+          cd expo-${{ matrix.version }}-wallet
+          npm install file:../packages/mobile-wallet-adapter-walletlib
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
