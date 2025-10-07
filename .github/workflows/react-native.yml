@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [ 69, 77, 79, 81, latest]
+        version: [ 69, 79, 80, latest]
 
     steps:
       - uses: actions/checkout@v5
