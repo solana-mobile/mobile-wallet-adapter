@@ -11,7 +11,7 @@ on:
     types: [ published ]
 
 jobs:
-  expo-build:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -62,7 +62,8 @@ jobs:
       - name: 'Build React Native App'
         working-directory: 'js/'
         run: |
-          cd android && ./gradlew assembleDebug --no-daemon --stacktrace
+          cd React${{ matrix.version }}App/android
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: 'Setup React Native Wallet'
         working-directory: 'js/'
@@ -82,4 +83,5 @@ jobs:
       - name: 'Build React Native Wallet'
         working-directory: 'js/'
         run: |
-          cd android && ./gradlew assembleDebug --no-daemon --stacktrace
+          cd React${{ matrix.version }}Wallet/android
+          ./gradlew assembleDebug --no-daemon --stacktrace

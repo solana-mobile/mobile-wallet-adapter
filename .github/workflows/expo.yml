@@ -8,7 +8,7 @@ on:
     types: [ published ]
 
 jobs:
-  expo-build:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
