@@ -1,17 +1,14 @@
 name: Expo Smoke Test
 
 on:
-  push:
-    branches: [ main ]
-    paths: [ '.github/**', 'js/**' ]
-  pull_request:
-    branches: [ main ]
-    paths: [ '.github/**', 'js/**' ]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 1" # Every Monday, 5am UTC
   release:
     types: [ published ]
 
 jobs:
-  expo-build:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -44,7 +41,7 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
 
-      - name: 'Expo Build: mobile-wallet-adapter-protocol'
+      - name: 'Setup Expo App'
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
@@ -52,12 +49,20 @@ jobs:
           else
             npx -y create-expo-app expo-${{ matrix.version }}-app --template blank@sdk-${{ matrix.version }}
           fi
+
+      - name: 'Install mobile-wallet-adapter-protocol'
+        working-directory: 'js/'
+        run: |
           cd expo-${{ matrix.version }}-app
           npm install file:../packages/mobile-wallet-adapter-protocol
+
+      - name: 'Build Expo App'
+        working-directory: 'js/'
+        run: |
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: 'Expo Build: mobile-wallet-adapter-walletlib'
+      - name: 'Setup Expo Wallet
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
@@ -65,7 +70,15 @@ jobs:
           else
             npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank@sdk-${{ matrix.version }}
           fi
+
+      - name: 'Install mobile-wallet-adapter-walletlib'
+        working-directory: 'js/'
+        run: |
           cd expo-${{ matrix.version }}-wallet
           npm install file:../packages/mobile-wallet-adapter-walletlib
+
+      - name: 'Build Expo Wallet'
+        working-directory: 'js/'
+        run: |
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
