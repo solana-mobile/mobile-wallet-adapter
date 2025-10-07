@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [ 0.69.0, 0.72.0, 0.77.0, 0.79.0, 0.81.0, latest]
+        version: [ 69, 72, 77, 79, 81, latest]
 
     steps:
       - uses: actions/checkout@v5
@@ -50,7 +50,7 @@ jobs:
           if [ "${{ matrix.version }}" = "latest" ]; then
             npx @react-native-community/cli@latest init React${{ matrix.version }}App
           else
-            npx @react-native-community/cli@latest init React${{ matrix.version }}App --version ${{ matrix.version }}
+            npx @react-native-community/cli@latest init React${{ matrix.version }}App --version 0.${{ matrix.version }}.0
           fi
 
       - name: 'Install mobile-wallet-adapter-protocol'
@@ -70,7 +70,7 @@ jobs:
           if [ "${{ matrix.version }}" = "latest" ]; then
             npx @react-native-community/cli@latest init React${{ matrix.version }}Wallet
           else
-            npx @react-native-community/cli@latest init React${{ matrix.version }}Wallet --version ${{ matrix.version }}
+            npx @react-native-community/cli@latest init React${{ matrix.version }}Wallet --version 0.${{ matrix.version }}.0
           fi
 
       - name: 'Install mobile-wallet-adapter-walletlib'

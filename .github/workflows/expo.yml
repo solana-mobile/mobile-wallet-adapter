@@ -1,12 +1,9 @@
 name: Expo Smoke Test
 
 on:
-  push:
-    branches: [ main ]
-    paths: [ '.github/**', 'js/**' ]
-  pull_request:
-    branches: [ main ]
-    paths: [ '.github/**', 'js/**' ]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 1" # Every Monday, 5am UTC
   release:
     types: [ published ]
 
