@@ -1,7 +1,7 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-protocol-kit",
     "description": "A convenience wrapper that enables you to call Solana Mobile Stack protocol methods using objects from @solana/kit",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "author": "Marco Martinez <marco.martinez@solana.com>",
     "repository": {
         "type": "git",
@@ -18,8 +18,8 @@
             "require": "./lib/cjs/index.js"
         },
         "browser": {
-            "import": "./lib/cjs/index.browser.js",
-            "require": "./lib/esm/index.browser.js"
+            "import": "./lib/esm/index.browser.js",
+            "require": "./lib/cjs/index.browser.js"
         },
         "node": {
             "import": "./lib/esm/index.js",
@@ -57,7 +57,7 @@
     },
     "dependencies": {
         "@solana/transactions": "^2.1.0",
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.3",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.4",
         "bs58": "^5.0.0",
         "js-base64": "^3.7.7"
     },

@@ -1,7 +1,7 @@
 {
     "name": "@solana-mobile/wallet-adapter-mobile",
     "description": "An adapter for mobile wallet apps that conform to the Solana Mobile Wallet Adapter protocol",
-    "version": "2.2.3",
+    "version": "2.2.4",
     "author": "Steven Luscher <steven.luscher@solanamobile.com>",
     "repository": {
         "type": "git",
@@ -18,8 +18,8 @@
             "require": "./lib/cjs/index.js"
         },
         "browser": {
-            "import": "./lib/cjs/index.browser.js",
-            "require": "./lib/esm/index.browser.js"
+            "import": "./lib/esm/index.browser.js",
+            "require": "./lib/cjs/index.browser.js"
         },
         "node": {
             "import": "./lib/esm/index.js",
@@ -57,7 +57,7 @@
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.0",
-        "@solana-mobile/wallet-standard-mobile": "^0.4.0",
+        "@solana-mobile/wallet-standard-mobile": "^0.4.1",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-standard-features": "^1.2.0",
         "js-base64": "^3.7.5"
