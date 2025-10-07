@@ -49,7 +49,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
     private val mActivityEventListener: ActivityEventListener =
         object : BaseActivityEventListener() {
             override fun onActivityResult(
-                activity: Activity?,
+                activity: Activity,
                 requestCode: Int,
                 resultCode: Int,
                 data: Intent?
@@ -61,10 +61,10 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
 
     private val sessionBackgroundTaskConfig
         get() = HeadlessJsTaskConfig(
-            taskKey = "SolanaMobileWalletAdapterSessionBackgroundTask",
-            timeout = 0,
-            data = Arguments.createMap(),
-            isAllowedInForeground = true
+            "SolanaMobileWalletAdapterSessionBackgroundTask",
+            Arguments.createMap(),
+            0,
+            true
         )
 
     init {
@@ -87,6 +87,10 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                     if (taskId != null && headlessJsTaskContext.isTaskRunning(taskId)) {
                         headlessJsTaskContext.finishTask(taskId)
                     }
+                    // fix for Expo 52/RN 0.72/0.73 where the older kotlin/gradle toolchain complains 
+                    // about the above if statement being used as an expression. Explicitly returning 
+                    // Unit here tells the compiler that the above if is not an expression
+                    Unit
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to finish headless JS task", e)
                 }
@@ -121,10 +125,11 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                     // stop the headless js task, regardless if the association was successful or not
                     finishHeadlessTask(sessionTaskId)
                 }
-                currentActivity?.startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
-                    ?: throw NullPointerException(
-                        "Could not find a current activity from which to launch a local association"
-                    )
+                reactApplicationContext.currentActivity?.apply {
+                    startActivityForResult(intent, REQUEST_LOCAL_ASSOCIATION)
+                } ?: throw NullPointerException(
+                    "Could not find a current activity from which to launch a local association"
+                )
                 val client = localAssociation.start()
                     .get(ASSOCIATION_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
                 sessionState = SessionState(client, localAssociation)
