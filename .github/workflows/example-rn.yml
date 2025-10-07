@@ -1,0 +1,75 @@
+name: Build React Native Example Apps
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ '.github/**', 'examples/example-react-native-*/**', 'js/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ '.github/**', 'examples/example-react-native-*/**', 'js/**' ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: 'examples/example-react-native-*/yarn.lock' # note - this only caches for examples/, not js/
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: '[js] Install yarn dependencies'
+        working-directory: 'js/'
+        run: yarn install --frozen-lockfile
+      - name: '[js] Lint'
+        working-directory: 'js/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[js] Build'
+        working-directory: 'js/'
+        run: yarn build
+
+      - name: '[Example App] Install yarn dependencies'
+        working-directory: 'examples/example-react-native-app/'
+        run: yarn install --frozen-lockfile
+      - name: '[Example App] Type Check'
+        working-directory: 'examples/example-react-native-app/'
+        run: npx tsc --noEmit
+      - name: '[Example App] Lint'
+        working-directory: 'examples/example-react-native-app/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[Example App] Build'
+        working-directory: 'examples/example-react-native-app/'
+        run: yarn android:build
+
+      - name: '[Example Wallet] Install yarn dependencies'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: yarn install --frozen-lockfile
+      - name: '[Example Wallet] Type Check'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: npx tsc --noEmit
+        continue-on-error: true # TODO: fix all type issues and remove this line
+      - name: '[Example Wallet] Lint'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: yarn lint
+        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[Example Wallet] Build'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: yarn android:build
