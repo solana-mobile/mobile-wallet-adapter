@@ -1,21 +1,29 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-walletlib",
     "description": "A React Native wrapper of the Solana Mobile, Mobile Wallet Adapter Wallet Library. Wallet apps can use this to handle dapp requests for signing and sending.",
-    "version": "1.4.0-beta2",
+    "version": "1.4.0",
     "author": "Michael Sulistio <mike.sulistio@solanamobile.com>",
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
-    "type": "module",
-    "sideEffects": false,
+    "exports": {
+        "node": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "react-native": "./lib/cjs/index.native.js",
+        "types": "./lib/types/index.d.ts"
+    },
     "main": "lib/esm/index",
-    "react-native": "lib/esm/index",
     "module": "lib/esm/index",
+    "react-native": "lib/esm/index",
     "types": "lib/types/index.d.ts",
+    "type": "module",
     "files": [
         "lib",
         "android",
         "LICENSE"
     ],
+    "sideEffects": false,
     "publishConfig": {
         "access": "public"
     },

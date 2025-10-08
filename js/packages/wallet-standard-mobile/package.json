@@ -1,32 +1,44 @@
 {
     "name": "@solana-mobile/wallet-standard-mobile",
     "description": "A wallet-standard wallet for mobile wallet apps that conform to the Solana Mobile Wallet Adapter protocol",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "author": "Marco Martinez <marco.martinez@solana.com>",
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
-    "type": "module",
-    "sideEffects": false,
-    "main": "lib/cjs/index.js",
-    "module": "lib/esm/index.js",
-    "react-native": "lib/cjs/index.native.js",
-    "types": "lib/types/index.d.ts",
+    "exports": {
+        "edge-light": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "workerd": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "browser": {
+            "import": "./lib/esm/index.browser.js",
+            "require": "./lib/cjs/index.browser.js"
+        },
+        "node": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "react-native": "./lib/cjs/index.native.js",
+        "types": "./lib/types/index.d.ts"
+    },
     "browser": {
         "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
         "./lib/esm/index.js": "./lib/esm/index.browser.js"
     },
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js",
-            "types": "./lib/types/index.d.ts"
-        }
-    },
+    "main": "lib/cjs/index.js",
+    "module": "lib/esm/index.js",
+    "react-native": "lib/cjs/index.native.js",
+    "types": "lib/types/index.d.ts",
+    "type": "module",
     "files": [
         "lib",
         "LICENSE"
     ],
+    "sideEffects": false,
     "publishConfig": {
         "access": "public"
     },
@@ -38,7 +50,7 @@
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.0",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.4",
         "@solana/wallet-standard-chains": "^1.1.0",
         "@solana/wallet-standard-features": "^1.2.0",
         "@wallet-standard/base": "^1.0.1",
