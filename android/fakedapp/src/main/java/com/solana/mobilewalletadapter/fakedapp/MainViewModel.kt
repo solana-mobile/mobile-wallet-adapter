@@ -76,37 +76,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 "Sign into Fake dApp to do fake things!"
             )
 
-            val signInResult = doLocalAssociateAndExecute(intentLauncher) { client ->
-                doAuthorize(client, IDENTITY, CHAIN_ID, signInPayload).let { authResult ->
-                    Log.d(TAG, "Authorized: $authResult")
-                    authResult.signInResult ?: run {
-                        Log.i(TAG, "Sign in failed, no sign in result returned from wallet, falling back on sign message")
-                        val publicKey = authResult.accounts.first().publicKey
-                        val signInMessage = signInPayload.prepareMessage(publicKey)
-                        client.signMessagesDetached(
-                            arrayOf(signInMessage.encodeToByteArray()),
-                            arrayOf(publicKey)
-                        ).first().let {
-                            SignInResult(it.addresses.first(), it.message,
-                                it.signatures.first(), "ed25519")
-                        }
-                    }
-                }
-            }
-
-            try {
-                Log.d(TAG, "Verifying signature of $signInResult")
-                val originalMessage = signInPayload.prepareMessage(signInResult.publicKey)
-                OffChainMessageSigningUseCase.verify(
-                    signInResult.signedMessage,
-                    signInResult.signature,
-                    signInResult.publicKey,
-                    originalMessage.encodeToByteArray()
-                )
+            doLocalAssociateAndExecute(intentLauncher) { client ->
+                doSignIn(client, IDENTITY, CHAIN_ID, signInPayload)
+            }.also {
+                Log.d(TAG, "Signed In: $it")
                 showMessage(R.string.msg_request_succeeded)
-            } catch (e: IllegalArgumentException) {
-                Log.e(TAG, "Failed verifying signature on message", e)
-                showMessage(R.string.msg_request_failed)
             }
         } catch (e: MobileWalletAdapterUseCase.LocalAssociationFailedException) {
             Log.e(TAG, "Error associating", e)
@@ -458,13 +432,76 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun doAuthorize(
         client: MobileWalletAdapterUseCase.Client,
         identity: MobileWalletAdapterUseCase.DappIdentity,
-        chain: String?,
-        signInPayload: SignInWithSolana.Payload? = null
+        chain: String?
     ): MobileWalletAdapterClient.AuthorizationResult {
         val result = try {
-            client.authorize(identity, chain, signInPayload,
+            client.authorize(identity, chain, null,
                 uiState.value.accounts?.map { it.publicKey },
                 uiState.value.sessionProtocolVersion!!)
+        } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
+            _uiState.update {
+                it.copy(
+                    authToken = null,
+                    accounts = null,
+                    walletUriBase = null
+                )
+            }
+            throw e
+        }
+
+        _uiState.update {
+            it.copy(
+                authToken = result.authToken,
+                accounts = result.accounts.asList(),
+                selectedAccount = result.accounts.first(),
+                walletUriBase = result.walletUriBase
+            )
+        }
+
+        return result
+    }
+
+    private suspend fun doSignIn(
+        client: MobileWalletAdapterUseCase.Client,
+        identity: MobileWalletAdapterUseCase.DappIdentity,
+        chain: String?,
+        signInPayload: SignInWithSolana.Payload
+    ): MobileWalletAdapterClient.AuthorizationResult {
+        val result = try {
+            val authResult = client.authorize(identity, chain, signInPayload,
+                uiState.value.accounts?.map { it.publicKey },
+                uiState.value.sessionProtocolVersion!!)
+
+            val signInResult = authResult.signInResult ?: run {
+                Log.i(TAG, "Sign in failed, no sign in result returned from wallet, falling back on sign message")
+                val publicKey = authResult.accounts.first().publicKey
+                val signInMessage = signInPayload.prepareMessage(publicKey)
+                client.signMessagesDetached(
+                    arrayOf(signInMessage.encodeToByteArray()),
+                    arrayOf(publicKey)
+                ).first().let {
+                    SignInResult(it.addresses.first(), it.message,
+                        it.signatures.first(), "ed25519")
+                }
+            }
+
+            val expectedMessage = signInPayload.prepareMessage(signInResult.publicKey).encodeToByteArray()
+            if (!expectedMessage.contentEquals(signInResult.signedMessage)) {
+                throw MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException(
+                    "signed message does not match expected SIWS payload",
+                    IllegalArgumentException("signed message does not match expected SIWS payload")
+                )
+            }
+
+            Log.d(TAG, "Verifying signature of $signInResult")
+            OffChainMessageSigningUseCase.verify(
+                signInResult.signedMessage,
+                signInResult.signature,
+                signInResult.publicKey,
+                expectedMessage
+            )
+
+            authResult
         } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
             _uiState.update {
                 it.copy(
