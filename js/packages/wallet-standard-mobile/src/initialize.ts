@@ -8,7 +8,7 @@ import {
 } from "./wallet";
 import { AppIdentity } from "@solana-mobile/mobile-wallet-adapter-protocol";
 import { IdentifierArray } from "@wallet-standard/base";
-import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported } from "./getIsSupported";
+import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported, isWebView } from "./getIsSupported";
 
 export function registerMwa(config: {
     appIdentity: AppIdentity;
@@ -26,7 +26,7 @@ export function registerMwa(config: {
         console.warn(`MWA not registered: secure context required (https)`)
         return
     }
-    if (getIsLocalAssociationSupported()) {
+    if (getIsLocalAssociationSupported() && !isWebView(navigator.userAgent)) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
     } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
         registerWallet(new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }))

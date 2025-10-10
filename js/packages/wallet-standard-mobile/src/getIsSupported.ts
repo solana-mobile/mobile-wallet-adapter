@@ -15,3 +15,9 @@ export function getIsRemoteAssociationSupported() {
         !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     );
 }
+
+export function isWebView(userAgentString: string) {
+    return /(WebView|Version\/.+(Chrome)\/(\d+)\.(\d+)\.(\d+)\.(\d+)|; wv\).+(Chrome)\/(\d+)\.(\d+)\.(\d+)\.(\d+))/i.test(
+        userAgentString
+    );
+}
