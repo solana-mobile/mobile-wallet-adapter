@@ -83,7 +83,7 @@ dependencies {
     implementation 'com.solanamobile:rpc-solana:0.2.10'
     implementation 'com.solanamobile:rpc-ktordriver:0.2.10'
     implementation 'org.bitcoinj:bitcoinj-core:0.17'
-    implementation 'com.squareup.okhttp3:okhttp:5.1.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.2.1'
 
     testImplementation 'junit:junit:4.13.2'
 
