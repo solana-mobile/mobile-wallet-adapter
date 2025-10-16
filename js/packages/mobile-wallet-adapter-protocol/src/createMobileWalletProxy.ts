@@ -1,3 +1,4 @@
+import { fromUint8Array, toUint8Array } from "./base64Utils";
 import { createSIWSMessageBase64 } from "./createSIWSMessage";
 import { 
     AuthorizationResult, 
@@ -9,6 +10,7 @@ import {
     SolanaSignTransactions 
 } from "./types";
 import type { IdentifierArray } from "@wallet-standard/core";
+import { base64ToBase58 } from "./base58Utils";
 
 /**
  * Creates a {@link MobileWallet} proxy that handles backwards compatibility and API to RPC conversion.
@@ -166,17 +168,24 @@ async function signInFallback(
 ) {
     const domain = signInPayload.domain ?? window.location.host;
     const address = (authorizationResult as AuthorizationResult).accounts[0].address;
-    const siwsMessage = createSIWSMessageBase64({ ...signInPayload, domain, address })
+    const siwsMessage = createSIWSMessageBase64({ ...signInPayload, domain, address: base64ToBase58(address) })
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, ''); // convert to base64url encoding
     const signMessageResult = await (protocolRequestHandler('sign_messages', 
         { 
             addresses: [ address ], 
             payloads: [ siwsMessage ]
         }
     ) as ReturnType<MobileWallet['signMessages']>);
+
+    const signedPayload = toUint8Array(signMessageResult.signed_payloads[0]);
+    const signedMessage = fromUint8Array(signedPayload.slice(0, signedPayload.length - 64));
+    const signature = fromUint8Array(signedPayload.slice(signedPayload.length - 64));
     const signInResult: SignInResult = {
         address: address,
-        signed_message: siwsMessage,
-        signature: signMessageResult.signed_payloads[0].slice(siwsMessage.length)
+        signed_message: signedMessage,
+        signature
     };
     return signInResult;
 }
