@@ -6,7 +6,11 @@ package com.solana.mobilewalletadapter.fakewallet
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import com.solana.mobilewalletadapter.fakewallet.databinding.ActivityMainBinding
 import com.solana.mobilewalletadapter.fakewallet.ui.scanqr.ScanQRActivity
 
@@ -18,6 +22,26 @@ class MainActivity : AppCompatActivity() {
 
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        // Handle layout insets to avoid overlapping top and bottom system bars on Android 15+
+        ViewCompat.setOnApplyWindowInsetsListener(viewBinding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            // Apply the insets as a margin to the view. This solution sets
+            // only the bottom, left, and right dimensions, but you can apply whichever
+            // insets are appropriate to your layout. You can also update the view padding
+            // if that's more appropriate.
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = insets.left
+                topMargin = insets.top
+                rightMargin = insets.right
+                bottomMargin = insets.bottom
+            }
+
+            // Return CONSUMED if you don't want the window insets to keep passing
+            // down to descendant views.
+            WindowInsetsCompat.CONSUMED
+        }
 
         viewBinding.buttonStartRemote.setOnClickListener {
             startActivity(Intent(applicationContext, ScanQRActivity::class.java))
