@@ -1,5 +1,5 @@
 import { fromUint8Array, toUint8Array } from "./base64Utils";
-import { createSIWSMessageBase64 } from "./createSIWSMessage";
+import { createSIWSMessageBase64Url } from "./createSIWSMessage";
 import { 
     AuthorizationResult, 
     MobileWallet, 
@@ -168,10 +168,7 @@ async function signInFallback(
 ) {
     const domain = signInPayload.domain ?? window.location.host;
     const address = (authorizationResult as AuthorizationResult).accounts[0].address;
-    const siwsMessage = createSIWSMessageBase64({ ...signInPayload, domain, address: base64ToBase58(address) })
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, ''); // convert to base64url encoding
+    const siwsMessage = createSIWSMessageBase64Url({ ...signInPayload, domain, address: base64ToBase58(address) });
     const signMessageResult = await (protocolRequestHandler('sign_messages', 
         { 
             addresses: [ address ], 
@@ -184,7 +181,10 @@ async function signInFallback(
     const signature = fromUint8Array(signedPayload.slice(signedPayload.length - 64));
     const signInResult: SignInResult = {
         address: address,
-        signed_message: signedMessage,
+        // Workaround: some wallets have been observed to only reply with the message signature.
+        // This is non-compliant with the spec, but in the interest of maximizing compatibility,
+        // detect this case and reuse the original message.
+        signed_message: signedMessage.length == 0 ? siwsMessage : signedMessage,
         signature
     };
     return signInResult;
