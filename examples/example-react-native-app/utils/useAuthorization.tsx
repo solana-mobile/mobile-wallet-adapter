@@ -66,6 +66,7 @@ function getPublicKeyFromAddress(base64Address: Base64EncodedAddress): Address {
 
 export const APP_IDENTITY = {
   name: 'React Native dApp',
+  uri: 'https://solanamobile.com'
 };
 
 export default function useAuthorization() {
