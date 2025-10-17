@@ -15,7 +15,7 @@ export function registerMwa(config: {
     authorizationCache: AuthorizationCache;
     chains: IdentifierArray;
     chainSelector: ChainSelector;
-    remoteHostAuthority?: string;
+    remoteHostAuthority: string;
     onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
 }) {
     if (typeof window === 'undefined') {
@@ -28,8 +28,8 @@ export function registerMwa(config: {
     }
     if (getIsLocalAssociationSupported()) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
-    } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
-        registerWallet(new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }))
+    } else if (getIsRemoteAssociationSupported()) {
+        registerWallet(new RemoteSolanaMobileWalletAdapterWallet(config))
     } else {
         // currently not supported (non-Android mobile device)
     }

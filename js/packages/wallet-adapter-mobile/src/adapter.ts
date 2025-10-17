@@ -457,6 +457,7 @@ export class LocalSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapte
             },
             chains: [chain],
             chainSelector: createDefaultChainSelector(),
+            remoteHostAuthority: 'development.reflector.solanamobile.com',
             onWalletNotFound: async () => {
                 config.onWalletNotFound(this)
             },

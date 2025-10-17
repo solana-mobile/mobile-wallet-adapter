@@ -75,3 +75,22 @@ export async function getRemoteAssociateAndroidIntentURL(
     })
     return url;
 }
+
+export async function getLocalReflectorAssociateAndroidIntentURL(
+    associationPublicKey: CryptoKey,
+    hostAuthority: string,
+    reflectorId: Uint8Array,
+    associationURLBase?: string,
+    protocolVersions: ProtocolVersion[] = ['v1'],
+): Promise<URL> {
+    const exportedKey = await crypto.subtle.exportKey('raw', associationPublicKey);
+    const encodedKey = arrayBufferToBase64String(exportedKey);
+    const url = getIntentURL('v1/associate/local/reflector', associationURLBase);
+    url.searchParams.set('association', getStringWithURLUnsafeBase64CharactersReplaced(encodedKey));
+    url.searchParams.set('reflector', `${hostAuthority}`);
+    url.searchParams.set('id', `${fromUint8Array(reflectorId, true)}`);
+    protocolVersions.forEach( (version) => {
+        url.searchParams.set('v', version);
+    })
+    return url;
+}

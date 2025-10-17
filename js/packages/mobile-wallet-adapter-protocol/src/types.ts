@@ -73,9 +73,11 @@ export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
-export type RemoteWalletAssociationConfig = WalletAssociationConfig & Readonly<{
+export type ReflectorWalletAssociationConfig = WalletAssociationConfig & Readonly<{
     remoteHostAuthority: string;
 }>;
+
+export type RemoteWalletAssociationConfig = ReflectorWalletAssociationConfig;
 
 export interface AuthorizeAPI {
     /**

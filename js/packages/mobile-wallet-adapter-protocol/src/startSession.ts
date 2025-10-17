@@ -1,6 +1,6 @@
 import { AssociationPort, getRandomAssociationPort } from './associationPort.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
-import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL.js';
+import getAssociateAndroidIntentURL, { getLocalReflectorAssociateAndroidIntentURL } from './getAssociateAndroidIntentURL.js';
 
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
 const Browser = {
@@ -95,4 +95,24 @@ export async function startSession(
     );
     await launchAssociation(associationUrl);
     return randomAssociationPort;
+}
+
+export async function startSessionWithReflector(
+    associationPublicKey: CryptoKey,
+    hostAuthority: string,
+    reflectorId: Uint8Array,
+    associationURLBase?: string,
+): Promise<void> {
+    const associationUrl = await getLocalReflectorAssociateAndroidIntentURL(
+        associationPublicKey,
+        hostAuthority,
+        reflectorId,
+        associationURLBase,
+    );
+    await launchAssociation(associationUrl);
+}
+export async function launchReflectorAssociation(
+    associationUrl: URL
+): Promise<void> {
+    await launchAssociation(associationUrl);
 }

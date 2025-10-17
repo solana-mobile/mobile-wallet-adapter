@@ -23,10 +23,12 @@ import {
     type AuthorizationResult,
     AuthToken,
     GetCapabilitiesAPI,
+    launchAssociation,
     MobileWallet,
     SignInPayload,
     type SolanaMobileWalletAdapterError,
     type SolanaMobileWalletAdapterErrorCode,
+    startLocalScenario,
     startRemoteScenario,
     transact,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -47,6 +49,7 @@ import {
 import { icon } from './icon';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
+import LocalConnectionModal from './embedded-modal/localConnectionModal.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI["getCapabilities"]>>;
 
@@ -100,6 +103,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
     #connectionGeneration = 0;
     #chains: IdentifierArray = [];
     #chainSelector: ChainSelector;
+    #hostAuthority: string;
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
 
@@ -163,12 +167,14 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         authorizationCache: AuthorizationCache;
         chains: IdentifierArray;
         chainSelector: ChainSelector;
+        remoteHostAuthority: string;
         onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     }) {
         this.#authorizationCache = config.authorizationCache;
         this.#appIdentity = config.appIdentity;
         this.#chains = config.chains;
         this.#chainSelector = config.chainSelector;
+        this.#hostAuthority = config.remoteHostAuthority;
         this.#onWalletNotFound = config.onWalletNotFound;
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
@@ -363,10 +369,23 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
 
     #transact = async <TReturn>(callback: (wallet: MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorization?.wallet_uri_base;
-        const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
+        const baseConfig = walletUriBase ? { baseUri: walletUriBase } : undefined;
+        const remoteConfig = { ...baseConfig, remoteHostAuthority: this.#hostAuthority };
         const currentConnectionGeneration = this.#connectionGeneration;
+        const modal = new LocalConnectionModal();
         try {
-            return await transact(callback, config);
+            const { associationUrl, close, wallet } = await startLocalScenario(remoteConfig);
+            const removeCloseListener = modal.addEventListener('close', (event: any) => {
+                if (event) close();
+            });
+            modal.initWithAssociationUrl(associationUrl);
+            modal.open();
+            const session = { close, wallet: await wallet };
+            removeCloseListener();
+            modal.close();
+            const result = await callback(session.wallet);
+            session.close();
+            return result;
         } catch (e) {
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.

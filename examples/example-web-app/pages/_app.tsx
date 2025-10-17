@@ -34,7 +34,7 @@ registerMwa({
     authorizationCache: createDefaultAuthorizationCache(),
     chains: ['solana:devnet'],
     chainSelector: createDefaultChainSelector(),
-    remoteHostAuthority: REFLECTOR_HOST_AUTHORITY,
+    remoteHostAuthority: REFLECTOR_HOST_AUTHORITY!,
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
 })
 
