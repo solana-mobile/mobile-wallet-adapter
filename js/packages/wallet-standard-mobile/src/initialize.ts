@@ -26,6 +26,9 @@ export function registerMwa(config: {
         console.warn(`MWA not registered: secure context required (https)`)
         return
     }
+
+    // Local association technically is possible in a webview, but we prevent registration
+    // by default because it usually fails in the most common cases (e.g wallet browsers).
     if (getIsLocalAssociationSupported() && !isWebView(navigator.userAgent)) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
     } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {

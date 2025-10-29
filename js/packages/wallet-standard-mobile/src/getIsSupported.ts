@@ -16,6 +16,8 @@ export function getIsRemoteAssociationSupported() {
     );
 }
 
+// Source: https://github.com/anza-xyz/wallet-adapter/blob/master/packages/core/react/src/getEnvironment.ts#L14
+// This is the same implementation that gated MWA in the Anza wallet-adapter-react library.
 export function isWebView(userAgentString: string) {
     return /(WebView|Version\/.+(Chrome)\/(\d+)\.(\d+)\.(\d+)\.(\d+)|; wv\).+(Chrome)\/(\d+)\.(\d+)\.(\d+)\.(\d+))/i.test(
         userAgentString
