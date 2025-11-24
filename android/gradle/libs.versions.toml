@@ -5,7 +5,7 @@ kotlinAndroidPlugin = "2.2.21"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
-androidxActivityKtx = "1.11.0"
+androidxActivityKtx = "1.12.0"
 androidxAppcompat = "1.7.1"
 androidxConstraintLayout = "2.2.1"
 androidxCoreKtx = "1.17.0"
