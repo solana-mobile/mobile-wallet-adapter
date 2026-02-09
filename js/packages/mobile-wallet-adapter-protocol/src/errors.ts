@@ -9,6 +9,7 @@ export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_WALLET_NOT_FOUND: 'ERROR_WALLET_NOT_FOUND',
     ERROR_INVALID_PROTOCOL_VERSION: 'ERROR_INVALID_PROTOCOL_VERSION',
     ERROR_BROWSER_NOT_SUPPORTED: 'ERROR_BROWSER_NOT_SUPPORTED',
+    ERROR_LOOPBACK_ACCESS_BLOCKED: 'ERROR_LOOPBACK_ACCESS_BLOCKED',
 } as const;
 type SolanaMobileWalletAdapterErrorCodeEnum =
     typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode];
@@ -29,6 +30,7 @@ type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_INVALID_PROTOCOL_VERSION]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_BROWSER_NOT_SUPPORTED]: undefined;
+    [SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED]: undefined;
 };
 
 export class SolanaMobileWalletAdapterError<TErrorCode extends SolanaMobileWalletAdapterErrorCodeEnum> extends Error {

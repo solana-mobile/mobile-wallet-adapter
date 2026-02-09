@@ -16,6 +16,7 @@ import {
     type SolanaSignTransactionFeature,
     type SolanaSignTransactionMethod,
 } from '@solana/wallet-standard-features';
+import LoopbackPermissionModal from './embedded-modal/loopbackPermissionModal.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
     type Account,
@@ -25,8 +26,8 @@ import {
     GetCapabilitiesAPI,
     MobileWallet,
     SignInPayload,
-    type SolanaMobileWalletAdapterError,
-    type SolanaMobileWalletAdapterErrorCode,
+    SolanaMobileWalletAdapterError,
+    SolanaMobileWalletAdapterErrorCode,
     startRemoteScenario,
     transact,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -47,6 +48,8 @@ import {
 import { icon } from './icon';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
+import LocalConnectionModal from './embedded-modal/localConnectionModal.js';
+import LoopbackPermissionBlockedModal from './embedded-modal/loopbackBlockedModal.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI["getCapabilities"]>>;
 
@@ -361,12 +364,139 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#emit('change', { accounts: this.accounts });
     };
 
+    #getLocalNetworkAccessPermission = async () => {
+        console.log(`LNA permission test start`);
+        try {
+            let lnaPermission: PermissionStatus = 
+                await navigator.permissions.query({ name: "loopback-network" as PermissionName});
+
+            lnaPermission.onchange = () => {
+                console.log(`LNA permission changed to: ${lnaPermission.state}`);
+            };
+            if (lnaPermission.state === "granted") {
+                console.log(`LNA permission already granted, continuing`);
+                return 'granted' as PermissionState;
+            } else if (lnaPermission.state === "denied") {
+                console.log(`LNA permission denied, aborting`);
+                return 'denied' as PermissionState;
+            } else if (lnaPermission.state === "prompt") {
+                console.log(`LNA permission is prompt, requesting...`);
+                const modal = new LoopbackPermissionModal();
+                modal.init();
+                modal.open();
+                return 'prompt' as PermissionState;
+            } else {
+                console.log(`LNA permission state is unknown (${lnaPermission.state}), aborting`);
+                throw new Error('Local Network Access permission denied');
+            }
+        } catch (e) {  
+            if (e instanceof TypeError && e.message.includes('local-network-access')) {
+                console.log(`LNA permission API appears to not be supported, continuing`);
+                return 'granted' as PermissionState;
+            }
+            console.warn(`LNA permission test error: ${e}`);
+        }
+        console.log(`LNA permission state is unknown, aborting`);
+        throw new SolanaMobileWalletAdapterError(
+            SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
+            'Local Network Access permission unknown'
+        );
+    }
+
+    #checkLocalNetworkAccessPermission: <TReturn>(onGranted: () => Promise<TReturn>) => Promise<TReturn> = async <TReturn>(onGranted: () => Promise<TReturn>) => {
+        try {
+            let lnaPermission: PermissionStatus = 
+                await navigator.permissions.query({ name: "loopback-network" as PermissionName});
+            if (lnaPermission.state === "granted") {
+                console.log(`LNA permission already granted, continuing`);
+                return await onGranted();
+            } else if (lnaPermission.state === "denied") {
+                console.log(`LNA permission denied, aborting`);
+                const modal = new LoopbackPermissionBlockedModal();
+                modal.init();
+                modal.open();
+                throw new SolanaMobileWalletAdapterError(
+                    SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
+                    'Local Network Access permission denied'
+                );
+            } else if (lnaPermission.state === "prompt") {
+                console.log(`LNA permission is prompt, requesting...`);
+
+                // Show permission explainer to user
+                const modal = new LoopbackPermissionModal();
+                modal.init();
+                modal.open();
+
+                // wait for the permission to change
+                const updatedState = await new Promise(resolve => {
+                    lnaPermission.onchange = () => {
+                        console.log(`LNA permission changed to: ${lnaPermission.state}`);
+                        lnaPermission.onchange = null; // cleanup
+                        resolve(lnaPermission.state);
+                    };
+                });
+
+                if (updatedState === "granted") {
+                    console.log(`LNA permission granted, continuing`);
+                    // User has granted the permission, now we need another click to continue
+                    // Note: this is required to avoid being blocked by the browsers pop-up blocker
+                    const modal = new LocalConnectionModal();
+                    await new Promise(resolve => {
+                        modal.initWithCallback(async () => {
+                            resolve(true);
+                        });
+                        modal.open();
+                    });
+                    return await onGranted();
+                } else {
+                    // recurse, to avoid duplicating above logic
+                    return await this.#checkLocalNetworkAccessPermission(onGranted);
+                }
+            }
+
+            // Shouldn't ever get here
+            console.log(`LNA permission state is unknown (${lnaPermission.state}), aborting`);
+            throw new SolanaMobileWalletAdapterError(
+                SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
+                'Local Network Access permission unknown'
+            );
+        } catch (e) {  
+            if (e instanceof TypeError && 
+                (
+                    e.message.includes('loopback-network') || 
+                    e.message.includes('local-network-access')
+                )
+            ) {
+                console.log(`LNA permission API not found, continuing`);
+                return await onGranted();
+            } 
+
+            throw new SolanaMobileWalletAdapterError(
+                SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
+                e instanceof Error ? e.message : 'Local Network Access permission unknown'
+            );
+        }
+    }
+
     #transact = async <TReturn>(callback: (wallet: MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
         try {
-            return await transact(callback, config);
+            // return await transact(callback, config);
+
+            // const lnaPermissionState = await this.#getLocalNetworkAccessPermission();
+            // if (lnaPermissionState === 'granted') {
+            //     console.log(`LNA permission granted, proceeding with transact`);
+            //     return await transact(callback, config);
+            // } else {
+            //     throw new Error('Local Network Access permission denied');
+            // }
+
+            return await this.#checkLocalNetworkAccessPermission(async () => {
+                console.log(`LNA permission granted, proceeding with transact`);
+                return await transact(callback, config);
+            });
         } catch (e) {
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
