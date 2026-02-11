@@ -106,8 +106,6 @@ export async function checkLocalNetworkAccessPermission<TReturn>(onGranted: () =
 
 // Source: https://web.dev/learn/pwa/detection/
 export function getIsPwaLaunchedAsApp() {
-    // Check for Android TWA
-    const isAndroidTwa = document.referrer.startsWith('android-app://')
 
     // Check for display-mode: standalone, fullscreen, or minimal-ui
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -115,5 +113,5 @@ export function getIsPwaLaunchedAsApp() {
     const isMinimalUI = window.matchMedia('(display-mode: minimal-ui)').matches;
     
     // App mode if any of these conditions are true
-    return isAndroidTwa || isStandalone || isFullscreen || isMinimalUI;
+    return isStandalone || isFullscreen || isMinimalUI;
 }
