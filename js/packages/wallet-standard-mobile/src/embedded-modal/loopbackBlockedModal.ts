@@ -1,3 +1,4 @@
+import { getIsPwaLaunchedAsApp } from "../getIsSupported";
 import EmbeddedModal from "./modal";
 
 export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
@@ -19,6 +20,10 @@ export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
     }
 }
 
+const browserPermissionInstructions = 'Tap the lock or settings icon in the address bar to open site settings';
+const pwaPermissionInstructions = 'Long press the app icon on your home screen to open site settings';
+const permissionInstructionDetail = getIsPwaLaunchedAsApp() ? pwaPermissionInstructions : browserPermissionInstructions;
+
 const ErrorDialogHtml = `
 <div class="mobile-wallet-adapter-embedded-modal-header">
     Local Wallet Connection
@@ -36,7 +41,7 @@ const ErrorDialogHtml = `
     Your wallet connection is blocked
 </div>
 <div id="mobile-wallet-adapter-local-launch-message" class="mobile-wallet-adapter-embedded-modal-subtitle">
-    Visit site settings in the address bar and allow local connections.
+    Visit site settings in the address bar and allow "Apps on Device".
 </div>
 
 <div class="mobile-wallet-adapter-embedded-modal-divider"><hr></div>
@@ -61,7 +66,7 @@ const ErrorDialogHtml = `
         
         <!-- Content to show/hide -->
         <ul class="mobile-wallet-adapter-embedded-modal-details-collapsible-content">
-            <li>Tap the lock or settings icon in the address bar to open site settings</li>
+            <li>${permissionInstructionDetail}</li>
             <li>Allow "Apps on Device"</li>
         </ul>
     </div>
