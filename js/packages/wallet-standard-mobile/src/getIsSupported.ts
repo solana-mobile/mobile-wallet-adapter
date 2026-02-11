@@ -29,6 +29,21 @@ export function isWebView(userAgentString: string) {
     );
 }
 
+// Source: https://web.dev/learn/pwa/detection/
+export function getIsPwaLaunchedAsApp() {
+    // Check for Android TWA
+    const isAndroidTwa = typeof document !== 'undefined' && document.referrer.startsWith('android-app://')
+
+    // Check for display-mode: standalone, fullscreen, or minimal-ui
+    if (typeof window == 'undefined' ) return isAndroidTwa;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
+    const isMinimalUI = window.matchMedia('(display-mode: minimal-ui)').matches;
+    
+    // App mode if any of these conditions are true
+    return isAndroidTwa || isStandalone || isFullscreen || isMinimalUI;
+}
+
 export async function checkLocalNetworkAccessPermission<TReturn>(onGranted: () => Promise<TReturn>): Promise<TReturn> {
     try {
         let lnaPermission: PermissionStatus = 
@@ -102,19 +117,4 @@ export async function checkLocalNetworkAccessPermission<TReturn>(onGranted: () =
             e instanceof Error ? e.message : 'Local Network Access permission unknown'
         );
     }
-}
-
-// Source: https://web.dev/learn/pwa/detection/
-export function getIsPwaLaunchedAsApp() {
-    // Check for Android TWA
-    const isAndroidTwa = typeof document !== 'undefined' && document.referrer.startsWith('android-app://')
-
-    // Check for display-mode: standalone, fullscreen, or minimal-ui
-    if (typeof window == 'undefined' ) return isAndroidTwa;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
-    const isMinimalUI = window.matchMedia('(display-mode: minimal-ui)').matches;
-    
-    // App mode if any of these conditions are true
-    return isAndroidTwa || isStandalone || isFullscreen || isMinimalUI;
 }
