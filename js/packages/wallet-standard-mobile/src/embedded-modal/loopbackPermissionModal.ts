@@ -79,10 +79,7 @@ const css = `
     display: block;
     width: 100%;
     height: 56px;
-    /*margin-top: 40px;*/
     font-size: 1.25em;
-    /*line-height: 24px;*/
-    /*letter-spacing: -1%;*/
     background: #000000;
     color: #FFFFFF;
     border-radius: 18px;
