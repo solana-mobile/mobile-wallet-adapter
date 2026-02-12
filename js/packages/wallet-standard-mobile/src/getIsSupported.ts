@@ -44,15 +44,15 @@ export function getIsPwaLaunchedAsApp() {
     return isAndroidTwa || isStandalone || isFullscreen || isMinimalUI;
 }
 
-export async function checkLocalNetworkAccessPermission<TReturn>(onGranted: () => Promise<TReturn>): Promise<TReturn> {
+export async function checkLocalNetworkAccessPermission(): Promise<void> {
     try {
         let lnaPermission: PermissionStatus = 
             await navigator.permissions.query({ name: "loopback-network" as PermissionName});
         if (lnaPermission.state === "granted") {
-            console.log(`LNA permission already granted, continuing`);
-            return await onGranted();
+            // LNA permission already granted, continuing
+            return;
         } else if (lnaPermission.state === "denied") {
-            console.log(`LNA permission denied, aborting`);
+            // LNA permission denied, aborting
             const modal = new LoopbackPermissionBlockedModal();
             modal.init();
             modal.open();
@@ -61,42 +61,53 @@ export async function checkLocalNetworkAccessPermission<TReturn>(onGranted: () =
                 'Local Network Access permission denied'
             );
         } else if (lnaPermission.state === "prompt") {
-            console.log(`LNA permission is prompt, requesting...`);
-
-            // Show permission explainer to user
+            // Show permission explainer to user, and wait for the permission to change
             const modal = new LoopbackPermissionModal();
-            modal.init();
-            modal.open();
-
-            // wait for the permission to change
-            const updatedState = await new Promise(resolve => {
+            const updatedState = await new Promise((resolve, reject) => {
+                modal.addEventListener('close', (event) => {
+                    if (event) {
+                        reject(new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
+                            'Wallet connection cancelled by user', 
+                            { event }
+                        ));
+                    }
+                });
                 lnaPermission.onchange = () => {
-                    console.log(`LNA permission changed to: ${lnaPermission.state}`);
                     lnaPermission.onchange = null; // cleanup
                     resolve(lnaPermission.state);
                 };
+                modal.init();
+                modal.open();
             });
 
             if (updatedState === "granted") {
-                console.log(`LNA permission granted, continuing`);
                 // User has granted the permission, now we need another click to continue
                 // Note: this is required to avoid being blocked by the browsers pop-up blocker
                 const modal = new LocalConnectionModal();
-                await new Promise(resolve => {
+                await new Promise((resolve, reject) => {
+                    modal.addEventListener('close', (event) => {
+                        if (event) {
+                            reject(new SolanaMobileWalletAdapterError(
+                                SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
+                                'Wallet connection cancelled by user',
+                                { event }
+                            ));
+                        }
+                    });
                     modal.initWithCallback(async () => {
                         resolve(true);
                     });
                     modal.open();
                 });
-                return await onGranted();
+                return;
             } else {
                 // recurse, to avoid duplicating above logic
-                return await checkLocalNetworkAccessPermission(onGranted);
+                return await checkLocalNetworkAccessPermission();
             }
         }
 
         // Shouldn't ever get here
-        console.log(`LNA permission state is unknown (${lnaPermission.state}), aborting`);
         throw new SolanaMobileWalletAdapterError(
             SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
             'Local Network Access permission unknown'
@@ -108,8 +119,8 @@ export async function checkLocalNetworkAccessPermission<TReturn>(onGranted: () =
                 e.message.includes('local-network-access')
             )
         ) {
-            console.log(`LNA permission API not found, continuing`);
-            return await onGranted();
+            // LNA permission API not found, continuing
+            return;
         } 
 
         throw new SolanaMobileWalletAdapterError(

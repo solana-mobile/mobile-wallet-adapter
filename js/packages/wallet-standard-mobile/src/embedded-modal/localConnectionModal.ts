@@ -11,7 +11,7 @@ export default class LocalConnectionModal extends EmbeddedModal {
 
     #prepareLaunchAction(callback: () => Promise<void>) {
         const launchButton = this.dom?.getElementById("mobile-wallet-adapter-launch-action");
-        const listener = async (event?: any) => {
+        const listener = async () => {
             launchButton?.removeEventListener('click', listener);
             this.close();
             callback();

@@ -10,6 +10,7 @@ export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_INVALID_PROTOCOL_VERSION: 'ERROR_INVALID_PROTOCOL_VERSION',
     ERROR_BROWSER_NOT_SUPPORTED: 'ERROR_BROWSER_NOT_SUPPORTED',
     ERROR_LOOPBACK_ACCESS_BLOCKED: 'ERROR_LOOPBACK_ACCESS_BLOCKED',
+    ERROR_ASSOCIATION_CANCELLED: 'ERROR_ASSOCIATION_CANCELLED',
 } as const;
 type SolanaMobileWalletAdapterErrorCodeEnum =
     typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode];
@@ -31,6 +32,9 @@ type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_INVALID_PROTOCOL_VERSION]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_BROWSER_NOT_SUPPORTED]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED]: undefined;
+    [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED]: { 
+        event: Event | undefined
+    };
 };
 
 export class SolanaMobileWalletAdapterError<TErrorCode extends SolanaMobileWalletAdapterErrorCodeEnum> extends Error {

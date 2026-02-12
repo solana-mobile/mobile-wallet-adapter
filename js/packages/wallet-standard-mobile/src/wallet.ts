@@ -16,7 +16,6 @@ import {
     type SolanaSignTransactionFeature,
     type SolanaSignTransactionMethod,
 } from '@solana/wallet-standard-features';
-import LoopbackPermissionModal from './embedded-modal/loopbackPermissionModal.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
     type Account,
@@ -48,8 +47,6 @@ import {
 import { icon } from './icon';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
-import LocalConnectionModal from './embedded-modal/localConnectionModal.js';
-import LoopbackPermissionBlockedModal from './embedded-modal/loopbackBlockedModal.js';
 import { checkLocalNetworkAccessPermission } from './getIsSupported.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI["getCapabilities"]>>;
@@ -74,6 +71,7 @@ export const SolanaMobileWalletAdapterRemoteWalletName = 'Remote Mobile Wallet A
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 const DEFAULT_FEATURES = [SolanaSignAndSendTransaction, SolanaSignTransaction, SolanaSignMessage, SolanaSignIn] as const;
+const WALLET_ASSOCIATION_TIMEOUT = 30_000;
 
 export interface SolanaMobileWalletAdapterWallet extends Wallet {
     url: string
@@ -365,54 +363,33 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         this.#emit('change', { accounts: this.accounts });
     };
 
-    #getLocalNetworkAccessPermission = async () => {
-        console.log(`LNA permission test start`);
-        try {
-            let lnaPermission: PermissionStatus = 
-                await navigator.permissions.query({ name: "loopback-network" as PermissionName});
-
-            lnaPermission.onchange = () => {
-                console.log(`LNA permission changed to: ${lnaPermission.state}`);
-            };
-            if (lnaPermission.state === "granted") {
-                console.log(`LNA permission already granted, continuing`);
-                return 'granted' as PermissionState;
-            } else if (lnaPermission.state === "denied") {
-                console.log(`LNA permission denied, aborting`);
-                return 'denied' as PermissionState;
-            } else if (lnaPermission.state === "prompt") {
-                console.log(`LNA permission is prompt, requesting...`);
-                const modal = new LoopbackPermissionModal();
-                modal.init();
-                modal.open();
-                return 'prompt' as PermissionState;
-            } else {
-                console.log(`LNA permission state is unknown (${lnaPermission.state}), aborting`);
-                throw new Error('Local Network Access permission denied');
-            }
-        } catch (e) {  
-            if (e instanceof TypeError && e.message.includes('local-network-access')) {
-                console.log(`LNA permission API appears to not be supported, continuing`);
-                return 'granted' as PermissionState;
-            }
-            console.warn(`LNA permission test error: ${e}`);
-        }
-        console.log(`LNA permission state is unknown, aborting`);
-        throw new SolanaMobileWalletAdapterError(
-            SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
-            'Local Network Access permission unknown'
-        );
-    }
-
     #transact = async <TReturn>(callback: (wallet: MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
         try {
-            return await checkLocalNetworkAccessPermission(async () => {
-                console.log(`LNA permission granted, proceeding with transact`);
-                return await transact(callback, config);
-            });
+            // check that we have permissions for local app connections, then run 
+            // wallet association (transact). In case the user manually cancels 
+            // the wallet association, cancel the connection after a timeout.
+            let associating = true;
+            return await Promise.race([
+                checkLocalNetworkAccessPermission()
+                    .then(() => transact((wallet) => {
+                        associating = false;
+                        return callback(wallet);
+                    }, config)),
+                new Promise((_, reject) => {
+                    setTimeout(() => {
+                        if (associating) { // only timeout during association
+                            reject(new SolanaMobileWalletAdapterError(
+                                SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
+                                'Wallet connection timed out',
+                                { event: undefined }
+                            ))
+                        }
+                    }, WALLET_ASSOCIATION_TIMEOUT);
+                }) as Promise<TReturn>
+            ]);
         } catch (e) {
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
