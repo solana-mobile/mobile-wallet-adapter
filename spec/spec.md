@@ -180,7 +180,11 @@ A version query parameter is used in the association uris below to allow dapp en
 
 ### Local URI
 
-When running on Android or iOS, the dapp endpoint should first attempt to associate with a local wallet endpoint by opening a URI (either from within the browser for a web dapp, or directly from a native dapp) with the `solana-wallet:` scheme. The URI should be formatted as:
+When running on Android or iOS, the dapp endpoint should first attempt to associate with a local wallet endpoint by opening a URI (either from within the browser for a web dapp, or directly from a native dapp) with the `solana-wallet:` scheme. 
+
+#### Native Dapps
+
+When associateing with a local wallet endpoint from a native dapp, the URI should be formatted as:
 
 ```
 solana-wallet:/v1/associate/local?association=<association_token>&port=<port_number>&v=<version>
@@ -196,15 +200,46 @@ Once the URI is opened, the dapp endpoint should attempt to connect to the local
 
 If the WebSocket transport is unavailable locally after no less than 30 seconds, the dapp endpoint should display user guidance (e.g. download a wallet) and optionally present the opportunity to connect to a remote wallet endpoint using one or more of the other association mechanisms.
 
-#### Android
+##### Android
 
 If a wallet endpoint is installed which has registered an Activity for this URI scheme and format, it will be launched. Upon launch via this URI, the wallet endpoint should start a WebSocket server on port `port_number` and begin listening for connections to `/solana-wallet` for no less than 10 seconds. This websocket server should only accept connections from the localhost.
 
 Whether launched from a web browser or a native dapp endpoint, the Intent’s action will be [`android.intent.action.VIEW`](https://developer.android.com/reference/android/content/Intent#ACTION_VIEW) and the category will be [`android.intent.category.BROWSABLE`](https://developer.android.com/reference/android/content/Intent#CATEGORY_BROWSABLE). When launched by a web browser, no caller identity will be available, and as such, the referrer details available within the Intent cannot be used to verify the origin of the association. When launched by a native dapp endpoint, this Intent should be sent with [`startActivityForResult`](https://developer.android.com/reference/android/app/Activity#startActivityForResult(android.content.Intent,%20int)), allowing the wallet endpoint to query the caller identity. The result returned to the calling dapp endpoint is not specified.
 
-#### iOS
+##### iOS
 
-_iOS support is planned for a future version of this specification_
+_Due to technical constraints unique to the iOS operating system, iOS is not supported by this specification. Support may be added for iOS native apps in a future version of this specification_
+
+#### Web Dapps
+
+When associateing with a local wallet endpoint from a web dapp running in a mobile browser, the URI should be formatted as:
+
+```
+solana-wallet:/v1/associate/local/reflector?association=<association_token>&reflector=<host_authority>&id=<reflector_unique_id>&v=<version>
+```
+
+where:
+
+- `association_token` is as described above
+- `host_authority` is the address of a publicly routable WebSocket server implementing the reflector protocol
+- `reflector_unique_id` is the base64url encoded [reflector ID](#reflector_id) byte sequence generated securely at random by the reflector server
+- `version` is the major version of the protocol that the client supports. This value can be repeated to specify multiple major versions supported by the client. The wallet endpoint should select the highest version from this set that it supports. 
+
+The dapp endpoint should attempt to connect to the WebSocket address `wss://<host_authority>/reflect`. On connection, the dapp endpoint must wait for the server to respond with a [`REFLECTOR_ID`](#reflector_id) message before proceeding to association. 
+
+Once the dapp has recieved the unique reflector ID, the association URI should be provided to the wallet endpoint through an out-of-band mechanism, detailed in the subsections below. The wallet endpoint should attempt to connect to the WebSocket address `wss://<host_authority>/reflect?id=<reflector_unique_id>`. On connection, each endpoint should wait for the [Reflector protocol](#reflector-protocol) to signal that the counterparty endpoint has connected.
+
+The dapp endpoint must wait no less than 30 seconds for reflection to commence. The wallet endpoint must wait no less than 10 seconds for reflection to commence. If it does not commence, the endpoints will disconnect and present appropriate error messages to the user.
+
+##### Android
+
+If a wallet endpoint is installed which has registered an Activity for this URI scheme and format, it will be launched. Upon launch via this URI, the wallet endpoint should start a WebSocket server on port `port_number` and begin listening for connections to `/solana-wallet` for no less than 10 seconds. This websocket server should only accept connections from the localhost.
+
+Whether launched from a web browser or a native dapp endpoint, the Intent’s action will be [`android.intent.action.VIEW`](https://developer.android.com/reference/android/content/Intent#ACTION_VIEW) and the category will be [`android.intent.category.BROWSABLE`](https://developer.android.com/reference/android/content/Intent#CATEGORY_BROWSABLE). When launched by a web browser, no caller identity will be available, and as such, the referrer details available within the Intent cannot be used to verify the origin of the association. When launched by a native dapp endpoint, this Intent should be sent with [`startActivityForResult`](https://developer.android.com/reference/android/app/Activity#startActivityForResult(android.content.Intent,%20int)), allowing the wallet endpoint to query the caller identity. The result returned to the calling dapp endpoint is not specified.
+
+##### iOS
+
+_Due to technical constraints unique to the iOS operating system, iOS is not supported by this specification. Support may be added for iOS web apps running in Safari in a future version of this specification_
 
 #### Desktop
 
