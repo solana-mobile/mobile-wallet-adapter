@@ -301,7 +301,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
     ) => {
         // TODO: investigate why using SolanaSignTransactions constant breaks treeshaking
-        const supportsSignTransaction = capabilities.features.includes('solana:signTransactions');//SolanaSignTransactions);
+        const supportsSignTransaction = capabilities.features.includes('solana:signTransaction') || capabilities.features.includes('solana:signTransactions');//SolanaSignTransactions);
         const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions;
         const didCapabilitiesChange = 
             SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
@@ -751,7 +751,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         capabilities: Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>
     ) => {
         // TODO: investigate why using SolanaSignTransactions constant breaks treeshaking
-        const supportsSignTransaction = capabilities.features.includes('solana:signTransactions');//SolanaSignTransactions);
+        const supportsSignTransaction = capabilities.features.includes('solana:signTransaction');//SolanaSignTransactions);
         const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions || 
             capabilities.features.includes('solana:signAndSendTransaction');
         const didCapabilitiesChange = 
