@@ -85,6 +85,10 @@ public abstract class AssociationUri {
         } catch (IllegalArgumentException ignored) {}
 
         try {
+            return new LocalReflectorAssociationUri(uri);
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
             return new RemoteAssociationUri(uri);
         } catch (IllegalArgumentException ignored) {}
 
