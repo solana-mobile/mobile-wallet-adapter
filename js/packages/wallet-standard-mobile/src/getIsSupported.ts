@@ -112,7 +112,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
             SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
             'Local Network Access permission unknown'
         );
-    } catch (e) {  
+    } catch (e) {
         if (e instanceof TypeError && 
             (
                 e.message.includes('loopback-network') || 
@@ -121,8 +121,14 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
         ) {
             // LNA permission API not found, continuing
             return;
-        } 
+        }
+        
+        // Re-throw existing adapter errors as-is
+        if (e instanceof SolanaMobileWalletAdapterError) {
+            throw e; 
+        }
 
+        // An unknown error occurred, wrap it
         throw new SolanaMobileWalletAdapterError(
             SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
             e instanceof Error ? e.message : 'Local Network Access permission unknown'

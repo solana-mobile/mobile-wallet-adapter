@@ -372,14 +372,15 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
             // wallet association (transact). In case the user manually cancels 
             // the wallet association, cancel the connection after a timeout.
             let associating = true;
-            return await Promise.race([
+            let timeout = undefined;
+            const result = await Promise.race([
                 checkLocalNetworkAccessPermission()
                     .then(() => transact((wallet) => {
                         associating = false;
                         return callback(wallet);
                     }, config)),
                 new Promise((_, reject) => {
-                    setTimeout(() => {
+                    timeout = setTimeout(() => {
                         if (associating) { // only timeout during association
                             reject(new SolanaMobileWalletAdapterError(
                                 SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
@@ -390,6 +391,8 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
                     }, WALLET_ASSOCIATION_TIMEOUT);
                 }) as Promise<TReturn>
             ]);
+            clearTimeout(timeout);
+            return result;
         } catch (e) {
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
