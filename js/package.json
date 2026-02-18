@@ -23,7 +23,7 @@
         "rollup-plugin-node-externals": "^8.0.0",
         "rollup-plugin-ts": "^3.4.5",
         "shx": "^0.3.4",
-        "turbo": "^2.8.6",
+        "turbo": "^2.8.10",
         "typescript": "~5.6.3",
         "typescript-esm": "^2.0.0"
     },
