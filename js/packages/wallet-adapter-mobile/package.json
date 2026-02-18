@@ -68,7 +68,7 @@
     "devDependencies": {
         "@solana/web3.js": "^1.95.3",
         "agadoo": "^3.0.0",
-        "cross-env": "^7.0.3",
-        "shx": "^0.3.4"
+        "cross-env": "^10.1.0",
+        "shx": "^0.4.0"
     }
 }

@@ -38,9 +38,9 @@
     "devDependencies": {
         "@solana/web3.js": "^1.91.7",
         "@types/react-native": "^0.69.3",
-        "@wallet-standard/core": "^1.0.3",
-        "cross-env": "^7.0.3",
-        "shx": "^0.3.4"
+        "@wallet-standard/core": "^1.1.1",
+        "cross-env": "^10.1.0",
+        "shx": "^0.4.0"
     },
     "peerDependencies": {
         "react-native": ">0.69"
