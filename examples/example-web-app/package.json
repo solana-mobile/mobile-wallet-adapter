@@ -11,7 +11,7 @@
         "start": "next start",
         "lint": "next lint",
         "tunnel:start": "ngrok http 3000",
-        "preinstall": "(cd ../../js/ && pnpm && pnpm build)",
+        "preinstall": "(cd ../../js/ && pnpm install && pnpm build)",
         "postinstall": "patch-package"
     },
     "dependencies": {
