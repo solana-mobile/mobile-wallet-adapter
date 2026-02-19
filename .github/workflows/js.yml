@@ -17,12 +17,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-      
-      - name: Install pnpm
-        working-directory: 'js/'
-        uses: pnpm/action-setup@v4
-        with:
-          cache: true
 
       - name: set up Node
         uses: actions/setup-node@v5
@@ -30,6 +24,11 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: 'js/pnpm-lock.yaml'
+      
+      - name: Enable Corepack and prepare package manager
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.30.0 --activate
 
       - name: '[js] Install dependencies'
         working-directory: 'js/'
