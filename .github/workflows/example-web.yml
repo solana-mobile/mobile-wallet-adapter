@@ -19,14 +19,16 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: yarn
           cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
       
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Enable Corepack and prepare package managers
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.30.0 --activate
       
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
