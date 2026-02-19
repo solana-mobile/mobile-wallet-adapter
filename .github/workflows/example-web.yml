@@ -25,6 +25,9 @@ jobs:
           cache: yarn
           cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
       
+      - name: Enable Corepack
+        run: corepack enable
+      
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
         run: yarn install --frozen-lockfile
