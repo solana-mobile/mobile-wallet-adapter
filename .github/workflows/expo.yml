@@ -23,8 +23,8 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: 'js/yarn.lock'
+          cache: pnpm
+          cache-dependency-path: 'js/pnpm-lock.yaml'
 
       - name: set up JDK 17
         uses: actions/setup-java@v5
@@ -38,8 +38,8 @@ jobs:
       - name: 'Build Project'
         working-directory: 'js/'
         run: |
-          yarn install --frozen-lockfile
-          yarn build
+          pnpm install --frozen-lockfile
+          pnpm build
 
       - name: 'Setup Expo App'
         working-directory: 'js/'
