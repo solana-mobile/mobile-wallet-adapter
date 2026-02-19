@@ -1,5 +1,5 @@
 import type { TransactionVersion } from '@solana/web3.js';
-import type { SolanaSignInInput } from "@solana/wallet-standard";
+import type { SolanaSignInInput } from "@solana/wallet-standard-features";
 import type { IdentifierArray, IdentifierString, WalletAccount, WalletIcon } from '@wallet-standard/core';
 
 export type Account = Readonly<{

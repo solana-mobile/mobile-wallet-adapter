@@ -50,16 +50,16 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
         "@solana/codecs-strings": "^4.0.0",
-        "@solana/wallet-standard": "^1.1.2",
-        "@solana/wallet-standard-util": "^1.1.1",
-        "@wallet-standard/core": "^1.0.3",
+        "@solana/wallet-standard-features": "^1.3.0",
+        "@solana/wallet-standard-util": "^1.1.2",
+        "@wallet-standard/core": "^1.1.1",
         "js-base64": "^3.7.5"
     },
     "devDependencies": {

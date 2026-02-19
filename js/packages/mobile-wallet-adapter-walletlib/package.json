@@ -29,16 +29,18 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
-        "example": "yarn --cwd example",
-        "bootstrap": "yarn example && yarn install && yarn example pods"
+        "example": "pnpm --cwd example",
+        "bootstrap": "pnpm example && pnpm install && pnpm example pods"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.91.7",
+        "@types/react": "^19.2.0",
         "@types/react-native": "^0.69.3",
         "@wallet-standard/core": "^1.1.1",
+        "react": "^19.2.3",
         "cross-env": "^10.1.0",
         "shx": "^0.4.0"
     },

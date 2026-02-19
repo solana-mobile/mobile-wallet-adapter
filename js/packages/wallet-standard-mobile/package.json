@@ -44,8 +44,8 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
@@ -55,9 +55,14 @@
         "@solana/wallet-standard-features": "^1.2.0",
         "@wallet-standard/base": "^1.0.1",
         "@wallet-standard/features": "^1.0.3",
-        "bs58": "^5.0.0",
+        "@wallet-standard/wallet": "^1.1.0",
+        "bs58": "^6.0.0",
         "js-base64": "^3.7.5",
-        "qrcode": "^1.5.4"
+        "qrcode": "^1.5.4",
+        "tslib": "^2.8.1"
+    },
+    "optionalDependencies": {
+        "@react-native-async-storage/async-storage": "^1.17.7"
     },
     "devDependencies": {
         "@types/qrcode": "^1.5.5",
