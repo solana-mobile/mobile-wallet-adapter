@@ -26,9 +26,9 @@ jobs:
       
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
-        working-directory: 'js/'
         with:
           cache: true
+          package_json_file: 'js/package.json'
 
       - name: set up JDK 17
         uses: actions/setup-java@v5

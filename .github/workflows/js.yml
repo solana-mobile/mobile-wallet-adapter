@@ -25,9 +25,9 @@ jobs:
       
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
-        working-directory: 'js/'
         with:
           cache: true
+          package_json_file: 'js/package.json'
 
       - name: '[js] Install dependencies'
         working-directory: 'js/'
