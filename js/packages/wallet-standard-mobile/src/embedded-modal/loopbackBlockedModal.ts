@@ -48,7 +48,7 @@ const ErrorDialogHtml = `
 <div class="mobile-wallet-adapter-embedded-modal-footer">
     <div class="mobile-wallet-adapter-embedded-modal-details">
         <!-- Clickable header (label associated with the checkbox) -->
-      	<label for"collapsible-1" class="mobile-wallet-adapter-embedded-modal-details-collapsible-header">
+      	<label for="collapsible-1" class="mobile-wallet-adapter-embedded-modal-details-collapsible-header">
             <!-- Hidden checkbox to track state -->
             <input type="checkbox" id="collapsible-1" class="mobile-wallet-adapter-embedded-modal-details-collapsible-input">
             <span class="mobile-wallet-adapter-embedded-modal-details-collapsible-header-label">
