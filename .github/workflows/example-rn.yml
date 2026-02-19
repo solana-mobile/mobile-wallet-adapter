@@ -17,6 +17,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          cache: true
 
       - name: set up Node
         uses: actions/setup-node@v5
@@ -34,16 +39,16 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v5
 
-      - name: '[js] Install yarn dependencies'
+      - name: '[js] Install dependencies'
         working-directory: 'js/'
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: '[js] Lint'
         working-directory: 'js/'
-        run: yarn lint
+        run: pnpm lint
         continue-on-error: true # TODO: fix all lint issues and remove this line
       - name: '[js] Build'
         working-directory: 'js/'
-        run: yarn build
+        run: pnpm build
 
       - name: '[Example App] Install yarn dependencies'
         working-directory: 'examples/example-react-native-app/'
