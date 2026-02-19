@@ -25,10 +25,12 @@ jobs:
           cache: yarn
           cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
       
-      - name: Enable Corepack and prepare package managers
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.30.0 --activate
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          cache: true
+          cache_dependency_path: 'js/pnpm-lock.yaml'
+          package_json_file: 'js/package.json'
 
       - name: 'Build Project'
         working-directory: 'js/'
@@ -38,7 +40,7 @@ jobs:
       
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
-        run: yarn install --frozen-lockfile
+        run: yarn install
       - name: '[Example Web App] Type Check'
         working-directory: 'examples/example-web-app/'
         run: npx tsc --noEmit

@@ -29,6 +29,7 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           cache: true
+          cache_dependency_path: 'js/pnpm-lock.yaml'
           package_json_file: 'js/package.json'
 
       - name: set up JDK 17
@@ -48,7 +49,7 @@ jobs:
 
       - name: '[Example App] Install yarn dependencies'
         working-directory: 'examples/example-react-native-app/'
-        run: yarn install --frozen-lockfile
+        run: yarn install
       - name: '[Example App] Type Check'
         working-directory: 'examples/example-react-native-app/'
         run: npx tsc --noEmit
