@@ -40,16 +40,11 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v5
 
-      - name: '[js] Install dependencies'
+      - name: 'Build Project'
         working-directory: 'js/'
-        run: pnpm install --frozen-lockfile
-      - name: '[js] Lint'
-        working-directory: 'js/'
-        run: pnpm lint
-        continue-on-error: true # TODO: fix all lint issues and remove this line
-      - name: '[js] Build'
-        working-directory: 'js/'
-        run: pnpm build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
 
       - name: '[Example App] Install yarn dependencies'
         working-directory: 'examples/example-react-native-app/'

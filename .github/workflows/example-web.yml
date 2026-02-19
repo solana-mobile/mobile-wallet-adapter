@@ -29,6 +29,12 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@10.30.0 --activate
+
+      - name: 'Build Project'
+        working-directory: 'js/'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
       
       - name: '[Example Web App] Install yarn dependencies'
         working-directory: 'examples/example-web-app/'
