@@ -27,6 +27,8 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           cache: true
+          cache_dependency_path: 'examples/example-web-app/pnpm-lock.yaml'
+          package_json_file: 'examples/example-web-app/package.json'
 
       - name: 'Build Project'
         working-directory: 'js/'
