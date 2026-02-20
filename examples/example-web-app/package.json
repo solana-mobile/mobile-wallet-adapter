@@ -4,6 +4,7 @@
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
     "private": true,
+    "packageManager": "pnpm@10.30.0",
     "scripts": {
         "clean": "shx rm -rf .next out",
         "dev": "NODE_OPTIONS='--inspect' next dev --port 3002",
