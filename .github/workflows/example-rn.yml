@@ -22,14 +22,12 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: 'examples/example-react-native-*/yarn.lock' # note - this only caches for examples/, not js/
       
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
           cache: true
-          cache_dependency_path: 'js/pnpm-lock.yaml'
+          cache_dependency_path: 'examples/example-react-native-*/pnpm-lock.yaml'
           package_json_file: 'js/package.json'
 
       - name: set up JDK 17
@@ -41,31 +39,23 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v5
 
-      - name: '[Example App] Install yarn dependencies'
+      - name: '[Example App] Install dependencies'
         working-directory: 'examples/example-react-native-app/'
-        run: yarn install
+        run: pnpm install --frozen-lockfile
       - name: '[Example App] Type Check'
         working-directory: 'examples/example-react-native-app/'
         run: npx tsc --noEmit
-      - name: '[Example App] Lint'
-        working-directory: 'examples/example-react-native-app/'
-        run: yarn lint
-        continue-on-error: true # TODO: fix all lint issues and remove this line
       - name: '[Example App] Build'
         working-directory: 'examples/example-react-native-app/'
-        run: yarn android:build
+        run: pnpm android:build
 
-      - name: '[Example Wallet] Install yarn dependencies'
+      - name: '[Example Wallet] Install dependencies'
         working-directory: 'examples/example-react-native-wallet/'
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: '[Example Wallet] Type Check'
         working-directory: 'examples/example-react-native-wallet/'
         run: npx tsc --noEmit
         continue-on-error: true # TODO: fix all type issues and remove this line
-      - name: '[Example Wallet] Lint'
-        working-directory: 'examples/example-react-native-wallet/'
-        run: yarn lint
-        continue-on-error: true # TODO: fix all lint issues and remove this line
       - name: '[Example Wallet] Build'
         working-directory: 'examples/example-react-native-wallet/'
-        run: yarn android:build
+        run: pnpm android:build

@@ -7,12 +7,14 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preinstall": "rm -rf node_modules/ && (cd ../../js/ && yarn install && yarn build)"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/addresses": "^6.1.0",
+    "@solana/transactions": "^6.1.0",
+    "@solana/transaction-confirmation": "^6.1.0",
     "@solana-mobile/mobile-wallet-adapter-protocol": "file:../../js/packages/mobile-wallet-adapter-protocol",
     "@solana-mobile/mobile-wallet-adapter-protocol-kit": "file:../../js/packages/mobile-wallet-adapter-protocol-kit",
     "@solana-program/memo": "^0.7.0",
@@ -39,7 +41,9 @@
     "@react-native-community/cli-platform-android": "18.0.0",
     "@react-native-community/cli-platform-ios": "18.0.0",
     "@react-native/babel-preset": "0.79.2",
+    "@react-native/codegen": "0.79.2",
     "@react-native/eslint-config": "0.79.2",
+    "@react-native/gradle-plugin": "0.79.2",
     "@react-native/metro-config": "0.79.2",
     "@react-native/typescript-config": "0.79.2",
     "@types/jest": "^29.5.13",
