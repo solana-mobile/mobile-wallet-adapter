@@ -19,22 +19,33 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
       
-      - name: '[Example Web App] Install yarn dependencies'
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          cache: true
+          cache_dependency_path: 'examples/example-web-app/pnpm-lock.yaml'
+          package_json_file: 'examples/example-web-app/package.json'
+
+      - name: 'Build Project'
+        working-directory: 'js/'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+      
+      - name: '[Example Web App] Install dependencies'
         working-directory: 'examples/example-web-app/'
-        run: yarn install --frozen-lockfile
+        run: pnpm install
       - name: '[Example Web App] Type Check'
         working-directory: 'examples/example-web-app/'
         run: npx tsc --noEmit
         continue-on-error: true # TODO: fix all lint issues and remove this line
       - name: '[Example Web App] Build'
         working-directory: 'examples/example-web-app/'
-        run: yarn build
+        run: pnpm build
 
       - uses: actions/upload-artifact@v4
         with:
