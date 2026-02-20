@@ -39,6 +39,12 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v5
 
+      - name: 'Build Project'
+        working-directory: 'js/'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
       - name: '[Example App] Install dependencies'
         working-directory: 'examples/example-react-native-app/'
         run: pnpm install --frozen-lockfile
