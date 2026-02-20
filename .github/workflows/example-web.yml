@@ -22,8 +22,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: 'examples/example-web-app/yarn.lock' # note - this only caches for examples/, not js/
       
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
