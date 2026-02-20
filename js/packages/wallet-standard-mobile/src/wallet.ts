@@ -25,8 +25,8 @@ import {
     GetCapabilitiesAPI,
     MobileWallet,
     SignInPayload,
-    type SolanaMobileWalletAdapterError,
-    type SolanaMobileWalletAdapterErrorCode,
+    SolanaMobileWalletAdapterError,
+    SolanaMobileWalletAdapterErrorCode,
     startRemoteScenario,
     transact,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -47,6 +47,7 @@ import {
 import { icon } from './icon';
 import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
+import { checkLocalNetworkAccessPermission } from './getIsSupported.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI["getCapabilities"]>>;
 
@@ -70,6 +71,7 @@ export const SolanaMobileWalletAdapterRemoteWalletName = 'Remote Mobile Wallet A
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 const DEFAULT_FEATURES = [SolanaSignAndSendTransaction, SolanaSignTransaction, SolanaSignMessage, SolanaSignIn] as const;
+const WALLET_ASSOCIATION_TIMEOUT = 30_000;
 
 export interface SolanaMobileWalletAdapterWallet extends Wallet {
     url: string
@@ -366,7 +368,31 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
         try {
-            return await transact(callback, config);
+            // check that we have permissions for local app connections, then run 
+            // wallet association (transact). In case the user manually cancels 
+            // the wallet association, cancel the connection after a timeout.
+            let associating = true;
+            let timeout = undefined;
+            const result = await Promise.race([
+                checkLocalNetworkAccessPermission()
+                    .then(() => transact((wallet) => {
+                        associating = false;
+                        return callback(wallet);
+                    }, config)),
+                new Promise((_, reject) => {
+                    timeout = setTimeout(() => {
+                        if (associating) { // only timeout during association
+                            reject(new SolanaMobileWalletAdapterError(
+                                SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
+                                'Wallet connection timed out',
+                                { event: undefined }
+                            ))
+                        }
+                    }, WALLET_ASSOCIATION_TIMEOUT);
+                }) as Promise<TReturn>
+            ]);
+            clearTimeout(timeout);
+            return result;
         } catch (e) {
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
