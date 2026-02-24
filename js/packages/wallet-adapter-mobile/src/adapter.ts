@@ -129,8 +129,8 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         super();
         // this.#chain = chainOrClusterToChainId(config.chain);
         this.#accountSelector = async (accounts: readonly WalletAccount[]) => {
-            const selectedBase64EncodedAddress = await config.addressSelector.select(accounts.map(({ publicKey }) => fromUint8Array(publicKey)));
-            return accounts.find(({ publicKey }) => fromUint8Array(publicKey) === selectedBase64EncodedAddress) ?? accounts[0];
+            const selectedBase64EncodedAddress = await config.addressSelector.select(accounts.map(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey))));
+            return accounts.find(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey)) === selectedBase64EncodedAddress) ?? accounts[0];
         };
         this.#wallet = wallet
         this.#wallet.features[StandardEvents].on('change', this.#handleChangeEvent);

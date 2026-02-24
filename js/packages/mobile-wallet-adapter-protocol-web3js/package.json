@@ -47,8 +47,8 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
@@ -57,13 +57,13 @@
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
-        "bs58": "^5.0.0",
+        "bs58": "^6.0.0",
         "js-base64": "^3.7.5"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.91.7",
         "agadoo": "^3.0.0",
-        "cross-env": "^7.0.3",
-        "shx": "^0.3.4"
+        "cross-env": "^10.1.0",
+        "shx": "^0.4.0"
     }
 }

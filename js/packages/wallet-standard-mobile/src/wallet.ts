@@ -472,7 +472,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
 
     #signMessage: SolanaSignMessageMethod = async (...inputs) => {
         const { authToken, chain } = this.#assertIsAuthorized();
-        const addresses = inputs.map(({ account }) => fromUint8Array(account.publicKey))
+        const addresses = inputs.map(({ account }) => fromUint8Array(new Uint8Array(account.publicKey)));
         const messages = inputs.map(({ message }) => fromUint8Array(message));
         try {
             return await this.#transact(async (wallet) => {
@@ -937,7 +937,7 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
 
     #signMessage: SolanaSignMessageMethod = async (...inputs) => {
         const { authToken, chain } = this.#assertIsAuthorized();
-        const addresses = inputs.map(({ account }) => fromUint8Array(account.publicKey))
+        const addresses = inputs.map(({ account }) => fromUint8Array(new Uint8Array(account.publicKey)));
         const messages = inputs.map(({ message }) => fromUint8Array(message));
         try {
             return await this.#transact(async (wallet) => {

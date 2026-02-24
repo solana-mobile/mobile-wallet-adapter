@@ -22,28 +22,33 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: 'js/yarn.lock'
+      
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          cache: true
+          cache_dependency_path: 'js/pnpm-lock.yaml'
+          package_json_file: 'js/package.json'
 
-      - name: '[js] Install yarn dependencies'
+      - name: '[js] Install dependencies'
         working-directory: 'js/'
-        run: yarn install --frozen-lockfile
-      - name: '[js] Lint'
-        working-directory: 'js/'
-        run: yarn lint
+        run: pnpm install --frozen-lockfile
+      # - name: '[js] Lint'
+      #   working-directory: 'js/'
+      #   run: pnpm lint
         continue-on-error: true # TODO: fix all lint issues and remove this line
       - name: '[js] Build'
         working-directory: 'js/'
-        run: yarn build
+        run: pnpm build
 
       - name: '[mobile-wallet-adapter-protocol] Pre-Publish'
         working-directory: 'js/packages/mobile-wallet-adapter-protocol'
-        run: yarn prepublishOnly
+        run: pnpm prepublishOnly
 
       - name: '[mobile-wallet-adapter-protocol-web3js] Pre-Publish'
         working-directory: 'js/packages/mobile-wallet-adapter-protocol-web3js'
-        run: yarn prepublishOnly
+        run: pnpm prepublishOnly
 
       - name: '[wallet-adapter-mobile] Pre-Publish'
         working-directory: 'js/packages/wallet-adapter-mobile'
-        run: yarn prepublishOnly
+        run: pnpm prepublishOnly

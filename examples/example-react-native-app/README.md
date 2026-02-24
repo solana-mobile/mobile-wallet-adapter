@@ -20,9 +20,9 @@ https://user-images.githubusercontent.com/13243/180274812-9cff2bdf-01d2-44fe-b09
 
 ### Android
 
-1. Install dependencies and build the client libraries locally with `yarn`.
-2. Start the React Native packager, build the application, and start the simulator with `yarn android`.
+1. Install dependencies and build the client libraries locally with `pnpm install`.
+2. Start the React Native packager, build the application, and start the simulator with `pnpm android`.
 
 ## Development
 
-After making changes to any of the client libraries in `js/packages/` you will need to re-run `yarn` in this directory. This will rebuild the client libraries and copy their build artifacts into the `node_modules/` folder of this example app.
+After making changes to any of the client libraries in `js/packages/` you will need to re-run `pnpm install` in this directory. This will rebuild the client libraries and copy their build artifacts into the `node_modules/` folder of this example app.

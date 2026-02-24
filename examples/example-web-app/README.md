@@ -17,6 +17,6 @@ To make it convenient to load the example app on your mobile phone we suggest cr
 
 ## Quick Start
 
-1. Build and host the app with `yarn && yarn build && yarn start`.
-2. Once the app is listening for connections on `localhost` open a remote tunnel to it in a separate terminal, using `yarn tunnel:start`
+1. Build and host the app with `pnpm install && pnpm build && pnpm start`.
+2. Once the app is listening for connections on `localhost` open a remote tunnel to it in a separate terminal, using `pnpm tunnel:start`
 3. Load the `https` tunnel URL on the Android mobile device that has a native wallet app installed.

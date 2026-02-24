@@ -47,28 +47,34 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/web3.js": "^1.58.0"
+        "@solana/web3.js": "^1.98.0",
+        "react-native": ">0.69.0"
     },
     "dependencies": {
+        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.5",
         "@solana-mobile/wallet-standard-mobile": "^0.4.3",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-standard-features": "^1.2.0",
-        "js-base64": "^3.7.5"
+        "@wallet-standard/core": "^1.1.1",
+        "bs58": "^6.0.0",
+        "js-base64": "^3.7.5",
+        "tslib": "^2.8.1"
     },
     "optionalDependencies": {
         "@react-native-async-storage/async-storage": "^1.17.7"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.95.3",
+        "@types/react-native": "^0.69.3",
         "agadoo": "^3.0.0",
-        "cross-env": "^7.0.3",
-        "shx": "^0.3.4"
+        "cross-env": "^10.1.0",
+        "shx": "^0.4.0"
     }
 }
