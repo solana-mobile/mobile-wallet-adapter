@@ -50,7 +50,7 @@
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
         "@solana/wallet-standard-chains": "^1.1.0",
         "@solana/wallet-standard-features": "^1.2.0",
         "@wallet-standard/base": "^1.0.1",

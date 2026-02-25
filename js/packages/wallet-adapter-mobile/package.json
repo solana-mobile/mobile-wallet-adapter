@@ -57,9 +57,9 @@
         "react-native": ">0.69.0"
     },
     "dependencies": {
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
-        "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.5",
-        "@solana-mobile/wallet-standard-mobile": "^0.4.3",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
+        "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "workspace:^",
+        "@solana-mobile/wallet-standard-mobile": "workspace:^",
         "@solana/wallet-adapter-base": "^0.9.23",
         "@solana/wallet-standard-features": "^1.2.0",
         "@wallet-standard/core": "^1.1.1",

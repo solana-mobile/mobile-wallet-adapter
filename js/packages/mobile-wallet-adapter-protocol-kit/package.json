@@ -58,7 +58,7 @@
     "dependencies": {
         "@solana/transactions": "^2.1.0",
         "@solana/transaction-messages": "^2.1.0",
-        "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
+        "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
         "bs58": "^6.0.0",
         "js-base64": "^3.7.7"
     },

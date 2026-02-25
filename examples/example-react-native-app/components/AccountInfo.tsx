@@ -14,7 +14,7 @@ import {
   Surface,
   useTheme,
 } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@react-native-vector-icons/material-icons';
 
 import {Account} from '../utils/useAuthorization';
 import AccountBalance from './AccountBalance';
