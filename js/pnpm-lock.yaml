@@ -214,7 +214,7 @@ importers:
         specifier: ^3.7.5
         version: 3.7.8
       react-native:
-        specifier: '>0.72.0'
+        specifier: '>0.72'
         version: 0.84.0(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10)
       tslib:
         specifier: ^2.8.1
