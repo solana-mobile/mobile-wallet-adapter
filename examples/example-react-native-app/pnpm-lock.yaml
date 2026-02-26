@@ -1159,7 +1159,7 @@ packages:
   '@solana-mobile/mobile-wallet-adapter-protocol@file:../../js/packages/mobile-wallet-adapter-protocol':
     resolution: {directory: ../../js/packages/mobile-wallet-adapter-protocol, type: directory}
     peerDependencies:
-      react-native: '>0.72'
+      react-native: '>0.74'
 
   '@solana-program/memo@0.7.0':
     resolution: {integrity: sha512-3T9iUjWSYtN/5S5jzJuasD2yQfVfFAQ9yTwIE25+P9peWqz4oarn6ZQvRj/FLcBqaMLtSqLhU1hN2cyVBS6hyg==}

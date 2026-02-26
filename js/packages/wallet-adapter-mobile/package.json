@@ -54,7 +54,7 @@
     },
     "peerDependencies": {
         "@solana/web3.js": "^1.98.0",
-        "react-native": ">0.72"
+        "react-native": ">0.74"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
