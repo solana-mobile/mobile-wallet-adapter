@@ -70,7 +70,7 @@
         "shx": "^0.4.0"
     },
     "peerDependencies": {
-        "react-native": ">0.69"
+        "react-native": ">0.74"
     },
     "codegenConfig": {
         "name": "SolanaMobileWalletAdapter",
