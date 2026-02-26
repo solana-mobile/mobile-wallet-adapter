@@ -24,8 +24,8 @@ import com.solana.mobilewalletadapter.walletlib.transport.websockets.ReflectorWe
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -46,13 +46,10 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     public final long reflectorId = 0;
 
     // All access to these members must be protected by mLock
-    private final Object mLock = new Object();
     private State mState = State.NOT_STARTED;
     private int mConnectionAttempts = 0;
     private ReflectorWebSocket mReflectorWebSocket;
     private ScheduledExecutorService mConnectionBackoffExecutor; // valid in State.CONNECTING
-    private NotifyingCompletableFuture<Boolean> mSessionEstablishedFuture; // valid in State.CONNECTING and State.ESTABLISHING_SESSION
-    private ArrayList<NotifyingCompletableFuture<Void>> mClosedFuture; // _may_ be valid in State.CLOSING
 
     @Deprecated(forRemoval = true)
     public RemoteWebSocketServerScenario(@NonNull Context context,
@@ -154,21 +151,22 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         }
     }
 
-    @Override
-    public void start() {
+    public NotifyingCompletableFuture<String> startAsync() {
+        final NotifyingCompletableFuture<String> future;
+
         synchronized (mLock) {
             if (mState != State.NOT_STARTED) {
                 throw new IllegalStateException("Scenario has already been started");
             }
 
             mState = State.CONNECTING;
-            startDeferredFuture();
+            future = super.startAsync();
+            doTryConnect();
 
-            // Delay the first connect to allow the association intent receiver to start the WebSocket
-            // server
             mConnectionBackoffExecutor = Executors.newScheduledThreadPool(1);
-            mConnectionBackoffExecutor.schedule(this::doTryConnect, CONNECT_BACKOFF_SCHEDULE_MS[0], TimeUnit.MILLISECONDS);
         }
+
+        return future;
     }
 
     @Override
@@ -222,15 +220,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                 mSessionStateCallbacks);
     }
 
-    @NonNull
-    @GuardedBy("mLock")
-    private NotifyingCompletableFuture<Boolean> startDeferredFuture() {
-        assert(mState == State.CONNECTING && mSessionEstablishedFuture == null);
-        final NotifyingCompletableFuture<Boolean> future = new NotifyingCompletableFuture<>();
-        mSessionEstablishedFuture = future;
-        return future;
-    }
-
     @GuardedBy("mLock")
     private void doTryConnect() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
@@ -281,13 +270,26 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
     }
 
     @GuardedBy("mLock")
+    private void doSessionEstablished() {
+        assert(mState == State.ESTABLISHING_SESSION || mState == State.CLOSING);
+        if (mState == State.CLOSING) return;
+        Log.d(TAG, "Session established, scenario ready for use");
+        mState = State.STARTED;
+        notifySessionEstablishmentSucceeded();
+        mCallbacks.onScenarioReady();
+    }
+
+    @GuardedBy("mLock")
     private void doDisconnected() {
         assert(mState == State.CONNECTING || mState == State.AWAITING_REFLECTION ||
                 mState == State.ESTABLISHING_SESSION || mState == State.STARTED || mState == State.CLOSING);
         if (mState == State.CONNECTING || mState == State.AWAITING_REFLECTION || mState == State.ESTABLISHING_SESSION) {
-            Log.w(TAG, "Disconnected before session established");
+            String message = mState == State.AWAITING_REFLECTION ?
+                    "Disconnected before reflection established, check your reflector ID" :
+                    "Disconnected before session established";
+            Log.w(TAG, message);
             mState = State.CLOSING;
-            notifySessionEstablishmentFailed("Disconnected before session established");
+            notifySessionEstablishmentFailed(message);
         } else {
             Log.d(TAG, "Disconnected during normal operation");
         }
@@ -295,7 +297,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         mCallbacks.onScenarioComplete();
         destroyResourcesOnClose();
         mCallbacks.onScenarioTeardownComplete();
-        notifyCloseCompleted();
     }
 
     @GuardedBy("mLock")
@@ -304,23 +305,6 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
         if (mConnectionBackoffExecutor != null) {
             mConnectionBackoffExecutor.shutdownNow();
             mConnectionBackoffExecutor = null;
-        }
-    }
-
-    @GuardedBy("mLock")
-    private void notifySessionEstablishmentFailed(@NonNull String message) {
-        mSessionEstablishedFuture.completeExceptionally(new ConnectionFailedException(message));
-        mSessionEstablishedFuture = null;
-    }
-
-    @GuardedBy("mLock")
-    private void notifyCloseCompleted() {
-        // NOTE: if close was initiated by counterparty, there won't be a closed future to complete
-        if (mClosedFuture != null) {
-            for (NotifyingCompletableFuture<Void> future : mClosedFuture) {
-                future.complete(null);
-            }
-            mClosedFuture = null;
         }
     }
 
@@ -362,6 +346,9 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
                 @Override
                 public void onSessionEstablished() {
                     Log.d(TAG, "MobileWalletAdapter session established");
+                    synchronized (mLock) {
+                        doSessionEstablished();
+                    }
                     if (mClientCount.incrementAndGet() == 1) {
                         mIoHandler.post(mAuthRepository::start);
                         mIoHandler.post(mCallbacks::onScenarioServingClients);
@@ -395,9 +382,5 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
 
     private enum State {
         NOT_STARTED, CONNECTING, AWAITING_REFLECTION, ESTABLISHING_SESSION, STARTED, CLOSING, CLOSED
-    }
-
-    public static class ConnectionFailedException extends RuntimeException {
-        public ConnectionFailedException(@NonNull String message) { super(message); }
     }
 }

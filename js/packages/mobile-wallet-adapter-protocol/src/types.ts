@@ -1,5 +1,5 @@
 import type { TransactionVersion } from '@solana/web3.js';
-import type { SolanaSignInInput } from "@solana/wallet-standard";
+import type { SolanaSignInInput } from "@solana/wallet-standard-features";
 import type { IdentifierArray, IdentifierString, WalletAccount, WalletIcon } from '@wallet-standard/core';
 
 export type Account = Readonly<{
@@ -187,7 +187,7 @@ export type SignInPayloadWithRequiredFields = Partial<SignInPayload> &
 export type SignInResult = Readonly<{
     address: Base64EncodedAddress;
     signed_message: Base64EncodedSignedMessage;
-    signature: Base64EncodedAddress;
+    signature: Base64EncodedSignature;
     signature_type?: string;
 }>;
 

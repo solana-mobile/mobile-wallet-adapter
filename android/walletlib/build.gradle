@@ -11,11 +11,11 @@ plugins {
 android {
     namespace = "com.solana.mobilewalletadapter.walletlib"
 
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         minSdk 23
-        targetSdk 35
+        targetSdk 36
         consumerProguardFiles "consumer-rules.pro"
     }
 

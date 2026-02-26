@@ -1,38 +1,48 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-walletlib",
     "description": "A React Native wrapper of the Solana Mobile, Mobile Wallet Adapter Wallet Library. Wallet apps can use this to handle dapp requests for signing and sending.",
-    "version": "1.4.0-beta2",
+    "version": "1.4.0",
     "author": "Michael Sulistio <mike.sulistio@solanamobile.com>",
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
-    "type": "module",
-    "sideEffects": false,
+    "exports": {
+        "node": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        },
+        "react-native": "./lib/cjs/index.native.js",
+        "types": "./lib/types/index.d.ts"
+    },
     "main": "lib/esm/index",
-    "react-native": "lib/esm/index",
     "module": "lib/esm/index",
+    "react-native": "lib/esm/index",
     "types": "lib/types/index.d.ts",
+    "type": "module",
     "files": [
         "lib",
         "android",
         "LICENSE"
     ],
+    "sideEffects": false,
     "publishConfig": {
         "access": "public"
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "yarn clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "yarn clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts --watch",
+        "build": "pnpm clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts",
+        "build:watch": "pnpm clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts --watch",
         "postbuild": "cross-env echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
-        "example": "yarn --cwd example",
-        "bootstrap": "yarn example && yarn install && yarn example pods"
+        "example": "pnpm --cwd example",
+        "bootstrap": "pnpm example && pnpm install && pnpm example pods"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.91.7",
+        "@types/react": "^19.2.0",
         "@types/react-native": "^0.69.3",
-        "@wallet-standard/core": "^1.0.3",
-        "cross-env": "^7.0.3",
-        "shx": "^0.3.4"
+        "@wallet-standard/core": "^1.1.1",
+        "react": "^19.2.3",
+        "cross-env": "^10.1.0",
+        "shx": "^0.4.0"
     },
     "peerDependencies": {
         "react-native": ">0.69"

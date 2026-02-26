@@ -1,4 +1,3 @@
-import { AuthorizationResult } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { Authorization, AuthorizationCache } from './wallet';
 import base58 from 'bs58';
 
@@ -35,17 +34,17 @@ export default function createDefaultAuthorizationCache(): AuthorizationCache {
                                 : base58.decode(account.address), // Fallback, get publicKey from address
                         }
                     })
-                    return { ...parsed, accounts: parsedAccounts }
+                    return { ...parsed, accounts: parsedAccounts };
                 } else return parsed || undefined;
                 // eslint-disable-next-line no-empty
             } catch {}
         },
-        async set(authorizationResult: AuthorizationResult) {
+        async set(authorization: Authorization) {
             if (!storage) {
                 return;
             }
             try {
-                storage.setItem(CACHE_KEY, JSON.stringify(authorizationResult));
+                storage.setItem(CACHE_KEY, JSON.stringify(authorization));
                 // eslint-disable-next-line no-empty
             } catch {}
         },

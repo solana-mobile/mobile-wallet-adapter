@@ -1,15 +1,28 @@
-import {WalletAdapterNetwork} from '@solana/wallet-adapter-base';
-import {useConnection} from '@solana/wallet-adapter-react';
+import { 
+  appendTransactionMessageInstruction, 
+  createTransactionMessage,
+  pipe,
+  setTransactionMessageLifetimeUsingBlockhash,
+  TransactionSendingSigner,
+  setTransactionMessageFeePayerSigner,
+  signAndSendTransactionMessageWithSigners,
+} from '@solana/kit';
 import {
-  PublicKey,
-  RpcResponseAndContext,
-  SignatureResult,
-  Transaction,
-  TransactionInstruction,
-} from '@solana/web3.js';
-import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
-import React, {useContext, useState} from 'react';
-import {Linking, StyleSheet, View} from 'react-native';
+  createBlockHeightExceedencePromiseFactory,
+  createRecentSignatureConfirmationPromiseFactory,
+  waitForRecentTransactionConfirmation,
+} from '@solana/transaction-confirmation';
+import {
+  SignaturesMap,
+  type Transaction,
+  TransactionWithBlockhashLifetime,
+  compileTransaction,
+} from '@solana/transactions';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { getAddMemoInstruction } from "@solana-program/memo";
+import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-kit';
+import React, { useContext, useState } from 'react';
+import { Linking, StyleSheet, View } from 'react-native';
 import {
   Button,
   Dialog,
@@ -17,11 +30,12 @@ import {
   Paragraph,
   Portal,
 } from 'react-native-paper';
-import {TextEncoder} from 'text-encoding';
+import bs58 from 'bs58';
 
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
-import {SnackbarContext} from './SnackbarProvider';
+import { SnackbarContext } from '../context/SnackbarProvider';
+import { RpcContext } from '../context/RpcContext';
 
 type Props = Readonly<{
   children?: React.ReactNode;
@@ -29,44 +43,69 @@ type Props = Readonly<{
 }>;
 
 export default function RecordMessageButton({children, message}: Props) {
-  const {authorizeSession, selectedAccount} = useAuthorization();
-  const {connection} = useConnection();
+  const { authorizeSession, selectedAccount } = useAuthorization();
+  const { rpc, rpcSubscriptions } = useContext(RpcContext);
   const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =
     useState(false);
   const [recordingInProgress, setRecordingInProgress] = useState(false);
   const recordMessageGuarded = useGuardedCallback(
     async (
-      messageBuffer: Buffer,
-    ): Promise<[string, RpcResponseAndContext<SignatureResult>]> => {
-      const [signature] = await transact(async wallet => {
-        const [freshAccount, latestBlockhash] = await Promise.all([
+      message: string,
+    ): Promise<[string, Promise<void>]> => {
+      const [transaction, signature] = await transact(async wallet => {
+        // Authorize session (get account) and fetch latest blockhash
+        const [freshAccount, { value: latestBlockhash }] = await Promise.all([
           authorizeSession(wallet),
-          connection.getLatestBlockhash(),
+          rpc.getLatestBlockhash().send(),
         ]);
-        const memoProgramTransaction = new Transaction({
-          ...latestBlockhash,
-          feePayer:
-            // Either the public key that was already selected when this method was called...
-            selectedAccount?.publicKey ??
-            // ...or the newly authorized public key.
-            freshAccount.publicKey,
-        }).add(
-          new TransactionInstruction({
-            data: messageBuffer,
-            keys: [],
-            programId: new PublicKey(
-              'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
-            ),
-          }),
+        
+        // create an MWA transaction signer
+        const mwaTransactionSigner: TransactionSendingSigner = {
+          address: selectedAccount?.publicKey ?? freshAccount.publicKey,
+          signAndSendTransactions: async (transactions: Transaction[]) => {
+            return await wallet.signAndSendTransactions({ transactions });
+          }
+        };
+
+        // Build memo transaction
+        const memoInstruction = getAddMemoInstruction({ memo: message });
+        const memoTransactionMessage = pipe(
+          createTransactionMessage({ version: 0 }),
+          (tx) => setTransactionMessageFeePayerSigner(mwaTransactionSigner, tx),
+          (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+          (tx) => appendTransactionMessageInstruction(memoInstruction, tx)
         );
-        return await wallet.signAndSendTransactions({
-          transactions: [memoProgramTransaction],
-        });
+
+        // Sign transaction with MWA signer and prepare outputs
+        const signature = await signAndSendTransactionMessageWithSigners(memoTransactionMessage);
+        const transaction = compileTransaction(memoTransactionMessage);
+        const signaturesMap: SignaturesMap = { [memoTransactionMessage.feePayer.address]: signature }
+
+        return [{ 
+          messageBytes: transaction.messageBytes, 
+          signatures: signaturesMap,
+          lifetimeConstraint: transaction.lifetimeConstraint,
+        } as Transaction & TransactionWithBlockhashLifetime, bs58.encode(signature)];
       });
-      return [signature, await connection.confirmTransaction(signature)];
+      const getBlockHeightExceedencePromise = createBlockHeightExceedencePromiseFactory({
+        rpc,
+        rpcSubscriptions,
+      });
+      const getRecentSignatureConfirmationPromise = createRecentSignatureConfirmationPromiseFactory({
+        rpc,
+        rpcSubscriptions,
+      });
+
+      // Return transaction signature and a promise that resolves when the transaction is confirmed
+      return [signature, waitForRecentTransactionConfirmation({
+        commitment: 'confirmed',
+        transaction: transaction,
+        getBlockHeightExceedencePromise,
+        getRecentSignatureConfirmationPromise
+      })];
     },
-    [authorizeSession, connection, selectedAccount],
+    [authorizeSession, rpc, rpcSubscriptions, selectedAccount],
   );
   return (
     <>
@@ -80,37 +119,34 @@ export default function RecordMessageButton({children, message}: Props) {
             }
             setRecordingInProgress(true);
             try {
-              const result = await recordMessageGuarded(
-                new TextEncoder().encode(message) as Buffer,
-              );
+              const result = await recordMessageGuarded(message);
               if (result) {
-                const [signature, response] = result;
-                const {
-                  value: {err},
-                } = response;
-                if (err) {
-                  setSnackbarProps({
-                    children:
-                      'Failed to record message:' +
-                      (err instanceof Error ? err.message : err),
-                  });
-                } else {
-                  setSnackbarProps({
-                    action: {
-                      label: 'View',
-                      onPress() {
-                        const explorerUrl =
-                          'https://explorer.solana.com/tx/' +
-                          signature +
-                          '?cluster=' +
-                          WalletAdapterNetwork.Devnet;
-                        Linking.openURL(explorerUrl);
-                      },
+                const [signature, confirmationPromise] = result;
+                // TODO AbortController and AbortSignal are not fully implemented in RN so
+                // transaction confirmation with kit does not work. Need to find a polyfill
+                // await confirmationPromise;
+                setSnackbarProps({
+                  action: {
+                    label: 'View',
+                    onPress() {
+                      const explorerUrl =
+                        'https://explorer.solana.com/tx/' +
+                        signature +
+                        '?cluster=' +
+                        WalletAdapterNetwork.Devnet;
+                      Linking.openURL(explorerUrl);
                     },
-                    children: 'Message recorded',
-                  });
-                }
+                  },
+                  children: 'Message recorded',
+                });
               }
+            } catch(err) {
+              setSnackbarProps({
+                children:
+                  'Failed to record message:' +
+                  (err instanceof Error ? err.message : err),
+              });
+              console.error('Failed to record message:', err);
             } finally {
               setRecordingInProgress(false);
             }

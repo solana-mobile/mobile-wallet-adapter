@@ -34,10 +34,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     private var clientTrustUseCase: ClientTrustUseCase? = null
     private var scenario: Scenario? = null
+    private var sessionId: String? = null
 
     fun isConnectionRemote(): Boolean = scenario is RemoteWebSocketServerScenario
     fun endSession() {
-        scenario?.close()
+        scenario?.let {
+            Log.d(TAG, "Ending active session: $sessionId")
+            it.close()
+        }
     }
 
     fun processLaunch(intent: Intent?, callingPackage: String?): Boolean {
@@ -69,11 +73,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             LocalWebSocketServerScenario(
                 getApplication<FakeWalletApplication>().applicationContext,
                 MobileWalletAdapterConfig(
-                    true,
                     10,
                     10,
                     arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
-                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS
+                    LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
+                    arrayOf(
+                        ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS,
+                        ProtocolContract.FEATURE_ID_SIGN_IN_WITH_SOLANA
+                    )
                 ),
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks(),
@@ -97,7 +104,16 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 AuthIssuerConfig("fakewallet"),
                 MobileWalletAdapterScenarioCallbacks()
             )
-        }.also { it.start() }
+        }.also {
+            sessionId = null
+            viewModelScope.launch(Dispatchers.IO) {
+                runCatching {
+                    sessionId = it.startAsync().get()
+                }.getOrElse {
+                    _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionEstablishmentFailed)
+                }
+            }
+        }
 
         return true
     }
@@ -490,9 +506,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         override fun onScenarioError() = Unit
         override fun onScenarioTeardownComplete() {
             viewModelScope.launch {
-                // No need to cancel any outstanding request; the scenario is torn down, and so
-                // cancelling a request that originated from it isn't actionable
-                _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionTerminated)
+                if (sessionId != null) {
+                    // No need to cancel any outstanding request; the scenario is torn down, and so
+                    // cancelling a request that originated from it isn't actionable
+                    _mobileWalletAdapterServiceEvents.emit(MobileWalletAdapterServiceRequest.SessionTerminated)
+                } else {
+                    // Scenario has been torn down but we never established a session, cancel any previous request
+                    cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SessionEstablishmentFailed)
+                }
             }
         }
 
@@ -614,6 +635,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         object None : MobileWalletAdapterServiceRequest
         object SessionTerminated : MobileWalletAdapterServiceRequest
         object LowPowerNoConnection : MobileWalletAdapterServiceRequest
+        object SessionEstablishmentFailed : MobileWalletAdapterServiceRequest
 
         sealed class MobileWalletAdapterRemoteRequest(open val request: ScenarioRequest) : MobileWalletAdapterServiceRequest
         sealed class AuthorizationRequest(

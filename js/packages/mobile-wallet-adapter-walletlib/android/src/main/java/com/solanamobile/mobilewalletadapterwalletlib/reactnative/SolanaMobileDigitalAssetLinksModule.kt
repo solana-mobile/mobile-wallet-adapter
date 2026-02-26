@@ -14,12 +14,12 @@ class SolanaMobileDigitalAssetLinksModule(val reactContext: ReactApplicationCont
 
     @ReactMethod
     fun getCallingPackage(promise: Promise) {
-        promise.resolve(currentActivity?.callingPackage)
+        promise.resolve(reactApplicationContext.currentActivity?.callingPackage)
     }
 
     @ReactMethod
     fun verifyCallingPackage(clientIdentityUri: String, promise: Promise) {
-        currentActivity?.callingPackage?.let { callingPackage -> 
+        reactApplicationContext.currentActivity?.callingPackage?.let { callingPackage -> 
             verifyPackage(callingPackage, clientIdentityUri, promise)
         } ?: run {
             promise.resolve(false)
@@ -41,7 +41,7 @@ class SolanaMobileDigitalAssetLinksModule(val reactContext: ReactApplicationCont
 
     @ReactMethod
     fun getCallingPackageUid(promise: Promise) {
-        currentActivity?.callingPackage?.let { callingPackage -> 
+        reactApplicationContext.currentActivity?.callingPackage?.let { callingPackage -> 
             getUidForPackage(callingPackage, promise)
         } ?: run {
             promise.reject(Error("Cannot get UID for calling package: No calling package found"))

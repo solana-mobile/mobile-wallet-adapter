@@ -1,0 +1,63 @@
+diff --git a/node_modules/@solana/wallet-adapter-react-ui/lib/cjs/WalletListItem.js b/node_modules/@solana/wallet-adapter-react-ui/lib/cjs/WalletListItem.js
+index 0aa2c3a..edba2e3 100644
+--- a/node_modules/@solana/wallet-adapter-react-ui/lib/cjs/WalletListItem.js
++++ b/node_modules/@solana/wallet-adapter-react-ui/lib/cjs/WalletListItem.js
+@@ -8,10 +8,12 @@ const wallet_adapter_base_1 = require("@solana/wallet-adapter-base");
+ const react_1 = __importDefault(require("react"));
+ const Button_js_1 = require("./Button.js");
+ const WalletIcon_js_1 = require("./WalletIcon.js");
++const { SolanaMobileWalletAdapterWalletName, SolanaMobileWalletAdapterRemoteWalletName } = require('@solana-mobile/wallet-adapter-mobile');
+ const WalletListItem = ({ handleClick, tabIndex, wallet }) => {
+     return (react_1.default.createElement("li", null,
+         react_1.default.createElement(Button_js_1.Button, { onClick: handleClick, startIcon: react_1.default.createElement(WalletIcon_js_1.WalletIcon, { wallet: wallet }), tabIndex: tabIndex },
+-            wallet.adapter.name,
++            wallet.adapter.name === SolanaMobileWalletAdapterWalletName ? "Use Installed Wallet" : 
++                (wallet.adapter.name === SolanaMobileWalletAdapterRemoteWalletName ? "Use Mobile Phone" : wallet.adapter.name),
+             wallet.readyState === wallet_adapter_base_1.WalletReadyState.Installed && react_1.default.createElement("span", null, "Detected"))));
+ };
+ exports.WalletListItem = WalletListItem;
+diff --git a/node_modules/@solana/wallet-adapter-react-ui/lib/esm/WalletListItem.js b/node_modules/@solana/wallet-adapter-react-ui/lib/esm/WalletListItem.js
+index a0b24c2..09baf1b 100644
+--- a/node_modules/@solana/wallet-adapter-react-ui/lib/esm/WalletListItem.js
++++ b/node_modules/@solana/wallet-adapter-react-ui/lib/esm/WalletListItem.js
+@@ -2,10 +2,12 @@ import { WalletReadyState } from '@solana/wallet-adapter-base';
+ import React from 'react';
+ import { Button } from './Button.js';
+ import { WalletIcon } from './WalletIcon.js';
++import { SolanaMobileWalletAdapterWalletName, SolanaMobileWalletAdapterRemoteWalletName, } from '@solana-mobile/wallet-adapter-mobile';
+ export const WalletListItem = ({ handleClick, tabIndex, wallet }) => {
+     return (React.createElement("li", null,
+         React.createElement(Button, { onClick: handleClick, startIcon: React.createElement(WalletIcon, { wallet: wallet }), tabIndex: tabIndex },
+-            wallet.adapter.name,
++            wallet.adapter.name === SolanaMobileWalletAdapterWalletName ? "Use Installed Wallet" : 
++                (wallet.adapter.name === SolanaMobileWalletAdapterRemoteWalletName ? "Use Mobile Phone" : wallet.adapter.name),
+             wallet.readyState === WalletReadyState.Installed && React.createElement("span", null, "Detected"))));
+ };
+ //# sourceMappingURL=WalletListItem.js.map
+\ No newline at end of file
+diff --git a/node_modules/@solana/wallet-adapter-react-ui/src/WalletListItem.tsx b/node_modules/@solana/wallet-adapter-react-ui/src/WalletListItem.tsx
+index fb0355e..96a1929 100644
+--- a/node_modules/@solana/wallet-adapter-react-ui/src/WalletListItem.tsx
++++ b/node_modules/@solana/wallet-adapter-react-ui/src/WalletListItem.tsx
+@@ -5,6 +5,11 @@ import React from 'react';
+ import { Button } from './Button.js';
+ import { WalletIcon } from './WalletIcon.js';
+ 
++import {
++    SolanaMobileWalletAdapterWalletName,
++    SolanaMobileWalletAdapterRemoteWalletName,
++} from '@solana-mobile/wallet-adapter-mobile';
++
+ export interface WalletListItemProps {
+     handleClick: MouseEventHandler<HTMLButtonElement>;
+     tabIndex?: number;
+@@ -15,7 +20,8 @@ export const WalletListItem: FC<WalletListItemProps> = ({ handleClick, tabIndex,
+     return (
+         <li>
+             <Button onClick={handleClick} startIcon={<WalletIcon wallet={wallet} />} tabIndex={tabIndex}>
+-                {wallet.adapter.name}
++                {wallet.adapter.name === SolanaMobileWalletAdapterWalletName ? "Use Installed Wallet" : 
++                    (wallet.adapter.name === SolanaMobileWalletAdapterRemoteWalletName ? "Use Mobile Phone" : wallet.adapter.name)}
+                 {wallet.readyState === WalletReadyState.Installed && <span>Detected</span>}
+             </Button>
+         </li>

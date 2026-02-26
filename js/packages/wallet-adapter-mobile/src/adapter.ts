@@ -52,6 +52,8 @@ import {
     createDefaultChainSelector,
     LocalSolanaMobileWalletAdapterWallet,
     RemoteSolanaMobileWalletAdapterWallet,
+    SolanaMobileWalletAdapterWalletName as WalletStandardWalletName,
+    SolanaMobileWalletAdapterRemoteWalletName as WalletStandardRemoteWalletName,
 } from '@solana-mobile/wallet-standard-mobile';
 import { fromUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
@@ -66,7 +68,8 @@ export interface AddressSelector {
     select(addresses: Base64EncodedAddress[]): Promise<Base64EncodedAddress>;
 }
 
-export const SolanaMobileWalletAdapterWalletName = 'Mobile Wallet Adapter' as WalletName;
+export const SolanaMobileWalletAdapterWalletName = WalletStandardWalletName as WalletName;
+export const SolanaMobileWalletAdapterRemoteWalletName = WalletStandardRemoteWalletName as WalletName;
 
 const SIGNATURE_LENGTH_IN_BYTES = 64;
 
@@ -126,8 +129,8 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         super();
         // this.#chain = chainOrClusterToChainId(config.chain);
         this.#accountSelector = async (accounts: readonly WalletAccount[]) => {
-            const selectedBase64EncodedAddress = await config.addressSelector.select(accounts.map(({ publicKey }) => fromUint8Array(publicKey)));
-            return accounts.find(({ publicKey }) => fromUint8Array(publicKey) === selectedBase64EncodedAddress) ?? accounts[0];
+            const selectedBase64EncodedAddress = await config.addressSelector.select(accounts.map(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey))));
+            return accounts.find(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey)) === selectedBase64EncodedAddress) ?? accounts[0];
         };
         this.#wallet = wallet
         this.#wallet.features[StandardEvents].on('change', this.#handleChangeEvent);
@@ -448,15 +451,7 @@ export class LocalSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapte
             authorizationCache: {
                 set: config.authorizationResultCache.set,
                 get: async () => {
-                    const authorizationResult = await config.authorizationResultCache.get();
-                    if (authorizationResult && 'chain' in authorizationResult) {
-                        return authorizationResult;
-                    } else if (authorizationResult) {
-                        return {
-                            ...authorizationResult,
-                            chain: chain,
-                        };
-                    } else return undefined;
+                    return await config.authorizationResultCache.get() as Authorization | undefined;
                 },
                 clear: config.authorizationResultCache.clear,
             },
@@ -487,15 +482,7 @@ export class RemoteSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapt
             authorizationCache: {
                 set: config.authorizationResultCache.set,
                 get: async () => {
-                    const authorizationResult = await config.authorizationResultCache.get();
-                    if (authorizationResult && 'chain' in authorizationResult) {
-                        return authorizationResult;
-                    } else if (authorizationResult) {
-                        return {
-                            ...authorizationResult,
-                            chain: chain,
-                        };
-                    } else return undefined;
+                    return await config.authorizationResultCache.get() as Authorization | undefined;
                 },
                 clear: config.authorizationResultCache.clear,
             },
