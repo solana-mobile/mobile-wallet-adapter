@@ -1152,7 +1152,7 @@ packages:
   '@solana-mobile/mobile-wallet-adapter-walletlib@file:../../js/packages/mobile-wallet-adapter-walletlib':
     resolution: {directory: ../../js/packages/mobile-wallet-adapter-walletlib, type: directory}
     peerDependencies:
-      react-native: '>0.69'
+      react-native: '>0.72'
 
   '@solana/buffer-layout@4.0.1':
     resolution: {integrity: sha512-E1ImOIAD1tBZFRdjeM4/pzTiTApC0AOBGwyAMS4fwIodCWArzJ3DWdoh8cKxeFM2fElkxBh2Aqts1BPC373rHA==}
