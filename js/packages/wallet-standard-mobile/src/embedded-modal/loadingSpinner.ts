@@ -137,9 +137,8 @@ export default class EmbeddedLoadingSpinner {
     }
 
     #injectHTML() {
-        // Check if the HTML has already been injected
-        if (document.getElementById('mobile-wallet-adapter-embedded-root-ui')) {
-            if (!this.#root) this.#root = document.getElementById('mobile-wallet-adapter-embedded-root-ui');
+        // Check if already injected by checking if shadow DOM exists
+        if (this.dom) {
             return;
         }
 
