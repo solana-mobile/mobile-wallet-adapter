@@ -16,6 +16,7 @@ import {
     type SolanaSignTransactionFeature,
     type SolanaSignTransactionMethod,
 } from '@solana/wallet-standard-features';
+import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
     type Account,
@@ -27,8 +28,8 @@ import {
     SignInPayload,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
+    startScenario,
     startRemoteScenario,
-    transact,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
@@ -367,6 +368,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
+        const loadingSpinner = new EmbeddedLoadingSpinner();
         try {
             // check that we have permissions for local app connections, then run 
             // wallet association (transact). In case the user manually cancels 
@@ -375,10 +377,17 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
             let timeout = undefined;
             const result = await Promise.race([
                 checkLocalNetworkAccessPermission()
-                    .then(() => transact((wallet) => {
-                        associating = false;
-                        return callback(wallet);
-                    }, config)),
+                    .then(async () => {
+                        // Begin local connection, show loading spinner while we connect
+                        loadingSpinner.init();
+                        const { wallet, close } = await startScenario(config);
+                        loadingSpinner.addEventListener('close', (event) => { if (event) close() });
+                        loadingSpinner.open();
+                        const result = await callback(await wallet);
+                        loadingSpinner.close();
+                        close();
+                        return result;
+                    }),
                 new Promise((_, reject) => {
                     timeout = setTimeout(() => {
                         if (associating) { // only timeout during association
@@ -394,6 +403,7 @@ export class LocalSolanaMobileWalletAdapterWallet implements SolanaMobileWalletA
             clearTimeout(timeout);
             return result;
         } catch (e) {
+            loadingSpinner.close();
             if (this.#connectionGeneration !== currentConnectionGeneration) {
                 await new Promise(() => {}); // Never resolve.
             }
@@ -851,12 +861,18 @@ export class RemoteSolanaMobileWalletAdapterWallet implements SolanaMobileWallet
         }
         
         try {
+            // Begin remote connection, show modal with loading anim while we connect
+            modal.init();
+            modal.open();
             const { associationUrl, close, wallet } = await startRemoteScenario(remoteConfig);
+
+            // Reflector is now connected, update the connection modal with qr code
             const removeCloseListener = modal.addEventListener('close', (event: any) => {
                 if (event) close();
             });
-            modal.initWithQR(associationUrl.toString());
-            modal.open();
+            modal.populateQRCode(associationUrl.toString());
+
+            // Wait for the wallet to be connected, then close the connection modal and proceed
             this.#session = { close, wallet: await wallet };
             removeCloseListener();
             modal.close();

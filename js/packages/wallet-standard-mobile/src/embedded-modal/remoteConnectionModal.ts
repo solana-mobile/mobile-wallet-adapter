@@ -11,13 +11,19 @@ export default class RemoteConnectionModal extends EmbeddedModal {
         this.populateQRCode(qrCode);
     }
 
-    private async populateQRCode(qrUrl: string) {
+    async populateQRCode(qrUrl: string) {
         const qrcodeContainer = this.dom?.getElementById('mobile-wallet-adapter-embedded-modal-qr-code-container');
         if (qrcodeContainer) {
             const qrCodeElement = await QRCode.toCanvas(qrUrl, { width: 200, margin: 0 });
             if (qrcodeContainer.firstElementChild !== null) {
                 qrcodeContainer.replaceChild(qrCodeElement, qrcodeContainer.firstElementChild);
             } else qrcodeContainer.appendChild(qrCodeElement);
+
+            // remove the loading placeholder for cleanup
+            const qrPlaceholder = this.dom?.getElementById('mobile-wallet-adapter-embedded-modal-qr-placeholder');
+            if (qrPlaceholder) {
+                qrPlaceholder.style.display = 'none';
+            }
         } else {
             console.error('QRCode Container not found');
         }
@@ -39,7 +45,9 @@ const QRCodeHtml = `
                 Open your wallet and scan this code
             </h4>
         </div>
-        <div id="mobile-wallet-adapter-embedded-modal-qr-code-container" class="mobile-wallet-adapter-embedded-modal-qr-code-container"></div>
+        <div id="mobile-wallet-adapter-embedded-modal-qr-code-container" class="mobile-wallet-adapter-embedded-modal-qr-code-container">
+            <div id="mobile-wallet-adapter-embedded-modal-qr-placeholder" class="mobile-wallet-adapter-embedded-modal-qr-placeholder"></div>
+        </div>
     </div>
 </div>
 <div class="mobile-wallet-adapter-embedded-modal-divider"><hr></div>
@@ -109,6 +117,16 @@ const css = `
 
 .mobile-wallet-adapter-embedded-modal-qr-code-container {
     margin-left: auto;
+}
+
+.mobile-wallet-adapter-embedded-modal-qr-placeholder {
+    margin-left: auto;
+    min-width: 200px;
+    min-height: 200px;
+    background: linear-gradient(-60deg, #F7F8F8 30%, #ECEEEE 50%, #F7F8F8 70%);
+    background-size: 200%;
+    animation: placeholderAnimate 2.7s linear infinite;
+    border-radius: 12px;
 }
 
 .mobile-wallet-adapter-embedded-modal-divider {
@@ -183,6 +201,15 @@ const css = `
     .mobile-wallet-adapter-embedded-modal-qr-code-container {
         margin: auto;
     }
+    .mobile-wallet-adapter-embedded-modal-qr-placeholder {
+        margin: auto;
+    }
+}
+
+/* QR Placeholder */
+@keyframes placeholderAnimate {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* Spinner */
