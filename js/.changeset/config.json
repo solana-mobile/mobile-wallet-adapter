@@ -12,10 +12,6 @@
     [
       "@solana-mobile/wallet-standard-mobile", 
       "@solana-mobile/wallet-adapter-mobile"
-    ],
-    [
-      "@solana-mobile/mobile-wallet-adapter-protocol",
-      "@solana-mobile/mobile-wallet-adapter-protocol-kit"
     ]
   ],
   "access": "public",

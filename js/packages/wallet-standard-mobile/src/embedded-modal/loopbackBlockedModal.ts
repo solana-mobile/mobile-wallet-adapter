@@ -3,7 +3,12 @@ import EmbeddedModal from "./modal";
 
 export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
     protected contentStyles = css;
-    protected contentHtml = ErrorDialogHtml;
+    protected get contentHtml() {
+        const instructions = getIsPwaLaunchedAsApp() 
+            ? 'Long press the app icon on your home screen to open site settings' 
+            : 'Tap the lock or settings icon in the address bar to open site settings';
+        return ErrorDialogHtml.replace('{{PERMISSION_INSTRUCTIONS}}', instructions);
+    }
 
     async init() {
         super.init();
@@ -19,10 +24,6 @@ export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
         launchButton?.addEventListener('click', listener);
     }
 }
-
-const browserPermissionInstructions = 'Tap the lock or settings icon in the address bar to open site settings';
-const pwaPermissionInstructions = 'Long press the app icon on your home screen to open site settings';
-const permissionInstructionDetail = getIsPwaLaunchedAsApp() ? pwaPermissionInstructions : browserPermissionInstructions;
 
 const ErrorDialogHtml = `
 <div class="mobile-wallet-adapter-embedded-modal-header">
@@ -66,7 +67,7 @@ const ErrorDialogHtml = `
         
         <!-- Content to show/hide -->
         <ul class="mobile-wallet-adapter-embedded-modal-details-collapsible-content">
-            <li>${permissionInstructionDetail}</li>
+            <li>{{PERMISSION_INSTRUCTION_DETAIL}}</li>
             <li>Allow "Apps on Device"</li>
         </ul>
     </div>

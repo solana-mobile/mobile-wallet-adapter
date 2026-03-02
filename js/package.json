@@ -4,7 +4,8 @@
     "packageManager": "pnpm@10.30.0",
     "scripts": {
         "build": "turbo run build",
-        "clean": "turbo run clean"
+        "clean": "turbo run clean",
+        "publish-packages": "pnpm build && pnpm changeset publish --access public --no-git-checks"
     },
     "devDependencies": {
         "@changesets/cli": "^2.29.8",

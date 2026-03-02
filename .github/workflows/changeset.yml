@@ -1,4 +1,4 @@
-name: Create Release PR
+name: Create Release PR or Publish to npm
 
 on:
   push:
@@ -8,10 +8,11 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release:
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./js
@@ -32,10 +33,10 @@ jobs:
 
       - run: pnpm install
 
-      - name: Create Changesets Release PR
+      - name: Create Release PR or Publish to npm
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version
+          publish: pnpm publish-packages
           commit: "chore: version packages"
           title: "Bump JS Packages"          
           cwd: ./js 
