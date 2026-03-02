@@ -7,7 +7,7 @@ export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
         const instructions = getIsPwaLaunchedAsApp() 
             ? 'Long press the app icon on your home screen to open site settings' 
             : 'Tap the lock or settings icon in the address bar to open site settings';
-        return ErrorDialogHtml.replace('{{PERMISSION_INSTRUCTIONS}}', instructions);
+        return ErrorDialogHtml.replace('{{PERMISSION_INSTRUCTION_DETAIL}}', instructions);
     }
 
     async init() {
