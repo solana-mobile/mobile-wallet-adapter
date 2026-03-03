@@ -67,7 +67,7 @@ jobs:
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: 'Setup Expo Wallet
+      - name: 'Setup Expo Wallet'
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
