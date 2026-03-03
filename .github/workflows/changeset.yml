@@ -14,6 +14,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: npm-publish
     defaults:
       run:
         working-directory: ./js
