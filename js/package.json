@@ -4,9 +4,11 @@
     "packageManager": "pnpm@10.30.0",
     "scripts": {
         "build": "turbo run build",
-        "clean": "turbo run clean"
+        "clean": "turbo run clean",
+        "publish-packages": "pnpm build && pnpm changeset publish --access public --no-git-checks"
     },
     "devDependencies": {
+        "@changesets/cli": "^2.29.8",
         "@rollup/plugin-alias": "^6.0.0",
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.0",

@@ -1,0 +1,44 @@
+name: Create Release PR or Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./js
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          cache: true
+          cache_dependency_path: 'js/pnpm-lock.yaml'
+          package_json_file: 'js/package.json'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install
+
+      - name: Create Release PR or Publish to npm
+        uses: changesets/action@v1
+        with:
+          publish: pnpm publish-packages
+          commit: "chore: version packages"
+          title: "Bump JS Packages"          
+          cwd: ./js 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
