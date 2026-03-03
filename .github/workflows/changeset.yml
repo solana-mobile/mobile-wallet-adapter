@@ -2,8 +2,9 @@ name: Create Release PR or Publish to npm
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 permissions:
   contents: write
@@ -38,7 +39,7 @@ jobs:
         with:
           publish: pnpm publish-packages
           commit: "chore: version packages"
-          title: "Bump JS Packages"          
-          cwd: ./js 
+          title: "Bump JS Packages"
+          cwd: ./js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
