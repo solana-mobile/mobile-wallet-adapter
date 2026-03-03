@@ -106,12 +106,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - api-level: 27
-            recipe_uuid: ea5fda48-fa8b-48c1-8acc-07d910856141 # Pixel XL, Android 8.1 (API 27)
-          # fb936099-d261-4dd3-8dec-3fc14f1d0f03 # Pixel 3a, Android 9.0 (API 28)
-          # 4c015ada-e64e-4f5d-a320-06cbf6e95648 # Pixel 3a, Android 10 (API 29)
-          # 95016679-8f8d-4890-b026-e4ad889aadf1 # Pixel 3a, Android 11 (API 30)
-          # see here for more recipes: https://support.genymotion.com/hc/en-us/articles/360007473658-Supported-Android-devices-templates-for-Genymotion-Cloud-SaaS
+          - api-level: 34
+            recipe_uuid: 3990323a-1e9a-49df-ad87-6947f7fc166e # Pixel 9, Android 14 (API 34)
 
     steps:
       # Setup
