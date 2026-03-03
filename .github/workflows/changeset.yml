@@ -2,8 +2,7 @@ name: Create Release PR or Publish to npm
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
   contents: write
@@ -13,6 +12,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: npm-publish
     defaults:
       run:
         working-directory: ./js
@@ -34,11 +34,11 @@ jobs:
       - run: pnpm install
 
       - name: Create Release PR or Publish to npm
-        uses: changesets/action@v1
+        uses: changesets/action@001cd79f0a536e733315164543a727bdf2d70aff # v1.5.1
         with:
           publish: pnpm publish-packages
           commit: "chore: version packages"
-          title: "Bump JS Packages"          
-          cwd: ./js 
+          title: "Bump JS Packages"
+          cwd: ./js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
