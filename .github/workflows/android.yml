@@ -108,8 +108,6 @@ jobs:
         include:
           - api-level: 34
             recipe_uuid: 9074ccc1-7aba-4c9b-b615-e69ef389738c # Generic Android 14 (API 34)
-            # recipe_uuid: c75346cb-67db-413e-ae09-32d9040bd8e1 # Generic Android 8
-            # recipe_uuid: 3990323a-1e9a-49df-ad87-6947f7fc166e # Pixel 9, Android 14 (API 34)
 
     steps:
       # Setup
