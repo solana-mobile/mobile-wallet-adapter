@@ -28,8 +28,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
 
       - uses: actions/checkout@v5
         with:
