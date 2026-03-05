@@ -2,7 +2,7 @@ name: Create Release PR or Publish to npm
 
 on:
   push:
-    branches: [ main, changeset-revamp ]
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
