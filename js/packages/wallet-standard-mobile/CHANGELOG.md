@@ -1,6 +1,6 @@
 # @solana-mobile/wallet-standard-mobile
 
-## 2.3.0
+## 0.5.0
 
 ### Minor Changes
 
