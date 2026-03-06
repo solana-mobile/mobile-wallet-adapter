@@ -1,7 +1,7 @@
 {
     "name": "@solana-mobile/wallet-adapter-mobile",
     "description": "An adapter for mobile wallet apps that conform to the Solana Mobile Wallet Adapter protocol",
-    "version": "2.2.5",
+    "version": "2.3.0",
     "author": "Steven Luscher <steven.luscher@solanamobile.com>",
     "repository": {
         "type": "git",
