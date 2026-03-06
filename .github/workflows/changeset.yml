@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -18,7 +22,18 @@ jobs:
         working-directory: ./js
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
+          persist-credentials: false
 
       - name: set up Node
         uses: actions/setup-node@v5
@@ -31,7 +46,8 @@ jobs:
           cache_dependency_path: 'js/pnpm-lock.yaml'
           package_json_file: 'js/package.json'
 
-      - run: pnpm install
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Create Release PR or Publish to npm
         uses: changesets/action@001cd79f0a536e733315164543a727bdf2d70aff # v1.5.1
@@ -41,4 +57,4 @@ jobs:
           title: "Bump JS Packages"
           cwd: ./js
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
