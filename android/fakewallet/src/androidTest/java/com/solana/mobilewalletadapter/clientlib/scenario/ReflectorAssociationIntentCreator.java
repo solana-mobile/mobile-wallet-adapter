@@ -5,8 +5,6 @@
 package com.solana.mobilewalletadapter.clientlib.scenario;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.util.Base64;
 
@@ -19,15 +17,16 @@ import com.solana.mobilewalletadapter.common.protocol.SessionProperties;
 
 import java.util.Set;
 
-public class RemoteAssociationIntentCreator {
+public class ReflectorAssociationIntentCreator {
 
-    private RemoteAssociationIntentCreator() { }
+    private ReflectorAssociationIntentCreator() { }
 
     @NonNull
     public static Intent createAssociationIntent(@Nullable Uri endpointPrefix,
                                                  @NonNull String hostAuthority,
                                                  @NonNull byte[] reflectorId,
-                                                 @NonNull MobileWalletAdapterSession session) {
+                                                 @NonNull MobileWalletAdapterSession session,
+                                                 @NonNull boolean isRemote) {
         final byte[] associationPublicKey = session.getEncodedAssociationPublicKey();
         final String associationToken = Base64.encodeToString(associationPublicKey,
                 Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
@@ -35,16 +34,7 @@ public class RemoteAssociationIntentCreator {
                 .setAction(Intent.ACTION_VIEW)
                 .addCategory(Intent.CATEGORY_BROWSABLE)
                 .setData(createAssociationUri(endpointPrefix, hostAuthority, reflectorId,
-                        associationToken, session.getSupportedProtocolVersions()));
-    }
-
-    public static boolean isWalletEndpointAvailable(@NonNull PackageManager pm) {
-        final Intent intent = new Intent()
-                .setAction(Intent.ACTION_VIEW)
-                .addCategory(Intent.CATEGORY_BROWSABLE)
-                .setData(createAssociationUri(null, "", new byte[1], "", Set.of()));
-        final ResolveInfo resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        return (resolveInfo != null);
+                        associationToken, session.getSupportedProtocolVersions(), isRemote));
     }
 
     @NonNull
@@ -52,7 +42,8 @@ public class RemoteAssociationIntentCreator {
                                             @NonNull String hostAuthority,
                                             @NonNull byte[] reflectorId,
                                             @NonNull String associationToken,
-                                            @NonNull Set<SessionProperties.ProtocolVersion> supportedProtocolVersions) {
+                                            @NonNull Set<SessionProperties.ProtocolVersion> supportedProtocolVersions,
+                                            boolean isRemote) {
         if (endpointPrefix != null && (!"https".equals(endpointPrefix.getScheme()) || !endpointPrefix.isHierarchical())) {
             throw new IllegalArgumentException("Endpoint-specific URI prefix must be absolute with scheme 'https' and hierarchical");
         }
@@ -68,12 +59,12 @@ public class RemoteAssociationIntentCreator {
                     .scheme(AssociationContract.SCHEME_MOBILE_WALLET_ADAPTER);
         }
 
-        dataUriBuilder.appendEncodedPath(AssociationContract.REMOTE_PATH_SUFFIX)
+        dataUriBuilder.appendEncodedPath(isRemote ? AssociationContract.REMOTE_PATH_SUFFIX : AssociationContract.LOCAL_REFLECTOR_PATH_SUFFIX)
                 .appendQueryParameter(AssociationContract.PARAMETER_ASSOCIATION_TOKEN,
                         associationToken)
-                .appendQueryParameter(AssociationContract.REMOTE_PARAMETER_REFLECTOR_HOST_AUTHORITY,
+                .appendQueryParameter(AssociationContract.PARAMETER_REFLECTOR_HOST_AUTHORITY,
                         hostAuthority)
-                .appendQueryParameter(AssociationContract.REMOTE_PARAMETER_REFLECTOR_ID,
+                .appendQueryParameter(AssociationContract.PARAMETER_REFLECTOR_ID,
                         Base64.encodeToString(reflectorId, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
 
         for (SessionProperties.ProtocolVersion version : supportedProtocolVersions) {
