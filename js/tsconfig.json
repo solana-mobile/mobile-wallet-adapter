@@ -1,5 +1,5 @@
 {
-  "include": ["rollup.config.ts"],
+  "include": ["packages/mobile-wallet-adapter-walletlib/tsdown.config.ts", "tsdown.config.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "declaration": true,
