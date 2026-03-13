@@ -29,9 +29,9 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "pnpm clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "pnpm clean && rollup --config rollup.config.ts --configPlugin rollup-plugin-ts --watch",
-        "postbuild": "cross-env echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
+        "build": "pnpm clean && tsdown --config tsdown.config.ts",
+        "build:watch": "pnpm clean && tsdown --config tsdown.config.ts --watch",
+        "postbuild": "printf '%s' '{\"type\":\"module\"}' > lib/esm/package.json",
         "example": "pnpm --cwd example",
         "bootstrap": "pnpm example && pnpm install && pnpm example pods"
     },

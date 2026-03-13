@@ -50,9 +50,9 @@
     },
     "scripts": {
         "clean": "shx rm -rf lib/*",
-        "build": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts",
-        "build:watch": "pnpm clean && rollup --config ../../rollup.config.ts --configPlugin rollup-plugin-ts --watch",
-        "postbuild": "cross-env echo {\\\"type\\\":\\\"commonjs\\\"} | npx json > lib/cjs/package.json && echo {\\\"type\\\":\\\"module\\\"} | npx json > lib/esm/package.json",
+        "build": "pnpm clean && tsdown --config ../../tsdown.config.ts",
+        "build:watch": "pnpm clean && tsdown --config ../../tsdown.config.ts --watch",
+        "postbuild": "printf '%s' '{\"type\":\"commonjs\"}' > lib/cjs/package.json && printf '%s' '{\"type\":\"module\"}' > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
