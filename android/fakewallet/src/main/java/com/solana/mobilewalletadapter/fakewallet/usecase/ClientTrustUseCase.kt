@@ -12,6 +12,7 @@ import android.util.Log
 import com.solana.digitalassetlinks.AndroidAppPackageVerifier
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
+import com.solana.mobilewalletadapter.walletlib.association.LocalReflectorAssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.RemoteAssociationUri
 import kotlinx.coroutines.*
 import java.net.URI
@@ -25,7 +26,7 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
 
     init {
         associationType = when (associationUri) {
-            is LocalAssociationUri -> {
+            is LocalAssociationUri, is LocalReflectorAssociationUri -> {
                 if (callingPackage != null) {
                     Log.d(TAG, "Creating client trust use case for a local app scenario")
                     AssociationType.LocalFromApp
