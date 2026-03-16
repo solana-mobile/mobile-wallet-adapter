@@ -52,14 +52,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: "[TEMP] dry run publish"
-        run: pnpm changeset publish --dry-run --no-git-checks
-        
-      - name: Test OIDC
-        run: |
-          curl -s "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" \
-            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq .
-
       - name: Create Release PR or Publish to npm
         uses: changesets/action@001cd79f0a536e733315164543a727bdf2d70aff # v1.5.1
         with:
