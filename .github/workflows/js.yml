@@ -41,6 +41,10 @@ jobs:
         working-directory: 'js/'
         run: pnpm build
 
+      - name: '[js] Test'
+        working-directory: 'js/'
+        run: pnpm test --run
+
       - name: '[mobile-wallet-adapter-protocol] Pre-Publish'
         working-directory: 'js/packages/mobile-wallet-adapter-protocol'
         run: pnpm prepublishOnly
