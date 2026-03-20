@@ -14,6 +14,70 @@ permissions:
   id-token: write
 
 jobs:
+  publish-canary:
+    if: ${{ !github.event.repository.fork }}
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: ./js
+
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
+          persist-credentials: false
+
+      - name: set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          cache: true
+          cache_dependency_path: 'js/pnpm-lock.yaml'
+          package_json_file: 'js/package.json'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for pending changesets
+        id: pending-changesets
+        run: |
+          if find .changeset -maxdepth 1 -name '*.md' -print -quit | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+            echo "No changesets found, skipping canary publish"
+          fi
+
+      - name: Version packages for canary publish
+        if: steps.pending-changesets.outputs.has_changesets == 'true'
+        run: pnpm changeset version --snapshot canary
+
+      - name: Build canary packages
+        if: steps.pending-changesets.outputs.has_changesets == 'true'
+        run: pnpm build
+
+      - name: Publish canary packages to npm
+        if: steps.pending-changesets.outputs.has_changesets == 'true'
+        run: pnpm changeset publish --tag canary --access public --no-git-checks
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
   release:
     if: ${{ !github.event.repository.fork }}
     runs-on: ubuntu-latest
