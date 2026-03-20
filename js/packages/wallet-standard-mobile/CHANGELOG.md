@@ -1,5 +1,16 @@
 # @solana-mobile/wallet-standard-mobile
 
+## 2.2.7
+
+### Patch Changes
+
+-   7b35afb: Replace the Rollup-based JS package builds with tsdown while preserving the published CJS, ESM, and types output layout.
+
+    Update the generated package metadata step so JS package builds complete cleanly on Node 24.
+
+-   Updated dependencies [7b35afb]
+    -   @solana-mobile/mobile-wallet-adapter-protocol@2.2.7
+
 ## 0.5.0
 
 ### Minor Changes
