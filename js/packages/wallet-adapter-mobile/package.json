@@ -53,15 +53,15 @@
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/web3.js": "^1.98.0",
+        "@solana/web3.js": "^1.98.4",
         "react-native": ">0.74"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "workspace:^",
         "@solana-mobile/wallet-standard-mobile": "workspace:^",
-        "@solana/wallet-adapter-base": "^0.9.23",
-        "@solana/wallet-standard-features": "^1.2.0",
+        "@solana/wallet-adapter-base": "^0.9.27",
+        "@solana/wallet-standard-features": "^1.3.0",
         "@wallet-standard/core": "^1.1.1",
         "bs58": "^6.0.0",
         "js-base64": "^3.7.5",
@@ -71,7 +71,7 @@
         "@react-native-async-storage/async-storage": "^1.17.7"
     },
     "devDependencies": {
-        "@solana/web3.js": "^1.95.3",
+        "@solana/web3.js": "^1.98.4",
         "@types/react-native": "^0.69.3",
         "agadoo": "^3.0.0",
         "cross-env": "^10.1.0",
