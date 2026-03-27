@@ -64,6 +64,7 @@ jobs:
       - name: 'Build Expo App'
         working-directory: 'js/'
         run: |
+          cd expo-${{ matrix.version }}-app
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
 
@@ -85,5 +86,6 @@ jobs:
       - name: 'Build Expo Wallet'
         working-directory: 'js/'
         run: |
+          cd expo-${{ matrix.version }}-wallet
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
