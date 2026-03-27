@@ -37,6 +37,10 @@ jobs:
       #   working-directory: 'js/'
       #   run: pnpm lint
         continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[js] Check Types'
+        working-directory: 'js/'
+        run: pnpm check-types
+
       - name: '[js] Build'
         working-directory: 'js/'
         run: pnpm build

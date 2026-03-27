@@ -4,8 +4,10 @@ import {
     getBase64EncodedWireTransaction,
     getTransactionDecoder
 } from '@solana/transactions';
-import { 
-    CompilableTransactionMessage, 
+import {
+    type TransactionMessage,
+    type TransactionMessageWithFeePayer,
+    type TransactionMessageWithLifetime,
 } from '@solana/transaction-messages';
 import type { SignatureBytes } from '@solana/keys';
 import {
@@ -17,17 +19,23 @@ import {
     GetCapabilitiesAPI,
     MobileWallet,
     ReauthorizeAPI,
+    RemoteWalletAssociationConfig,
+    startRemoteScenario as baseStartRemoteScenario,
     TerminateSessionAPI,
     transact as baseTransact,
-    startRemoteScenario as baseStartRemoteScenario,
     WalletAssociationConfig,
-    RemoteWalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
 import { fromUint8Array, toUint8Array } from './base64Utils.js';
 
+export type TransactionMessageWithFeePayerAndLifetime<TAddress extends string = string> = TransactionMessage &
+    TransactionMessageWithFeePayer<TAddress> &
+    TransactionMessageWithLifetime;
+
+export type SignAndSendTransactionMessage = TransactionMessageWithFeePayerAndLifetime;
+
 interface KitSignAndSendTransactionsAPI {
-    signAndSendTransactions<T extends Transaction | CompilableTransactionMessage >(params: {
+    signAndSendTransactions<T extends Transaction | SignAndSendTransactionMessage >(params: {
         minContextSlot?: number;
         commitment?: string;
         skipPreflight?: boolean;
@@ -68,7 +76,7 @@ export type KitRemoteScenario = KitScenario & Readonly<{
 }>;
 
 function getPayloadFromTransaction(
-    transaction: Transaction | CompilableTransactionMessage
+  transaction: Transaction | SignAndSendTransactionMessage
 ): Base64EncodedTransaction {
     if ('messageBytes' in transaction) {
         return getBase64EncodedWireTransaction(transaction);

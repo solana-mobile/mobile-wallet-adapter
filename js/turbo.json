@@ -5,6 +5,9 @@
       "dependsOn": ["^build"],
       "outputs": ["lib/**"]
     },
+    "check-types": {
+      "dependsOn": ["^build", "^check-types"]
+    },
     "clean": {
       "cache": false
     }
