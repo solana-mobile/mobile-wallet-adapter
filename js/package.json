@@ -4,6 +4,7 @@
     "packageManager": "pnpm@10.30.0",
     "scripts": {
         "build": "turbo run build",
+        "check-types": "turbo run check-types",
         "clean": "turbo run clean",
         "publish-packages": "pnpm build && pnpm changeset publish --access public --no-git-checks",
         "test": "vitest"

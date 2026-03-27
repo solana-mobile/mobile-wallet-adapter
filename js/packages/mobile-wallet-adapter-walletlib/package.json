@@ -31,6 +31,7 @@
         "clean": "shx rm -rf lib/*",
         "build": "pnpm clean && tsdown --config tsdown.config.ts",
         "build:watch": "pnpm clean && tsdown --config tsdown.config.ts --watch",
+        "check-types": "tsc -p tsconfig.json --noEmit",
         "postbuild": "printf '%s' '{\"type\":\"module\"}' > lib/esm/package.json",
         "example": "pnpm --cwd example",
         "bootstrap": "pnpm example && pnpm install && pnpm example pods"

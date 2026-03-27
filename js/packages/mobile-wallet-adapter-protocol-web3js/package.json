@@ -49,6 +49,7 @@
         "clean": "shx rm -rf lib/*",
         "build": "pnpm clean && tsdown --config ../../tsdown.config.ts",
         "build:watch": "pnpm clean && tsdown --config ../../tsdown.config.ts --watch",
+        "check-types": "tsc -p tsconfig.json --noEmit",
         "postbuild": "printf '%s' '{\"type\":\"commonjs\"}' > lib/cjs/package.json && printf '%s' '{\"type\":\"module\"}' > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
