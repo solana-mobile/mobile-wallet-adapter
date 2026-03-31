@@ -8,7 +8,7 @@ import {
 } from "./wallet";
 import { AppIdentity } from "@solana-mobile/mobile-wallet-adapter-protocol";
 import { IdentifierArray } from "@wallet-standard/base";
-import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported, isWebView } from "./getIsSupported";
+import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported, isWebView, isSolanaMobileWebShell } from "./getIsSupported";
 
 export function registerMwa(config: {
     appIdentity: AppIdentity;
@@ -27,9 +27,14 @@ export function registerMwa(config: {
         return
     }
 
+    const userAgent = navigator.userAgent;
+
+    const allowLocalAssociation = getIsLocalAssociationSupported()
+        && (!isWebView(userAgent) || isSolanaMobileWebShell(userAgent));
+
     // Local association technically is possible in a webview, but we prevent registration
     // by default because it usually fails in the most common cases (e.g wallet browsers).
-    if (getIsLocalAssociationSupported() && !isWebView(navigator.userAgent)) {
+    if (allowLocalAssociation) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
     } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
         registerWallet(new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }))

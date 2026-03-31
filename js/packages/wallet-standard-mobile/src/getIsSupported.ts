@@ -29,6 +29,10 @@ export function isWebView(userAgentString: string) {
     );
 }
 
+export function isSolanaMobileWebShell(userAgentString: string) {
+    return userAgentString.includes("Solana Mobile Web Shell");
+}
+
 // Source: https://web.dev/learn/pwa/detection/
 export function getIsPwaLaunchedAsApp() {
     // Check for Android TWA
@@ -45,6 +49,16 @@ export function getIsPwaLaunchedAsApp() {
 }
 
 export async function checkLocalNetworkAccessPermission(): Promise<void> {
+    if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
+        // Solana Mobile Web Shell runs inside an Android WebView hosted by a
+        // native app, not a regular mobile browser tab. The WebView currently
+        // does not expose a usable loopback-network permission query, so this
+        // check throws even though the shell can still proceed with local
+        // association. Keep this bypass scoped to the explicit Web Shell user
+        // agent marker so the normal browser permission flow remains unchanged.
+        return;
+    }
+
     try {
         let lnaPermission: PermissionStatus = 
             await navigator.permissions.query({ name: "loopback-network" as PermissionName});
