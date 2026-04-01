@@ -15,15 +15,15 @@ import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.j
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
 import { startSession } from './startSession.js';
-import { 
-    AssociationKeypair, 
-    MobileWallet, 
-    RemoteMobileWallet, 
-    RemoteScenario, 
-    RemoteWalletAssociationConfig, 
-    Scenario, 
-    SessionProperties, 
-    WalletAssociationConfig 
+import {
+    AssociationKeypair,
+    MobileWallet,
+    RemoteMobileWallet,
+    RemoteScenario,
+    RemoteWalletAssociationConfig,
+    Scenario,
+    SessionProperties,
+    WalletAssociationConfig,
 } from './types.js';
 
 const WEBSOCKET_CONNECTION_CONFIG = {
@@ -55,7 +55,7 @@ type State =
     | { __type: 'disconnected' }
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
 
-type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: ArrayBuffer }; 
+type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: ArrayBuffer };
 
 function assertSecureContext() {
     if (typeof window === 'undefined' || window.isSecureContext !== true) {
@@ -89,17 +89,17 @@ function getSequenceNumberFromByteArray(byteArray: ArrayBuffer): number {
     return view.getUint32(0, /* littleEndian */ false);
 }
 
-function decodeVarLong(byteArray: ArrayBuffer): { value: number, offset: number} {
-    var bytes = new Uint8Array(byteArray), 
+function decodeVarLong(byteArray: ArrayBuffer): { value: number; offset: number } {
+    var bytes = new Uint8Array(byteArray),
         l = byteArray.byteLength,
         limit = 10,
-        value = 0, 
-        offset = 0, 
+        value = 0,
+        offset = 0,
         b;
     do {
         if (offset >= l || offset > limit) throw new RangeError('Failed to decode varint');
         b = bytes[offset++];
-        value |= (b & 0x7F) << (7 * offset);
+        value |= (b & 0x7f) << (7 * offset);
     } while (b >= 0x80);
 
     return { value, offset };
@@ -122,9 +122,7 @@ export async function transact<TReturn>(
     }
 }
 
-export async function startScenario(
-    config?: WalletAssociationConfig,
-): Promise<Scenario> {
+export async function startScenario(config?: WalletAssociationConfig): Promise<Scenario> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const sessionPort = await startSession(associationKeypair.publicKey, config?.baseUri);
@@ -140,108 +138,77 @@ export async function startScenario(
     let socket: WebSocket;
     let sessionEstablished = false;
     let handleForceClose: () => void;
-    return { close: () => {
-        socket.close();
-        handleForceClose();
-    }, wallet: new Promise((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
-        const handleOpen = async () => {
-            if (state.__type !== 'connecting') {
-                console.warn(
-                    'Expected adapter state to be `connecting` at the moment the websocket opens. ' +
-                        `Got \`${state.__type}\`.`,
-                );
-                return;
-            }
-            socket.removeEventListener('open', handleOpen);
+    return {
+        close: () => {
+            socket.close();
+            handleForceClose();
+        },
+        wallet: new Promise((resolve, reject) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const handleOpen = async () => {
+                if (state.__type !== 'connecting') {
+                    console.warn(
+                        'Expected adapter state to be `connecting` at the moment the websocket opens. ' +
+                            `Got \`${state.__type}\`.`,
+                    );
+                    return;
+                }
+                socket.removeEventListener('open', handleOpen);
 
-            // previous versions of this library and walletlib incorrectly implemented the MWA session 
-            // establishment protocol for local connections. The dapp is supposed to wait for the 
-            // APP_PING message before sending the HELLO_REQ. Instead, the dapp was sending the HELLO_REQ 
-            // immediately upon connection to the websocket server regardless of wether or not an 
-            // APP_PING was sent by the wallet/websocket server. We must continue to support this behavior 
-            // in case the user is using a wallet that has not updated their walletlib implementation. 
-            const { associationKeypair } = state;
-            const ecdhKeypair = await generateECDHKeypair();
-            socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
-            state = {
-                __type: 'hello_req_sent',
-                associationPublicKey: associationKeypair.publicKey,
-                ecdhPrivateKey: ecdhKeypair.privateKey,
+                // previous versions of this library and walletlib incorrectly implemented the MWA session
+                // establishment protocol for local connections. The dapp is supposed to wait for the
+                // APP_PING message before sending the HELLO_REQ. Instead, the dapp was sending the HELLO_REQ
+                // immediately upon connection to the websocket server regardless of wether or not an
+                // APP_PING was sent by the wallet/websocket server. We must continue to support this behavior
+                // in case the user is using a wallet that has not updated their walletlib implementation.
+                const { associationKeypair } = state;
+                const ecdhKeypair = await generateECDHKeypair();
+                socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
+                state = {
+                    __type: 'hello_req_sent',
+                    associationPublicKey: associationKeypair.publicKey,
+                    ecdhPrivateKey: ecdhKeypair.privateKey,
+                };
             };
-        };
-        const handleClose = (evt: CloseEvent) => {
-            if (evt.wasClean) {
-                state = { __type: 'disconnected' };
-            } else {
-                reject(
-                    new SolanaMobileWalletAdapterError(
-                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
-                        `The wallet session dropped unexpectedly (${evt.code}: ${evt.reason}).`,
-                        { closeEvent: evt },
-                    ),
-                );
-            }
-            disposeSocket();
-        };
-        const handleError = async (_evt: Event) => {
-            disposeSocket();
-            if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
-                reject(
-                    new SolanaMobileWalletAdapterError(
-                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT,
-                        `Failed to connect to the wallet websocket at ${websocketURL}.`,
-                    ),
-                );
-            } else {
-                await new Promise((resolve) => {
-                    const retryDelayMs = getNextRetryDelayMs();
-                    retryWaitTimeoutId = window.setTimeout(resolve, retryDelayMs);
-                });
-                attemptSocketConnection();
-            }
-        };
-        const handleMessage = async (evt: MessageEvent<Blob>) => {
-            const responseBuffer = await evt.data.arrayBuffer();
-            switch (state.__type) {
-                case 'connecting':
-                    if (responseBuffer.byteLength !== 0) {
-                        throw new Error('Encountered unexpected message while connecting');
-                    }
-                    const ecdhKeypair = await generateECDHKeypair();
-                    socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
-                    state = {
-                        __type: 'hello_req_sent',
-                        associationPublicKey: associationKeypair.publicKey,
-                        ecdhPrivateKey: ecdhKeypair.privateKey,
-                    };
-                    break;
-                case 'connected':
-                    try {
-                        const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
-                        const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
-                        if (sequenceNumber !== (lastKnownInboundSequenceNumber + 1)) {
-                            throw new Error('Encrypted message has invalid sequence number');
+            const handleClose = (evt: CloseEvent) => {
+                if (evt.wasClean) {
+                    state = { __type: 'disconnected' };
+                } else {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            `The wallet session dropped unexpectedly (${evt.code}: ${evt.reason}).`,
+                            { closeEvent: evt },
+                        ),
+                    );
+                }
+                disposeSocket();
+            };
+            const handleError = async (_evt: Event) => {
+                disposeSocket();
+                if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT,
+                            `Failed to connect to the wallet websocket at ${websocketURL}.`,
+                        ),
+                    );
+                } else {
+                    await new Promise((resolve) => {
+                        const retryDelayMs = getNextRetryDelayMs();
+                        retryWaitTimeoutId = window.setTimeout(resolve, retryDelayMs);
+                    });
+                    attemptSocketConnection();
+                }
+            };
+            const handleMessage = async (evt: MessageEvent<Blob>) => {
+                const responseBuffer = await evt.data.arrayBuffer();
+                switch (state.__type) {
+                    case 'connecting':
+                        if (responseBuffer.byteLength !== 0) {
+                            throw new Error('Encountered unexpected message while connecting');
                         }
-                        lastKnownInboundSequenceNumber = sequenceNumber;
-                        const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
-                        const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
-                        delete jsonRpcResponsePromises[jsonRpcMessage.id];
-                        responsePromise.resolve(jsonRpcMessage.result);
-                    } catch (e) {
-                        if (e instanceof SolanaMobileWalletAdapterProtocolError) {
-                            const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
-                            delete jsonRpcResponsePromises[e.jsonRpcMessageId];
-                            responsePromise.reject(e);
-                        } else {
-                            throw e;
-                        }
-                    }
-                    break;
-                case 'hello_req_sent': {
-                    // if we receive an APP_PING message (empty message), resend the HELLO_REQ (see above)
-                    if (responseBuffer.byteLength === 0) {
                         const ecdhKeypair = await generateECDHKeypair();
                         socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
                         state = {
@@ -250,117 +217,156 @@ export async function startScenario(
                             ecdhPrivateKey: ecdhKeypair.privateKey,
                         };
                         break;
-                    }
-                    const sharedSecret = await parseHelloRsp(
-                        responseBuffer,
-                        state.associationPublicKey,
-                        state.ecdhPrivateKey,
-                    );
-                    const sessionPropertiesBuffer = responseBuffer.slice(ENCODED_PUBLIC_KEY_LENGTH_BYTES);
-                    const sessionProperties = sessionPropertiesBuffer.byteLength !== 0 
-                        ? await (async () => {
-                            const sequenceNumberVector = sessionPropertiesBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
+                    case 'connected':
+                        try {
+                            const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
-                            if (sequenceNumber !== (lastKnownInboundSequenceNumber + 1)) {
+                            if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
                                 throw new Error('Encrypted message has invalid sequence number');
                             }
                             lastKnownInboundSequenceNumber = sequenceNumber;
-                            return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
-                        })() : <SessionProperties> { protocol_version: 'legacy' };
-                    state = { __type: 'connected', sharedSecret, sessionProperties };
-                    const wallet = createMobileWalletProxy(sessionProperties.protocol_version,
-                        async (method, params) => {
-                            const id = nextJsonRpcMessageId++;
-                            socket.send(
-                                await encryptJsonRpcMessage(
-                                    {
-                                        id,
-                                        jsonrpc: '2.0' as const,
-                                        method,
-                                        params: params ?? {},
-                                    }, 
-                                    sharedSecret,
-                                ),
-                            );
-                            return new Promise((resolve, reject) => {
-                                jsonRpcResponsePromises[id] = {
-                                    resolve(result) {
-                                        switch (method) {
-                                            case 'authorize':
-                                            case 'reauthorize': {
-                                                const { wallet_uri_base } = result as Awaited<
-                                                    ReturnType<MobileWallet['authorize' | 'reauthorize']>
-                                                >;
-                                                if (wallet_uri_base != null) {
-                                                    try {
-                                                        assertSecureEndpointSpecificURI(wallet_uri_base);
-                                                    } catch (e) {
-                                                        reject(e);
-                                                        return;
+                            const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
+                            const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                            delete jsonRpcResponsePromises[jsonRpcMessage.id];
+                            responsePromise.resolve(jsonRpcMessage.result);
+                        } catch (e) {
+                            if (e instanceof SolanaMobileWalletAdapterProtocolError) {
+                                const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                delete jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                responsePromise.reject(e);
+                            } else {
+                                throw e;
+                            }
+                        }
+                        break;
+                    case 'hello_req_sent': {
+                        // if we receive an APP_PING message (empty message), resend the HELLO_REQ (see above)
+                        if (responseBuffer.byteLength === 0) {
+                            const ecdhKeypair = await generateECDHKeypair();
+                            socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
+                            state = {
+                                __type: 'hello_req_sent',
+                                associationPublicKey: associationKeypair.publicKey,
+                                ecdhPrivateKey: ecdhKeypair.privateKey,
+                            };
+                            break;
+                        }
+                        const sharedSecret = await parseHelloRsp(
+                            responseBuffer,
+                            state.associationPublicKey,
+                            state.ecdhPrivateKey,
+                        );
+                        const sessionPropertiesBuffer = responseBuffer.slice(ENCODED_PUBLIC_KEY_LENGTH_BYTES);
+                        const sessionProperties =
+                            sessionPropertiesBuffer.byteLength !== 0
+                                ? await (async () => {
+                                      const sequenceNumberVector = sessionPropertiesBuffer.slice(
+                                          0,
+                                          SEQUENCE_NUMBER_BYTES,
+                                      );
+                                      const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                                      if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
+                                          throw new Error('Encrypted message has invalid sequence number');
+                                      }
+                                      lastKnownInboundSequenceNumber = sequenceNumber;
+                                      return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
+                                  })()
+                                : <SessionProperties>{ protocol_version: 'legacy' };
+                        state = { __type: 'connected', sharedSecret, sessionProperties };
+                        const wallet = createMobileWalletProxy(
+                            sessionProperties.protocol_version,
+                            async (method, params) => {
+                                const id = nextJsonRpcMessageId++;
+                                socket.send(
+                                    await encryptJsonRpcMessage(
+                                        {
+                                            id,
+                                            jsonrpc: '2.0' as const,
+                                            method,
+                                            params: params ?? {},
+                                        },
+                                        sharedSecret,
+                                    ),
+                                );
+                                return new Promise((resolve, reject) => {
+                                    jsonRpcResponsePromises[id] = {
+                                        resolve(result) {
+                                            switch (method) {
+                                                case 'authorize':
+                                                case 'reauthorize': {
+                                                    const { wallet_uri_base } = result as Awaited<
+                                                        ReturnType<MobileWallet['authorize' | 'reauthorize']>
+                                                    >;
+                                                    if (wallet_uri_base != null) {
+                                                        try {
+                                                            assertSecureEndpointSpecificURI(wallet_uri_base);
+                                                        } catch (e) {
+                                                            reject(e);
+                                                            return;
+                                                        }
                                                     }
+                                                    break;
                                                 }
-                                                break;
                                             }
-                                        }
-                                        resolve(result);
-                                    },
-                                    reject,
-                                };
-                            });
-                        })
-                    sessionEstablished = true;
-                    try {
-                        resolve(wallet);
-                    } catch (e) {
-                        reject(e);
+                                            resolve(result);
+                                        },
+                                        reject,
+                                    };
+                                });
+                            },
+                        );
+                        sessionEstablished = true;
+                        try {
+                            resolve(wallet);
+                        } catch (e) {
+                            reject(e);
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
-        };
-        handleForceClose = () => {
-            socket.removeEventListener('message', handleMessage);
-            disposeSocket();
-            if (!sessionEstablished) {
-                reject(
-                    new SolanaMobileWalletAdapterError(
-                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
-                        `The wallet session was closed before connection.`,
-                        { closeEvent: new CloseEvent('socket was closed before connection') },
-                    ),
-                );
-            }
-        };
-        let disposeSocket: () => void;
-        let retryWaitTimeoutId: number;
-        const attemptSocketConnection = () => {
-            if (disposeSocket) {
-                disposeSocket();
-            }
-            state = { __type: 'connecting', associationKeypair };
-            if (connectionStartTime === undefined) {
-                connectionStartTime = Date.now();
-            }
-            socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL_BINARY]);
-            socket.addEventListener('open', handleOpen);
-            socket.addEventListener('close', handleClose);
-            socket.addEventListener('error', handleError);
-            socket.addEventListener('message', handleMessage);
-            disposeSocket = () => {
-                window.clearTimeout(retryWaitTimeoutId);
-                socket.removeEventListener('open', handleOpen);
-                socket.removeEventListener('close', handleClose);
-                socket.removeEventListener('error', handleError);
-                socket.removeEventListener('message', handleMessage);
             };
-        };
-        attemptSocketConnection();
-    })};
+            handleForceClose = () => {
+                socket.removeEventListener('message', handleMessage);
+                disposeSocket();
+                if (!sessionEstablished) {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            `The wallet session was closed before connection.`,
+                            { closeEvent: new CloseEvent('socket was closed before connection') },
+                        ),
+                    );
+                }
+            };
+            let disposeSocket: () => void;
+            let retryWaitTimeoutId: number;
+            const attemptSocketConnection = () => {
+                if (disposeSocket) {
+                    disposeSocket();
+                }
+                state = { __type: 'connecting', associationKeypair };
+                if (connectionStartTime === undefined) {
+                    connectionStartTime = Date.now();
+                }
+                socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL_BINARY]);
+                socket.addEventListener('open', handleOpen);
+                socket.addEventListener('close', handleClose);
+                socket.addEventListener('error', handleError);
+                socket.addEventListener('message', handleMessage);
+                disposeSocket = () => {
+                    window.clearTimeout(retryWaitTimeoutId);
+                    socket.removeEventListener('open', handleOpen);
+                    socket.removeEventListener('close', handleClose);
+                    socket.removeEventListener('error', handleError);
+                    socket.removeEventListener('message', handleMessage);
+                };
+            };
+            attemptSocketConnection();
+        }),
+    };
 }
 
-export async function startRemoteScenario(
-    config: RemoteWalletAssociationConfig,
-): Promise<RemoteScenario> {
+export async function startRemoteScenario(config: RemoteWalletAssociationConfig): Promise<RemoteScenario> {
     assertSecureContext();
     const associationKeypair = await generateAssociationKeypair();
     const websocketURL = `wss://${config?.remoteHostAuthority}/reflect`;
@@ -376,15 +382,16 @@ export async function startRemoteScenario(
     let socket: WebSocket;
     let disposeSocket: () => void;
     let decodeBytes = async (evt: MessageEvent<string | Blob>) => {
-        if (encoding == 'base64') { // base64 encoding
-            const message = await evt.data as string;
+        if (encoding == 'base64') {
+            // base64 encoding
+            const message = (await evt.data) as string;
             return toUint8Array(message).buffer;
         } else {
             return await (evt.data as Blob).arrayBuffer();
         }
     };
     // Reflector Connection Phase
-    // here we connect to the reflector and wait for the REFLECTOR_ID message 
+    // here we connect to the reflector and wait for the REFLECTOR_ID message
     // so we build the association URL and return that back to the caller
     const associationUrl = await new Promise<URL>((resolve, reject) => {
         const handleOpen = async () => {
@@ -442,13 +449,13 @@ export async function startRemoteScenario(
                 const reflectorId = getReflectorIdFromByteArray(responseBuffer);
                 state = {
                     __type: 'reflector_id_received',
-                    reflectorId: reflectorId
+                    reflectorId: reflectorId,
                 };
                 const associationUrl = await getRemoteAssociateAndroidIntentURL(
-                    associationKeypair.publicKey, 
-                    config.remoteHostAuthority, 
+                    associationKeypair.publicKey,
+                    config.remoteHostAuthority,
                     reflectorId,
-                    config?.baseUri
+                    config?.baseUri,
                 );
                 socket.removeEventListener('message', handleReflectorIdMessage);
                 resolve(associationUrl);
@@ -463,8 +470,7 @@ export async function startRemoteScenario(
             if (connectionStartTime === undefined) {
                 connectionStartTime = Date.now();
             }
-            socket = new WebSocket(websocketURL, 
-                [WEBSOCKET_PROTOCOL_BINARY, WEBSOCKET_PROTOCOL_BASE64]);
+            socket = new WebSocket(websocketURL, [WEBSOCKET_PROTOCOL_BINARY, WEBSOCKET_PROTOCOL_BASE64]);
             socket.addEventListener('open', handleOpen);
             socket.addEventListener('close', handleClose);
             socket.addEventListener('error', handleError);
@@ -480,142 +486,153 @@ export async function startRemoteScenario(
         attemptSocketConnection();
     });
     // Wallet Connection Phase
-    // here we return the association URL (containing the reflector ID) to the caller + 
+    // here we return the association URL (containing the reflector ID) to the caller +
     // a promise that will resolve the MobileWallet object once the wallet connects.
     let sessionEstablished = false;
     let handleClose: () => void;
-    return { associationUrl, close: () => {
-        socket.close();
-        handleClose();
-    }, wallet: new Promise((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
-        const handleMessage = async (evt: MessageEvent<string | Blob>) => {
-            const responseBuffer = await decodeBytes(evt);
-            switch (state.__type) {
-                case 'reflector_id_received':
-                    if (responseBuffer.byteLength !== 0) {
-                        throw new Error('Encountered unexpected message while awaiting reflection');
-                    }
-                    const ecdhKeypair = await generateECDHKeypair();
-                    const binaryMsg = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
-                    if (encoding == 'base64') {
-                        socket.send(fromUint8Array(binaryMsg));
-                    } else {
-                        socket.send(binaryMsg);
-                    }
-                    state = {
-                        __type: 'hello_req_sent',
-                        associationPublicKey: associationKeypair.publicKey,
-                        ecdhPrivateKey: ecdhKeypair.privateKey,
-                    };
-                    break;
-                case 'connected':
-                    try {
-                        const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
-                        const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
-                        if (sequenceNumber !== (lastKnownInboundSequenceNumber + 1)) {
-                            throw new Error('Encrypted message has invalid sequence number');
+    return {
+        associationUrl,
+        close: () => {
+            socket.close();
+            handleClose();
+        },
+        wallet: new Promise((resolve, reject) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const handleMessage = async (evt: MessageEvent<string | Blob>) => {
+                const responseBuffer = await decodeBytes(evt);
+                switch (state.__type) {
+                    case 'reflector_id_received':
+                        if (responseBuffer.byteLength !== 0) {
+                            throw new Error('Encountered unexpected message while awaiting reflection');
                         }
-                        lastKnownInboundSequenceNumber = sequenceNumber;
-                        const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
-                        const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
-                        delete jsonRpcResponsePromises[jsonRpcMessage.id];
-                        responsePromise.resolve(jsonRpcMessage.result);
-                    } catch (e) {
-                        if (e instanceof SolanaMobileWalletAdapterProtocolError) {
-                            const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
-                            delete jsonRpcResponsePromises[e.jsonRpcMessageId];
-                            responsePromise.reject(e);
+                        const ecdhKeypair = await generateECDHKeypair();
+                        const binaryMsg = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
+                        if (encoding == 'base64') {
+                            socket.send(fromUint8Array(binaryMsg));
                         } else {
-                            throw e;
+                            socket.send(binaryMsg);
                         }
-                    }
-                    break;
-                case 'hello_req_sent': {
-                    const sharedSecret = await parseHelloRsp(
-                        responseBuffer,
-                        state.associationPublicKey,
-                        state.ecdhPrivateKey,
-                    );
-                    const sessionPropertiesBuffer = responseBuffer.slice(ENCODED_PUBLIC_KEY_LENGTH_BYTES);
-                    const sessionProperties = sessionPropertiesBuffer.byteLength !== 0 
-                        ? await (async () => {
-                            const sequenceNumberVector = sessionPropertiesBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
+                        state = {
+                            __type: 'hello_req_sent',
+                            associationPublicKey: associationKeypair.publicKey,
+                            ecdhPrivateKey: ecdhKeypair.privateKey,
+                        };
+                        break;
+                    case 'connected':
+                        try {
+                            const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
-                            if (sequenceNumber !== (lastKnownInboundSequenceNumber + 1)) {
+                            if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
                                 throw new Error('Encrypted message has invalid sequence number');
                             }
                             lastKnownInboundSequenceNumber = sequenceNumber;
-                            return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
-                        })() : <SessionProperties> { protocol_version: 'legacy' };
-                    state = { __type: 'connected', sharedSecret, sessionProperties };
-                    const wallet = createMobileWalletProxy(sessionProperties.protocol_version,
-                        async (method, params) => {
-                            const id = nextJsonRpcMessageId++;
-                            const binaryMsg = await encryptJsonRpcMessage(
-                                {
-                                    id,
-                                    jsonrpc: '2.0' as const,
-                                    method,
-                                    params: params ?? {},
-                                }, 
-                                sharedSecret,
-                            )
-                            if (encoding == 'base64') {
-                                socket.send(fromUint8Array(binaryMsg));
+                            const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
+                            const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                            delete jsonRpcResponsePromises[jsonRpcMessage.id];
+                            responsePromise.resolve(jsonRpcMessage.result);
+                        } catch (e) {
+                            if (e instanceof SolanaMobileWalletAdapterProtocolError) {
+                                const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                delete jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                responsePromise.reject(e);
                             } else {
-                                socket.send(binaryMsg);
+                                throw e;
                             }
-                            return new Promise((resolve, reject) => {
-                                jsonRpcResponsePromises[id] = {
-                                    resolve(result) {
-                                        switch (method) {
-                                            case 'authorize':
-                                            case 'reauthorize': {
-                                                const { wallet_uri_base } = result as Awaited<
-                                                    ReturnType<MobileWallet['authorize' | 'reauthorize']>
-                                                >;
-                                                if (wallet_uri_base != null) {
-                                                    try {
-                                                        assertSecureEndpointSpecificURI(wallet_uri_base);
-                                                    } catch (e) {
-                                                        reject(e);
-                                                        return;
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                        }
-                                        resolve(result);
+                        }
+                        break;
+                    case 'hello_req_sent': {
+                        const sharedSecret = await parseHelloRsp(
+                            responseBuffer,
+                            state.associationPublicKey,
+                            state.ecdhPrivateKey,
+                        );
+                        const sessionPropertiesBuffer = responseBuffer.slice(ENCODED_PUBLIC_KEY_LENGTH_BYTES);
+                        const sessionProperties =
+                            sessionPropertiesBuffer.byteLength !== 0
+                                ? await (async () => {
+                                      const sequenceNumberVector = sessionPropertiesBuffer.slice(
+                                          0,
+                                          SEQUENCE_NUMBER_BYTES,
+                                      );
+                                      const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                                      if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
+                                          throw new Error('Encrypted message has invalid sequence number');
+                                      }
+                                      lastKnownInboundSequenceNumber = sequenceNumber;
+                                      return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
+                                  })()
+                                : <SessionProperties>{ protocol_version: 'legacy' };
+                        state = { __type: 'connected', sharedSecret, sessionProperties };
+                        const wallet = createMobileWalletProxy(
+                            sessionProperties.protocol_version,
+                            async (method, params) => {
+                                const id = nextJsonRpcMessageId++;
+                                const binaryMsg = await encryptJsonRpcMessage(
+                                    {
+                                        id,
+                                        jsonrpc: '2.0' as const,
+                                        method,
+                                        params: params ?? {},
                                     },
-                                    reject,
-                                };
-                            });
-                        })
-                    sessionEstablished = true;
-                    try {
-                        resolve(wallet);
-                    } catch (e) {
-                        reject(e);
+                                    sharedSecret,
+                                );
+                                if (encoding == 'base64') {
+                                    socket.send(fromUint8Array(binaryMsg));
+                                } else {
+                                    socket.send(binaryMsg);
+                                }
+                                return new Promise((resolve, reject) => {
+                                    jsonRpcResponsePromises[id] = {
+                                        resolve(result) {
+                                            switch (method) {
+                                                case 'authorize':
+                                                case 'reauthorize': {
+                                                    const { wallet_uri_base } = result as Awaited<
+                                                        ReturnType<MobileWallet['authorize' | 'reauthorize']>
+                                                    >;
+                                                    if (wallet_uri_base != null) {
+                                                        try {
+                                                            assertSecureEndpointSpecificURI(wallet_uri_base);
+                                                        } catch (e) {
+                                                            reject(e);
+                                                            return;
+                                                        }
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                            resolve(result);
+                                        },
+                                        reject,
+                                    };
+                                });
+                            },
+                        );
+                        sessionEstablished = true;
+                        try {
+                            resolve(wallet);
+                        } catch (e) {
+                            reject(e);
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
-        }
-        socket.addEventListener('message', handleMessage);
-        handleClose = () => {
-            socket.removeEventListener('message', handleMessage);
-            disposeSocket();
-            if (!sessionEstablished) {
-                reject(
-                    new SolanaMobileWalletAdapterError(
-                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
-                        `The wallet session was closed before connection.`,
-                        { closeEvent: new CloseEvent('socket was closed before connection') },
-                    ),
-                );
-            }
-        };
-    })};
+            };
+            socket.addEventListener('message', handleMessage);
+            handleClose = () => {
+                socket.removeEventListener('message', handleMessage);
+                disposeSocket();
+                if (!sessionEstablished) {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            `The wallet session was closed before connection.`,
+                            { closeEvent: new CloseEvent('socket was closed before connection') },
+                        ),
+                    );
+                }
+            };
+        }),
+    };
 }

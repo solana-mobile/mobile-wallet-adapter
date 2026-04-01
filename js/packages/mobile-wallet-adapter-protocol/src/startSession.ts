@@ -7,7 +7,7 @@ const Browser = {
     Firefox: 0,
     Other: 1,
 } as const;
-type BrowserEnum = typeof Browser[keyof typeof Browser];
+type BrowserEnum = (typeof Browser)[keyof typeof Browser];
 
 function assertUnreachable(x: never): never {
     return x;

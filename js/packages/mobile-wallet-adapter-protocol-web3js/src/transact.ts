@@ -45,7 +45,8 @@ interface Web3SignMessagesAPI {
 }
 
 export interface Web3MobileWallet
-    extends AuthorizeAPI,
+    extends
+        AuthorizeAPI,
         CloneAuthorizationAPI,
         DeauthorizeAPI,
         GetCapabilitiesAPI,
@@ -54,17 +55,17 @@ export interface Web3MobileWallet
         Web3SignTransactionsAPI,
         Web3SignMessagesAPI {}
 
-export interface Web3RemoteMobileWallet
-    extends Web3MobileWallet, TerminateSessionAPI {}
+export interface Web3RemoteMobileWallet extends Web3MobileWallet, TerminateSessionAPI {}
 
 export type Web3Scenario = Readonly<{
     wallet: Promise<Web3MobileWallet>;
     close: () => void;
 }>;
 
-export type Web3RemoteScenario = Web3Scenario & Readonly<{
-    associationUrl: URL;
-}>;
+export type Web3RemoteScenario = Web3Scenario &
+    Readonly<{
+        associationUrl: URL;
+    }>;
 
 function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTransaction): Base64EncodedTransaction {
     const serializedTransaction =
@@ -99,12 +100,10 @@ export async function transact<TReturn>(
     return await baseTransact(augmentedCallback, config);
 }
 
-export async function startRemoteScenario(
-    config: RemoteWalletAssociationConfig,
-): Promise<Web3RemoteScenario> {
+export async function startRemoteScenario(config: RemoteWalletAssociationConfig): Promise<Web3RemoteScenario> {
     const { wallet, close, associationUrl } = await baseStartRemoteScenario(config);
     const augmentedPromise = wallet.then((wallet) => {
-        return augmentWalletAPI(wallet); 
+        return augmentWalletAPI(wallet);
     });
     return { wallet: augmentedPromise, close, associationUrl };
 }
@@ -130,12 +129,12 @@ function augmentWalletAPI(wallet: MobileWallet): Web3MobileWallet {
                                 commitment: commitment,
                                 skip_preflight: skipPreflight,
                                 max_retries: maxRetries,
-                                wait_for_commitment_to_send_next_transaction: waitForCommitmentToSendNextTransaction
+                                wait_for_commitment_to_send_next_transaction: waitForCommitmentToSendNextTransaction,
                             };
                             const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
                                 ...rest,
-                                ...(Object.values(options).some(element => element != null) 
-                                    ? { options: options } 
+                                ...(Object.values(options).some((element) => element != null)
+                                    ? { options: options }
                                     : null),
                                 payloads,
                             });

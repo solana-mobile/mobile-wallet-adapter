@@ -1,4 +1,4 @@
-import EmbeddedModal from "./modal";
+import EmbeddedModal from './modal';
 
 export default class LocalConnectionModal extends EmbeddedModal {
     protected contentStyles = css;
@@ -10,12 +10,12 @@ export default class LocalConnectionModal extends EmbeddedModal {
     }
 
     #prepareLaunchAction(callback: () => Promise<void>) {
-        const launchButton = this.dom?.getElementById("mobile-wallet-adapter-launch-action");
+        const launchButton = this.dom?.getElementById('mobile-wallet-adapter-launch-action');
         const listener = async () => {
             launchButton?.removeEventListener('click', listener);
             this.close();
             callback();
-        }
+        };
         launchButton?.addEventListener('click', listener);
     }
 }

@@ -97,7 +97,9 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
         ['legacy', 0],
     );
-    name; icon; url;
+    name;
+    icon;
+    url;
     #wallet: LocalSolanaMobileWalletAdapterWallet | RemoteSolanaMobileWalletAdapterWallet;
     #connecting = false;
     #readyState: WalletReadyState = getIsSupported() ? WalletReadyState.Loadable : WalletReadyState.Unsupported;
@@ -120,24 +122,33 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                 );
             }
         }
-    }
+    };
 
-    protected constructor(wallet: LocalSolanaMobileWalletAdapterWallet | RemoteSolanaMobileWalletAdapterWallet, config: {
-        addressSelector: AddressSelector;
-        chain: Chain;
-    }) {
+    protected constructor(
+        wallet: LocalSolanaMobileWalletAdapterWallet | RemoteSolanaMobileWalletAdapterWallet,
+        config: {
+            addressSelector: AddressSelector;
+            chain: Chain;
+        },
+    ) {
         super();
         // this.#chain = chainOrClusterToChainId(config.chain);
         this.#accountSelector = async (accounts: readonly WalletAccount[]) => {
-            const selectedBase64EncodedAddress = await config.addressSelector.select(accounts.map(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey))));
-            return accounts.find(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey)) === selectedBase64EncodedAddress) ?? accounts[0];
+            const selectedBase64EncodedAddress = await config.addressSelector.select(
+                accounts.map(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey))),
+            );
+            return (
+                accounts.find(
+                    ({ publicKey }) => fromUint8Array(new Uint8Array(publicKey)) === selectedBase64EncodedAddress,
+                ) ?? accounts[0]
+            );
         };
-        this.#wallet = wallet
+        this.#wallet = wallet;
         this.#wallet.features[StandardEvents].on('change', this.#handleChangeEvent);
         this.name = this.#wallet.name as WalletName;
         this.icon = this.#wallet.icon;
         this.url = this.#wallet.url;
-        // TODO: evaluate if this logic should be kept - it seems to create a nasty bug where 
+        // TODO: evaluate if this logic should be kept - it seems to create a nasty bug where
         //  the wallet tries to auto connect on page load and gets blocked by the popup blocker
         // if (this.#readyState !== WalletReadyState.Unsupported) {
         //     config.authorizationResultCache.get().then((authorizationResult) => {
@@ -178,7 +189,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
     async autoConnect_DO_NOT_USE_OR_YOU_WILL_BE_FIRED(): Promise<void> {
         return await this.autoConnect();
     }
-    
+
     async autoConnect(): Promise<void> {
         this.#connect(true);
     }
@@ -205,7 +216,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             }
         });
     }
-    
+
     /** @deprecated Use `connect()` or `autoConnect()` instead. */
     async performAuthorization(signInPayload?: SignInPayload): Promise<AuthorizationResult> {
         try {
@@ -233,7 +244,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             this.#selectedAccount = undefined;
             await this.#wallet.features[StandardDisconnect].disconnect();
             this.emit('disconnect');
-        })
+        });
     }
 
     async signIn(input?: SolanaSignInInput): Promise<SolanaSignInOutput> {
@@ -245,12 +256,12 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             try {
                 const outputs = await this.#wallet.features[SolanaSignIn].signIn({
                     ...input,
-                    domain: input?.domain ?? window.location.host
-                })
+                    domain: input?.domain ?? window.location.host,
+                });
                 if (outputs.length > 0) {
                     return outputs[0];
                 } else {
-                    throw new Error("Sign in failed, no sign in result returned by wallet");
+                    throw new Error('Sign in failed, no sign in result returned by wallet');
                 }
             } catch (e) {
                 throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
@@ -265,9 +276,10 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             const account = this.#assertIsAuthorized();
             try {
                 const outputs = await this.#wallet.features[SolanaSignMessage].signMessage({
-                    account, message: message
-                })
-                return outputs[0].signature
+                    account,
+                    message: message,
+                });
+                return outputs[0].signature;
             } catch (error: any) {
                 throw new WalletSignMessageError(error?.message, error);
             }
@@ -279,7 +291,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         connection: Connection,
         options?: SendOptions,
     ): Promise<TransactionSignature> {
-        return await this.#runWithGuard(async ()  => {
+        return await this.#runWithGuard(async () => {
             const account = this.#assertIsAuthorized();
             try {
                 function getTargetCommitment() {
@@ -310,8 +322,8 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                         targetPreflightCommitment === 'finalized'
                             ? 2
                             : targetPreflightCommitment === 'confirmed'
-                            ? 1
-                            : 0;
+                              ? 1
+                              : 0;
                     const targetCommitmentScore =
                         targetCommitment === 'finalized' ? 2 : targetCommitment === 'confirmed' ? 1 : 0;
                     return preflightCommitmentScore < targetCommitmentScore
@@ -320,21 +332,25 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                 }
                 if (SolanaSignAndSendTransaction in this.#wallet.features) {
                     const chain = chainOrClusterToChainId(this.#wallet.currentAuthorization!.chain);
-                    const [signature] = (await this.#wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
-                        account,
-                        transaction: transaction.serialize(),
-                        chain: chain,
-                        options: options ? {
-                            skipPreflight: options.skipPreflight,
-                            maxRetries: options.maxRetries
-                        } : undefined
-                    })).map(((output) => {
-                        return fromUint8Array(output.signature)
-                    }));
-        
+                    const [signature] = (
+                        await this.#wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
+                            account,
+                            transaction: transaction.serialize(),
+                            chain: chain,
+                            options: options
+                                ? {
+                                      skipPreflight: options.skipPreflight,
+                                      maxRetries: options.maxRetries,
+                                  }
+                                : undefined,
+                        })
+                    ).map((output) => {
+                        return fromUint8Array(output.signature);
+                    });
+
                     return signature;
                 } else {
-                    const [signedTransaction] = await this.#performSignTransactions([transaction])
+                    const [signedTransaction] = await this.#performSignTransactions([transaction]);
                     if (isVersionedTransaction(signedTransaction)) {
                         return await connection.sendTransaction(signedTransaction);
                     } else {
@@ -372,10 +388,10 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
     }
 
     #assertIsAuthorized() {
-        if (!this.#wallet.isAuthorized || !this.#selectedAccount) throw new WalletNotConnectedError()
+        if (!this.#wallet.isAuthorized || !this.#selectedAccount) throw new WalletNotConnectedError();
         return this.#selectedAccount;
     }
-    
+
     async #performSignTransactions<T extends LegacyTransaction | VersionedTransaction>(
         transactions: T[],
     ): Promise<T[]> {
@@ -384,21 +400,23 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             if (SolanaSignTransaction in this.#wallet.features) {
                 return this.#wallet.features[SolanaSignTransaction].signTransaction(
                     ...transactions.map((value) => {
-                        return { account, transaction: value.serialize() }
-                    }
-                )).then((outputs) => {
+                        return { account, transaction: value.serialize() };
+                    }),
+                ).then((outputs) => {
                     return outputs.map((output: SolanaSignTransactionOutput) => {
                         const byteArray = output.signedTransaction;
                         const numSignatures = byteArray[0];
                         const messageOffset = numSignatures * SIGNATURE_LENGTH_IN_BYTES + 1;
-                        const version = VersionedMessage.deserializeMessageVersion(byteArray.slice(messageOffset, byteArray.length));
+                        const version = VersionedMessage.deserializeMessageVersion(
+                            byteArray.slice(messageOffset, byteArray.length),
+                        );
                         if (version === 'legacy') {
                             return Transaction.from(byteArray) as T;
                         } else {
                             return VersionedTransaction.deserialize(byteArray) as T;
                         }
-                    })
-                })
+                    });
+                });
             } else {
                 throw new Error('Connected wallet does not support signing transactions');
             }
@@ -446,24 +464,27 @@ export class LocalSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapte
         onWalletNotFound: (mobileWalletAdapter: LocalSolanaMobileWalletAdapter) => Promise<void>;
     }) {
         const chain = chainOrClusterToChainId(config.chain ?? config.cluster);
-        super(new LocalSolanaMobileWalletAdapterWallet({
-            appIdentity: config.appIdentity,
-            authorizationCache: {
-                set: config.authorizationResultCache.set,
-                get: async () => {
-                    return await config.authorizationResultCache.get() as Authorization | undefined;
+        super(
+            new LocalSolanaMobileWalletAdapterWallet({
+                appIdentity: config.appIdentity,
+                authorizationCache: {
+                    set: config.authorizationResultCache.set,
+                    get: async () => {
+                        return (await config.authorizationResultCache.get()) as Authorization | undefined;
+                    },
+                    clear: config.authorizationResultCache.clear,
                 },
-                clear: config.authorizationResultCache.clear,
+                chains: [chain],
+                chainSelector: createDefaultChainSelector(),
+                onWalletNotFound: async () => {
+                    config.onWalletNotFound(this);
+                },
+            }),
+            {
+                addressSelector: config.addressSelector,
+                chain: chain,
             },
-            chains: [chain],
-            chainSelector: createDefaultChainSelector(),
-            onWalletNotFound: async () => {
-                config.onWalletNotFound(this)
-            },
-        }), {
-            addressSelector: config.addressSelector,
-            chain: chain,
-        });
+        );
     }
 }
 
@@ -477,25 +498,28 @@ export class RemoteSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapt
         onWalletNotFound: (mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => Promise<void>;
     }) {
         const chain = chainOrClusterToChainId(config.chain);
-        super(new RemoteSolanaMobileWalletAdapterWallet({
-            appIdentity: config.appIdentity,
-            authorizationCache: {
-                set: config.authorizationResultCache.set,
-                get: async () => {
-                    return await config.authorizationResultCache.get() as Authorization | undefined;
+        super(
+            new RemoteSolanaMobileWalletAdapterWallet({
+                appIdentity: config.appIdentity,
+                authorizationCache: {
+                    set: config.authorizationResultCache.set,
+                    get: async () => {
+                        return (await config.authorizationResultCache.get()) as Authorization | undefined;
+                    },
+                    clear: config.authorizationResultCache.clear,
                 },
-                clear: config.authorizationResultCache.clear,
+                chains: [chain],
+                chainSelector: createDefaultChainSelector(),
+                remoteHostAuthority: config.remoteHostAuthority,
+                onWalletNotFound: async () => {
+                    config.onWalletNotFound(this);
+                },
+            }),
+            {
+                addressSelector: config.addressSelector,
+                chain: chain,
             },
-            chains: [chain],
-            chainSelector: createDefaultChainSelector(),
-            remoteHostAuthority: config.remoteHostAuthority,
-            onWalletNotFound: async () => {
-                config.onWalletNotFound(this)
-            },
-        }), {
-            addressSelector: config.addressSelector,
-            chain: chain,
-        });
+        );
     }
 }
 

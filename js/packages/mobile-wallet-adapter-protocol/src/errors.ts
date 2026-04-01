@@ -13,7 +13,7 @@ export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_ASSOCIATION_CANCELLED: 'ERROR_ASSOCIATION_CANCELLED',
 } as const;
 type SolanaMobileWalletAdapterErrorCodeEnum =
-    typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode];
+    (typeof SolanaMobileWalletAdapterErrorCode)[keyof typeof SolanaMobileWalletAdapterErrorCode];
 
 type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_PORT_OUT_OF_RANGE]: {
@@ -32,8 +32,8 @@ type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_INVALID_PROTOCOL_VERSION]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_BROWSER_NOT_SUPPORTED]: undefined;
     [SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED]: undefined;
-    [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED]: { 
-        event: Event | undefined
+    [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED]: {
+        event: Event | undefined;
     };
 };
 
@@ -66,7 +66,7 @@ export const SolanaMobileWalletAdapterProtocolErrorCode = {
     ERROR_ATTEST_ORIGIN_ANDROID: -100,
 } as const;
 type SolanaMobileWalletAdapterProtocolErrorCodeEnum =
-    typeof SolanaMobileWalletAdapterProtocolErrorCode[keyof typeof SolanaMobileWalletAdapterProtocolErrorCode];
+    (typeof SolanaMobileWalletAdapterProtocolErrorCode)[keyof typeof SolanaMobileWalletAdapterProtocolErrorCode];
 
 type ProtocolErrorDataTypeMap = {
     [SolanaMobileWalletAdapterProtocolErrorCode.ERROR_AUTHORIZATION_FAILED]: undefined;

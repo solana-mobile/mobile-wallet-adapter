@@ -1,8 +1,8 @@
-import { 
+import {
     type Transaction,
     compileTransaction,
     getBase64EncodedWireTransaction,
-    getTransactionDecoder
+    getTransactionDecoder,
 } from '@solana/transactions';
 import {
     type TransactionMessage,
@@ -35,7 +35,7 @@ export type TransactionMessageWithFeePayerAndLifetime<TAddress extends string = 
 export type SignAndSendTransactionMessage = TransactionMessageWithFeePayerAndLifetime;
 
 interface KitSignAndSendTransactionsAPI {
-    signAndSendTransactions<T extends Transaction | SignAndSendTransactionMessage >(params: {
+    signAndSendTransactions<T extends Transaction | SignAndSendTransactionMessage>(params: {
         minContextSlot?: number;
         commitment?: string;
         skipPreflight?: boolean;
@@ -54,7 +54,8 @@ interface KitSignMessagesAPI {
 }
 
 export interface KitMobileWallet
-    extends AuthorizeAPI,
+    extends
+        AuthorizeAPI,
         CloneAuthorizationAPI,
         DeauthorizeAPI,
         GetCapabilitiesAPI,
@@ -63,21 +64,19 @@ export interface KitMobileWallet
         KitSignTransactionsAPI,
         KitSignMessagesAPI {}
 
-export interface KitRemoteMobileWallet
-    extends KitMobileWallet, TerminateSessionAPI {}
+export interface KitRemoteMobileWallet extends KitMobileWallet, TerminateSessionAPI {}
 
 export type KitScenario = Readonly<{
     wallet: Promise<KitMobileWallet>;
     close: () => void;
 }>;
 
-export type KitRemoteScenario = KitScenario & Readonly<{
-    associationUrl: URL;
-}>;
+export type KitRemoteScenario = KitScenario &
+    Readonly<{
+        associationUrl: URL;
+    }>;
 
-function getPayloadFromTransaction(
-  transaction: Transaction | SignAndSendTransactionMessage
-): Base64EncodedTransaction {
+function getPayloadFromTransaction(transaction: Transaction | SignAndSendTransactionMessage): Base64EncodedTransaction {
     if ('messageBytes' in transaction) {
         return getBase64EncodedWireTransaction(transaction);
     } else if ('instructions' in transaction) {
@@ -103,12 +102,10 @@ export async function transact<TReturn>(
     return await baseTransact(augmentedCallback, config);
 }
 
-export async function startRemoteScenario(
-    config: RemoteWalletAssociationConfig,
-): Promise<KitRemoteScenario> {
+export async function startRemoteScenario(config: RemoteWalletAssociationConfig): Promise<KitRemoteScenario> {
     const { wallet, close, associationUrl } = await baseStartRemoteScenario(config);
     const augmentedPromise = wallet.then((wallet) => {
-        return augmentWalletAPI(wallet); 
+        return augmentWalletAPI(wallet);
     });
     return { wallet: augmentedPromise, close, associationUrl };
 }
@@ -134,12 +131,12 @@ function augmentWalletAPI(wallet: MobileWallet): KitMobileWallet {
                                 commitment: commitment,
                                 skip_preflight: skipPreflight,
                                 max_retries: maxRetries,
-                                wait_for_commitment_to_send_next_transaction: waitForCommitmentToSendNextTransaction
+                                wait_for_commitment_to_send_next_transaction: waitForCommitmentToSendNextTransaction,
                             };
                             const { signatures: base64EncodedSignatures } = await wallet.signAndSendTransactions({
                                 ...rest,
-                                ...(Object.values(options).some(element => element != null) 
-                                    ? { options: options } 
+                                ...(Object.values(options).some((element) => element != null)
+                                    ? { options: options }
                                     : null),
                                 payloads,
                             });

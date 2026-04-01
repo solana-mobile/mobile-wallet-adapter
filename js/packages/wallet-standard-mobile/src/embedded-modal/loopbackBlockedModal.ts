@@ -1,11 +1,11 @@
-import { getIsPwaLaunchedAsApp } from "../getIsSupported";
-import EmbeddedModal from "./modal";
+import { getIsPwaLaunchedAsApp } from '../getIsSupported';
+import EmbeddedModal from './modal';
 
 export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
     protected contentStyles = css;
     protected get contentHtml() {
-        const instructions = getIsPwaLaunchedAsApp() 
-            ? 'Long press the app icon on your home screen to open site settings' 
+        const instructions = getIsPwaLaunchedAsApp()
+            ? 'Long press the app icon on your home screen to open site settings'
             : 'Tap the lock or settings icon in the address bar to open site settings';
         return ErrorDialogHtml.replace('{{PERMISSION_INSTRUCTION_DETAIL}}', instructions);
     }
@@ -16,11 +16,11 @@ export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
     }
 
     #prepareLaunchAction() {
-        const launchButton = this.dom?.getElementById("mobile-wallet-adapter-launch-action");
+        const launchButton = this.dom?.getElementById('mobile-wallet-adapter-launch-action');
         const listener = async (event?: any) => {
             launchButton?.removeEventListener('click', listener);
             this.close(event);
-        }
+        };
         launchButton?.addEventListener('click', listener);
     }
 }

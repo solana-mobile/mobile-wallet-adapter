@@ -6,6 +6,6 @@ export default function getStringWithURLUnsafeCharactersReplaced(unsafeBase64Enc
                 '/': '_',
                 '+': '-',
                 '=': '.',
-            }[m] as string),
+            })[m] as string,
     );
 }

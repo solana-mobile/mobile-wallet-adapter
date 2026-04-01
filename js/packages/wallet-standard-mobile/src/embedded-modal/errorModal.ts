@@ -1,13 +1,13 @@
-import { 
-    type SolanaMobileWalletAdapterError, 
-    type SolanaMobileWalletAdapterErrorCode 
-} from "@solana-mobile/mobile-wallet-adapter-protocol";
-import EmbeddedModal from "./modal";
+import {
+    type SolanaMobileWalletAdapterError,
+    type SolanaMobileWalletAdapterErrorCode,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
+import EmbeddedModal from './modal';
 
-const WALLET_NOT_FOUND_ERROR_MESSAGE = 
+const WALLET_NOT_FOUND_ERROR_MESSAGE =
     'To use mobile wallet adapter, you must have a compatible mobile wallet application installed on your device.';
-    
-const BROWSER_NOT_SUPPORTED_ERROR_MESSAGE = 
+
+const BROWSER_NOT_SUPPORTED_ERROR_MESSAGE =
     'This browser appears to be incompatible with mobile wallet adapter. Open this page in a compatible mobile browser app and try again.';
 
 export default class ErrorModal extends EmbeddedModal {
@@ -22,22 +22,25 @@ export default class ErrorModal extends EmbeddedModal {
     private populateError(error: Error) {
         const errorMessageElement = this.dom?.getElementById('mobile-wallet-adapter-error-message');
         const actionBtn = this.dom?.getElementById('mobile-wallet-adapter-error-action');
-        if(errorMessageElement) {
+        if (errorMessageElement) {
             if (error.name === 'SolanaMobileWalletAdapterError') {
                 switch (
-                    (error as SolanaMobileWalletAdapterError<
-                        typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode]
-                    >).code
+                    (
+                        error as SolanaMobileWalletAdapterError<
+                            (typeof SolanaMobileWalletAdapterErrorCode)[keyof typeof SolanaMobileWalletAdapterErrorCode]
+                        >
+                    ).code
                 ) {
                     case 'ERROR_WALLET_NOT_FOUND':
                         errorMessageElement.innerHTML = WALLET_NOT_FOUND_ERROR_MESSAGE;
-                        if (actionBtn) actionBtn.addEventListener('click', () => {
-                            window.location.href = 'https://solanamobile.com/wallets';
-                        });
+                        if (actionBtn)
+                            actionBtn.addEventListener('click', () => {
+                                window.location.href = 'https://solanamobile.com/wallets';
+                            });
                         return;
                     case 'ERROR_BROWSER_NOT_SUPPORTED':
                         errorMessageElement.innerHTML = BROWSER_NOT_SUPPORTED_ERROR_MESSAGE;
-                        if (actionBtn) actionBtn.style.display = 'none'
+                        if (actionBtn) actionBtn.style.display = 'none';
                         return;
                 }
             }
