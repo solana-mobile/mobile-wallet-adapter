@@ -20,12 +20,13 @@ export default function createDefaultAuthorizationCache(): AuthorizationCache {
                     const parsedAccounts = parsed.accounts.map((account) => {
                         return {
                             ...account,
-                            publicKey: 'publicKey' in account
-                                ? new Uint8Array(Object.values(account.publicKey)) // Rebuild publicKey for WalletAccount
-                                : base58.decode(account.address), // Fallback, get publicKey from address
-                        }
-                    })
-                    return { ...parsed, accounts: parsedAccounts }
+                            publicKey:
+                                'publicKey' in account
+                                    ? new Uint8Array(Object.values(account.publicKey)) // Rebuild publicKey for WalletAccount
+                                    : base58.decode(account.address), // Fallback, get publicKey from address
+                        };
+                    });
+                    return { ...parsed, accounts: parsedAccounts };
                 } else return parsed || undefined;
                 // eslint-disable-next-line no-empty
             } catch {}

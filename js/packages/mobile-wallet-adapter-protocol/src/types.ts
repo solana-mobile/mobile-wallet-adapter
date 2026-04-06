@@ -1,14 +1,16 @@
 import type { TransactionVersion } from '@solana/web3.js';
-import type { SolanaSignInInput } from "@solana/wallet-standard-features";
+import type { SolanaSignInInput } from '@solana/wallet-standard-features';
 import type { IdentifierArray, IdentifierString, WalletAccount, WalletIcon } from '@wallet-standard/core';
 
-export type Account = Readonly<{
-    address: Base64EncodedAddress;
-    label?: string;
-    icon?: WalletIcon;
-    chains?: IdentifierArray;
-    features?: IdentifierArray;
-}> | WalletAccount;
+export type Account =
+    | Readonly<{
+          address: Base64EncodedAddress;
+          label?: string;
+          icon?: WalletIcon;
+          chains?: IdentifierArray;
+          features?: IdentifierArray;
+      }>
+    | WalletAccount;
 
 /**
  * Properties that wallets may present to users when an app
@@ -73,9 +75,10 @@ export type WalletAssociationConfig = Readonly<{
     baseUri?: string;
 }>;
 
-export type RemoteWalletAssociationConfig = WalletAssociationConfig & Readonly<{
-    remoteHostAuthority: string;
-}>;
+export type RemoteWalletAssociationConfig = WalletAssociationConfig &
+    Readonly<{
+        remoteHostAuthority: string;
+    }>;
 
 export interface AuthorizeAPI {
     /**
@@ -83,12 +86,12 @@ export interface AuthorizeAPI {
      */
     authorize(params: { cluster: Cluster; identity: AppIdentity }): Promise<AuthorizationResult>;
 
-    authorize(params: { 
+    authorize(params: {
         identity: AppIdentity;
         chain?: Chain;
-        features?: IdentifierArray; 
-        addresses?: string[]; 
-        auth_token?: AuthToken; 
+        features?: IdentifierArray;
+        addresses?: string[];
+        auth_token?: AuthToken;
         sign_in_payload?: SignInPayload;
     }): Promise<AuthorizationResult>;
 }
@@ -145,7 +148,8 @@ export interface SignAndSendTransactionsAPI {
 }
 
 export interface MobileWallet
-    extends AuthorizeAPI,
+    extends
+        AuthorizeAPI,
         CloneAuthorizationAPI,
         DeauthorizeAPI,
         GetCapabilitiesAPI,
@@ -155,34 +159,35 @@ export interface MobileWallet
         SignAndSendTransactionsAPI {}
 
 export interface TerminateSessionAPI {
-    terminateSession(): void
+    terminateSession(): void;
 }
 
-export interface RemoteMobileWallet
-    extends MobileWallet, TerminateSessionAPI {}
+export interface RemoteMobileWallet extends MobileWallet, TerminateSessionAPI {}
 
 // optional features
-export const SolanaSignTransactions = 'solana:signTransactions'
-export const SolanaCloneAuthorization = 'solana:cloneAuthorization'
-export const SolanaSignInWithSolana = 'solana:signInWithSolana'
+export const SolanaSignTransactions = 'solana:signTransactions';
+export const SolanaCloneAuthorization = 'solana:cloneAuthorization';
+export const SolanaSignInWithSolana = 'solana:signInWithSolana';
 
-export type SignInPayload = Readonly<{
-    domain?: string;
-    address?: string;
-    statement?: string;
-    uri?: string;
-    version?: string;
-    chainId?: string;
-    nonce?: string;
-    issuedAt?: string;
-    expirationTime?: string;
-    notBefore?: string;
-    requestId?: string;
-    resources?: readonly string[];
-}> | SolanaSignInInput;
+export type SignInPayload =
+    | Readonly<{
+          domain?: string;
+          address?: string;
+          statement?: string;
+          uri?: string;
+          version?: string;
+          chainId?: string;
+          nonce?: string;
+          issuedAt?: string;
+          expirationTime?: string;
+          notBefore?: string;
+          requestId?: string;
+          resources?: readonly string[];
+      }>
+    | SolanaSignInInput;
 
-export type SignInPayloadWithRequiredFields = Partial<SignInPayload> & 
-    Required<Pick<SignInPayload, 'domain' | 'address'>>
+export type SignInPayloadWithRequiredFields = Partial<SignInPayload> &
+    Required<Pick<SignInPayload, 'domain' | 'address'>>;
 
 export type SignInResult = Readonly<{
     address: Base64EncodedAddress;
@@ -196,6 +201,7 @@ export type Scenario = Readonly<{
     close: () => void;
 }>;
 
-export type RemoteScenario = Scenario & Readonly<{
-    associationUrl: URL;
-}>;
+export type RemoteScenario = Scenario &
+    Readonly<{
+        associationUrl: URL;
+    }>;

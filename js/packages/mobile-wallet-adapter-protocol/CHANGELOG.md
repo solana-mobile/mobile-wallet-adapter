@@ -4,4 +4,4 @@
 
 ### Patch Changes
 
--   53a2139: Initialize Changeset a publish all and include all unreleased changes made since the last published version
+- 53a2139: Initialize Changeset a publish all and include all unreleased changes made since the last published version

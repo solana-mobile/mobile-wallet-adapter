@@ -19,12 +19,14 @@ function resolveSourcePath(importer: string, source: string): string | undefined
     const extension = path.extname(resolvedImportPath);
     const candidates =
         extension === '.cjs' || extension === '.js' || extension === '.jsx' || extension === '.mjs'
-            ? SOURCE_CANDIDATE_EXTENSIONS.map((candidateExtension) =>
-                  `${resolvedImportPath.slice(0, -extension.length)}${candidateExtension}`,
+            ? SOURCE_CANDIDATE_EXTENSIONS.map(
+                  (candidateExtension) => `${resolvedImportPath.slice(0, -extension.length)}${candidateExtension}`,
               )
             : [
                   resolvedImportPath,
-                  ...SOURCE_CANDIDATE_EXTENSIONS.map((candidateExtension) => `${resolvedImportPath}${candidateExtension}`),
+                  ...SOURCE_CANDIDATE_EXTENSIONS.map(
+                      (candidateExtension) => `${resolvedImportPath}${candidateExtension}`,
+                  ),
                   ...SOURCE_INDEX_EXTENSIONS.map((indexFilename) => path.join(resolvedImportPath, indexFilename)),
               ];
     return candidates.find((candidate) => existsSync(candidate));
@@ -52,13 +54,7 @@ function runtimeForkPlugin(runtime: Runtime): TsdownPlugin {
     };
 }
 
-function createConfig({
-    entryName,
-    runtime,
-}: {
-    entryName: string;
-    runtime: Runtime;
-}): UserConfig {
+function createConfig({ entryName, runtime }: { entryName: string; runtime: Runtime }): UserConfig {
     return {
         clean: false,
         cwd: process.cwd(),

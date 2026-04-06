@@ -1,5 +1,5 @@
-import { getBase58Decoder } from "@solana/codecs-strings";
-import { toUint8Array } from "./base64Utils";
+import { getBase58Decoder } from '@solana/codecs-strings';
+import { toUint8Array } from './base64Utils';
 
 export function fromUint8Array(byteArray: Uint8Array): string {
     return getBase58Decoder().decode(byteArray);

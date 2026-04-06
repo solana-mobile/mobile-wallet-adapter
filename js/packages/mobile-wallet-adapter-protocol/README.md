@@ -5,6 +5,7 @@ This is a reference implementation of the [Mobile Wallet Adapter specification](
 If you are simply looking to integrate a JavaScript application with mobile wallets, see [`@solana-mobile/wallet-adapter-mobile`](https://www.npmjs.com/package/@solana-mobile/wallet-adapter-mobile) instead.
 
 ## Learn how to use this API on our [documentation website](https://docs.solanamobile.com/):
+
 - React Native
     - [Quickstart Setup](https://docs.solanamobile.com/react-native/quickstart)
     - [dApp Integration Guide](https://docs.solanamobile.com/react-native/mwa_integration_rn)
@@ -16,7 +17,7 @@ If you are simply looking to integrate a JavaScript application with mobile wall
 Use this API to start a session:
 
 ```typescript
-import {transact} from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol';
 
 await transact(async (wallet) => {
     /* ... */
@@ -27,9 +28,11 @@ The callback you provide will be called once a session has been established with
 
 ```typescript
 const signedPayloads = await transact(async (wallet) => {
-    const {signed_payloads} = await wallet.signMessages({
+    const { signed_payloads } = await wallet.signMessages({
         auth_token,
-        payloads: [/* ... */],
+        payloads: [
+            /* ... */
+        ],
     });
     return signed_payloads;
 });
@@ -52,13 +55,13 @@ try {
                 e.code === SolanaMobileWalletAdapterProtocolErrorCode.ERROR_REAUTHORIZE
             ) {
                 console.error('The auth token has gone stale');
-                await wallet.reauthorize({auth_token, identity});
+                await wallet.reauthorize({ auth_token, identity });
                 // Retry...
             }
             throw e;
         }
     });
-} catch(e) {
+} catch (e) {
     if (
         e instanceof SolanaMobileWalletAdapterError &&
         e.code === SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND

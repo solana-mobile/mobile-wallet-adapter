@@ -117,7 +117,7 @@ export default abstract class EmbeddedModal {
         if (this.#root) {
             this.#root.style.display = 'flex';
         }
-    }
+    };
 
     close = (event: Event | undefined = undefined) => {
         console.debug('Modal close');
@@ -126,15 +126,17 @@ export default abstract class EmbeddedModal {
             this.#root.style.display = 'none';
         }
         this.#eventListeners['close']?.forEach((listener) => listener(event));
-    }
+    };
 
     addEventListener<E extends ModalEventsNames>(event: E, listener: ModalEventsListeners[E]) {
         this.#eventListeners[event]?.push(listener) || (this.#eventListeners[event] = [listener]);
         return (): void => this.removeEventListener(event, listener);
     }
 
-    removeEventListener<E extends ModalEventsNames>(event: E, listener: (ModalEventsListeners[E])): void {
-        this.#eventListeners[event] = this.#eventListeners[event]?.filter((existingListener) => listener !== existingListener);
+    removeEventListener<E extends ModalEventsNames>(event: E, listener: ModalEventsListeners[E]): void {
+        this.#eventListeners[event] = this.#eventListeners[event]?.filter(
+            (existingListener) => listener !== existingListener,
+        );
     }
 
     #injectHTML() {
@@ -174,7 +176,7 @@ export default abstract class EmbeddedModal {
         if (!this.#root || this.#listenersAttached) return;
 
         const closers = [...this.#root.querySelectorAll('[data-modal-close]')];
-        closers.forEach(closer => closer?.addEventListener('click', this.close));
+        closers.forEach((closer) => closer?.addEventListener('click', this.close));
 
         window.addEventListener('load', this.close);
         document.addEventListener('keydown', this.#handleKeyDown);
@@ -190,12 +192,12 @@ export default abstract class EmbeddedModal {
 
         if (!this.#root) return;
         const closers = [...this.#root.querySelectorAll('[data-modal-close]')];
-        closers.forEach(closer => closer?.removeEventListener('click', this.close));
+        closers.forEach((closer) => closer?.removeEventListener('click', this.close));
 
         this.#listenersAttached = false;
     }
 
     #handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'Escape') this.close(event);
-    }
+    };
 }

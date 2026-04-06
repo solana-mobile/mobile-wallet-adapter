@@ -1,4 +1,4 @@
-import EmbeddedModal from "./modal";
+import EmbeddedModal from './modal';
 
 export default class LoopbackPermissionModal extends EmbeddedModal {
     protected contentStyles = css;
@@ -10,15 +10,17 @@ export default class LoopbackPermissionModal extends EmbeddedModal {
     }
 
     #prepareLaunchAction() {
-        const launchButton = this.dom?.getElementById("mobile-wallet-adapter-launch-action");
+        const launchButton = this.dom?.getElementById('mobile-wallet-adapter-launch-action');
         const listener = async () => {
             launchButton?.removeEventListener('click', listener);
             try {
                 // Trigger LNA permission prompting
                 await fetch('http://localhost');
-            } catch (e) { /* Ignore errors from fetch */ }
+            } catch (e) {
+                /* Ignore errors from fetch */
+            }
             this.close();
-        }
+        };
         launchButton?.addEventListener('click', listener);
     }
 }

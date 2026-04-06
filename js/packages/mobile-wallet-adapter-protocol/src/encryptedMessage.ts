@@ -4,11 +4,7 @@ import { SharedSecret } from './parseHelloRsp.js';
 const INITIALIZATION_VECTOR_BYTES = 12;
 export const ENCODED_PUBLIC_KEY_LENGTH_BYTES = 65;
 
-export async function encryptMessage(
-    plaintext: string,
-    sequenceNumber: number,
-    sharedSecret: SharedSecret,
-) {
+export async function encryptMessage(plaintext: string, sequenceNumber: number, sharedSecret: SharedSecret) {
     const sequenceNumberVector = createSequenceNumberVector(sequenceNumber);
     const initializationVector = new Uint8Array(INITIALIZATION_VECTOR_BYTES);
     crypto.getRandomValues(initializationVector);
@@ -39,7 +35,7 @@ export async function decryptMessage(message: ArrayBuffer, sharedSecret: SharedS
         ciphertext,
     );
     const plaintext = getUtf8Decoder().decode(plaintextBuffer);
-    return plaintext
+    return plaintext;
 }
 
 function getAlgorithmParams(sequenceNumber: ArrayBuffer, initializationVector: ArrayBuffer) {

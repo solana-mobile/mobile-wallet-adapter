@@ -5,10 +5,7 @@ export function encode(input: string): string {
 export function fromUint8Array(byteArray: Uint8Array, urlsafe?: boolean): string {
     const base64 = window.btoa(String.fromCharCode.call(null, ...byteArray));
     if (urlsafe) {
-        return base64
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
+        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     } else return base64;
 }
 

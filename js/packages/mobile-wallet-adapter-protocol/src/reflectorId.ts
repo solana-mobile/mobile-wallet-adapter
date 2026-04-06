@@ -20,7 +20,8 @@ function getRandomInt(min: number, max: number) {
 }
 
 export function assertReflectorId(id: number): ReflectorId {
-    if (id < 0 || id > 9007199254740991) { // 0 < id < 2^53 - 1
+    if (id < 0 || id > 9007199254740991) {
+        // 0 < id < 2^53 - 1
         throw new SolanaMobileWalletAdapterError(
             SolanaMobileWalletAdapterErrorCode.ERROR_REFLECTOR_ID_OUT_OF_RANGE,
             `Association port number must be between 49152 and 65535. ${id} given.`,

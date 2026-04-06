@@ -1,14 +1,19 @@
-import { registerWallet } from "@wallet-standard/wallet";
-import { 
-    AuthorizationCache, 
-    ChainSelector, 
-    LocalSolanaMobileWalletAdapterWallet, 
-    RemoteSolanaMobileWalletAdapterWallet, 
-    SolanaMobileWalletAdapterWallet 
-} from "./wallet";
-import { AppIdentity } from "@solana-mobile/mobile-wallet-adapter-protocol";
-import { IdentifierArray } from "@wallet-standard/base";
-import { getIsLocalAssociationSupported, getIsRemoteAssociationSupported, isWebView, isSolanaMobileWebShell } from "./getIsSupported";
+import { registerWallet } from '@wallet-standard/wallet';
+import {
+    AuthorizationCache,
+    ChainSelector,
+    LocalSolanaMobileWalletAdapterWallet,
+    RemoteSolanaMobileWalletAdapterWallet,
+    SolanaMobileWalletAdapterWallet,
+} from './wallet';
+import { AppIdentity } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { IdentifierArray } from '@wallet-standard/base';
+import {
+    getIsLocalAssociationSupported,
+    getIsRemoteAssociationSupported,
+    isWebView,
+    isSolanaMobileWebShell,
+} from './getIsSupported';
 
 export function registerMwa(config: {
     appIdentity: AppIdentity;
@@ -19,25 +24,27 @@ export function registerMwa(config: {
     onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
 }) {
     if (typeof window === 'undefined') {
-        console.warn(`MWA not registered: no window object`)
-        return
+        console.warn(`MWA not registered: no window object`);
+        return;
     }
     if (!window.isSecureContext) {
-        console.warn(`MWA not registered: secure context required (https)`)
-        return
+        console.warn(`MWA not registered: secure context required (https)`);
+        return;
     }
 
     const userAgent = navigator.userAgent;
 
-    const allowLocalAssociation = getIsLocalAssociationSupported()
-        && (!isWebView(userAgent) || isSolanaMobileWebShell(userAgent));
+    const allowLocalAssociation =
+        getIsLocalAssociationSupported() && (!isWebView(userAgent) || isSolanaMobileWebShell(userAgent));
 
     // Local association technically is possible in a webview, but we prevent registration
     // by default because it usually fails in the most common cases (e.g wallet browsers).
     if (allowLocalAssociation) {
-        registerWallet(new LocalSolanaMobileWalletAdapterWallet(config))
+        registerWallet(new LocalSolanaMobileWalletAdapterWallet(config));
     } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
-        registerWallet(new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }))
+        registerWallet(
+            new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }),
+        );
     } else {
         // currently not supported (non-Android mobile device)
     }

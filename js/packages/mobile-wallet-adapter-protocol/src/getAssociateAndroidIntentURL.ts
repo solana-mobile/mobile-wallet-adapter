@@ -51,9 +51,9 @@ export default async function getAssociateAndroidIntentURL(
     const url = getIntentURL('v1/associate/local', associationURLBase);
     url.searchParams.set('association', getStringWithURLUnsafeBase64CharactersReplaced(encodedKey));
     url.searchParams.set('port', `${associationPort}`);
-    protocolVersions.forEach( (version) => {
+    protocolVersions.forEach((version) => {
         url.searchParams.set('v', version);
-    })
+    });
     return url;
 }
 
@@ -70,8 +70,8 @@ export async function getRemoteAssociateAndroidIntentURL(
     url.searchParams.set('association', getStringWithURLUnsafeBase64CharactersReplaced(encodedKey));
     url.searchParams.set('reflector', `${hostAuthority}`);
     url.searchParams.set('id', `${fromUint8Array(reflectorId, true)}`);
-    protocolVersions.forEach( (version) => {
+    protocolVersions.forEach((version) => {
         url.searchParams.set('v', version);
-    })
+    });
     return url;
 }

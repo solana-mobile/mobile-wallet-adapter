@@ -25,17 +25,17 @@ const SolanaMobileDigitalAssetLinks =
           );
 
 export async function getCallingPackage(): Promise<string | undefined> {
-    return await SolanaMobileDigitalAssetLinks.getCallingPackage()
+    return await SolanaMobileDigitalAssetLinks.getCallingPackage();
 }
 
 export async function verifyCallingPackage(clientIdentityUri: string) {
-    return await SolanaMobileDigitalAssetLinks.verifyCallingPackage(clientIdentityUri)
+    return await SolanaMobileDigitalAssetLinks.verifyCallingPackage(clientIdentityUri);
 }
 
 export async function getCallingPackageUid() {
-    return await SolanaMobileDigitalAssetLinks.getCallingPackageUid()
+    return await SolanaMobileDigitalAssetLinks.getCallingPackageUid();
 }
 
 export async function getUidForPackage(packageName: string) {
-    return await SolanaMobileDigitalAssetLinks.getUidForPackage(packageName)
+    return await SolanaMobileDigitalAssetLinks.getUidForPackage(packageName);
 }

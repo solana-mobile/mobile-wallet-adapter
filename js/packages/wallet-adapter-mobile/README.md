@@ -6,7 +6,7 @@ This is a plugin for use with [`@solana/wallet-adapter`](https://github.com/sola
 
 Users of these libraries do not need to take any extra steps:
 
-* `@solana/wallet-adapter-react@">=0.15.21"`
+- `@solana/wallet-adapter-react@">=0.15.21"`
 
 Those libraries automatically bundle the Mobile Wallet Adapter plugin, and enable it when running in a compatible mobile environment.
 
@@ -28,7 +28,7 @@ new SolanaMobileWalletAdapter({
 });
 ```
 
-Developers who use `@solana/wallet-adapter-react@">=0.15.21"` can supply this custom instance to `WalletProvider` which will use it to override the default one. 
+Developers who use `@solana/wallet-adapter-react@">=0.15.21"` can supply this custom instance to `WalletProvider` which will use it to override the default one.
 
 ```typescript
 const wallets = useMemo(
@@ -106,7 +106,8 @@ When you call `connect()` but no wallet responds within a reasonable amount of t
 Alternatively, you can use the included `createDefaultWalletNotFoundHandler()` method to create a function that opens the Solana Mobile ecosystem wallets webpage.
 
 ## Android Chrome Browser Issues
-Chrome on Android has a policy of blocking all navigation that does not come from explicit user gestures (click, tap, swipe, keypress). As a result, MWA Intent navigation to a wallet app will be blocked if it does not come from a user gesture. 
+
+Chrome on Android has a policy of blocking all navigation that does not come from explicit user gestures (click, tap, swipe, keypress). As a result, MWA Intent navigation to a wallet app will be blocked if it does not come from a user gesture.
 
 You will see an error like:
 
@@ -115,5 +116,3 @@ Navigation is blocked: solana-wallet:/v1/associate...
 ```
 
 There isn't a way around this on the Android Chrome Browser, but you can write a mobile app if you need this behavior.
-
-

@@ -4,9 +4,9 @@
 
 ### Minor Changes
 
--   53a2139: Initialize Changeset a publish all and include all unreleased changes made since the last published version
+- 53a2139: Initialize Changeset a publish all and include all unreleased changes made since the last published version
 
 ### Patch Changes
 
--   Updated dependencies [53a2139]
-    -   @solana-mobile/mobile-wallet-adapter-protocol@2.2.6
+- Updated dependencies [53a2139]
+    - @solana-mobile/mobile-wallet-adapter-protocol@2.2.6
