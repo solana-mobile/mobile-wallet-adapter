@@ -198,7 +198,7 @@ export type ReauthorizeDappCompleteResponse = Readonly<{
 export type ReauthorizeDappResponse = ReauthorizeDappCompleteResponse | AuthorizationNotValidResponse;
 
 /* Deauthorize Dapp */
-export type DeauthorizeDappCompleteResponse = Readonly<{}>;
+export type DeauthorizeDappCompleteResponse = Readonly<Record<string, never>>;
 export type DeauthorizeDappResponse = DeauthorizeDappCompleteResponse | AuthorizationNotValidResponse;
 
 /* Sign Transactions/Messages */

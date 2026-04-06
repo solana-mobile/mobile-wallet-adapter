@@ -1,7 +1,7 @@
-import { decryptMessage } from './encryptedMessage';
-import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors';
-import { SharedSecret } from './parseHelloRsp';
-import { ProtocolVersion, SessionProperties } from './types';
+import { decryptMessage } from './encryptedMessage.js';
+import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
+import { SharedSecret } from './parseHelloRsp.js';
+import { ProtocolVersion, SessionProperties } from './types.js';
 
 export default async function parseSessionProps(
     message: ArrayBuffer,

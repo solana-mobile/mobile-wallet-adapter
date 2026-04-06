@@ -2,8 +2,9 @@ import {
     type SolanaMobileWalletAdapterError,
     type SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { SolanaMobileWalletAdapterWallet } from './wallet.js';
+
 import ErrorModal from './embedded-modal/errorModal.js';
+import { SolanaMobileWalletAdapterWallet } from './wallet.js';
 
 export async function defaultErrorModalWalletNotFoundHandler() {
     if (typeof window !== 'undefined') {

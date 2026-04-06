@@ -1,15 +1,15 @@
-import {
-    type Transaction,
-    compileTransaction,
-    getBase64EncodedWireTransaction,
-    getTransactionDecoder,
-} from '@solana/transactions';
+import type { SignatureBytes } from '@solana/keys';
 import {
     type TransactionMessage,
     type TransactionMessageWithFeePayer,
     type TransactionMessageWithLifetime,
 } from '@solana/transaction-messages';
-import type { SignatureBytes } from '@solana/keys';
+import {
+    compileTransaction,
+    getBase64EncodedWireTransaction,
+    getTransactionDecoder,
+    type Transaction,
+} from '@solana/transactions';
 import {
     AuthorizeAPI,
     Base64EncodedAddress,

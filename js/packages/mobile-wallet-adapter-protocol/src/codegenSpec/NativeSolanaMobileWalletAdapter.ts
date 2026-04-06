@@ -5,6 +5,8 @@ export interface Spec extends TurboModule {
         protocol_version: 'legacy' | 'v1';
     }>;
 
+    // React Native codegen rejects the primitive `object` type in TurboModule specs.
+    // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
     invoke(method: string, params: Object | undefined): Promise<Object>;
 
     endSession(): Promise<boolean>;

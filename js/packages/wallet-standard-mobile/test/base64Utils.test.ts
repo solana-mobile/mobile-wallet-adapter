@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { fromUint8Array, toUint8Array } from '../src/base64Utils';
+import { fromUint8Array, toUint8Array } from '../src/base64Utils.js';
 
 describe('base64Utils', () => {
     it('encodes bytes to a base64 string', () => {

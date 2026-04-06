@@ -1,6 +1,7 @@
-import { SolanaSignInInputWithRequiredFields, createSignInMessageText } from '@solana/wallet-standard-util';
-import { SignInPayload } from './types';
-import { encode } from './base64Utils';
+import { createSignInMessageText, SolanaSignInInputWithRequiredFields } from '@solana/wallet-standard-util';
+
+import { encode } from './base64Utils.js';
+import { SignInPayload } from './types.js';
 
 export function createSIWSMessage(payload: SolanaSignInInputWithRequiredFields & SignInPayload): string {
     return createSignInMessageText(payload);

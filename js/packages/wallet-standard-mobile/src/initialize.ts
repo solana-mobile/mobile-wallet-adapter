@@ -1,19 +1,20 @@
+import { AppIdentity } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { IdentifierArray } from '@wallet-standard/base';
 import { registerWallet } from '@wallet-standard/wallet';
+
+import {
+    getIsLocalAssociationSupported,
+    getIsRemoteAssociationSupported,
+    isSolanaMobileWebShell,
+    isWebView,
+} from './getIsSupported.js';
 import {
     AuthorizationCache,
     ChainSelector,
     LocalSolanaMobileWalletAdapterWallet,
     RemoteSolanaMobileWalletAdapterWallet,
     SolanaMobileWalletAdapterWallet,
-} from './wallet';
-import { AppIdentity } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { IdentifierArray } from '@wallet-standard/base';
-import {
-    getIsLocalAssociationSupported,
-    getIsRemoteAssociationSupported,
-    isWebView,
-    isSolanaMobileWebShell,
-} from './getIsSupported';
+} from './wallet.js';
 
 export function registerMwa(config: {
     appIdentity: AppIdentity;

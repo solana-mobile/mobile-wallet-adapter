@@ -1,4 +1,4 @@
-import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage';
+import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage.js';
 
 /**
  * A secret agreed upon by the app and the wallet. Used as

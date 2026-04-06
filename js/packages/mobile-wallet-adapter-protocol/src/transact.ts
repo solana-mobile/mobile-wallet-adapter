@@ -18,7 +18,6 @@ import { startSession } from './startSession.js';
 import {
     AssociationKeypair,
     MobileWallet,
-    RemoteMobileWallet,
     RemoteScenario,
     RemoteWalletAssociationConfig,
     Scenario,
@@ -90,10 +89,10 @@ function getSequenceNumberFromByteArray(byteArray: ArrayBuffer): number {
 }
 
 function decodeVarLong(byteArray: ArrayBuffer): { value: number; offset: number } {
-    var bytes = new Uint8Array(byteArray),
-        l = byteArray.byteLength,
-        limit = 10,
-        value = 0,
+    const bytes = new Uint8Array(byteArray);
+    const l = byteArray.byteLength;
+    const limit = 10;
+    let value = 0,
         offset = 0,
         b;
     do {
@@ -106,7 +105,7 @@ function decodeVarLong(byteArray: ArrayBuffer): { value: number; offset: number 
 }
 
 function getReflectorIdFromByteArray(byteArray: ArrayBuffer): Uint8Array {
-    let { value: length, offset } = decodeVarLong(byteArray);
+    const { value: length, offset } = decodeVarLong(byteArray);
     return new Uint8Array(byteArray.slice(offset, offset + length));
 }
 
@@ -205,7 +204,7 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
             const handleMessage = async (evt: MessageEvent<Blob>) => {
                 const responseBuffer = await evt.data.arrayBuffer();
                 switch (state.__type) {
-                    case 'connecting':
+                    case 'connecting': {
                         if (responseBuffer.byteLength !== 0) {
                             throw new Error('Encountered unexpected message while connecting');
                         }
@@ -217,6 +216,7 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                             ecdhPrivateKey: ecdhKeypair.privateKey,
                         };
                         break;
+                    }
                     case 'connected':
                         try {
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
@@ -381,7 +381,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
     let state: RemoteState = { __type: 'disconnected' };
     let socket: WebSocket;
     let disposeSocket: () => void;
-    let decodeBytes = async (evt: MessageEvent<string | Blob>) => {
+    const decodeBytes = async (evt: MessageEvent<string | Blob>) => {
         if (encoding == 'base64') {
             // base64 encoding
             const message = (await evt.data) as string;
@@ -502,7 +502,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
             const handleMessage = async (evt: MessageEvent<string | Blob>) => {
                 const responseBuffer = await decodeBytes(evt);
                 switch (state.__type) {
-                    case 'reflector_id_received':
+                    case 'reflector_id_received': {
                         if (responseBuffer.byteLength !== 0) {
                             throw new Error('Encountered unexpected message while awaiting reflection');
                         }
@@ -519,6 +519,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                             ecdhPrivateKey: ecdhKeypair.privateKey,
                         };
                         break;
+                    }
                     case 'connected':
                         try {
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);

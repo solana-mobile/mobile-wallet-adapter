@@ -2,7 +2,8 @@ import {
     type SolanaMobileWalletAdapterError,
     type SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import EmbeddedModal from './modal';
+
+import EmbeddedModal from './modal.js';
 
 const WALLET_NOT_FOUND_ERROR_MESSAGE =
     'To use mobile wallet adapter, you must have a compatible mobile wallet application installed on your device.';

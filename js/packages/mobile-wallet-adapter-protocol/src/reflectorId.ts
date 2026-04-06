@@ -12,7 +12,7 @@ function getRandomInt(min: number, max: number) {
 
     window.crypto.getRandomValues(randomBuffer);
 
-    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
+    const randomNumber = randomBuffer[0] / (0xffffffff + 1);
 
     min = Math.ceil(min);
     max = Math.floor(max);

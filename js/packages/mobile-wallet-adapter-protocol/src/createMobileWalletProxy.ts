@@ -1,16 +1,18 @@
-import { fromUint8Array, toUint8Array } from './base64Utils';
-import { createSIWSMessageBase64Url } from './createSIWSMessage';
+import type { IdentifierArray } from '@wallet-standard/core';
+
+import { base64ToBase58 } from './base58Utils.js';
+import { fromUint8Array, toUint8Array } from './base64Utils.js';
+import { createSIWSMessageBase64Url } from './createSIWSMessage.js';
 import {
     AuthorizationResult,
+    Cluster,
     MobileWallet,
     ProtocolVersion,
     SignInPayload,
     SignInResult,
     SolanaCloneAuthorization,
     SolanaSignTransactions,
-} from './types';
-import type { IdentifierArray } from '@wallet-standard/core';
-import { base64ToBase58 } from './base58Utils';
+} from './types.js';
 
 /**
  * Creates a {@link MobileWallet} proxy that handles backwards compatibility and API to RPC conversion.
@@ -24,14 +26,14 @@ export default function createMobileWalletProxy<
     TReturn extends Awaited<ReturnType<MobileWallet[TMethodName]>>,
 >(
     protocolVersion: ProtocolVersion,
-    protocolRequestHandler: (method: string, params: Parameters<MobileWallet[TMethodName]>[0]) => Promise<any>,
+    protocolRequestHandler: (method: string, params: Parameters<MobileWallet[TMethodName]>[0]) => Promise<unknown>,
 ): MobileWallet {
     return new Proxy<MobileWallet>({} as MobileWallet, {
         get<TMethodName extends keyof MobileWallet>(target: MobileWallet, p: TMethodName) {
             // Wrapping a Proxy in a promise results in the Proxy being asked for a 'then' property so must
             // return null if 'then' is called on this proxy to let the 'resolve()' call know this is not a promise.
             // see: https://stackoverflow.com/a/53890904
-            //@ts-ignore
+            // @ts-expect-error `then` is not part of the wallet API, but the proxy must explicitly return null.
             if (p === 'then') {
                 return null;
             }
@@ -42,8 +44,10 @@ export default function createMobileWalletProxy<
                         ReturnType<MobileWallet[TMethodName]>
                     >;
                     // if the request tried to sign in but the wallet did not return a sign in result, fallback on message signing
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     if (method === 'authorize' && (params as any).sign_in_payload && !(result as any).sign_in_result) {
-                        (result as any)['sign_in_result'] = await signInFallback(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (result as any).sign_in_result = await signInFallback(
                             (params as Parameters<MobileWallet['authorize']>[0]).sign_in_payload as SignInPayload,
                             result as Awaited<ReturnType<MobileWallet['authorize']>>,
                             protocolRequestHandler,
@@ -84,7 +88,8 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
         .toLowerCase();
     switch (methodName) {
         case 'authorize': {
-            let { chain } = params as Parameters<MobileWallet['authorize']>[0];
+            const authorizeParams = params as Parameters<MobileWallet['authorize']>[0] & { cluster?: Cluster };
+            let { chain } = authorizeParams;
             if (protocolVersion === 'legacy') {
                 switch (chain) {
                     case 'solana:testnet': {
@@ -100,10 +105,11 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
                         break;
                     }
                     default: {
-                        chain = (params as any).cluster;
+                        chain = authorizeParams.cluster;
                     }
                 }
-                (params as any).cluster = chain;
+                authorizeParams.cluster = chain as Cluster | undefined;
+                params = authorizeParams;
             } else {
                 switch (chain) {
                     case 'testnet':
@@ -116,9 +122,11 @@ function handleMobileWalletRequest<TMethodName extends keyof MobileWallet>(
                         break;
                     }
                 }
-                (params as Parameters<MobileWallet['authorize']>[0]).chain = chain;
+                authorizeParams.chain = chain;
+                params = authorizeParams;
             }
         }
+        // fall through
         case 'reauthorize': {
             const { auth_token, identity } = params as Parameters<MobileWallet['authorize' | 'reauthorize']>[0];
             if (auth_token) {
@@ -191,7 +199,7 @@ async function signInFallback(
     const signMessageResult = await (protocolRequestHandler('sign_messages', {
         addresses: [address],
         payloads: [siwsMessage],
-    }) as ReturnType<MobileWallet['signMessages']>);
+    }) as Promise<Awaited<ReturnType<MobileWallet['signMessages']>>>);
 
     const signedPayload = toUint8Array(signMessageResult.signed_payloads[0]);
     const signedMessage = fromUint8Array(signedPayload.slice(0, signedPayload.length - 64));

@@ -1,5 +1,6 @@
-import EmbeddedModal from './modal';
 import QRCode from 'qrcode';
+
+import EmbeddedModal from './modal.js';
 
 export default class RemoteConnectionModal extends EmbeddedModal {
     protected contentStyles = css;

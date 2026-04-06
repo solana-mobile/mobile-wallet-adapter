@@ -4,8 +4,8 @@ import { SOLANA_MAINNET_CHAIN } from '@solana/wallet-standard-chains';
 import base58 from 'bs58';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import createDefaultAuthorizationCache from '../src/createDefaultAuthorizationCache';
-import type { Authorization } from '../src/wallet';
+import createDefaultAuthorizationCache from '../src/createDefaultAuthorizationCache.js';
+import type { Authorization } from '../src/wallet.js';
 
 const AUTHORIZATION_CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 const DEFAULT_CAPABILITIES: Authorization['capabilities'] = {

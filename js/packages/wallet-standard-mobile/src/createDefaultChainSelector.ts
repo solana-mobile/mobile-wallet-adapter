@@ -1,5 +1,6 @@
 import { SOLANA_MAINNET_CHAIN } from '@solana/wallet-standard-chains';
-import { ChainSelector } from './wallet';
+
+import { ChainSelector } from './wallet.js';
 
 export default function createDefaultChainSelector(): ChainSelector {
     return {

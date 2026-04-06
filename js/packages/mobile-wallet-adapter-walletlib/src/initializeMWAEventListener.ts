@@ -4,6 +4,7 @@ import { MWASessionEvent, MWASessionEventType } from './mwaSessionEvents.js';
 import { MWARequest, MWARequestType } from './resolve.js';
 
 const MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME = 'MobileWalletAdapterServiceRequestBridge';
+type NativeMWAEvent = Readonly<{ __type?: unknown }>;
 
 export function initializeMWAEventListener(
     handleRequest: (request: MWARequest) => void,
@@ -11,10 +12,11 @@ export function initializeMWAEventListener(
 ): EmitterSubscription {
     const mwaEventEmitter = new NativeEventEmitter();
     const listener = mwaEventEmitter.addListener(MOBILE_WALLET_ADAPTER_EVENT_BRIDGE_NAME, (nativeEvent) => {
-        if (isMWARequest(nativeEvent)) {
-            handleRequest(nativeEvent as MWARequest);
-        } else if (isMWASessionEvent(nativeEvent)) {
-            handleSessionEvent(nativeEvent as MWASessionEvent);
+        const event = nativeEvent as NativeMWAEvent;
+        if (isMWARequest(event)) {
+            handleRequest(event);
+        } else if (isMWASessionEvent(event)) {
+            handleSessionEvent(event);
         } else {
             console.warn('Unexpected native event type');
         }
@@ -23,10 +25,10 @@ export function initializeMWAEventListener(
     return listener;
 }
 
-function isMWARequest(nativeEvent: any): boolean {
-    return Object.values(MWARequestType).includes(nativeEvent.__type);
+function isMWARequest(nativeEvent: NativeMWAEvent): nativeEvent is MWARequest {
+    return Object.values(MWARequestType).includes(nativeEvent.__type as MWARequest['__type']);
 }
 
-function isMWASessionEvent(nativeEvent: any) {
-    return Object.values(MWASessionEventType).includes(nativeEvent.__type);
+function isMWASessionEvent(nativeEvent: NativeMWAEvent): nativeEvent is MWASessionEvent {
+    return Object.values(MWASessionEventType).includes(nativeEvent.__type as MWASessionEvent['__type']);
 }

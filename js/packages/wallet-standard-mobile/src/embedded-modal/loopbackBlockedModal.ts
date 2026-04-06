@@ -1,5 +1,5 @@
-import { getIsPwaLaunchedAsApp } from '../getIsSupported';
-import EmbeddedModal from './modal';
+import { getIsPwaLaunchedAsApp } from '../getIsSupported.js';
+import EmbeddedModal from './modal.js';
 
 export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
     protected contentStyles = css;
@@ -17,7 +17,7 @@ export default class LoopbackPermissionBlockedModal extends EmbeddedModal {
 
     #prepareLaunchAction() {
         const launchButton = this.dom?.getElementById('mobile-wallet-adapter-launch-action');
-        const listener = async (event?: any) => {
+        const listener = async (event?: Event) => {
             launchButton?.removeEventListener('click', listener);
             this.close(event);
         };
