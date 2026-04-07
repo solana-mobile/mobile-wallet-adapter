@@ -5,7 +5,7 @@
     "fixed": [
         ["@solana-mobile/mobile-wallet-adapter-protocol", "@solana-mobile/mobile-wallet-adapter-protocol-web3js"]
     ],
-    "linked": [["@solana-mobile/wallet-standard-mobile", "@solana-mobile/wallet-adapter-mobile"]],
+    "linked": [],
     "access": "public",
     "baseBranch": "main",
     "updateInternalDependencies": "patch",
