@@ -1,6 +1,7 @@
 import {
     BaseSignInMessageSignerWalletAdapter,
     WalletConnectionError,
+    WalletError,
     WalletName,
     WalletNotConnectedError,
     WalletNotReadyError,
@@ -11,26 +12,6 @@ import {
     WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import {
-    Connection,
-    PublicKey,
-    SendOptions,
-    Transaction as LegacyTransaction,
-    TransactionSignature,
-    TransactionVersion,
-    VersionedTransaction,
-    VersionedMessage,
-    Transaction,
-} from '@solana/web3.js';
-import {
-    AppIdentity,
-    AuthorizationResult,
-    Base64EncodedAddress,
-    Finality,
-    Chain,
-    Cluster,
-    SignInPayload,
-} from '@solana-mobile/mobile-wallet-adapter-protocol';
-import {
     SolanaSignAndSendTransaction,
     SolanaSignIn,
     SolanaSignInInput,
@@ -40,6 +21,34 @@ import {
     SolanaSignTransactionOutput,
 } from '@solana/wallet-standard-features';
 import {
+    Connection,
+    PublicKey,
+    SendOptions,
+    Transaction as LegacyTransaction,
+    Transaction,
+    TransactionSignature,
+    TransactionVersion,
+    VersionedMessage,
+    VersionedTransaction,
+} from '@solana/web3.js';
+import {
+    AppIdentity,
+    AuthorizationResult,
+    Base64EncodedAddress,
+    Chain,
+    Cluster,
+    Finality,
+    SignInPayload,
+} from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {
+    Authorization,
+    createDefaultChainSelector,
+    LocalSolanaMobileWalletAdapterWallet,
+    RemoteSolanaMobileWalletAdapterWallet,
+    SolanaMobileWalletAdapterRemoteWalletName as WalletStandardRemoteWalletName,
+    SolanaMobileWalletAdapterWalletName as WalletStandardWalletName,
+} from '@solana-mobile/wallet-standard-mobile';
+import {
     IdentifierString,
     StandardConnect,
     StandardDisconnect,
@@ -47,14 +56,7 @@ import {
     StandardEventsChangeProperties,
     WalletAccount,
 } from '@wallet-standard/core';
-import {
-    Authorization,
-    createDefaultChainSelector,
-    LocalSolanaMobileWalletAdapterWallet,
-    RemoteSolanaMobileWalletAdapterWallet,
-    SolanaMobileWalletAdapterWalletName as WalletStandardWalletName,
-    SolanaMobileWalletAdapterRemoteWalletName as WalletStandardRemoteWalletName,
-} from '@solana-mobile/wallet-standard-mobile';
+
 import { fromUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
 
@@ -92,6 +94,10 @@ function chainOrClusterToChainId(chain: Cluster | Chain): IdentifierString {
     }
 }
 
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : 'Unknown error';
+}
+
 abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdapter {
     readonly supportedTransactionVersions: Set<TransactionVersion> = new Set(
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
@@ -117,7 +123,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                 this.emit(
                     'connect',
                     // Having just set `this.#selectedAccount`, `this.publicKey` is definitely non-null
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
                     this.publicKey!,
                 );
             }
@@ -280,8 +286,8 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                     message: message,
                 });
                 return outputs[0].signature;
-            } catch (error: any) {
-                throw new WalletSignMessageError(error?.message, error);
+            } catch (error: unknown) {
+                throw new WalletSignMessageError(getErrorMessage(error), error);
             }
         });
     }
@@ -361,8 +367,8 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                         });
                     }
                 }
-            } catch (error: any) {
-                throw new WalletSendTransactionError(error?.message, error);
+            } catch (error: unknown) {
+                throw new WalletSendTransactionError(getErrorMessage(error), error);
             }
         });
     }
@@ -420,16 +426,16 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             } else {
                 throw new Error('Connected wallet does not support signing transactions');
             }
-        } catch (error: any) {
-            throw new WalletSignTransactionError(error?.message, error);
+        } catch (error: unknown) {
+            throw new WalletSignTransactionError(getErrorMessage(error), error);
         }
     }
 
     async #runWithGuard<TReturn>(callback: () => Promise<TReturn>) {
         try {
             return await callback();
-        } catch (e: any) {
-            this.emit('error', e);
+        } catch (e: unknown) {
+            this.emit('error', e instanceof WalletError ? e : new WalletError(getErrorMessage(e), e));
             throw e;
         }
     }

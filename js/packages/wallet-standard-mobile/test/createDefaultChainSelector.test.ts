@@ -1,7 +1,7 @@
 import { SOLANA_DEVNET_CHAIN, SOLANA_MAINNET_CHAIN, SOLANA_TESTNET_CHAIN } from '@solana/wallet-standard-chains';
 import { describe, expect, it } from 'vitest';
 
-import createDefaultChainSelector from '../src/createDefaultChainSelector';
+import createDefaultChainSelector from '../src/createDefaultChainSelector.js';
 
 describe('createDefaultChainSelector', () => {
     it('falls back to the first chain when mainnet is absent', async () => {

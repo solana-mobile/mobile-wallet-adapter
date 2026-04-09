@@ -1,5 +1,6 @@
-import { Authorization, AuthorizationCache } from './wallet';
 import base58 from 'bs58';
+
+import { Authorization, AuthorizationCache } from './wallet.js';
 
 const CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 

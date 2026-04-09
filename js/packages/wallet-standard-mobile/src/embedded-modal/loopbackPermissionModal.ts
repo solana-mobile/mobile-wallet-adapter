@@ -1,4 +1,4 @@
-import EmbeddedModal from './modal';
+import EmbeddedModal from './modal.js';
 
 export default class LoopbackPermissionModal extends EmbeddedModal {
     protected contentStyles = css;
@@ -16,7 +16,7 @@ export default class LoopbackPermissionModal extends EmbeddedModal {
             try {
                 // Trigger LNA permission prompting
                 await fetch('http://localhost');
-            } catch (e) {
+            } catch {
                 /* Ignore errors from fetch */
             }
             this.close();

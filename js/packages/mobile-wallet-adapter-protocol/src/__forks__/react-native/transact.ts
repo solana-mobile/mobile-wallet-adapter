@@ -1,4 +1,4 @@
-import { Platform, AppRegistry } from 'react-native';
+import { AppRegistry, Platform } from 'react-native';
 
 import NativeSolanaMobileWalletAdapter from '../../codegenSpec/NativeSolanaMobileWalletAdapter.js';
 import createMobileWalletProxy from '../../createMobileWalletProxy.js';
@@ -49,7 +49,7 @@ function getErrorMessage(e: ReactNativeError): string {
     }
 }
 
-function handleError(e: any): never {
+function handleError(e: unknown): never {
     if (e instanceof Error) {
         const reactNativeError: ReactNativeError = e;
         switch (reactNativeError.code) {
@@ -64,6 +64,8 @@ function handleError(e: any): never {
                 );
             }
             default:
+                // The native module forwards string error codes that are validated on the native side.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 throw new SolanaMobileWalletAdapterError<any>(
                     reactNativeError.code,
                     getErrorMessage(reactNativeError),

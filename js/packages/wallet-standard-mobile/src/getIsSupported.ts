@@ -2,9 +2,10 @@ import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import LocalConnectionModal from './embedded-modal/localConnectionModal';
-import LoopbackPermissionBlockedModal from './embedded-modal/loopbackBlockedModal';
-import LoopbackPermissionModal from './embedded-modal/loopbackPermissionModal';
+
+import LocalConnectionModal from './embedded-modal/localConnectionModal.js';
+import LoopbackPermissionBlockedModal from './embedded-modal/loopbackBlockedModal.js';
+import LoopbackPermissionModal from './embedded-modal/loopbackPermissionModal.js';
 
 export function getIsLocalAssociationSupported() {
     return (
@@ -63,7 +64,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
     }
 
     try {
-        let lnaPermission: PermissionStatus = await navigator.permissions.query({
+        const lnaPermission: PermissionStatus = await navigator.permissions.query({
             name: 'loopback-network' as PermissionName,
         });
         if (lnaPermission.state === 'granted') {

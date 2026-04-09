@@ -30,7 +30,7 @@ const SolanaMobileWalletAdapterWalletLib =
 
 type ReactNativeError = Error & { code?: string; userInfo?: Record<string, unknown> };
 
-function handleError(e: any): never {
+function handleError(e: unknown): never {
     if (e instanceof Error) {
         const { code, message } = e as ReactNativeError;
         if (code && code in SolanaMWAWalletLibErrorCode) {

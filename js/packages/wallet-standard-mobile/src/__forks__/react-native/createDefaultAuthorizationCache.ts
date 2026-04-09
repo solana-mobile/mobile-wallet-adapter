@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import base58 from 'bs58';
 
 import { Authorization, AuthorizationCache } from '../../wallet.js';
-import base58 from 'bs58';
 
 const CACHE_KEY = 'SolanaMobileWalletAdapterWalletStandardDefaultAuthorizationCache';
 

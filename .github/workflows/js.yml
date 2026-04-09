@@ -33,10 +33,9 @@ jobs:
       - name: '[js] Install dependencies'
         working-directory: 'js/'
         run: pnpm install --frozen-lockfile
-      # - name: '[js] Lint'
-      #   working-directory: 'js/'
-      #   run: pnpm lint
-        continue-on-error: true # TODO: fix all lint issues and remove this line
+      - name: '[js] Lint'
+        working-directory: 'js/'
+        run: pnpm lint:check
       - name: '[js] Format Check'
         working-directory: 'js/'
         run: pnpm format:check

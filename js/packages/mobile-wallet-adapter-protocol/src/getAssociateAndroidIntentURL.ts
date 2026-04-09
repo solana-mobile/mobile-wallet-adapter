@@ -1,9 +1,9 @@
 import arrayBufferToBase64String from './arrayBufferToBase64String.js';
 import { assertAssociationPort } from './associationPort.js';
+import { fromUint8Array } from './base64Utils.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
 import getStringWithURLUnsafeBase64CharactersReplaced from './getStringWithURLUnsafeBase64CharactersReplaced.js';
 import { ProtocolVersion } from './types.js';
-import { fromUint8Array } from './base64Utils.js';
 
 const INTENT_NAME = 'solana-wallet';
 

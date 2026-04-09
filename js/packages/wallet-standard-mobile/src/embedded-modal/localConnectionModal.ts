@@ -1,4 +1,4 @@
-import EmbeddedModal from './modal';
+import EmbeddedModal from './modal.js';
 
 export default class LocalConnectionModal extends EmbeddedModal {
     protected contentStyles = css;

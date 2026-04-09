@@ -4,7 +4,7 @@ import { SOLANA_DEVNET_CHAIN, SOLANA_MAINNET_CHAIN, SOLANA_TESTNET_CHAIN } from 
 export const MWA_SOLANA_CHAINS = [SOLANA_MAINNET_CHAIN, SOLANA_DEVNET_CHAIN, SOLANA_TESTNET_CHAIN] as const;
 
 // Placeholder types to remove dependency on web3.js
-type LegacyTransaction = { [key: string]: any }; // Placeholder type
+type LegacyTransaction = Record<string, unknown>; // Placeholder type
 type LegacyVersionedTransaction = LegacyTransaction & { version: number };
 
 /**

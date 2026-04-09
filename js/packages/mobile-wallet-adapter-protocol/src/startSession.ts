@@ -45,7 +45,7 @@ function launchUrlThroughHiddenFrame(url: URL) {
         _frame.style.display = 'none';
         document.body.appendChild(_frame);
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     _frame.contentWindow!.location.href = url.toString();
 }
 
@@ -74,7 +74,7 @@ async function launchAssociation(associationUrl: URL) {
                 default:
                     assertUnreachable(browser);
             }
-        } catch (e) {
+        } catch {
             throw new SolanaMobileWalletAdapterError(
                 SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
                 'Found no installed wallet that supports the mobile wallet protocol.',

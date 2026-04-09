@@ -16,8 +16,6 @@ import {
     type SolanaSignTransactionFeature,
     type SolanaSignTransactionMethod,
 } from '@solana/wallet-standard-features';
-import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
-import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import {
     type Account,
     type AppIdentity,
@@ -28,8 +26,8 @@ import {
     SignInPayload,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
-    startScenario,
     startRemoteScenario,
+    startScenario,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
@@ -45,10 +43,13 @@ import {
     type StandardEventsNames,
     type StandardEventsOnMethod,
 } from '@wallet-standard/features';
-import { icon } from './icon';
-import { fromUint8Array, toUint8Array } from './base64Utils';
 import base58 from 'bs58';
+
+import { fromUint8Array, toUint8Array } from './base64Utils.js';
+import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
+import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import { checkLocalNetworkAccessPermission } from './getIsSupported.js';
+import { icon } from './icon.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>;
 
@@ -79,6 +80,10 @@ const DEFAULT_FEATURES = [
     SolanaSignIn,
 ] as const;
 const WALLET_ASSOCIATION_TIMEOUT = 30_000;
+
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : 'Unknown error';
+}
 
 export interface SolanaMobileWalletAdapterWallet extends Wallet {
     url: string;
@@ -248,7 +253,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                 await this.#performAuthorization();
             }
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         } finally {
             this.#connecting = false;
         }
@@ -292,7 +297,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                 return authorization;
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -362,7 +367,7 @@ export class LocalSolanaMobileWalletAdapterWallet
             Promise.all([this.#authorizationCache.set(authorization), this.#handleAuthorizationResult(authorization)]);
         } catch (e) {
             this.#disconnect();
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -390,6 +395,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                     // Begin local connection, show loading spinner while we connect
                     loadingSpinner.init();
                     const { wallet, close } = await startScenario(config);
+                    associating = false;
                     loadingSpinner.addEventListener('close', (event) => {
                         if (event) close();
                     });
@@ -472,7 +478,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                 return signedTransactions;
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -483,7 +489,7 @@ export class LocalSolanaMobileWalletAdapterWallet
         const { authToken, chain } = this.#assertIsAuthorized();
         try {
             return await this.#transact(async (wallet) => {
-                const [capabilities, _1] = await Promise.all([
+                const [capabilities] = await Promise.all([
                     wallet.getCapabilities(),
                     this.#performReauthorization(wallet, authToken, chain),
                 ]);
@@ -501,7 +507,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                 }
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -542,7 +548,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                 });
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -585,7 +591,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                 signature: toUint8Array(authorizationResult.sign_in_result.signature),
             };
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         } finally {
             this.#connecting = false;
         }
@@ -736,7 +742,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
         this.#listeners[event] = this.#listeners[event]?.filter((existingListener) => listener !== existingListener);
     }
 
-    #connect: StandardConnectMethod = async ({ silent } = {}) => {
+    #connect: StandardConnectMethod = async (_input = {}) => {
         if (this.#connecting || this.connected) {
             return { accounts: this.accounts };
         }
@@ -744,7 +750,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
         try {
             await this.#performAuthorization();
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         } finally {
             this.#connecting = false;
         }
@@ -789,7 +795,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 return authorizationResult;
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -861,7 +867,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
             Promise.all([this.#authorizationCache.set(authorization), this.#handleAuthorizationResult(authorization)]);
         } catch (e) {
             this.#disconnect();
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -893,7 +899,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
             const { associationUrl, close, wallet } = await startRemoteScenario(remoteConfig);
 
             // Reflector is now connected, update the connection modal with qr code
-            const removeCloseListener = modal.addEventListener('close', (event: any) => {
+            const removeCloseListener = modal.addEventListener('close', (event?: Event) => {
                 if (event) close();
             });
             modal.populateQRCode(associationUrl.toString());
@@ -956,7 +962,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 return signedTransactions;
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -967,7 +973,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
         const { authToken, chain } = this.#assertIsAuthorized();
         try {
             return await this.#transact(async (wallet) => {
-                const [capabilities, _1] = await Promise.all([
+                const [capabilities] = await Promise.all([
                     wallet.getCapabilities(),
                     this.#performReauthorization(wallet, authToken, chain),
                 ]);
@@ -984,7 +990,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 }
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -1024,7 +1030,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 });
             });
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         }
     };
 
@@ -1067,7 +1073,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 signature: toUint8Array(authorizationResult.sign_in_result.signature),
             };
         } catch (e) {
-            throw new Error((e instanceof Error && e.message) || 'Unknown error');
+            throw new Error(getErrorMessage(e), { cause: e });
         } finally {
             this.#connecting = false;
         }

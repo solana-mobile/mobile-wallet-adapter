@@ -15,11 +15,11 @@ import {
     GetCapabilitiesAPI,
     MobileWallet,
     ReauthorizeAPI,
+    RemoteWalletAssociationConfig,
+    startRemoteScenario as baseStartRemoteScenario,
     TerminateSessionAPI,
     transact as baseTransact,
-    startRemoteScenario as baseStartRemoteScenario,
     WalletAssociationConfig,
-    RemoteWalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import bs58 from 'bs58';
 
