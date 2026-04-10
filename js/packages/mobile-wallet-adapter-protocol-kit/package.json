@@ -1,7 +1,7 @@
 {
     "name": "@solana-mobile/mobile-wallet-adapter-protocol-kit",
     "description": "A convenience wrapper that enables you to call Solana Mobile Stack protocol methods using objects from @solana/kit",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "author": "Marco Martinez <marco.martinez@solana.com>",
     "repository": {
         "type": "git",
