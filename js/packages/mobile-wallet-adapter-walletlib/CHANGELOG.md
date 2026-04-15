@@ -1,5 +1,13 @@
 # @solana-mobile/mobile-wallet-adapter-walletlib
 
+## 1.4.3
+
+### Patch Changes
+
+- a2e8d0d: Restore ESLint checks in the JS workspace and apply the package source updates needed for lint compliance.
+
+    Add narrow `eslint-disable-next-line` comments in package source where platform requirements or existing runtime behavior conflict with the restored lint rules, while keeping package behavior unchanged.
+
 ## 1.4.2
 
 ### Patch Changes
