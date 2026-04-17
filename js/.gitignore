@@ -1,3 +1,4 @@
-node_modules/
 .turbo/
+coverage/
+node_modules/
 packages/*/lib/
