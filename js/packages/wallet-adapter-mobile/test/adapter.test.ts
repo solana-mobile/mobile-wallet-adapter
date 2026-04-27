@@ -40,7 +40,7 @@ vi.mock('@solana-mobile/wallet-standard-mobile', async () => {
         accounts: unknown[] = [];
         cachedAuthorization: unknown;
         config: unknown;
-        connectImpl = vi.fn(async () => ({ accounts: this.accounts }));
+        connectImpl = vi.fn(async (_input?: unknown) => ({ accounts: this.accounts }));
         connected = false;
         currentAuthorization: { chain: string } | undefined;
         disconnectImpl = vi.fn(async () => {
@@ -53,10 +53,10 @@ vi.mock('@solana-mobile/wallet-standard-mobile', async () => {
         isAuthorized = false;
         listeners: Array<(properties: { accounts?: unknown[] }) => unknown> = [];
         name = 'Mock Mobile Wallet';
-        signAndSendImpl = vi.fn(async () => [{ signature: Uint8Array.of(1, 2, 3) }]);
-        signInImpl = vi.fn(async () => []);
-        signMessageImpl = vi.fn(async () => [{ signature: Uint8Array.of(9, 9, 9) }]);
-        signTransactionImpl = vi.fn(async () => []);
+        signAndSendImpl = vi.fn(async (_input: unknown) => [{ signature: Uint8Array.of(1, 2, 3) }]);
+        signInImpl = vi.fn(async (_input?: unknown) => []);
+        signMessageImpl = vi.fn(async (_input: unknown) => [{ signature: Uint8Array.of(9, 9, 9) }]);
+        signTransactionImpl = vi.fn(async (..._inputs: unknown[]) => []);
         url = 'https://example.test/wallet';
 
         constructor(config: unknown) {
@@ -184,7 +184,7 @@ describe('adapter', () => {
             appIdentity: createAppIdentity(),
             authorizationResultCache: createAuthorizationResultCache(),
             cluster: 'devnet',
-            onWalletNotFound: vi.fn().mockResolvedValue(undefined),
+            onWalletNotFound: createLocalWalletNotFoundHandler(),
         });
 
         expect(createDefaultChainSelectorMock).toHaveBeenCalledTimes(1);
@@ -201,7 +201,7 @@ describe('adapter', () => {
             appIdentity: createAppIdentity(),
             authorizationResultCache: createAuthorizationResultCache(),
             chain: 'solana:mainnet',
-            onWalletNotFound: vi.fn().mockResolvedValue(undefined),
+            onWalletNotFound: createRemoteWalletNotFoundHandler(),
             remoteHostAuthority: 'remote.example.com',
         });
 
@@ -254,7 +254,7 @@ describe('adapter', () => {
     });
 
     it('passes the adapter instance to the local onWalletNotFound handler', async () => {
-        const onWalletNotFound = vi.fn().mockResolvedValue(undefined);
+        const onWalletNotFound = createLocalWalletNotFoundHandler();
         const { adapter } = createLocalAdapter({ onWalletNotFound });
 
         await (getLastItem(localWalletConfigs) as { onWalletNotFound: () => Promise<void> }).onWalletNotFound();
@@ -264,7 +264,7 @@ describe('adapter', () => {
     });
 
     it('passes the adapter instance to the remote onWalletNotFound handler', async () => {
-        const onWalletNotFound = vi.fn().mockResolvedValue(undefined);
+        const onWalletNotFound = createRemoteWalletNotFoundHandler();
         const { adapter } = createRemoteAdapter({ onWalletNotFound });
 
         await (getLastItem(remoteWalletConfigs) as { onWalletNotFound: () => Promise<void> }).onWalletNotFound();
@@ -474,12 +474,16 @@ function createAuthorizationResultCache() {
     };
 }
 
+function createLocalWalletNotFoundHandler() {
+    return vi.fn(async (_mobileWalletAdapter: LocalSolanaMobileWalletAdapter) => undefined);
+}
+
 function createLocalAdapter({
     addressSelector = createAddressSelector(),
-    onWalletNotFound = vi.fn().mockResolvedValue(undefined),
+    onWalletNotFound = createLocalWalletNotFoundHandler(),
 }: {
     addressSelector?: ReturnType<typeof createAddressSelector>;
-    onWalletNotFound?: ReturnType<typeof vi.fn>;
+    onWalletNotFound?: (mobileWalletAdapter: LocalSolanaMobileWalletAdapter) => Promise<void>;
 } = {}) {
     const adapter = new LocalSolanaMobileWalletAdapter({
         addressSelector,
@@ -495,12 +499,16 @@ function createLocalAdapter({
     };
 }
 
+function createRemoteWalletNotFoundHandler() {
+    return vi.fn(async (_mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => undefined);
+}
+
 function createRemoteAdapter({
     addressSelector = createAddressSelector(),
-    onWalletNotFound = vi.fn().mockResolvedValue(undefined),
+    onWalletNotFound = createRemoteWalletNotFoundHandler(),
 }: {
     addressSelector?: ReturnType<typeof createAddressSelector>;
-    onWalletNotFound?: ReturnType<typeof vi.fn>;
+    onWalletNotFound?: (mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => Promise<void>;
 } = {}) {
     const adapter = new RemoteSolanaMobileWalletAdapter({
         addressSelector,
