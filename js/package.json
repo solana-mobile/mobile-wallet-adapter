@@ -11,7 +11,8 @@
         "lint:check": "eslint . --ext .cjs,.cts,.js,.mjs,.mts,.ts,.tsx",
         "lint:fix": "eslint . --ext .cjs,.cts,.js,.mjs,.mts,.ts,.tsx --fix",
         "publish-packages": "pnpm build && pnpm changeset publish --access public --no-git-checks",
-        "test": "vitest"
+        "test": "vitest",
+        "test:coverage": "vitest run --coverage.enabled"
     },
     "devDependencies": {
         "@changesets/cli": "^2.29.8",
@@ -20,6 +21,7 @@
         "@types/node-fetch": "^2.6.1",
         "@typescript-eslint/eslint-plugin": "^8.56.1",
         "@typescript-eslint/parser": "^8.56.1",
+        "@vitest/coverage-v8": "^4.1.0",
         "eslint": "^10.2.0",
         "eslint-plugin-simple-import-sort": "^12.1.0",
         "jsdom": "^29.0.1",
