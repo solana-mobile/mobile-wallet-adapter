@@ -160,13 +160,16 @@ describe('transact', () => {
     it('converts kit transactions to protocol payloads and signed payloads back to transactions', async () => {
         const decodedTransactionA = { decoded: 'a' };
         const decodedTransactionB = { decoded: 'b' };
-        const compiledTransaction = { messageBytes: new Uint8Array([1, 2, 3]) } as unknown as Transaction;
+        const compiledTransactionA = { messageBytes: new Uint8Array([1, 2, 3]) } as unknown as Transaction;
+        const compiledTransactionB = { messageBytes: new Uint8Array([10, 11, 12]) } as unknown as Transaction;
         const baseWallet = createBaseWallet();
         const decoder = {
             decode: vi.fn().mockReturnValueOnce(decodedTransactionA).mockReturnValueOnce(decodedTransactionB),
         };
 
-        mockGetBase64EncodedWireTransaction.mockReturnValue('compiled-payload');
+        mockGetBase64EncodedWireTransaction
+            .mockReturnValueOnce('compiled-payload-a')
+            .mockReturnValueOnce('compiled-payload-b');
         mockGetTransactionDecoder.mockReturnValue(decoder);
         baseWallet.signTransactions.mockResolvedValue({
             signed_payloads: ['BAUG', 'BwgJ'],
@@ -176,13 +179,13 @@ describe('transact', () => {
         await expect(
             transact((wallet) =>
                 wallet.signTransactions({
-                    transactions: [compiledTransaction],
+                    transactions: [compiledTransactionA, compiledTransactionB],
                 }),
             ),
         ).resolves.toEqual([decodedTransactionA, decodedTransactionB]);
 
         expect(baseWallet.signTransactions).toHaveBeenCalledWith({
-            payloads: ['compiled-payload'],
+            payloads: ['compiled-payload-a', 'compiled-payload-b'],
         });
         expect(decoder.decode).toHaveBeenNthCalledWith(1, new Uint8Array([4, 5, 6]));
         expect(decoder.decode).toHaveBeenNthCalledWith(2, new Uint8Array([7, 8, 9]));
