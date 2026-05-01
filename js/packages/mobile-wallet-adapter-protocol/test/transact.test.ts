@@ -228,6 +228,70 @@ describe('startScenario', () => {
         );
     });
 
+    it('retries local socket connections before the timeout expires', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const scenario = await startScenario();
+        const firstSocket = getOnlySocket();
+
+        const dispatchPromise = firstSocket.dispatch('error', new Event('error'));
+        await vi.advanceTimersByTimeAsync(150);
+        await dispatchPromise;
+
+        expect(MockWebSocket.instances).toHaveLength(2);
+        const secondSocket = MockWebSocket.instances[1];
+        await establishLocalSession(secondSocket);
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+    });
+
+    it('sends the local hello request after an app ping while connecting', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+        expect(socket.sent).toEqual([HELLO_REQ]);
+    });
+
+    it('resends the local hello request after an app ping while waiting for hello response', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+        expect(socket.sent).toEqual([HELLO_REQ, HELLO_REQ]);
+    });
+
+    it('throws when local encrypted messages arrive out of sequence', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(0, 0, 0, 2, 99)))).rejects.toThrow(
+            'Encrypted message has invalid sequence number',
+        );
+    });
+
+    it('throws when local session properties arrive out of sequence', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+
+        await expect(
+            socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(...HELLO_RSP, 0, 0, 0, 2, 12))),
+        ).rejects.toThrow('Encrypted message has invalid sequence number');
+
+        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+    });
+
     it('parses local session properties from hello responses', async () => {
         const scenario = await startScenario();
         const socket = getOnlySocket();
@@ -389,6 +453,107 @@ describe('startRemoteScenario', () => {
         await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE));
 
         await expect(responsePromise).resolves.toBe(responseResult);
+    });
+
+    it('retries remote reflector socket connections before the timeout expires', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const firstSocket = getOnlySocket();
+
+        const dispatchPromise = firstSocket.dispatch('error', new Event('error'));
+        await vi.advanceTimersByTimeAsync(150);
+        await dispatchPromise;
+
+        expect(MockWebSocket.instances).toHaveLength(2);
+        const secondSocket = MockWebSocket.instances[1];
+        await secondSocket.dispatch('open', new Event('open'));
+        await secondSocket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+
+        await expect(scenarioPromise).resolves.toEqual(
+            expect.objectContaining({
+                associationUrl: ASSOCIATION_URL,
+            }),
+        );
+    });
+
+    it('throws when the reflector sends an empty id message while connecting', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+
+        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()))).rejects.toThrow(
+            'Encountered unexpected message while connecting',
+        );
+        await expect(Promise.race([scenarioPromise, Promise.resolve('pending')])).resolves.toBe('pending');
+    });
+
+    it('throws when remote wallet reflection receives an unexpected payload', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+
+        const scenario = await scenarioPromise;
+
+        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(1)))).rejects.toThrow(
+            'Encountered unexpected message while awaiting reflection',
+        );
+        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+    });
+
+    it('parses remote session properties from hello responses', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+        const sessionPropertiesBuffer = Uint8Array.of(0, 0, 0, 1, 12);
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+
+        const scenario = await scenarioPromise;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch(
+            'message',
+            createBlobMessageEvent(Uint8Array.of(...HELLO_RSP, ...sessionPropertiesBuffer)),
+        );
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+        expect(mockParseSessionProps).toHaveBeenCalledWith(expect.any(ArrayBuffer), SHARED_SECRET);
+        expect(new Uint8Array(mockParseSessionProps.mock.calls[0][0] as ArrayBuffer)).toEqual(sessionPropertiesBuffer);
+    });
+
+    it('rejects pending remote RPC requests when the wallet returns protocol errors', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const protocolError = new SolanaMobileWalletAdapterProtocolError(1, -3, 'not signed');
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_messages', {
+            addresses: [],
+            payloads: [],
+        });
+        await flushPromises();
+
+        mockDecryptJsonRpcMessage.mockRejectedValue(protocolError);
+        await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE));
+
+        await expect(responsePromise).rejects.toBe(protocolError);
     });
 
     it('rejects remote authorization responses with insecure wallet base URLs', async () => {
