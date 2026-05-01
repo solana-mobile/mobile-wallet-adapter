@@ -41,6 +41,13 @@ afterEach(() => {
 });
 
 describe('EmbeddedModal', () => {
+    it('no-ops open and close before initialization', () => {
+        const modal = new TestModal();
+
+        expect(() => modal.open()).not.toThrow();
+        expect(() => modal.close()).not.toThrow();
+    });
+
     it('injects modal content, opens, closes, and removes close listeners', async () => {
         const modal = new TestModal();
         const closeListener = vi.fn();
@@ -76,6 +83,25 @@ describe('EmbeddedModal', () => {
         expect(closeListener).toHaveBeenCalledTimes(1);
     });
 
+    it('reuses an existing embedded modal root when one is already present', async () => {
+        const existingRoot = document.createElement('div');
+        const modal = new TestModal();
+
+        existingRoot.id = 'mobile-wallet-adapter-embedded-root-ui';
+        document.body.appendChild(existingRoot);
+
+        await modal.init();
+
+        expect(existingRoot.style.display).toBe('');
+        expect(document.body.children).toHaveLength(1);
+
+        modal.open();
+        expect(existingRoot.style.display).toBe('flex');
+
+        modal.close();
+        expect(existingRoot.style.display).toBe('none');
+    });
+
     it('closes when the backdrop is clicked', async () => {
         const modal = new TestModal();
         const closeListener = vi.fn();
@@ -94,6 +120,13 @@ describe('EmbeddedModal', () => {
 });
 
 describe('EmbeddedLoadingSpinner', () => {
+    it('no-ops open and close before initialization', () => {
+        const spinner = new EmbeddedLoadingSpinner();
+
+        expect(() => spinner.open()).not.toThrow();
+        expect(() => spinner.close()).not.toThrow();
+    });
+
     it('injects, opens, closes, and handles escape key closure', async () => {
         const spinner = new EmbeddedLoadingSpinner();
         const closeListener = vi.fn();
@@ -101,10 +134,12 @@ describe('EmbeddedLoadingSpinner', () => {
         spinner.addEventListener('close', closeListener);
 
         await spinner.init();
+        await spinner.init();
         spinner.open();
 
         const root = getRoot(getDom(spinner));
 
+        expect(document.body.children).toHaveLength(1);
         expect(root.style.display).toBe('flex');
 
         const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
@@ -204,12 +239,20 @@ describe('concrete embedded modals', () => {
         mockGetIsPwaLaunchedAsApp.mockReturnValueOnce(true);
 
         const appModal = new LoopbackPermissionBlockedModal();
+        const closeListener = vi.fn();
 
+        appModal.addEventListener('close', closeListener);
         await appModal.init();
 
         expect(getDom(appModal).textContent).toContain(
             'Long press the app icon on your home screen to open site settings',
         );
+
+        getDom(appModal)
+            .getElementById('mobile-wallet-adapter-launch-action')
+            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        expect(closeListener).toHaveBeenCalledWith(expect.any(MouseEvent));
 
         document.body.replaceChildren();
         mockGetIsPwaLaunchedAsApp.mockReturnValueOnce(false);
@@ -243,6 +286,16 @@ describe('concrete embedded modals', () => {
 
         expect(mockQrCodeToCanvas).toHaveBeenCalledWith('solana-wallet:/second', { margin: 0, width: 200 });
         expect(qrContainer?.firstElementChild).toBe(secondCanvas);
+    });
+
+    it('logs when the remote connection QR container is missing', async () => {
+        const modal = new RemoteConnectionModal();
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        await modal.populateQRCode('solana-wallet:/missing-container');
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith('QRCode Container not found');
+        expect(mockQrCodeToCanvas).not.toHaveBeenCalled();
     });
 });
 
