@@ -125,6 +125,7 @@ beforeEach(() => {
 afterEach(() => {
     resetModalMocks();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
 });
 
 type MockPermissionStatus = {
@@ -157,6 +158,43 @@ describe('getIsSupported helpers', () => {
         expect(blockedModalInstances).toHaveLength(0);
         expect(localConnectionModalInstances).toHaveLength(0);
         expect(permissionModalInstances).toHaveLength(0);
+    });
+
+    it('covers the local network access API missing case with the alternate permission name', async () => {
+        installBrowserGlobals({
+            permissionQuery: vi
+                .fn()
+                .mockRejectedValue(new TypeError('local-network-access is not a valid permission name')),
+        });
+
+        await expect(checkLocalNetworkAccessPermission()).resolves.toBeUndefined();
+    });
+
+    it('covers prompt close events without cancellation payloads', async () => {
+        const permission = createPermissionStatus('prompt');
+
+        installBrowserGlobals({
+            permissionQuery: vi.fn().mockResolvedValue(permission),
+        });
+
+        const permissionPromise = checkLocalNetworkAccessPermission();
+
+        await vi.waitFor(() => {
+            expect(permissionModalInstances).toHaveLength(1);
+        });
+
+        permissionModalInstances[0].closeListener?.();
+        permission.state = 'granted';
+        permission.onchange?.(new Event('change'));
+
+        await vi.waitFor(() => {
+            expect(localConnectionModalInstances).toHaveLength(1);
+        });
+
+        localConnectionModalInstances[0].closeListener?.();
+        await localConnectionModalInstances[0].callback?.();
+
+        await expect(permissionPromise).resolves.toBeUndefined();
     });
 
     it('covers the prompt flow cancelling before permission is granted', async () => {
@@ -329,7 +367,35 @@ describe('getIsSupported helpers', () => {
         expect(getIsPwaLaunchedAsApp()).toBe(true);
     });
 
+    it('treats Android TWA referrers as app launches when window is unavailable', () => {
+        Object.defineProperty(document, 'referrer', {
+            configurable: true,
+            value: 'android-app://com.example.wallet',
+        });
+        vi.stubGlobal('window', undefined);
+
+        expect(getIsPwaLaunchedAsApp()).toBe(true);
+    });
+
     it('treats matching display modes as app launches', () => {
+        installBrowserGlobals({
+            displayMode: { fullscreen: true },
+            documentReferrer: '',
+            isSecureContext: true,
+            userAgent: DESKTOP_BROWSER_USER_AGENT,
+        });
+
+        expect(getIsPwaLaunchedAsApp()).toBe(true);
+
+        installBrowserGlobals({
+            displayMode: { minimalUI: true },
+            documentReferrer: '',
+            isSecureContext: true,
+            userAgent: DESKTOP_BROWSER_USER_AGENT,
+        });
+
+        expect(getIsPwaLaunchedAsApp()).toBe(true);
+
         installBrowserGlobals({
             displayMode: { standalone: true },
             documentReferrer: '',
@@ -389,6 +455,18 @@ describe('getIsSupported helpers', () => {
         await expect(checkLocalNetworkAccessPermission()).rejects.toMatchObject({
             code: SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
             message: 'permission service unavailable',
+            name: 'SolanaMobileWalletAdapterError',
+        });
+    });
+
+    it('wraps non-error permission failures with the fallback message', async () => {
+        installBrowserGlobals({
+            permissionQuery: vi.fn().mockRejectedValue('permission service unavailable'),
+        });
+
+        await expect(checkLocalNetworkAccessPermission()).rejects.toMatchObject({
+            code: SolanaMobileWalletAdapterErrorCode.ERROR_LOOPBACK_ACCESS_BLOCKED,
+            message: 'Local Network Access permission unknown',
             name: 'SolanaMobileWalletAdapterError',
         });
     });

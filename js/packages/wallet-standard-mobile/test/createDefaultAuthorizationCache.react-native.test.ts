@@ -1,13 +1,10 @@
-// @vitest-environment jsdom
-
 import { SOLANA_MAINNET_CHAIN } from '@solana/wallet-standard-chains';
 import base58 from 'bs58';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import createDefaultAuthorizationCache from '../src/createDefaultAuthorizationCache.js';
 import type { Authorization } from '../src/wallet.js';
 
-const AUTHORIZATION_CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
+const AUTHORIZATION_CACHE_KEY = 'SolanaMobileWalletAdapterWalletStandardDefaultAuthorizationCache';
 const DEFAULT_CAPABILITIES: Authorization['capabilities'] = {
     features: [],
     max_messages_per_request: 1,
@@ -17,21 +14,67 @@ const DEFAULT_CAPABILITIES: Authorization['capabilities'] = {
     supports_sign_and_send_transactions: false,
 };
 
+const { asyncStorage, resetAsyncStorage } = vi.hoisted(() => {
+    let store = new Map<string, string>();
+
+    return {
+        asyncStorage: {
+            getItem: vi.fn(async (key: string) => store.get(key) ?? null),
+            removeItem: vi.fn(async (key: string) => {
+                store.delete(key);
+            }),
+            setItem: vi.fn(async (key: string, value: string) => {
+                store.set(key, value);
+            }),
+        },
+        resetAsyncStorage: () => {
+            store = new Map();
+        },
+    };
+});
+
+vi.mock('@react-native-async-storage/async-storage', () => ({
+    default: asyncStorage,
+}));
+
+import createDefaultAuthorizationCache from '../src/__forks__/react-native/createDefaultAuthorizationCache.js';
+
 beforeEach(() => {
-    window.localStorage.clear();
+    resetAsyncStorage();
 });
 
 afterEach(() => {
+    asyncStorage.getItem.mockReset();
+    asyncStorage.removeItem.mockReset();
+    asyncStorage.setItem.mockReset();
     vi.restoreAllMocks();
-    window.localStorage.clear();
 });
 
-describe('createDefaultAuthorizationCache', () => {
+describe('react-native createDefaultAuthorizationCache fork', () => {
+    it('persists cached authorization, rehydrates serialized public keys, and clears the cache', async () => {
+        const publicKey = Uint8Array.of(1, 2, 3);
+        const authorization = createAuthorization(publicKey);
+        const cache = createDefaultAuthorizationCache();
+
+        await cache.set(authorization);
+
+        const cachedAuthorization = await cache.get();
+
+        expect(asyncStorage.setItem).toHaveBeenCalledWith(AUTHORIZATION_CACHE_KEY, JSON.stringify(authorization));
+        expectAccountPublicKey(cachedAuthorization?.accounts[0], publicKey);
+        expect(cachedAuthorization?.auth_token).toBe('token');
+        expect(cachedAuthorization?.chain).toBe(SOLANA_MAINNET_CHAIN);
+
+        await cache.clear();
+
+        expect(asyncStorage.removeItem).toHaveBeenCalledWith(AUTHORIZATION_CACHE_KEY);
+        await expect(cache.get()).resolves.toBeUndefined();
+    });
+
     it('falls back to decoding public keys from account addresses', async () => {
         const publicKey = Uint8Array.of(7, 8, 9);
 
-        window.localStorage.setItem(
-            AUTHORIZATION_CACHE_KEY,
+        asyncStorage.getItem.mockResolvedValue(
             JSON.stringify({
                 accounts: [
                     {
@@ -54,40 +97,6 @@ describe('createDefaultAuthorizationCache', () => {
         expectAccountPublicKey(authorization?.accounts[0], publicKey);
     });
 
-    it('persists cached authorization, rehydrates serialized public keys, and clears the cache', async () => {
-        const publicKey = Uint8Array.of(1, 2, 3);
-
-        const authorization = createAuthorization(publicKey);
-        const cache = createDefaultAuthorizationCache();
-
-        await cache.set(authorization);
-
-        const cachedAuthorization = await cache.get();
-
-        expect(window.localStorage.getItem(AUTHORIZATION_CACHE_KEY)).not.toBeNull();
-        expectAccountPublicKey(cachedAuthorization?.accounts[0], publicKey);
-        expect(cachedAuthorization?.auth_token).toBe('token');
-        expect(cachedAuthorization?.chain).toBe(SOLANA_MAINNET_CHAIN);
-
-        await cache.clear();
-
-        expect(window.localStorage.getItem(AUTHORIZATION_CACHE_KEY)).toBeNull();
-    });
-
-    it('returns undefined for invalid cached JSON', async () => {
-        window.localStorage.setItem(AUTHORIZATION_CACHE_KEY, '{');
-
-        await expect(createDefaultAuthorizationCache().get()).resolves.toBeUndefined();
-    });
-
-    it('returns undefined when localStorage is unavailable', async () => {
-        vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
-            throw new Error('localStorage unavailable');
-        });
-
-        await expect(createDefaultAuthorizationCache().get()).resolves.toBeUndefined();
-    });
-
     it('returns cached objects that do not include accounts', async () => {
         const authorization = {
             auth_token: 'token',
@@ -95,38 +104,30 @@ describe('createDefaultAuthorizationCache', () => {
             wallet_uri_base: 'https://example.com',
         };
 
-        window.localStorage.setItem(AUTHORIZATION_CACHE_KEY, JSON.stringify(authorization));
+        asyncStorage.getItem.mockResolvedValue(JSON.stringify(authorization));
 
         await expect(createDefaultAuthorizationCache().get()).resolves.toEqual(authorization);
     });
 
-    it('returns undefined when no cached authorization exists', async () => {
-        await expect(createDefaultAuthorizationCache().get()).resolves.toBeUndefined();
-    });
-
-    it('no-ops clear and set when localStorage is unavailable', async () => {
-        vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
-            throw new Error('localStorage unavailable');
-        });
-
+    it('returns undefined for missing or invalid cached JSON', async () => {
         const cache = createDefaultAuthorizationCache();
 
-        await expect(cache.clear()).resolves.toBeUndefined();
-        await expect(cache.set(createAuthorization(Uint8Array.of(1, 2, 3)))).resolves.toBeUndefined();
+        asyncStorage.getItem.mockResolvedValueOnce(null).mockResolvedValueOnce('{');
+
+        await expect(cache.get()).resolves.toBeUndefined();
+        await expect(cache.get()).resolves.toBeUndefined();
     });
 
-    it('swallows localStorage clear and set failures', async () => {
+    it('swallows AsyncStorage failures', async () => {
         const cache = createDefaultAuthorizationCache();
 
-        vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
-            throw new Error('remove failed');
-        });
-        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-            throw new Error('set failed');
-        });
+        asyncStorage.setItem.mockRejectedValueOnce(new Error('set failed'));
+        asyncStorage.getItem.mockRejectedValueOnce(new Error('get failed'));
+        asyncStorage.removeItem.mockRejectedValueOnce(new Error('clear failed'));
 
-        await expect(cache.clear()).resolves.toBeUndefined();
         await expect(cache.set(createAuthorization(Uint8Array.of(1, 2, 3)))).resolves.toBeUndefined();
+        await expect(cache.get()).resolves.toBeUndefined();
+        await expect(cache.clear()).resolves.toBeUndefined();
     });
 });
 
