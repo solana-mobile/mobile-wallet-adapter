@@ -4,6 +4,7 @@
     "packageManager": "pnpm@10.30.0",
     "scripts": {
         "build": "turbo run build",
+        "changeset:check": "node ./scripts/check-changesets.mjs",
         "check-types": "turbo run check-types",
         "clean": "turbo run clean",
         "format:check": "prettier . --check --cache",

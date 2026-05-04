@@ -36,6 +36,9 @@ jobs:
       - name: '[js] Lint'
         working-directory: 'js/'
         run: pnpm lint:check
+      - name: '[js] Changeset Check'
+        working-directory: 'js/'
+        run: pnpm changeset:check
       - name: '[js] Format Check'
         working-directory: 'js/'
         run: pnpm format:check
