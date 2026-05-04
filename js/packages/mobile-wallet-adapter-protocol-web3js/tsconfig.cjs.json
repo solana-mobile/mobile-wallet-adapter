@@ -2,6 +2,8 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "module": "commonjs",
+        // Temporary TS5 compatibility. TS6 prep uses bundler elsewhere, but TS5 rejects bundler + commonjs.
+        "moduleResolution": "node",
         "outDir": "lib/cjs"
     }
 }

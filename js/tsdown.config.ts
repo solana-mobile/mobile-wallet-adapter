@@ -4,7 +4,7 @@ import path from 'node:path';
 import { defineConfig, type DtsOptions, type UserConfig } from 'tsdown';
 
 type Runtime = 'browser' | 'node' | 'react-native';
-type TsdownPlugin = NonNullable<UserConfig['plugins']>[number];
+type TsdownPlugin = NonNullable<UserConfig['plugins']>;
 
 const DTS_OPTIONS: DtsOptions = {
     emitDtsOnly: true,
@@ -36,7 +36,7 @@ function resolveSourcePath(importer: string, source: string): string | undefined
 function runtimeForkPlugin(runtime: Runtime): TsdownPlugin {
     return {
         name: `runtime-fork-${runtime}`,
-        resolveId(source, importer) {
+        resolveId(source: string, importer?: string) {
             if (importer == null || !source.startsWith('.')) {
                 return null;
             }
