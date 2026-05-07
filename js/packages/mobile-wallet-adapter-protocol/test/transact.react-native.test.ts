@@ -91,6 +91,37 @@ describe('react-native transact fork', () => {
         expect(nativeModule.endSession).not.toHaveBeenCalled();
     });
 
+    it('maps native module errors with recognized protocol codes', async () => {
+        const nativeModule = createNativeModule();
+        nativeModule.startSession.mockRejectedValue(
+            Object.assign(new Error('native session closed'), {
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                userInfo: { closeEvent: 'close' },
+            }),
+        );
+
+        const { transact } = await importReactNativeTransact({ nativeModule });
+
+        await expect(transact(vi.fn())).rejects.toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                message: 'native session closed',
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+        expect(nativeModule.endSession).not.toHaveBeenCalled();
+    });
+
+    it('rethrows native module failures that are not errors', async () => {
+        const nativeModule = createNativeModule();
+        nativeModule.startSession.mockRejectedValue('native failure');
+
+        const { transact } = await importReactNativeTransact({ nativeModule });
+
+        await expect(transact(vi.fn())).rejects.toBe('native failure');
+        expect(nativeModule.endSession).not.toHaveBeenCalled();
+    });
+
     it('maps native JSON-RPC errors thrown by invoke', async () => {
         const nativeModule = createNativeModule();
         let invokePromise: Promise<unknown> | undefined;

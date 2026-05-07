@@ -23,6 +23,13 @@ describe('createMobileWalletProxy', () => {
         expect(Reflect.deleteProperty(wallet, 'authorize')).toBe(false);
     });
 
+    it('reuses generated wallet method wrappers after the first access', () => {
+        const wallet = createMobileWalletProxy('v1', vi.fn());
+        const authorize = wallet.authorize;
+
+        expect(wallet.authorize).toBe(authorize);
+    });
+
     it('maps legacy authorize chains to clusters', async () => {
         const protocolRequestHandler = vi.fn().mockResolvedValue(AUTHORIZATION_RESULT);
         const wallet = createMobileWalletProxy('legacy', protocolRequestHandler);
@@ -240,7 +247,6 @@ describe('createMobileWalletProxy', () => {
             chain: 'solana:mainnet',
             identity: APP_IDENTITY,
             sign_in_payload: {
-                domain: 'example.test',
                 nonce: 'nonce-123',
             },
         });
