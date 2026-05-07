@@ -1,16 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const { mockCreateScenario, nativeModules, platform } = vi.hoisted(() => ({
-    mockCreateScenario: vi.fn(),
-    nativeModules: {
-        SolanaMobileWalletAdapterWalletLib: {
-            createScenario: vi.fn(),
-        },
-    },
-    platform: { OS: 'android' },
-}));
+const { mockCreateScenario, nativeModules, nativeWalletLib, platform } = vi.hoisted(() => {
+    const mockCreateScenario = vi.fn();
+    const nativeWalletLib = {
+        createScenario: vi.fn(),
+    };
+    nativeWalletLib.createScenario = mockCreateScenario;
 
-nativeModules.SolanaMobileWalletAdapterWalletLib.createScenario = mockCreateScenario;
+    return {
+        mockCreateScenario,
+        nativeModules: {
+            SolanaMobileWalletAdapterWalletLib: nativeWalletLib as
+                | { createScenario: ReturnType<typeof vi.fn> }
+                | undefined,
+        },
+        nativeWalletLib,
+        platform: { OS: 'android' },
+    };
+});
 
 vi.mock('react-native', () => ({
     NativeModules: nativeModules,
@@ -33,7 +40,9 @@ const CONFIG: MobileWalletAdapterConfig = {
 
 afterEach(() => {
     mockCreateScenario.mockReset();
+    nativeModules.SolanaMobileWalletAdapterWalletLib = nativeWalletLib;
     platform.OS = 'android';
+    vi.resetModules();
 });
 
 describe('initializeMobileWalletAdapterSession', () => {
@@ -69,5 +78,31 @@ describe('initializeMobileWalletAdapterSession', () => {
         mockCreateScenario.mockRejectedValue(error);
 
         await expect(initializeMobileWalletAdapterSession('Example Wallet', CONFIG)).rejects.toBe(error);
+    });
+
+    it('rethrows unknown native non-error rejections unchanged', async () => {
+        mockCreateScenario.mockRejectedValue('Unexpected failure');
+
+        await expect(initializeMobileWalletAdapterSession('Example Wallet', CONFIG)).rejects.toBe('Unexpected failure');
+    });
+
+    it('throws a linking error when the Android native module is missing', async () => {
+        nativeModules.SolanaMobileWalletAdapterWalletLib = undefined;
+        vi.resetModules();
+        const { initializeMobileWalletAdapterSession } = await import('../src/initializeMobileWalletAdapterSession.js');
+
+        await expect(initializeMobileWalletAdapterSession('Example Wallet', CONFIG)).rejects.toThrow(
+            "The package 'solana-mobile-wallet-adapter-walletlib' doesn't seem to be linked.",
+        );
+    });
+
+    it('throws a platform error outside Android', async () => {
+        platform.OS = 'ios';
+        vi.resetModules();
+        const { initializeMobileWalletAdapterSession } = await import('../src/initializeMobileWalletAdapterSession.js');
+
+        await expect(initializeMobileWalletAdapterSession('Example Wallet', CONFIG)).rejects.toThrow(
+            'is only compatible with React Native Android',
+        );
     });
 });
