@@ -319,7 +319,7 @@ Dapp endpoints may optionally also support copying the remote URI to the system 
 When using a [Nostr relay](#nostr) as the transport, the dapp endpoint may present a URI suitable for connection via Nostr. The URI should be formatted as:
 
 ```
-solana-wallet:/v1/associate/nostr?association=<association_token>&relay=<relay_url>&pubkey=<dapp_nostr_pubkey>&v=<version>
+solana-wallet:/v1/associate/{local|remote}/nostr?association=<association_token>&relay=<relay_url>&pubkey=<dapp_nostr_pubkey>&v=<version>
 ```
 
 where:
@@ -328,6 +328,8 @@ where:
 - `relay_url` is the URL-encoded WebSocket address of a Nostr relay (e.g. `wss%3A%2F%2Frelay.example.com`)
 - `dapp_nostr_pubkey` is the 64-character lowercase hex-encoded public key of the dapp endpoint's ephemeral [Nostr keypair](#terminology)
 - `version` is the major version of the protocol that the client supports, as described above
+
+The dapp must provide the correct `local` or `remote` path to inform the wallet of the context of the connection. This allows the walet endpoint to cater its UX accordingly for both on device or remote MWA connections.
 
 Prior to presenting the association URI, the dapp endpoint should generate an ephemeral secp256k1 [Nostr keypair](#terminology), derive the [session identifier](#session-identifier-derivation) from the association token, connect to the specified Nostr relay, and subscribe to session events:
 
