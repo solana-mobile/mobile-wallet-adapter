@@ -203,9 +203,9 @@ The kind number `20012` is provisional and subject to change pending publication
 
 ##### Tags
 
-The `d` tag is REQUIRED on every MWA transport event. It contains the [session identifier](#session-identifier-derivation) and is used by both endpoints to subscribe to events belonging to their session.
+The `d` tag is required on every MWA transport event. It contains the [session identifier](#session-identifier-derivation) and is used by both endpoints to subscribe to events belonging to their session.
 
-The `p` tag is RECOMMENDED on events where the sender knows the recipient's Nostr public key. It enables relay-side optimizations and access controls. For the first message in a session (before the recipient's Nostr public key is known), the `p` tag may be omitted.
+The `p` tag is required on events _where the sender knows the recipient's Nostr public key_. It enables relay-side optimizations and access controls. For the first message in a session (before the recipient's Nostr public key is known), the `p` tag may be omitted.
 
 ##### Content
 
@@ -218,7 +218,7 @@ An empty `content` field has no defined meaning in the MWA protocol and should b
 
 ##### Event verification
 
-Endpoints MUST verify the Nostr event `id` and `sig` fields (per [NIP-01](https://github.com/nostr-protocol/nips/blob/master/01.md)) before processing any received event. Events with an invalid signature or mismatched ID must be silently discarded.
+Endpoints must verify the Nostr event `id` and `sig` fields (per [NIP-01](https://github.com/nostr-protocol/nips/blob/master/01.md)) before processing any received event. Events with an invalid signature or mismatched ID should be silently discarded.
 
 #### Session identifier derivation
 
@@ -326,12 +326,12 @@ where:
 
 - `association_token` is as described above
 - `relay` is the domain of a Nostr relay (e.g. `relay.example.com`)
-- `nostr_pubkey` is the 64-character lowercase hex-encoded public key of the dapp endpoint's ephemeral [Nostr keypair](#terminology)
+- `nostr_pubkey` is the 64-character lowercase hex-encoded public key of the dapp endpoint's ephemeral [Nostr keypair](#nostr-specific-terminology)
 - `version` is the major version of the protocol that the client supports, as described above
 
 The dapp must provide the correct `local` or `remote` path to inform the wallet of the context of the connection. This allows the walet endpoint to cater its UX accordingly for both on device or remote MWA connections.
 
-Prior to presenting the association URI, the dapp endpoint should generate an ephemeral secp256k1 [Nostr keypair](#terminology), derive the [session identifier](#session-identifier-derivation) from the association token, connect to the specified Nostr relay, and subscribe to session events:
+Prior to presenting the association URI, the dapp endpoint should generate an ephemeral secp256k1 [Nostr keypair](#nostr-specific-terminology), derive the [session identifier](#session-identifier-derivation) from the association token, connect to the specified Nostr relay, and subscribe to session events:
 
 ```json
 ["REQ", "<subscription_id>", {"kinds": [20012], "#d": ["<session_identifier>"]}]
@@ -339,7 +339,7 @@ Prior to presenting the association URI, the dapp endpoint should generate an ep
 
 The association URI should then be provided to the wallet endpoint through an out-of-band mechanism. The same mechanisms described for both [local](#local-uri) and [remote](#remote-uri) URIs apply.
 
-Upon receipt of a Nostr URI, the wallet endpoint should generate its own ephemeral secp256k1 [Nostr keypair](#terminology), derive the [session identifier](#session-identifier-derivation) from the association token, connect to the specified Nostr relay, and subscribe to session events using the same filter as the dapp endpoint. The wallet endpoint should then publish a [`CONNECT`](#connect) event to signal readiness to the dapp endpoint.
+Upon receipt of a Nostr URI, the wallet endpoint should generate its own ephemeral secp256k1 [Nostr keypair](#nostr-specific-terminology), derive the [session identifier](#session-identifier-derivation) from the association token, connect to the specified Nostr relay, and subscribe to session events using the same filter as the dapp endpoint. The wallet endpoint should then publish a [`CONNECT`](#connect) event to signal readiness to the dapp endpoint.
 
 The dapp endpoint must wait no less than 30 seconds for the wallet endpoint's [`CONNECT`](#connect) event. The wallet endpoint must wait no less than 10 seconds for [`HELLO_REQ`](#hello_req) after sending the `CONNECT` event. If these timeouts elapse, the endpoints should disconnect from the relay and present appropriate error messages to the user.
 
