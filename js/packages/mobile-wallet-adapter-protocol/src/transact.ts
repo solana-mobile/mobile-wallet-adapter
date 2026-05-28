@@ -12,12 +12,21 @@ import generateAssociationKeypair from './generateAssociationKeypair.js';
 import generateECDHKeypair from './generateECDHKeypair.js';
 import { getRemoteAssociateAndroidIntentURL } from './getAssociateAndroidIntentURL.js';
 import { decryptJsonRpcMessage, encryptJsonRpcMessage } from './jsonRpcMessage.js';
+import {
+    createNostrEvent,
+    deriveSessionIdentifier,
+    generateNostrKeypair,
+    NOSTR_EVENT_KIND_MWA,
+    type NostrEvent,
+    verifyNostrEvent,
+} from './nostr.js';
 import parseHelloRsp, { SharedSecret } from './parseHelloRsp.js';
 import parseSessionProps from './parseSessionProps.js';
-import { startSession } from './startSession.js';
+import { startNostrSession, startSession } from './startSession.js';
 import {
     AssociationKeypair,
     MobileWallet,
+    NostrWalletAssociationConfig,
     RemoteScenario,
     RemoteWalletAssociationConfig,
     Scenario,
@@ -49,12 +58,16 @@ type JsonResponsePromises<T> = Record<
 >;
 
 type State =
-    | { __type: 'connected'; sharedSecret: SharedSecret; sessionProperties: SessionProperties }
     | { __type: 'connecting'; associationKeypair: AssociationKeypair }
-    | { __type: 'disconnected' }
-    | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey };
+    | { __type: 'connected'; sharedSecret: SharedSecret; sessionProperties: SessionProperties }
+    | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey }
+    | { __type: 'disconnected' };
 
 type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: ArrayBuffer };
+
+type NostrStateNew =
+    | State
+    | { __type: 'subscribed'; dappNostrPrivateKey: Uint8Array; dappNostrPubkey: string; sessionIdentifier: string };
 
 function assertSecureContext() {
     if (typeof window === 'undefined' || window.isSecureContext !== true) {
@@ -636,4 +649,284 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
             };
         }),
     };
+}
+
+export async function startNostrScenario(config: NostrWalletAssociationConfig): Promise<Scenario | RemoteScenario> {
+    assertSecureContext();
+    const associationKeypair = await generateAssociationKeypair();
+    const { privateKey: dappNostrPrivateKey, publicKey: dappNostrPubkey } = generateNostrKeypair();
+    const associationUrl = await startNostrSession(
+        associationKeypair.publicKey,
+        config.connectionType,
+        config.relayDomain,
+        dappNostrPubkey,
+        config.baseUri,
+    );
+    const sessionIdentifier = await deriveSessionIdentifier(associationKeypair.publicKey);
+    const subscriptionId = crypto.randomUUID();
+    const webSocketURL = `wss://${config.relayDomain}`;
+    const connectionStartTime = Date.now();
+    const getNextRetryDelayMs = (() => {
+        const schedule = [...WEBSOCKET_CONNECTION_CONFIG.retryDelayScheduleMs];
+        return () => (schedule.length > 1 ? (schedule.shift() as number) : schedule[0]);
+    })();
+    let nextJsonRpcMessageId = 1;
+    let lastKnownInboundSequenceNumber = 0;
+    let state: NostrStateNew & { walletNostrPubkey?: string } = { __type: 'disconnected' };
+    let socket: WebSocket;
+    let sessionEstablished = false;
+    let handleForceClose: () => void;
+    const sendNostrEvent = (content: string, walletPubkey: string) => {
+        const event = createNostrEvent(
+            NOSTR_EVENT_KIND_MWA,
+            content,
+            [
+                ['d', sessionIdentifier],
+                ['p', walletPubkey],
+            ],
+            dappNostrPrivateKey,
+        );
+        socket.send(JSON.stringify(['EVENT', event]));
+    };
+
+    const scenario = {
+        close: () => {
+            socket.close();
+            handleForceClose();
+        },
+        wallet: new Promise<MobileWallet>((resolve, reject) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const handleOpen = async () => {
+                if (state.__type !== 'connecting') {
+                    console.warn(
+                        'Expected adapter state to be `connecting` at the moment the websocket opens. ' +
+                            `Got \`${state.__type}\`.`,
+                    );
+                    return;
+                }
+                socket.removeEventListener('open', handleOpen);
+                socket.send(
+                    JSON.stringify([
+                        'REQ',
+                        subscriptionId,
+                        { kinds: [NOSTR_EVENT_KIND_MWA], '#d': [sessionIdentifier] },
+                    ]),
+                );
+                state = {
+                    __type: 'subscribed',
+                    dappNostrPrivateKey,
+                    dappNostrPubkey,
+                    sessionIdentifier,
+                };
+            };
+            const handleClose = (evt: CloseEvent) => {
+                if (evt.wasClean) {
+                    state = { __type: 'disconnected' };
+                } else {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            `The Nostr subscription dropped unexpectedly (${evt.code}: ${evt.reason}).`,
+                            { closeEvent: evt },
+                        ),
+                    );
+                }
+                disposeSocket();
+            };
+            const handleError = async () => {
+                disposeSocket();
+                if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT,
+                            `Failed to connect to the Nostr relay at ${config.relayDomain}.`,
+                        ),
+                    );
+                } else {
+                    await new Promise<void>((resolve) => {
+                        const retryDelayMs = getNextRetryDelayMs();
+                        retryWaitTimeoutId = window.setTimeout(resolve, retryDelayMs);
+                    });
+                    attemptSocketConnection();
+                }
+            };
+            const handleMessage = async (evt: MessageEvent<string>) => {
+                let msg: unknown[];
+                try {
+                    msg = JSON.parse(evt.data);
+                } catch {
+                    throw new Error('Invalid Nostr message received: ' + evt.data);
+                }
+                if (!Array.isArray(msg)) throw new Error('Invalid Nostr message received: ' + evt.data);
+
+                const type = msg[0];
+                if (type === 'CLOSED') {
+                    disposeSocket();
+                } else if (type === 'EVENT') {
+                    const event = msg[2] as NostrEvent;
+                    if (!event || !verifyNostrEvent(event)) return;
+
+                    switch (state.__type) {
+                        case 'subscribed': {
+                            if (event.content.length !== 0) {
+                                throw new Error('Encountered unexpected message while awaiting reflection');
+                            }
+                            const walletNostrPubkey = event.pubkey;
+                            const ecdhKeypair = await generateECDHKeypair();
+                            const helloReq = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
+                            const base64Content = fromUint8Array(helloReq);
+                            sendNostrEvent(base64Content, walletNostrPubkey);
+                            state = {
+                                __type: 'hello_req_sent',
+                                associationPublicKey: associationKeypair.publicKey,
+                                ecdhPrivateKey: ecdhKeypair.privateKey,
+                                walletNostrPubkey: walletNostrPubkey,
+                            };
+                            break;
+                        }
+                        case 'hello_req_sent': {
+                            if (event.pubkey !== state.walletNostrPubkey) return;
+                            if (event.content === '') return;
+
+                            const responseBuffer = toUint8Array(event.content).buffer;
+                            const sharedSecret = await parseHelloRsp(
+                                responseBuffer,
+                                state.associationPublicKey,
+                                state.ecdhPrivateKey,
+                            );
+                            const sessionPropertiesBuffer = responseBuffer.slice(ENCODED_PUBLIC_KEY_LENGTH_BYTES);
+                            const sessionProperties =
+                                sessionPropertiesBuffer.byteLength !== 0
+                                    ? await (async () => {
+                                          const sequenceNumberVector = sessionPropertiesBuffer.slice(
+                                              0,
+                                              SEQUENCE_NUMBER_BYTES,
+                                          );
+                                          const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                                          if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
+                                              throw new Error('Encrypted message has invalid sequence number');
+                                          }
+                                          lastKnownInboundSequenceNumber = sequenceNumber;
+                                          return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
+                                      })()
+                                    : <SessionProperties>{ protocol_version: 'legacy' };
+                            state = {
+                                __type: 'connected',
+                                sharedSecret,
+                                sessionProperties,
+                                walletNostrPubkey: state.walletNostrPubkey,
+                            };
+                            const wallet = createMobileWalletProxy(
+                                sessionProperties.protocol_version,
+                                async (method, params) => {
+                                    const id = nextJsonRpcMessageId++;
+                                    const binaryMsg = await encryptJsonRpcMessage(
+                                        { id, jsonrpc: '2.0' as const, method, params: params ?? {} },
+                                        sharedSecret,
+                                    );
+                                    sendNostrEvent(fromUint8Array(binaryMsg), state.walletNostrPubkey!);
+                                    return new Promise((resolve, reject) => {
+                                        jsonRpcResponsePromises[id] = {
+                                            resolve(result) {
+                                                switch (method) {
+                                                    case 'authorize':
+                                                    case 'reauthorize': {
+                                                        const { wallet_uri_base } = result as Awaited<
+                                                            ReturnType<MobileWallet['authorize' | 'reauthorize']>
+                                                        >;
+                                                        if (wallet_uri_base != null) {
+                                                            try {
+                                                                assertSecureEndpointSpecificURI(wallet_uri_base);
+                                                            } catch (e) {
+                                                                reject(e);
+                                                                return;
+                                                            }
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                                resolve(result);
+                                            },
+                                            reject,
+                                        };
+                                    });
+                                },
+                            );
+                            sessionEstablished = true;
+                            try {
+                                resolve(wallet);
+                            } catch (e) {
+                                reject(e);
+                            }
+                            break;
+                        }
+                        case 'connected': {
+                            if (event.pubkey !== state.walletNostrPubkey) return;
+                            if (event.content === '') return;
+                            try {
+                                const responseBuffer = toUint8Array(event.content).buffer;
+                                const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
+                                const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
+                                if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
+                                    throw new Error('Encrypted message has invalid sequence number');
+                                }
+                                lastKnownInboundSequenceNumber = sequenceNumber;
+                                const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
+                                const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                                delete jsonRpcResponsePromises[jsonRpcMessage.id];
+                                responsePromise.resolve(jsonRpcMessage.result);
+                            } catch (e) {
+                                if (e instanceof SolanaMobileWalletAdapterProtocolError) {
+                                    const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                    delete jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                    responsePromise.reject(e);
+                                } else {
+                                    throw e;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            };
+            handleForceClose = () => {
+                socket.removeEventListener('message', handleMessage);
+                disposeSocket();
+                if (!sessionEstablished) {
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            `The wallet session was closed before connection.`,
+                            { closeEvent: new CloseEvent('socket was closed before connection') },
+                        ),
+                    );
+                }
+            };
+            let disposeSocket: () => void;
+            let retryWaitTimeoutId: number;
+            const attemptSocketConnection = () => {
+                if (disposeSocket) {
+                    disposeSocket();
+                }
+                state = { __type: 'connecting', associationKeypair };
+                socket = new WebSocket(webSocketURL);
+                socket.addEventListener('open', handleOpen);
+                socket.addEventListener('close', handleClose);
+                socket.addEventListener('error', handleError);
+                socket.addEventListener('message', handleMessage);
+                disposeSocket = () => {
+                    window.clearTimeout(retryWaitTimeoutId);
+                    socket.removeEventListener('open', handleOpen);
+                    socket.removeEventListener('close', handleClose);
+                    socket.removeEventListener('error', handleError);
+                    socket.removeEventListener('message', handleMessage);
+                };
+            };
+            attemptSocketConnection();
+        }),
+    };
+
+    if (config.connectionType == 'local') return scenario;
+    else return { ...scenario, associationUrl };
 }

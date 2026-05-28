@@ -80,6 +80,12 @@ export type RemoteWalletAssociationConfig = WalletAssociationConfig &
         remoteHostAuthority: string;
     }>;
 
+export type NostrWalletAssociationConfig = WalletAssociationConfig &
+    Readonly<{
+        connectionType: 'local' | 'remote';
+        relayDomain: string;
+    }>;
+
 export interface AuthorizeAPI {
     /**
      * @deprecated Replaced by updated authorize() method, which adds MWA 2.0 spec support.
