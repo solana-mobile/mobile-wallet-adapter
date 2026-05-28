@@ -24,25 +24,37 @@ const WALLET = {} as const;
 const {
     mockCreateHelloReq,
     mockCreateMobileWalletProxy,
+    mockCreateNostrEvent,
     mockDecryptJsonRpcMessage,
+    mockDeriveSessionIdentifier,
     mockEncryptJsonRpcMessage,
     mockGenerateAssociationKeypair,
     mockGenerateECDHKeypair,
+    mockGenerateNostrKeypair,
+    mockGetNostrAssociateAndroidIntentURL,
     mockGetRemoteAssociateAndroidIntentURL,
     mockParseHelloRsp,
     mockParseSessionProps,
+    mockStartNostrSession,
     mockStartSession,
+    mockVerifyNostrEvent,
 } = vi.hoisted(() => ({
     mockCreateHelloReq: vi.fn(),
     mockCreateMobileWalletProxy: vi.fn(),
+    mockCreateNostrEvent: vi.fn(),
     mockDecryptJsonRpcMessage: vi.fn(),
+    mockDeriveSessionIdentifier: vi.fn(),
     mockEncryptJsonRpcMessage: vi.fn(),
     mockGenerateAssociationKeypair: vi.fn(),
     mockGenerateECDHKeypair: vi.fn(),
+    mockGenerateNostrKeypair: vi.fn(),
+    mockGetNostrAssociateAndroidIntentURL: vi.fn(),
     mockGetRemoteAssociateAndroidIntentURL: vi.fn(),
     mockParseHelloRsp: vi.fn(),
     mockParseSessionProps: vi.fn(),
+    mockStartNostrSession: vi.fn(),
     mockStartSession: vi.fn(),
+    mockVerifyNostrEvent: vi.fn(),
 }));
 
 vi.mock('../src/createHelloReq.js', () => ({
@@ -62,12 +74,21 @@ vi.mock('../src/generateECDHKeypair.js', () => ({
 }));
 
 vi.mock('../src/getAssociateAndroidIntentURL.js', () => ({
+    getNostrAssociateAndroidIntentURL: mockGetNostrAssociateAndroidIntentURL,
     getRemoteAssociateAndroidIntentURL: mockGetRemoteAssociateAndroidIntentURL,
 }));
 
 vi.mock('../src/jsonRpcMessage.js', () => ({
     decryptJsonRpcMessage: mockDecryptJsonRpcMessage,
     encryptJsonRpcMessage: mockEncryptJsonRpcMessage,
+}));
+
+vi.mock('../src/nostr.js', () => ({
+    createNostrEvent: mockCreateNostrEvent,
+    deriveSessionIdentifier: mockDeriveSessionIdentifier,
+    generateNostrKeypair: mockGenerateNostrKeypair,
+    NOSTR_EVENT_KIND_MWA: 20012,
+    verifyNostrEvent: mockVerifyNostrEvent,
 }));
 
 vi.mock('../src/parseHelloRsp.js', () => ({
@@ -80,11 +101,12 @@ vi.mock('../src/parseSessionProps.js', () => ({
 
 vi.mock('../src/startSession.js', () => ({
     startSession: mockStartSession,
+    startNostrSession: mockStartNostrSession,
 }));
 
 import { SolanaMobileWalletAdapterErrorCode, SolanaMobileWalletAdapterProtocolError } from '../src/errors.js';
-import { startRemoteScenario, startScenario, transact } from '../src/transact.js';
-import { RemoteWalletAssociationConfig } from '../src/types.js';
+import { startNostrScenario, startRemoteScenario, startScenario, transact } from '../src/transact.js';
+import { NostrWalletAssociationConfig, RemoteScenario, RemoteWalletAssociationConfig } from '../src/types.js';
 
 beforeEach(() => {
     MockWebSocket.instances = [];
@@ -97,6 +119,21 @@ beforeEach(() => {
     mockParseHelloRsp.mockResolvedValue(SHARED_SECRET);
     mockParseSessionProps.mockResolvedValue({ protocol_version: 'v1' });
     mockStartSession.mockResolvedValue(ASSOCIATION_PORT);
+    mockStartNostrSession.mockResolvedValue(ASSOCIATION_URL);
+    mockCreateNostrEvent.mockImplementation(
+        (_kind: number, content: string, tags: string[][], _privateKey: Uint8Array) => ({
+            id: 'mock-event-id',
+            pubkey: 'dapp-nostr-pubkey',
+            created_at: 1000,
+            kind: 20012,
+            tags,
+            content,
+            sig: 'mock-sig',
+        }),
+    );
+    mockDeriveSessionIdentifier.mockResolvedValue('mock-session-id');
+    mockGenerateNostrKeypair.mockReturnValue({ privateKey: new Uint8Array([1, 2, 3]), publicKey: 'dapp-nostr-pubkey' });
+    mockVerifyNostrEvent.mockReturnValue(true);
     Object.defineProperty(window, 'isSecureContext', {
         configurable: true,
         value: true,
@@ -115,6 +152,11 @@ afterEach(() => {
     mockParseHelloRsp.mockReset();
     mockParseSessionProps.mockReset();
     mockStartSession.mockReset();
+    mockStartNostrSession.mockReset();
+    mockCreateNostrEvent.mockReset();
+    mockDeriveSessionIdentifier.mockReset();
+    mockGenerateNostrKeypair.mockReset();
+    mockVerifyNostrEvent.mockReset();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.useRealTimers();
@@ -615,6 +657,219 @@ describe('startRemoteScenario', () => {
     });
 });
 
+describe('startNostrScenario', () => {
+    it('establishes a local session through the nostr relay', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+        const requestHandler = getLastProtocolRequestHandler();
+        const responseResult = {
+            signed_payloads: [],
+        };
+        const responsePromise = requestHandler('sign_messages', {
+            addresses: [],
+            payloads: [],
+        });
+        await flushPromises();
+
+        expect(mockCreateNostrEvent).toHaveBeenCalledWith(
+            20012,
+            fromUint8Array(HELLO_REQ),
+            expect.any(Array),
+            new Uint8Array([1, 2, 3]),
+        );
+
+        mockDecryptJsonRpcMessage.mockResolvedValue({
+            id: 1,
+            jsonrpc: '2.0',
+            result: responseResult,
+        });
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+
+        await expect(responsePromise).resolves.toBe(responseResult);
+    });
+
+    it('establishes a remote session through the nostr relay', async () => {
+        const scenario = (await startNostrScenario(createNostrConfig('remote'))) as RemoteScenario;
+        const socket = getOnlySocket();
+
+        expect(scenario.associationUrl).toBe(ASSOCIATION_URL);
+        expect(mockStartNostrSession).toHaveBeenCalledWith(
+            ASSOCIATION_KEYPAIR.publicKey,
+            'remote',
+            'relay.nostr.example',
+            'dapp-nostr-pubkey',
+            'https://wallet.example',
+        );
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+        const requestHandler = getLastProtocolRequestHandler();
+        const responseResult = {
+            signed_payloads: [],
+        };
+        const responsePromise = requestHandler('sign_messages', {
+            addresses: [],
+            payloads: [],
+        });
+        await flushPromises();
+
+        expect(mockCreateNostrEvent).toHaveBeenCalledWith(
+            20012,
+            fromUint8Array(HELLO_REQ),
+            expect.any(Array),
+            new Uint8Array([1, 2, 3]),
+        );
+
+        mockDecryptJsonRpcMessage.mockResolvedValue({
+            id: 1,
+            jsonrpc: '2.0',
+            result: responseResult,
+        });
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+
+        await expect(responsePromise).resolves.toBe(responseResult);
+    });
+
+    it('retries nostr socket connections before the timeout expires', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const firstSocket = getOnlySocket();
+
+        const dispatchPromise = firstSocket.dispatch('error', new Event('error'));
+        await vi.advanceTimersByTimeAsync(150);
+        await dispatchPromise;
+
+        expect(MockWebSocket.instances).toHaveLength(2);
+        const secondSocket = MockWebSocket.instances[1];
+        await secondSocket.dispatch('open', new Event('open'));
+        await secondSocket.dispatch('message', createNostrRelayEventMessage(''));
+        await secondSocket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+    });
+
+    it('throws when the relay sends a non-empty event while awaiting reflection', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+
+        await expect(socket.dispatch('message', createNostrRelayEventMessage('unexpected-content'))).rejects.toThrow(
+            'Encountered unexpected message while awaiting reflection',
+        );
+        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+    });
+
+    it('throws when the relay sends an invalid message', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+
+        await expect(socket.dispatch('message', new MessageEvent('message', { data: 'not-json{' }))).rejects.toThrow(
+            'Invalid Nostr message received',
+        );
+        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+    });
+
+    it('parses nostr session properties from hello responses', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+        const sessionPropertiesBuffer = Uint8Array.of(0, 0, 0, 1, 12);
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch(
+            'message',
+            createNostrRelayEventMessage(fromUint8Array(Uint8Array.of(...HELLO_RSP, ...sessionPropertiesBuffer))),
+        );
+
+        await expect(scenario.wallet).resolves.toBe(WALLET);
+        expect(mockParseSessionProps).toHaveBeenCalledWith(expect.any(ArrayBuffer), SHARED_SECRET);
+        expect(new Uint8Array(mockParseSessionProps.mock.calls[0][0] as ArrayBuffer)).toEqual(sessionPropertiesBuffer);
+    });
+
+    it('rejects pending relay RPC requests when the wallet returns protocol errors', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const protocolError = new SolanaMobileWalletAdapterProtocolError(1, -3, 'not signed');
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_messages', {
+            addresses: [],
+            payloads: [],
+        });
+        await flushPromises();
+
+        mockDecryptJsonRpcMessage.mockRejectedValue(protocolError);
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+
+        await expect(responsePromise).rejects.toBe(protocolError);
+    });
+
+    it('rejects nostr authorization responses with insecure wallet base URLs', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('authorize', { identity: { name: 'Test App' } });
+        await flushPromises();
+
+        mockDecryptJsonRpcMessage.mockResolvedValue({
+            id: 1,
+            jsonrpc: '2.0',
+            result: {
+                accounts: [],
+                auth_token: 'auth-token',
+                wallet_uri_base: 'http://wallet.example',
+            },
+        });
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+
+        await expect(responsePromise).rejects.toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_FORBIDDEN_WALLET_BASE_URL,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects the wallet promise when the nostr scenario closes before wallet connection', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        scenario.close();
+
+        await expect(scenario.wallet).rejects.toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+        expect(socket.close).toHaveBeenCalledTimes(1);
+    });
+});
+
 async function establishLocalSession(socket: MockWebSocket) {
     await socket.dispatch('open', new Event('open'));
     await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
@@ -638,9 +893,35 @@ function createRemoteConfig(): RemoteWalletAssociationConfig {
     };
 }
 
+function createNostrConfig(connectionType: 'local' | 'remote'): NostrWalletAssociationConfig {
+    return {
+        baseUri: 'https://wallet.example',
+        relayDomain: 'relay.nostr.example',
+        connectionType: connectionType,
+    };
+}
+
 function createStringMessageEvent(data: string) {
     return new MessageEvent('message', {
         data,
+    });
+}
+
+function createNostrRelayEventMessage(content: string, pubkey = 'wallet-nostr-pubkey') {
+    return new MessageEvent('message', {
+        data: JSON.stringify([
+            'EVENT',
+            'mock-sub-id',
+            {
+                id: 'mock-wallet-event-id',
+                pubkey,
+                created_at: 1000,
+                kind: 20012,
+                tags: [],
+                content,
+                sig: 'mock-wallet-sig',
+            },
+        ]),
     });
 }
 
