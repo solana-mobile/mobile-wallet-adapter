@@ -23,9 +23,11 @@ import {
     AuthToken,
     GetCapabilitiesAPI,
     MobileWallet,
+    RemoteScenario,
     SignInPayload,
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
+    startNostrScenario,
     startRemoteScenario,
     startScenario,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -48,7 +50,7 @@ import base58 from 'bs58';
 import { fromUint8Array, toUint8Array } from './base64Utils.js';
 import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
-import { checkLocalNetworkAccessPermission } from './getIsSupported.js';
+import { checkLocalNetworkAccessPermission, isLocalWebSocketAvailable } from './getIsSupported.js';
 import { icon } from './icon.js';
 
 type WalletCapabilities = Awaited<ReturnType<GetCapabilitiesAPI['getCapabilities']>>;
@@ -118,6 +120,7 @@ export class LocalSolanaMobileWalletAdapterWallet
     #chainSelector: ChainSelector;
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+    #nostrRelay: string | undefined;
 
     get version() {
         return this.#version;
@@ -180,12 +183,14 @@ export class LocalSolanaMobileWalletAdapterWallet
         chains: IdentifierArray;
         chainSelector: ChainSelector;
         onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+        nostrRelay?: string;
     }) {
         this.#authorizationCache = config.authorizationCache;
         this.#appIdentity = config.appIdentity;
         this.#chains = config.chains;
         this.#chainSelector = config.chainSelector;
         this.#onWalletNotFound = config.onWalletNotFound;
+        this.#nostrRelay = config.nostrRelay;
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
             // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
@@ -390,11 +395,23 @@ export class LocalSolanaMobileWalletAdapterWallet
             // the wallet association, cancel the connection after a timeout.
             let associating = true;
             let timeout = undefined;
+            const useWebSocket = await isLocalWebSocketAvailable();
             const result = await Promise.race([
-                checkLocalNetworkAccessPermission().then(async () => {
+                (async () => {
+                    if (!useWebSocket && !this.#nostrRelay) {
+                        await checkLocalNetworkAccessPermission();
+                    }
+                })().then(async () => {
                     // Begin local connection, show loading spinner while we connect
                     loadingSpinner.init();
-                    const { wallet, close } = await startScenario(config);
+                    const { wallet, close } =
+                        !useWebSocket && this.#nostrRelay
+                            ? await startNostrScenario({
+                                  ...config,
+                                  connectionType: 'local' as const,
+                                  relayDomain: this.#nostrRelay,
+                              })
+                            : await startScenario(config);
                     associating = false;
                     loadingSpinner.addEventListener('close', (event) => {
                         if (event) close();
@@ -621,7 +638,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
     #chainSelector: ChainSelector;
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    #hostAuthority: string;
+    #relay: { kind: 'reflector' | 'nostr'; domain: string };
     #session: { close: () => void; wallet: MobileWallet } | undefined;
 
     get version() {
@@ -686,12 +703,32 @@ export class RemoteSolanaMobileWalletAdapterWallet
         chainSelector: ChainSelector;
         remoteHostAuthority: string;
         onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    }) {
+    });
+    constructor(config: {
+        appIdentity: AppIdentity;
+        authorizationCache: AuthorizationCache;
+        chains: IdentifierArray;
+        chainSelector: ChainSelector;
+        nostrRelay: string;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+    });
+    constructor(
+        config: {
+            appIdentity: AppIdentity;
+            authorizationCache: AuthorizationCache;
+            chains: IdentifierArray;
+            chainSelector: ChainSelector;
+            onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+        } & ({ remoteHostAuthority: string } | { nostrRelay: string }),
+    ) {
         this.#authorizationCache = config.authorizationCache;
         this.#appIdentity = config.appIdentity;
         this.#chains = config.chains;
         this.#chainSelector = config.chainSelector;
-        this.#hostAuthority = config.remoteHostAuthority;
+        this.#relay =
+            'remoteHostAuthority' in config
+                ? { kind: 'reflector', domain: config.remoteHostAuthority }
+                : { kind: 'nostr', domain: config.nostrRelay };
         this.#onWalletNotFound = config.onWalletNotFound;
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
@@ -884,7 +921,6 @@ export class RemoteSolanaMobileWalletAdapterWallet
     #transact = async <TReturn>(callback: (wallet: MobileWallet) => TReturn) => {
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const baseConfig = walletUriBase ? { baseUri: walletUriBase } : undefined;
-        const remoteConfig = { ...baseConfig, remoteHostAuthority: this.#hostAuthority };
         const currentConnectionGeneration = this.#connectionGeneration;
         const modal = new RemoteConnectionModal();
 
@@ -896,7 +932,17 @@ export class RemoteSolanaMobileWalletAdapterWallet
             // Begin remote connection, show modal with loading anim while we connect
             modal.init();
             modal.open();
-            const { associationUrl, close, wallet } = await startRemoteScenario(remoteConfig);
+            const { associationUrl, close, wallet } =
+                this.#relay.kind == 'reflector'
+                    ? await startRemoteScenario({
+                          ...baseConfig,
+                          remoteHostAuthority: this.#relay.domain,
+                      })
+                    : ((await startNostrScenario({
+                          ...baseConfig,
+                          connectionType: 'remote',
+                          relayDomain: this.#relay.domain,
+                      })) as RemoteScenario);
 
             // Reflector is now connected, update the connection modal with qr code
             const removeCloseListener = modal.addEventListener('close', (event?: Event) => {

@@ -502,25 +502,50 @@ export class RemoteSolanaMobileWalletAdapter extends BaseSolanaMobileWalletAdapt
         chain: Chain;
         remoteHostAuthority: string;
         onWalletNotFound: (mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => Promise<void>;
-    }) {
+    });
+    constructor(config: {
+        addressSelector: AddressSelector;
+        appIdentity: AppIdentity;
+        authorizationResultCache: AuthorizationResultCache;
+        chain: Chain;
+        nostrRelay: string;
+        onWalletNotFound: (mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => Promise<void>;
+    });
+    constructor(
+        config: {
+            addressSelector: AddressSelector;
+            appIdentity: AppIdentity;
+            authorizationResultCache: AuthorizationResultCache;
+            chain: Chain;
+            onWalletNotFound: (mobileWalletAdapter: RemoteSolanaMobileWalletAdapter) => Promise<void>;
+        } & ({ remoteHostAuthority: string } | { nostrRelay: string }),
+    ) {
         const chain = chainOrClusterToChainId(config.chain);
+        const baseConfig = {
+            appIdentity: config.appIdentity,
+            authorizationCache: {
+                set: config.authorizationResultCache.set,
+                get: async () => {
+                    return (await config.authorizationResultCache.get()) as Authorization | undefined;
+                },
+                clear: config.authorizationResultCache.clear,
+            },
+            chains: [chain],
+            chainSelector: createDefaultChainSelector(),
+            onWalletNotFound: async () => {
+                config.onWalletNotFound(this);
+            },
+        };
         super(
-            new RemoteSolanaMobileWalletAdapterWallet({
-                appIdentity: config.appIdentity,
-                authorizationCache: {
-                    set: config.authorizationResultCache.set,
-                    get: async () => {
-                        return (await config.authorizationResultCache.get()) as Authorization | undefined;
-                    },
-                    clear: config.authorizationResultCache.clear,
-                },
-                chains: [chain],
-                chainSelector: createDefaultChainSelector(),
-                remoteHostAuthority: config.remoteHostAuthority,
-                onWalletNotFound: async () => {
-                    config.onWalletNotFound(this);
-                },
-            }),
+            'remoteHostAuthority' in config
+                ? new RemoteSolanaMobileWalletAdapterWallet({
+                      ...baseConfig,
+                      remoteHostAuthority: config.remoteHostAuthority,
+                  })
+                : new RemoteSolanaMobileWalletAdapterWallet({
+                      ...baseConfig,
+                      nostrRelay: config.nostrRelay,
+                  }),
             {
                 addressSelector: config.addressSelector,
                 chain: chain,
