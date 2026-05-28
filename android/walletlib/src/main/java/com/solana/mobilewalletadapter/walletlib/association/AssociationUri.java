@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AssociationUri {
+
+    public enum ConnectionType { LOCAL, REMOTE }
+
     @NonNull
     public final Uri uri;
 
@@ -30,11 +33,15 @@ public abstract class AssociationUri {
     @NonNull
     public final List<SessionProperties.ProtocolVersion> associationProtocolVersions;
 
+    @NonNull
+    public final ConnectionType connectionType;
+
     protected AssociationUri(@NonNull Uri uri) {
         this.uri = uri;
         validate(uri);
         associationPublicKey = parseAssociationToken(uri);
         associationProtocolVersions = parseSupportedProtocolVersions(uri);
+        connectionType = parseConnectionType(uri);
     }
 
     private static void validate(@NonNull Uri uri) {
@@ -78,6 +85,17 @@ public abstract class AssociationUri {
         return supportedVersions;
     }
 
+    @NonNull
+    private static ConnectionType parseConnectionType(@NonNull Uri uri) {
+        final String path = uri.getPath();
+        if (path != null) {
+            if (path.contains(AssociationContract.LOCAL_PATH_SUFFIX)) return ConnectionType.LOCAL;
+            if (path.contains(AssociationContract.REMOTE_PATH_SUFFIX)) return ConnectionType.REMOTE;
+            throw new IllegalArgumentException("Invalid MWA URI");
+        }
+        throw new IllegalArgumentException("URI must contain a path segment");
+    }
+
     @Nullable
     public static AssociationUri parse(@NonNull Uri uri) {
         try {
@@ -86,6 +104,10 @@ public abstract class AssociationUri {
 
         try {
             return new RemoteAssociationUri(uri);
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
+            return new NostrAssociationUri(uri);
         } catch (IllegalArgumentException ignored) {}
 
         return null;
