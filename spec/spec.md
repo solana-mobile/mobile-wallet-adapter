@@ -455,7 +455,7 @@ A [Nostr event](#nostr-event-structure) of kind `20012` with a `msg` tag with va
     "tags": [
         ["d", "<session_identifier>"],
         ["p", "<wallet_nostr_pubkey>"],
-        ["msg", "END_SESSION"],
+        ["msg", "SESSION_END"],
     ],
     "content": ""
 }
