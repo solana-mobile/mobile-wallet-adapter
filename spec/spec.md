@@ -469,7 +469,7 @@ where:
 
 #### Description
 
-When a [Nostr relay](#nostr) is in use, the dapp endpoint may send a `SESSION_END` message to notify the wallet endpoint that the dapp is terminating the session. Nostr relays do not provide a way for one endpoint to be notified when another subscriber discinnects or unsubscribes. This message serves an analogous role to the explicit closure mechanics used in local and reflector websockets where endpoint closures can be propogated to the opposite party. 
+When a [Nostr relay](#nostr) is in use, the dapp endpoint may send a `SESSION_END` message to notify the wallet endpoint that the dapp is terminating the session. Nostr relays do not provide a way for one endpoint to be notified when another subscriber disconnects or unsubscribes. This message serves an analogous role to the explicit closure mechanics used in local and reflector websockets where endpoint closures can be propogated to the opposite party. 
 
 When the wallet endpoint receives a `SESSION_END` message it should immediately close its Nostr relay connection and end the MWA session cleany.
 
