@@ -65,7 +65,7 @@ type State =
 
 type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: ArrayBuffer };
 
-type NostrStateNew =
+type NostrState =
     | State
     | { __type: 'subscribed'; dappNostrPrivateKey: Uint8Array; dappNostrPubkey: string; sessionIdentifier: string };
 
@@ -672,7 +672,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
     })();
     let nextJsonRpcMessageId = 1;
     let lastKnownInboundSequenceNumber = 0;
-    let state: NostrStateNew & { walletNostrPubkey?: string } = { __type: 'disconnected' };
+    let state: NostrState & { walletNostrPubkey?: string } = { __type: 'disconnected' };
     let socket: WebSocket;
     let sessionEstablished = false;
     let handleForceClose: () => void;
@@ -691,6 +691,19 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
 
     const scenario = {
         close: () => {
+            if (state.__type == 'connected' || state.__type == 'hello_req_sent') {
+                const event = createNostrEvent(
+                    NOSTR_EVENT_KIND_MWA,
+                    "",
+                    [
+                        ['d', sessionIdentifier],
+                        ['p', state.walletNostrPubkey!],
+                        ['msg', 'SESSION_END']
+                    ],
+                    dappNostrPrivateKey,
+                );
+                socket.send(JSON.stringify(['EVENT', event]));
+            }
             socket.close();
             handleForceClose();
         },

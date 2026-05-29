@@ -20,6 +20,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NostrCrypto {
     public static final int NOSTR_EVENT_KIND_MWA = 20012;
@@ -197,6 +200,22 @@ public class NostrCrypto {
         }
     }
 
+    public static Map<String, String[]> getEventTags(@NonNull JSONObject event) throws JSONException {
+        JSONArray tagsArray = event.getJSONArray("tags");
+        Map<String, String[]> tags = new HashMap<>();
+        for (int i = 0; i < tagsArray.length(); i++) {
+            JSONArray tag = tagsArray.getJSONArray(i);
+            String tagKey = tag.getString(0);
+            String[] tagValues = new String[tag.length()-1];
+            for (int j = 0; j < tagValues.length; j++) {
+                tagValues[j] = tag.getString(j+1);
+            }
+            tags.put(tagKey, tagValues);
+        }
+
+        return tags;
+    }
+
     @NonNull
     public static JSONObject buildEvent(@NonNull byte[] privateKey, int kind,
                                          @NonNull String content, @NonNull String[][] tags) {
@@ -233,7 +252,31 @@ public class NostrCrypto {
 
     @NonNull
     private static String serializeEvent(@NonNull String pubkey, long createdAt, int kind,
-                                          @NonNull String[][] tags, @NonNull String content) {
+                                          @NonNull Map<String, String[]> tags, @NonNull String content) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[0,\"").append(pubkey).append("\",")
+                .append(createdAt).append(",").append(kind).append(",");
+
+        sb.append("[");
+        int i = 0;
+        for (Map.Entry<String, String[]> entry : tags.entrySet()) {
+            if (i > 0) sb.append(",");
+            sb.append("[\"").append(escapeJsonString(entry.getKey())).append("\"");
+            for (String value : entry.getValue()) {
+                sb.append(",\"").append(escapeJsonString(value)).append("\"");
+            }
+            sb.append("]");
+            i++;
+        }
+        sb.append("],");
+
+        sb.append("\"").append(escapeJsonString(content)).append("\"]");
+        return sb.toString();
+    }
+
+    @NonNull
+    private static String serializeEvent(@NonNull String pubkey, long createdAt, int kind,
+                                         @NonNull String[][] tags, @NonNull String content) {
         StringBuilder sb = new StringBuilder();
         sb.append("[0,\"").append(pubkey).append("\",")
                 .append(createdAt).append(",").append(kind).append(",");

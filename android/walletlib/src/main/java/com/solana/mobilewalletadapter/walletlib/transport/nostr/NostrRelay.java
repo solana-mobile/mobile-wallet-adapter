@@ -24,6 +24,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class NostrRelay implements MessageSender {
@@ -188,18 +191,7 @@ public class NostrRelay implements MessageSender {
             throw new IOException("Send failed; session not ready");
         }
 
-        String base64Content = Base64.encodeToString(message, Base64.NO_WRAP);
-        JSONObject event = NostrCrypto.buildEvent(mPrivateKey,
-                NostrCrypto.NOSTR_EVENT_KIND_MWA, base64Content,
-                new String[][]{
-                        {"d", mSessionIdentifier},
-                        {"p", mDappNostrPubkey}
-                });
-
-        JSONArray eventMsg = new JSONArray();
-        eventMsg.put("EVENT");
-        eventMsg.put(event);
-        mWebSocketClient.send(eventMsg.toString());
+        sendEvent(message);
     }
 
     private void doSubscribe() {
@@ -219,17 +211,7 @@ public class NostrRelay implements MessageSender {
     }
 
     private void doSendConnectEvent() {
-        JSONObject event = NostrCrypto.buildEvent(mPrivateKey,
-                NostrCrypto.NOSTR_EVENT_KIND_MWA, "",
-                new String[][]{
-                        {"d", mSessionIdentifier},
-                        {"p", mDappNostrPubkey}
-                });
-
-        JSONArray eventMsg = new JSONArray();
-        eventMsg.put("EVENT");
-        eventMsg.put(event);
-        mWebSocketClient.send(eventMsg.toString());
+        sendEvent(new String[][]{{"msg", "CONNECT"}});
     }
 
     private void doReflectionEstablished() {
@@ -280,8 +262,6 @@ public class NostrRelay implements MessageSender {
     }
 
     private void handleEventMessage(@NonNull JSONArray msg) throws JSONException {
-        if (msg.length() < 3) return;
-
         JSONObject event = msg.getJSONObject(2);
 
         if (!NostrCrypto.verifyEvent(event)) {
@@ -296,10 +276,12 @@ public class NostrRelay implements MessageSender {
         }
 
         String content = event.getString("content");
-
         if (mState == State.SUBSCRIBED || mState == State.REFLECTION_ESTABLISHED) {
-            if (content.isEmpty()) {
-                Log.v(TAG, "Ignoring empty-content event (CONNECT echo or duplicate)");
+            Map<String, String[]> tags = NostrCrypto.getEventTags(event);
+            if (Arrays.toString(tags.get("msg")).contains("SESSION_END")
+                    || content.isEmpty()) {
+                Log.d(TAG, "Received SESSION_END event from Dapp");
+                close();
                 return;
             }
 
@@ -310,12 +292,34 @@ public class NostrRelay implements MessageSender {
     }
 
     private void handleOkMessage(@NonNull JSONArray msg) throws JSONException {
-        if (msg.length() < 3) return;
         boolean success = msg.getBoolean(2);
         if (!success) {
             String reason = msg.optString(3, "unknown");
             Log.w(TAG, "Relay rejected event: " + reason);
         }
+    }
+
+    private void sendEvent(@NonNull byte[] message) {
+        sendEvent(message, new String[0][]);
+    }
+
+    private void sendEvent(@NonNull String[][] tags) {
+        sendEvent(new byte[0], tags);
+    }
+    private void sendEvent(@NonNull byte[] message, @NonNull String[][] tags) {
+        String[][] fullTags = new String[tags.length + 2][];
+        fullTags[0] = new String[]{"d", mSessionIdentifier};
+        fullTags[1] = new String[]{"p", mDappNostrPubkey};
+        System.arraycopy(tags, 0, fullTags, 2, tags.length);
+
+        String base64Content = Base64.encodeToString(message, Base64.NO_WRAP);
+        JSONObject event = NostrCrypto.buildEvent(mPrivateKey,
+                NostrCrypto.NOSTR_EVENT_KIND_MWA, base64Content, fullTags);
+
+        JSONArray eventMsg = new JSONArray();
+        eventMsg.put("EVENT");
+        eventMsg.put(event);
+        mWebSocketClient.send(eventMsg.toString());
     }
 
     public interface StateCallbacks {

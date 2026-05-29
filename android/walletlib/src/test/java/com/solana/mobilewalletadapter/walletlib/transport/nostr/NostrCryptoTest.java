@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -16,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
+import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
 public class NostrCryptoTest {
@@ -345,6 +347,77 @@ public class NostrCryptoTest {
 
         // then
         assertFalse(result);
+    }
+
+    @Test
+    public void testGetEventTagsSingleTagWithOneValue() throws JSONException {
+        // given
+        JSONObject event = new JSONObject();
+        event.put("tags", new JSONArray("[[\"p\",\"abc123\"]]"));
+
+        // when
+        Map<String, String[]> tags = NostrCrypto.getEventTags(event);
+
+        // then
+        assertEquals(1, tags.size());
+        assertTrue(tags.containsKey("p"));
+        assertArrayEquals(new String[]{"abc123"}, tags.get("p"));
+    }
+
+    @Test
+    public void testGetEventTagsMultipleTags() throws JSONException {
+        // given
+        JSONObject event = new JSONObject();
+        event.put("tags", new JSONArray("[" +
+                "[\"p\",\"pubkey1\"]," +
+                "[\"d\",\"session123\"]," +
+                "[\"msg\",\"MESSAGE\"]" +
+                "]"));
+
+        // when
+        Map<String, String[]> tags = NostrCrypto.getEventTags(event);
+
+        // then
+        assertEquals(3, tags.size());
+        assertArrayEquals(new String[]{"pubkey1"}, tags.get("p"));
+        assertArrayEquals(new String[]{"session123"}, tags.get("d"));
+        assertArrayEquals(new String[]{"MESSAGE"}, tags.get("msg"));
+    }
+
+    @Test
+    public void testGetEventTagsMultipleValues() throws JSONException {
+        // given
+        JSONObject event = new JSONObject();
+        event.put("tags", new JSONArray("[[\"p\",\"val1\",\"val2\",\"val3\"]]"));
+
+        // when
+        Map<String, String[]> tags = NostrCrypto.getEventTags(event);
+
+        // then
+        assertEquals(1, tags.size());
+        assertArrayEquals(new String[]{"val1", "val2", "val3"}, tags.get("p"));
+    }
+
+    @Test
+    public void testGetEventTagsEmptyTags() throws JSONException {
+        // given
+        JSONObject event = new JSONObject();
+        event.put("tags", new JSONArray("[]"));
+
+        // when
+        Map<String, String[]> tags = NostrCrypto.getEventTags(event);
+
+        // then
+        assertEquals(0, tags.size());
+    }
+
+    @Test(expected = JSONException.class)
+    public void testGetEventTagsMissingTagsField() throws JSONException {
+        // given
+        JSONObject event = new JSONObject();
+
+        // when
+        NostrCrypto.getEventTags(event);
     }
 
     @Test
