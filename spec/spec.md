@@ -343,6 +343,12 @@ Upon receipt of a Nostr URI, the wallet endpoint should generate its own ephemer
 
 The dapp endpoint must wait no less than 30 seconds for the wallet endpoint's [`CONNECT`](#connect) event. The wallet endpoint must wait no less than 10 seconds for [`HELLO_REQ`](#hello_req) after sending the `CONNECT` event. If these timeouts elapse, the endpoints should disconnect from the relay and present appropriate error messages to the user.
 
+Once both endpoints have identified their counterpart's Nostr public key (the dapp endpoint learns the wallet's from `CONNECT`; the wallet endpoint learns the dapp's from the [Nostr URI](#nostr-uri)), all subsequent events received for the session MUST originate from the expected counterpart public key. Events with an unexpected `pubkey` must be silently discarded.
+
+When the Nostr transport is in use, all subsequent protocol messages ([`HELLO_REQ`](#hello_req), [`HELLO_RSP`](#hello_rsp), and [encrypted messages](#encrypted-message-wrapping)) are sent as [Nostr events](#nostr-event-structure) with the binary payload base64-encoded in the `content` field. Message ordering is determined by the MWA [sequence numbers](#encrypted-message-wrapping), not by the Nostr event `created_at` timestamp.
+
+If an endpoint's WebSocket connection to the Nostr relay is closed for any reason, the session is terminated. Endpoints must not attempt to reconnect to the relay to resume a terminated session. A new [association](#association) should be performed to establish a new session.
+
 ### Endpoint-specific URIs
 
 During [Session Establishment](#session-establishment), the wallet endpoint may return a URI prefix to use for future association attempts. This is expected to be used with [App Links](https://developer.android.com/training/app-links) or [Universal Links](https://developer.apple.com/ios/universal-links/), to ensure that the desired wallet app is launched by the dapp. A dapp should reject URI prefixes with schemes other than `https:` for security reasons. If a dapp has been informed of a URI prefix for a wallet, it should use it with the same path elements and parameters provided as for the `solana-wallet:` URI scheme. For e.g., if an Android wallet endpoint handles App Links for solanaexamplewallet.io, it could provide a prefix of:
@@ -403,7 +409,7 @@ Wallet endpoint to dapp endpoint
 
 #### Specification
 
-A [Nostr event](#nostr-event-structure) of kind `20012` with an empty `content` field:
+A [Nostr event](#nostr-event-structure) of kind `20012` with a `msg` tag with value `CONNECT` and an empty `content` field:
 
 ```json
 {
@@ -411,7 +417,8 @@ A [Nostr event](#nostr-event-structure) of kind `20012` with an empty `content` 
     "pubkey": "<wallet_nostr_pubkey>",
     "tags": [
         ["d", "<session_identifier>"],
-        ["p", "<dapp_nostr_pubkey>"]
+        ["p", "<dapp_nostr_pubkey>"],
+        ["msg", "CONNECT"]
     ],
     "content": ""
 }
@@ -431,11 +438,40 @@ The `CONNECT` event's `pubkey` field reveals the wallet endpoint's Nostr public 
 
 On receipt of the `CONNECT` event, the dapp endpoint should verify that the event's `d` tag matches the expected session identifier, record the wallet endpoint's Nostr public key from the event's `pubkey` field, and proceed to send [`HELLO_REQ`](#hello_req). If additional `CONNECT` events are received from different Nostr public keys for the same session, they should be ignored — only the first valid `CONNECT` event is processed.
 
-Once both endpoints have identified their counterpart's Nostr public key (the dapp endpoint learns the wallet's from `CONNECT`; the wallet endpoint learns the dapp's from the [Nostr URI](#nostr-uri)), all subsequent events received for the session MUST originate from the expected counterpart public key. Events with an unexpected `pubkey` must be silently discarded.
+### SESSION_END
 
-When the Nostr transport is in use, all subsequent protocol messages ([`HELLO_REQ`](#hello_req), [`HELLO_RSP`](#hello_rsp), and [encrypted messages](#encrypted-message-wrapping)) are sent as [Nostr events](#nostr-event-structure) with the binary payload base64-encoded in the `content` field. Message ordering is determined by the MWA [sequence numbers](#encrypted-message-wrapping), not by the Nostr event `created_at` timestamp.
+#### Direction
 
-If an endpoint's WebSocket connection to the Nostr relay is closed for any reason, the session is terminated. Endpoints must not attempt to reconnect to the relay to resume a terminated session. A new [association](#association) should be performed to establish a new session.
+Dapp endpoint to wallet endpoint
+
+#### Specification
+
+A [Nostr event](#nostr-event-structure) of kind `20012` with a `msg` tag with value `SESSION_END` and an empty `content` field:
+
+```json
+{
+    "kind": 20012,
+    "pubkey": "<dapp_nostr_pubkey>",
+    "tags": [
+        ["d", "<session_identifier>"],
+        ["p", "<wallet_nostr_pubkey>"],
+        ["msg", "END_SESSION"],
+    ],
+    "content": ""
+}
+```
+
+where:
+
+- `dapp_nostr_pubkey` is the dapp endpoint's Nostr public key, obtained from the [Nostr URI](#nostr-uri)
+- `wallet_nostr_pubkey` is the wallet endpoint's ephemeral Nostr public key
+- `session_identifier` is the [session identifier](#session-identifier-derivation) derived from the association token
+
+#### Description
+
+When a [Nostr relay](#nostr) is in use, the dapp endpoint may send a `SESSION_END` message to notify the wallet endpoint that the dapp is terminating the session. Nostr relays do not provide a way for one endpoint to be notified when another subscriber discinnects or unsubscribes. This message serves an analogous role to the explicit closure mechanics used in local and reflector websockets where endpoint closures can be propogated to the opposite party. 
+
+When the wallet endpoint receives a `SESSION_END` message it should immediately close its Nostr relay connection and end the MWA session cleany.
 
 ### HELLO_REQ
 
