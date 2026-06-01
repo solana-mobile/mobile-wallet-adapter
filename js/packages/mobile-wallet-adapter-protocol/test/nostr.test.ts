@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
+
 import {
     createNostrEvent,
     deriveSessionIdentifier,
@@ -164,5 +167,53 @@ describe('verifyNostrEvent', () => {
         const wrongSigner = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'test', [], key2.privateKey);
         const tampered = { ...event, sig: wrongSigner.sig };
         expect(verifyNostrEvent(tampered)).toBe(false);
+    });
+
+    it('rejects an event with a tampered kind', () => {
+        const { privateKey } = generateNostrKeypair();
+        const event = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'test', [], privateKey);
+        const tampered = { ...event, kind: 99999 };
+        expect(verifyNostrEvent(tampered)).toBe(false);
+    });
+
+    it('rejects an event with invalid hex in sig', () => {
+        const { privateKey } = generateNostrKeypair();
+        const event = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'test', [], privateKey);
+        const tampered = { ...event, sig: 'not-valid-hex' };
+        expect(verifyNostrEvent(tampered)).toBe(false);
+    });
+
+    it('rejects an event with invalid hex in pubkey', () => {
+        const { privateKey } = generateNostrKeypair();
+        const event = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'test', [], privateKey);
+        const tampered = { ...event, pubkey: 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' };
+        expect(verifyNostrEvent(tampered)).toBe(false);
+    });
+
+    it('rejects an event with wrong-length sig', () => {
+        const { privateKey } = generateNostrKeypair();
+        const event = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'test', [], privateKey);
+        const tampered = { ...event, sig: 'aa' };
+        expect(verifyNostrEvent(tampered)).toBe(false);
+    });
+});
+
+describe('createNostrEvent known-answer serialization', () => {
+    it('produces the correct event id for fixed inputs', () => {
+        // given
+        const { privateKey, publicKey } = generateNostrKeypair();
+        const fixedTimestamp = 1700000000;
+        vi.spyOn(Date, 'now').mockReturnValue(fixedTimestamp * 1000);
+
+        // when
+        const event = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'hello', [['d', 'session']], privateKey);
+
+        // then
+        const expectedSerialized = JSON.stringify([0, publicKey, fixedTimestamp, NOSTR_EVENT_KIND_MWA, [['d', 'session']], 'hello']);
+        const expectedId = bytesToHex(sha256(new TextEncoder().encode(expectedSerialized)));
+        expect(event.id).toBe(expectedId);
+        expect(event.created_at).toBe(fixedTimestamp);
+
+        vi.restoreAllMocks();
     });
 });

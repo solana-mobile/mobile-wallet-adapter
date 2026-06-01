@@ -59,6 +59,6 @@ export function registerMwa(
         }
     } else {
         // currently not supported (non-Android mobile device)
-        console.warn(`MWA not registered: device or enviroment not supported`);
+        console.warn(`MWA not registered: device or environment not supported`);
     }
 }
