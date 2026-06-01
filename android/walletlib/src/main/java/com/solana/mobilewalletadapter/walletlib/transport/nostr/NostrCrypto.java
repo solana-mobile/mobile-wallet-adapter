@@ -95,6 +95,8 @@ public class NostrCrypto {
 
     @NonNull
     public static byte[] schnorrSign(@NonNull byte[] messageHash, @NonNull byte[] privateKey) {
+        // hardcoded zero randomness here - this produces valid signatures which is all we need for interacting with
+        // Nostr. MWA has its own payload encryption, the Nostr keypair is only used for routing and message verification.
         BigInteger k0 = taggedHash("BIP0340/aux", new byte[32]);
         BigInteger d = new BigInteger(1, privateKey);
         ECPoint P = SECP256K1_SPEC.getG().multiply(d).normalize();
