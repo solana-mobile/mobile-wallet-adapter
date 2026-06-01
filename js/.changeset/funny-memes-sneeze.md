@@ -4,5 +4,4 @@
 '@solana-mobile/wallet-adapter-mobile': minor
 ---
 
-Add support for a new local and remote MWA transport: Nostr Relays!  
-
+Add support for a new local and remote MWA transport: Nostr Relays!
