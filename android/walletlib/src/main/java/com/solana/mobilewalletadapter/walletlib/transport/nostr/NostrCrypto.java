@@ -386,7 +386,7 @@ public class NostrCrypto {
         BigInteger p = SECP256K1_SPEC.getCurve().getField().getCharacteristic();
         BigInteger ySquared = x.modPow(BigInteger.valueOf(3), p).add(BigInteger.valueOf(7)).mod(p);
         BigInteger y = ySquared.modPow(p.add(BigInteger.ONE).divide(BigInteger.valueOf(4)), p);
-        if (!y.modPow(BigInteger.TWO, p).equals(ySquared)) return null;
+        if (!y.modPow(BigInteger.valueOf(2), p).equals(ySquared)) return null;
         if (y.testBit(0)) y = p.subtract(y);
         try {
             return SECP256K1_SPEC.getCurve().createPoint(x, y).normalize();
