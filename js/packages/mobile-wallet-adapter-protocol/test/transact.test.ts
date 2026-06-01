@@ -744,7 +744,7 @@ async function flushPromises() {
 
 function createBlobMessageEvent(bytes: Uint8Array) {
     return new MessageEvent('message', {
-        data: new Blob([bytes]),
+        data: new Blob([bytes as BlobPart]),
     });
 }
 
