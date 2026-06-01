@@ -21,6 +21,14 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        Properties properties = new Properties()
+        def localPropertiesFile = project.file('local.properties')
+        if (localPropertiesFile.exists()) {
+            properties.load(localPropertiesFile.newDataInputStream())
+        }
+        def privateKey = properties.getProperty('privateKey')
+        buildConfigField "String", "PRIVATE_KEY", privateKey ? "\"$privateKey\"" : "null"
     }
 
     testOptions {

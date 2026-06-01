@@ -39,6 +39,19 @@ class Ed25519KeyRepository(private val application: Application) {
         return kp
     }
 
+    suspend fun getOrInsertKeypair(privateKeyRaw: ByteArray): AsymmetricCipherKeyPair {
+        val privateKeyParams = Ed25519PrivateKeyParameters(privateKeyRaw, 0)
+        val publicKeyParams = privateKeyParams.generatePublicKey()
+        return getKeypair(publicKeyParams.encoded) ?: withContext(Dispatchers.IO) {
+            val publicKeyBase64 = Base64.encodeToString(publicKeyParams.encoded, Base64.NO_PADDING or Base64.NO_WRAP)
+            val id = db.keysDao().insert(
+                Ed25519KeyPair(publicKeyBase64 = publicKeyBase64, privateKey = privateKeyParams.encoded)
+            )
+            Log.d(TAG, "Inserted key entry with id=$id for $publicKeyBase64")
+            AsymmetricCipherKeyPair(publicKeyParams, privateKeyParams)
+        }
+    }
+
     suspend fun getKeypair(publicKeyRaw: ByteArray): AsymmetricCipherKeyPair? {
         val publicKeyBase64 = Base64.encodeToString(publicKeyRaw, Base64.NO_PADDING or Base64.NO_WRAP)
         return withContext(Dispatchers.IO) {
