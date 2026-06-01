@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     createNostrEvent,
@@ -209,7 +208,14 @@ describe('createNostrEvent known-answer serialization', () => {
         const event = createNostrEvent(NOSTR_EVENT_KIND_MWA, 'hello', [['d', 'session']], privateKey);
 
         // then
-        const expectedSerialized = JSON.stringify([0, publicKey, fixedTimestamp, NOSTR_EVENT_KIND_MWA, [['d', 'session']], 'hello']);
+        const expectedSerialized = JSON.stringify([
+            0,
+            publicKey,
+            fixedTimestamp,
+            NOSTR_EVENT_KIND_MWA,
+            [['d', 'session']],
+            'hello',
+        ]);
         const expectedId = bytesToHex(sha256(new TextEncoder().encode(expectedSerialized)));
         expect(event.id).toBe(expectedId);
         expect(event.created_at).toBe(fixedTimestamp);

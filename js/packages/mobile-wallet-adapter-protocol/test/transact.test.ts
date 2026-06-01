@@ -329,9 +329,8 @@ describe('startScenario', () => {
 
         await expect(
             socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(...HELLO_RSP, 0, 0, 0, 2, 12))),
-        ).rejects.toThrow('Encrypted message has invalid sequence number');
-
-        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+        ).resolves.toBeUndefined();
+        await expect(scenario.wallet).rejects.toThrow('Encrypted message has invalid sequence number');
     });
 
     it('parses local session properties from hello responses', async () => {
@@ -527,10 +526,8 @@ describe('startRemoteScenario', () => {
 
         await socket.dispatch('open', new Event('open'));
 
-        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()))).rejects.toThrow(
-            'Encountered unexpected message while connecting',
-        );
-        await expect(Promise.race([scenarioPromise, Promise.resolve('pending')])).resolves.toBe('pending');
+        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()))).resolves.toBeUndefined();
+        await expect(scenarioPromise).rejects.toThrow('Encountered unexpected message while connecting');
     });
 
     it('throws when remote wallet reflection receives an unexpected payload', async () => {
@@ -543,10 +540,8 @@ describe('startRemoteScenario', () => {
 
         const scenario = await scenarioPromise;
 
-        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(1)))).rejects.toThrow(
-            'Encountered unexpected message while awaiting reflection',
-        );
-        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(1)))).resolves.toBeUndefined();
+        await expect(scenario.wallet).rejects.toThrow('Encountered unexpected message while awaiting reflection');
     });
 
     it('parses remote session properties from hello responses', async () => {
@@ -764,10 +759,10 @@ describe('startNostrScenario', () => {
 
         await socket.dispatch('open', new Event('open'));
 
-        await expect(socket.dispatch('message', createNostrRelayEventMessage('unexpected-content'))).rejects.toThrow(
-            'Encountered unexpected message while awaiting reflection',
-        );
-        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+        await expect(
+            socket.dispatch('message', createNostrRelayEventMessage('unexpected-content')),
+        ).resolves.toBeUndefined();
+        await expect(scenario.wallet).rejects.toThrow('Encountered unexpected message while awaiting reflection');
     });
 
     it('throws when the relay sends an invalid message', async () => {
@@ -776,10 +771,10 @@ describe('startNostrScenario', () => {
 
         await socket.dispatch('open', new Event('open'));
 
-        await expect(socket.dispatch('message', new MessageEvent('message', { data: 'not-json{' }))).rejects.toThrow(
-            'Invalid Nostr message received',
-        );
-        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
+        await expect(
+            socket.dispatch('message', new MessageEvent('message', { data: 'not-json{' })),
+        ).resolves.toBeUndefined();
+        await expect(scenario.wallet).rejects.toThrow('Invalid Nostr message received');
     });
 
     it('parses nostr session properties from hello responses', async () => {

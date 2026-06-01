@@ -219,7 +219,13 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                 switch (state.__type) {
                     case 'connecting': {
                         if (responseBuffer.byteLength !== 0) {
-                            throw new Error('Encountered unexpected message while connecting');
+                            reject(
+                                new SolanaMobileWalletAdapterError(
+                                    SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                    'Encountered unexpected message while connecting',
+                                ),
+                            );
+                            return;
                         }
                         const ecdhKeypair = await generateECDHKeypair();
                         socket.send(await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey));
@@ -235,7 +241,12 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                             if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
-                                throw new Error('Encrypted message has invalid sequence number');
+                                // with an invalid sequence number we cannot decrypt the message, and therefore
+                                // cannot get a promise to reject. All we can do is throw an error here.
+                                throw new SolanaMobileWalletAdapterError(
+                                    SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                    'Encrypted message has invalid sequence number',
+                                );
                             }
                             lastKnownInboundSequenceNumber = sequenceNumber;
                             const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
@@ -279,7 +290,14 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                                       );
                                       const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                                       if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
-                                          throw new Error('Encrypted message has invalid sequence number');
+                                          reject(
+                                              new SolanaMobileWalletAdapterError(
+                                                  SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                                  'Encrypted message has invalid sequence number',
+                                              ),
+                                          );
+                                          socket.close();
+                                          return <SessionProperties>{ protocol_version: 'v1' };
                                       }
                                       lastKnownInboundSequenceNumber = sequenceNumber;
                                       return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
@@ -457,7 +475,14 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
             const responseBuffer = await decodeBytes(evt);
             if (state.__type === 'connecting') {
                 if (responseBuffer.byteLength == 0) {
-                    throw new Error('Encountered unexpected message while connecting');
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                            'Encountered unexpected message while connecting',
+                        ),
+                    );
+                    socket.close();
+                    return;
                 }
                 const reflectorId = getReflectorIdFromByteArray(responseBuffer);
                 state = {
@@ -517,7 +542,14 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                 switch (state.__type) {
                     case 'reflector_id_received': {
                         if (responseBuffer.byteLength !== 0) {
-                            throw new Error('Encountered unexpected message while awaiting reflection');
+                            reject(
+                                new SolanaMobileWalletAdapterError(
+                                    SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                    'Encountered unexpected message while awaiting reflection',
+                                ),
+                            );
+                            socket.close();
+                            return;
                         }
                         const ecdhKeypair = await generateECDHKeypair();
                         const binaryMsg = await createHelloReq(ecdhKeypair.publicKey, associationKeypair.privateKey);
@@ -538,7 +570,12 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                             if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
-                                throw new Error('Encrypted message has invalid sequence number');
+                                // with an invalid sequence number we cannot decrypt the message, and therefore
+                                // cannot get a promise to reject. All we can do is throw an error here.
+                                throw new SolanaMobileWalletAdapterError(
+                                    SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                    'Encrypted message has invalid sequence number',
+                                );
                             }
                             lastKnownInboundSequenceNumber = sequenceNumber;
                             const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
@@ -571,7 +608,14 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                                       );
                                       const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                                       if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
-                                          throw new Error('Encrypted message has invalid sequence number');
+                                          reject(
+                                              new SolanaMobileWalletAdapterError(
+                                                  SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                                  'Encrypted message has invalid sequence number',
+                                              ),
+                                          );
+                                          socket.close();
+                                          return <SessionProperties>{ protocol_version: 'v1' };
                                       }
                                       lastKnownInboundSequenceNumber = sequenceNumber;
                                       return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
@@ -688,23 +732,26 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
         );
         socket.send(JSON.stringify(['EVENT', event]));
     };
+    const doClose = () => {
+        if (state.__type == 'connected' || state.__type == 'hello_req_sent') {
+            const event = createNostrEvent(
+                NOSTR_EVENT_KIND_MWA,
+                '',
+                [
+                    ['d', sessionIdentifier],
+                    ['p', state.walletNostrPubkey!],
+                    ['msg', 'SESSION_END'],
+                ],
+                dappNostrPrivateKey,
+            );
+            socket.send(JSON.stringify(['EVENT', event]));
+        }
+        socket.close();
+    };
 
     const scenario = {
         close: () => {
-            if (state.__type == 'connected' || state.__type == 'hello_req_sent') {
-                const event = createNostrEvent(
-                    NOSTR_EVENT_KIND_MWA,
-                    "",
-                    [
-                        ['d', sessionIdentifier],
-                        ['p', state.walletNostrPubkey!],
-                        ['msg', 'SESSION_END']
-                    ],
-                    dappNostrPrivateKey,
-                );
-                socket.send(JSON.stringify(['EVENT', event]));
-            }
-            socket.close();
+            doClose();
             handleForceClose();
         },
         wallet: new Promise<MobileWallet>((resolve, reject) => {
@@ -768,10 +815,17 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 let msg: unknown[];
                 try {
                     msg = JSON.parse(evt.data);
+                    if (!Array.isArray(msg)) throw new Error();
                 } catch {
-                    throw new Error('Invalid Nostr message received: ' + evt.data);
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                            'Invalid Nostr message received: ' + evt.data,
+                        ),
+                    );
+                    doClose();
+                    return;
                 }
-                if (!Array.isArray(msg)) throw new Error('Invalid Nostr message received: ' + evt.data);
 
                 const type = msg[0];
                 if (type === 'CLOSED') {
@@ -783,7 +837,14 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                     switch (state.__type) {
                         case 'subscribed': {
                             if (event.content.length !== 0) {
-                                throw new Error('Encountered unexpected message while awaiting reflection');
+                                reject(
+                                    new SolanaMobileWalletAdapterError(
+                                        SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                        'Encountered unexpected message while awaiting reflection',
+                                    ),
+                                );
+                                doClose();
+                                return;
                             }
                             const walletNostrPubkey = event.pubkey;
                             const ecdhKeypair = await generateECDHKeypair();
@@ -818,7 +879,14 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                           );
                                           const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                                           if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
-                                              throw new Error('Encrypted message has invalid sequence number');
+                                              reject(
+                                                  new SolanaMobileWalletAdapterError(
+                                                      SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                                      'Encrypted message has invalid sequence number',
+                                                  ),
+                                              );
+                                              doClose();
+                                              return <SessionProperties>{ protocol_version: 'v1' };
                                           }
                                           lastKnownInboundSequenceNumber = sequenceNumber;
                                           return parseSessionProps(sessionPropertiesBuffer, sharedSecret);
@@ -882,7 +950,12 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                 const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                                 const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                                 if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
-                                    throw new Error('Encrypted message has invalid sequence number');
+                                    // with an invalid sequence number we cannot decrypt the message, and therefore
+                                    // cannot get a promise to reject. All we can do is throw an error here.
+                                    throw new SolanaMobileWalletAdapterError(
+                                        SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                                        'Encrypted message has invalid sequence number',
+                                    );
                                 }
                                 lastKnownInboundSequenceNumber = sequenceNumber;
                                 const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
