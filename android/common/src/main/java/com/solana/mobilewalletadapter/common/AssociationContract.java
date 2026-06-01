@@ -19,7 +19,7 @@ public class AssociationContract {
     public static final String REMOTE_PARAMETER_REFLECTOR_ID = "id"; // type: Long
 
     public static final String NOSTR_PATH_SUFFIX = "nostr";
-    public static final String NOSTR_PARAMETER_RELAY = "relay"; // type: String, repeatable
+    public static final String NOSTR_PARAMETER_RELAY = "relay"; // type: String
     public static final String NOSTR_PARAMETER_PUBKEY = "pubkey"; // type: String
 
     private AssociationContract() {}
