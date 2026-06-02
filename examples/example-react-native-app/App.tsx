@@ -4,11 +4,11 @@ import React, { Suspense } from 'react';
 import {
   ActivityIndicator,
   AppState,
-  SafeAreaView,
   StyleSheet,
   View,
 } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Cache, SWRConfig } from 'swr';
 
 import { ChainContextProvider } from './context/ChainContextProvider';

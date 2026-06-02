@@ -7,6 +7,15 @@ import {
 } from '@solana/web3.js';
 import {decode} from 'bs58';
 
+type SolanaCluster = Parameters<typeof clusterApiUrl>[0];
+
+const MWA_CHAIN_CLUSTER: Record<string, SolanaCluster> = {
+  'solana:devnet': 'devnet',
+  'solana:mainnet': 'mainnet-beta',
+  'solana:mainnet-beta': 'mainnet-beta',
+  'solana:testnet': 'testnet',
+};
+
 export class SendTransactionsError extends Error {
   valid: boolean[];
   constructor(message: string, valid: boolean[]) {
@@ -23,8 +32,10 @@ export class SendTransactionsUseCase {
   static async sendSignedTransactions(
     signedTransactions: Array<Uint8Array>,
     minContextSlot: number | undefined,
+    chain: string,
   ): Promise<Uint8Array[]> {
-    const connection = new Connection(clusterApiUrl('testnet'), 'finalized');
+    const cluster = MWA_CHAIN_CLUSTER[chain] ?? 'testnet';
+    const connection = new Connection(clusterApiUrl(cluster), 'finalized');
     const signatures: (Uint8Array | null)[] = await Promise.all(
       signedTransactions.map(async byteArray => {
         // Try sending a transaction.

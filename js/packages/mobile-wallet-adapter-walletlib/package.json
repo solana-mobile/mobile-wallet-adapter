@@ -10,18 +10,19 @@
             "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
         },
-        "react-native": "./lib/cjs/index.native.js",
+        "react-native": "./lib/esm/index.native.js",
         "types": "./lib/types/index.d.ts"
     },
     "main": "lib/esm/index",
     "module": "lib/esm/index",
-    "react-native": "lib/esm/index",
+    "react-native": "lib/esm/index.native",
     "types": "lib/types/index.d.ts",
     "type": "module",
     "files": [
-        "lib",
         "android",
-        "LICENSE"
+        "LICENSE",
+        "lib",
+        "src"
     ],
     "sideEffects": false,
     "publishConfig": {
