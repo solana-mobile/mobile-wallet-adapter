@@ -14,11 +14,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.google.android.material.snackbar.Snackbar
 import com.journeyapps.barcodescanner.BarcodeView
 import com.solana.mobilewalletadapter.fakewallet.MobileWalletAdapterActivity
 import com.solana.mobilewalletadapter.fakewallet.R
 import com.solana.mobilewalletadapter.fakewallet.databinding.ActivityScanQrBinding
+import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
 import com.solana.mobilewalletadapter.walletlib.association.RemoteAssociationUri
 
 class ScanQRActivity : AppCompatActivity() {
@@ -88,12 +90,15 @@ class ScanQRActivity : AppCompatActivity() {
         barcodeView.decodeSingle { barcodeResult ->
             println("Barcode Result = ${barcodeResult.text}")
             runCatching {
-                val remoteAssociationUri = RemoteAssociationUri(Uri.parse(barcodeResult.text))
+                val associationUri = AssociationUri.parse(barcodeResult.text.toUri())!!
                 barcodeView.pause()
+
+                if (associationUri.connectionType != AssociationUri.ConnectionType.REMOTE)
+                    throw IllegalArgumentException("Invalid URI: association is not remote")
 
                 startActivity(
                     Intent(applicationContext, MobileWalletAdapterActivity::class.java)
-                        .setData(remoteAssociationUri.uri))
+                        .setData(associationUri.uri))
             }.getOrElse {
                 Snackbar.make(viewBinding.root, R.string.str_invalid_barcode, Snackbar.LENGTH_LONG).apply {
                     setAction(R.string.label_try_again) { dismiss() }

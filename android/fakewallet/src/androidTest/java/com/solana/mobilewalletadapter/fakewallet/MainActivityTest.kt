@@ -18,6 +18,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
+import com.solana.mobilewalletadapter.clientlib.scenario.NostrAssociationIntentCreator
+import com.solana.mobilewalletadapter.clientlib.scenario.NostrAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.RemoteAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.scenario.RemoteAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
@@ -25,6 +27,7 @@ import com.solana.mobilewalletadapter.common.ProtocolContract
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.fakewallet.usecase.SolanaSigningUseCase
 import com.solana.mobilewalletadapter.walletlib.scenario.TestScopeLowPowerMode
+import com.solana.mobilewalletadapter.walletlib.transport.nostr.server.NostrRelayServer
 import com.solana.mobilewalletadapter.walletlib.transport.websockets.server.WebSocketReflectorServer
 import com.solana.publickey.SolanaPublicKey
 import com.solana.transaction.AccountMeta
@@ -230,6 +233,57 @@ class MainActivityTest {
 
         val authResult = authorization.get()
         server.close()
+
+        // verify that we got an auth token (successful auth)
+        assertTrue(authResult?.authToken?.isNotEmpty() == true)
+    }
+
+    @Test
+    fun authorizationFlow_SuccessfulNostrAuthorization() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        val identityUri = Uri.parse("https://test.com")
+        val iconUri = Uri.parse("favicon.ico")
+        val identityName = "Test"
+        val chain = ProtocolContract.CHAIN_SOLANA_TESTNET
+
+        // simulate mock Nostr relay
+        val port = 8900 + Random.nextInt(0, 100)
+        val relayServer = NostrRelayServer(port)
+        relayServer.init()
+
+        // simulate client side scenario
+        val relayDomain = "localhost:$port"
+        val nostrAssociation = NostrAssociationScenario("ws", relayDomain,
+            Scenario.DEFAULT_CLIENT_TIMEOUT_MS) { scenario ->
+            val associationIntent = NostrAssociationIntentCreator.createAssociationIntent(
+                null,
+                true,
+                relayDomain,
+                scenario.nostrPubkey,
+                scenario.session
+            ).apply {
+                println("associationIntent = $this")
+            }
+            ActivityScenario.launch<MainActivity>(associationIntent)
+        }
+
+        // when
+        // trigger authorization from client
+        val authorization = nostrAssociation.start().get().run {
+            authorize(identityUri, iconUri, identityName, chain, null, null, null, null)
+        }
+
+        uiDevice.wait(Until.hasObject(By.res(FAKEWALLET_PACKAGE, "authorize")), WINDOW_CHANGE_TIMEOUT)
+
+        // then
+        onView(withId(R.id.btn_authorize))
+            .check(matches(isDisplayed())).perform(click())
+
+        val authResult = authorization.get()
+        nostrAssociation.close()
+        relayServer.close()
 
         // verify that we got an auth token (successful auth)
         assertTrue(authResult?.authToken?.isNotEmpty() == true)

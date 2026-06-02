@@ -18,6 +18,7 @@ import {
     registerMwa, 
 } from '@solana-mobile/wallet-standard-mobile';
 
+const NOSTR_RELAY = process.env.NEXT_PUBLIC_NOSTR_RELAY ?? undefined;
 const REFLECTOR_HOST_AUTHORITY = process.env.NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY ?? undefined;
 
 function getUriForAppIdentity() {
@@ -26,17 +27,30 @@ function getUriForAppIdentity() {
     return `${location.protocol}//${location.host}`;
 }
 
-registerMwa({
-    appIdentity: {
-        uri: getUriForAppIdentity(),
-        name: 'Example MWA Web DApp',
-    },
-    authorizationCache: createDefaultAuthorizationCache(),
-    chains: ['solana:devnet'],
-    chainSelector: createDefaultChainSelector(),
-    remoteHostAuthority: REFLECTOR_HOST_AUTHORITY,
-    onWalletNotFound: createDefaultWalletNotFoundHandler(),
-})
+function getBaseMwaConfig() {
+  return {
+      appIdentity: {
+          uri: getUriForAppIdentity(),
+          name: 'Example MWA Web DApp',
+      },
+      authorizationCache: createDefaultAuthorizationCache(),
+      chains: ['solana:devnet'] as readonly `${string}:${string}`[],
+      chainSelector: createDefaultChainSelector(),
+      onWalletNotFound: createDefaultWalletNotFoundHandler(),
+  }
+}
+
+registerMwa(
+  NOSTR_RELAY
+      ? {
+            ...getBaseMwaConfig(),
+            nostrRelay: NOSTR_RELAY,
+        }
+      : {
+            ...getBaseMwaConfig(),
+            remoteHostAuthority: REFLECTOR_HOST_AUTHORITY,
+        },
+)
 
 const CLUSTER = WalletAdapterNetwork.Devnet;
 const CONNECTION_CONFIG: ConnectionConfig = { commitment: 'processed' };
