@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Buffer } from 'node:buffer';
+
+import { describe, expect, it } from 'vitest';
 
 import { createSIWSMessage, createSIWSMessageBase64Url } from '../src/createSIWSMessage.js';
 
@@ -35,19 +37,12 @@ Resources:
 - https://example.com
 - ipfs://example`;
 
-afterEach(() => {
-    vi.restoreAllMocks();
-});
-
 describe('createSIWSMessage', () => {
     it('creates a sign-in message with the expected field order', () => {
         expect(createSIWSMessage(PAYLOAD)).toBe(EXPECTED_MESSAGE);
     });
 
     it('encodes the sign-in message as base64url', () => {
-        const btoaSpy = vi.spyOn(window, 'btoa').mockReturnValue('abc+/==');
-
-        expect(createSIWSMessageBase64Url(PAYLOAD)).toBe('abc-_');
-        expect(btoaSpy).toHaveBeenCalledWith(EXPECTED_MESSAGE);
+        expect(createSIWSMessageBase64Url(PAYLOAD)).toBe(Buffer.from(EXPECTED_MESSAGE).toString('base64url'));
     });
 });

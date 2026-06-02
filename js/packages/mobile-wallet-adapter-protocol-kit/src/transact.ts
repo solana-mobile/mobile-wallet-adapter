@@ -25,8 +25,7 @@ import {
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-
-import { fromUint8Array, toUint8Array } from './base64Utils.js';
+import { base64FromUint8Array, base64ToUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 
 export type TransactionMessageWithFeePayerAndLifetime<TAddress extends string = string> = TransactionMessage &
     TransactionMessageWithFeePayer<TAddress> &
@@ -140,7 +139,7 @@ function augmentWalletAPI(wallet: MobileWallet): KitMobileWallet {
                                     : null),
                                 payloads,
                             });
-                            const signatures = base64EncodedSignatures.map(toUint8Array);
+                            const signatures = base64EncodedSignatures.map(base64ToUint8Array);
                             return signatures as SignatureBytes[];
                         } as KitMobileWallet[TMethodName];
                         break;
@@ -149,12 +148,12 @@ function augmentWalletAPI(wallet: MobileWallet): KitMobileWallet {
                             payloads,
                             ...rest
                         }: Parameters<KitMobileWallet['signMessages']>[0]) {
-                            const base64EncodedPayloads = payloads.map(fromUint8Array);
+                            const base64EncodedPayloads = payloads.map(base64FromUint8Array);
                             const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessages({
                                 ...rest,
                                 payloads: base64EncodedPayloads,
                             });
-                            const signedMessages = base64EncodedSignedMessages.map(toUint8Array);
+                            const signedMessages = base64EncodedSignedMessages.map(base64ToUint8Array);
                             return signedMessages;
                         } as KitMobileWallet[TMethodName];
                         break;
@@ -169,7 +168,7 @@ function augmentWalletAPI(wallet: MobileWallet): KitMobileWallet {
                                     ...rest,
                                     payloads,
                                 });
-                            const compiledTransactions = base64EncodedCompiledTransactions.map(toUint8Array);
+                            const compiledTransactions = base64EncodedCompiledTransactions.map(base64ToUint8Array);
                             const signedTransactions = compiledTransactions.map(getTransactionFromWireMessage);
                             return signedTransactions;
                         } as KitMobileWallet[TMethodName];
