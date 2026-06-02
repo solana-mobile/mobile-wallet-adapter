@@ -3,6 +3,7 @@ package com.solanamobile.mobilewalletadapter.reactnative
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import com.facebook.react.bridge.*
@@ -97,6 +98,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
             }
             try {
                 val uriPrefix = config?.getString("baseUri")?.let { Uri.parse(it) }
+                val packageName = config?.getString("packageName")
                 val localAssociation =
                     LocalAssociationScenario(
                         CLIENT_TIMEOUT_MS,
@@ -107,6 +109,7 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                         localAssociation.port,
                         localAssociation.session
                     )
+                packageName?.let { intent.setPackage(it) }
                 withContext(Dispatchers.Main) {
                     sessionTaskId = headlessJsTaskContext.startTask(sessionBackgroundTaskConfig)
                 }
@@ -221,6 +224,25 @@ class SolanaMobileWalletAdapterModule(reactContext: ReactApplicationContext) :
                 }
             }
         } ?: throw NullPointerException("Tried to end a session without an active session")
+    }
+
+    @ReactMethod
+    override fun getInstalledWallets(promise: Promise) {
+        try {
+            val queryIntent = Intent(Intent.ACTION_VIEW, Uri.parse("solana-wallet://"))
+            val pm = reactApplicationContext.packageManager
+            val resolveInfos = pm.queryIntentActivities(queryIntent, PackageManager.MATCH_ALL)
+            val result: WritableArray = WritableNativeArray()
+            for (info in resolveInfos) {
+                val map: WritableMap = WritableNativeMap()
+                map.putString("packageName", info.activityInfo.packageName)
+                map.putString("appName", info.loadLabel(pm).toString())
+                result.pushMap(map)
+            }
+            promise.resolve(result)
+        } catch (e: Throwable) {
+            promise.reject("ERROR_QUERY_WALLETS", e)
+        }
     }
 
     private fun cleanup() {
