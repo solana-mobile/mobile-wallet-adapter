@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import base58 from 'bs58';
+import { base58ToUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 
 import { Authorization, AuthorizationCache } from '../../wallet.js';
 
@@ -23,7 +23,7 @@ export default function createDefaultAuthorizationCache(): AuthorizationCache {
                             publicKey:
                                 'publicKey' in account
                                     ? new Uint8Array(Object.values(account.publicKey)) // Rebuild publicKey for WalletAccount
-                                    : base58.decode(account.address), // Fallback, get publicKey from address
+                                    : base58ToUint8Array(account.address), // Fallback, get publicKey from address
                         };
                     });
                     return { ...parsed, accounts: parsedAccounts };

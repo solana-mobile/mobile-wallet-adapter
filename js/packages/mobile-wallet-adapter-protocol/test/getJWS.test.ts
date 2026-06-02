@@ -33,13 +33,14 @@ describe('getJWS', () => {
         const message = `${headerEncoded}.${payloadEncoded}`;
 
         await expect(getJWS(PAYLOAD, PRIVATE_KEY)).resolves.toBe(`${message}.AQID`);
-        expect(mockSign).toHaveBeenCalledWith(
-            {
-                hash: 'SHA-256',
-                name: 'ECDSA',
-            },
-            PRIVATE_KEY,
-            new TextEncoder().encode(message),
-        );
+        expect(mockSign).toHaveBeenCalledTimes(1);
+
+        const [algorithm, key, messageBytes] = mockSign.mock.calls[0];
+        expect(algorithm).toEqual({
+            hash: 'SHA-256',
+            name: 'ECDSA',
+        });
+        expect(key).toBe(PRIVATE_KEY);
+        expect(Array.from(messageBytes as Uint8Array)).toEqual(Array.from(new TextEncoder().encode(message)));
     });
 });

@@ -1,4 +1,5 @@
 import createSequenceNumberVector, { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
+import { utf8FromUint8Array, utf8ToUint8Array } from './encoding.js';
 import { SharedSecret } from './parseHelloRsp.js';
 
 const INITIALIZATION_VECTOR_BYTES = 12;
@@ -11,7 +12,7 @@ export async function encryptMessage(plaintext: string, sequenceNumber: number, 
     const ciphertext = await crypto.subtle.encrypt(
         getAlgorithmParams(sequenceNumberVector, initializationVector),
         sharedSecret,
-        new TextEncoder().encode(plaintext),
+        utf8ToUint8Array(plaintext),
     );
     const response = new Uint8Array(
         sequenceNumberVector.byteLength + initializationVector.byteLength + ciphertext.byteLength,
@@ -34,7 +35,7 @@ export async function decryptMessage(message: ArrayBuffer, sharedSecret: SharedS
         sharedSecret,
         ciphertext,
     );
-    const plaintext = getUtf8Decoder().decode(plaintextBuffer);
+    const plaintext = utf8FromUint8Array(new Uint8Array(plaintextBuffer));
     return plaintext;
 }
 
@@ -45,12 +46,4 @@ function getAlgorithmParams(sequenceNumber: ArrayBuffer, initializationVector: A
         name: 'AES-GCM',
         tagLength: 128, // 16 byte tag => 128 bits
     };
-}
-
-let _utf8Decoder: TextDecoder | undefined;
-function getUtf8Decoder() {
-    if (_utf8Decoder === undefined) {
-        _utf8Decoder = new TextDecoder('utf-8');
-    }
-    return _utf8Decoder;
 }

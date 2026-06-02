@@ -12,9 +12,9 @@ import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import type { WalletAccount } from '@wallet-standard/base';
 import { StandardConnect, StandardDisconnect, StandardEvents } from '@wallet-standard/features';
-import base58 from 'bs58';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const { mockStartRemoteScenario, mockStartScenario } = vi.hoisted(() => ({
@@ -215,7 +215,7 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
             expect.objectContaining({
                 accounts: [
                     expect.objectContaining({
-                        address: base58.encode(accountPublicKey),
+                        address: base58FromUint8Array(accountPublicKey),
                         publicKey: accountPublicKey,
                     }),
                 ],
@@ -226,7 +226,7 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         );
         expect(connectResult.accounts).toEqual(wallet.accounts);
         expect(wallet.connected).toBe(true);
-        expect(wallet.accounts[0].address).toBe(base58.encode(accountPublicKey));
+        expect(wallet.accounts[0].address).toBe(base58FromUint8Array(accountPublicKey));
         expect(wallet.accounts[0].publicKey).toEqual(accountPublicKey);
         expect(changeListener).toHaveBeenCalledWith({ accounts: wallet.accounts });
         expect(loadingSpinnerInstances).toHaveLength(1);
@@ -394,7 +394,7 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         await expect(wallet.features[SolanaSignIn].signIn({ statement: 'Sign in' })).resolves.toEqual([
             {
                 account: expect.objectContaining({
-                    address: base58.encode(accountPublicKey),
+                    address: base58FromUint8Array(accountPublicKey),
                     publicKey: accountPublicKey,
                 }),
                 signature,
@@ -567,7 +567,7 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         await expect(wallet.features[SolanaSignIn].signIn({ domain: 'app.example' })).resolves.toEqual([
             {
                 account: {
-                    address: base58.encode(signedInPublicKey),
+                    address: base58FromUint8Array(signedInPublicKey),
                     chains: [SOLANA_MAINNET_CHAIN],
                     features: DEFAULT_CAPABILITIES.features,
                     publicKey: signedInPublicKey,
@@ -698,7 +698,7 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         await expect(wallet.features[StandardConnect].connect()).resolves.toEqual({
             accounts: [
                 expect.objectContaining({
-                    address: base58.encode(accountPublicKey),
+                    address: base58FromUint8Array(accountPublicKey),
                     publicKey: accountPublicKey,
                 }),
             ],
@@ -830,7 +830,7 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         ).resolves.toEqual([
             {
                 account: expect.objectContaining({
-                    address: base58.encode(accountPublicKey),
+                    address: base58FromUint8Array(accountPublicKey),
                     publicKey: accountPublicKey,
                 }),
                 signature,
@@ -1180,7 +1180,7 @@ function createCachedAuthorization(
 
 function createWalletAccount(publicKey: Uint8Array): WalletAccount {
     return {
-        address: base58.encode(publicKey),
+        address: base58FromUint8Array(publicKey),
         chains: [SOLANA_MAINNET_CHAIN],
         features: [SolanaSignAndSendTransaction, SolanaSignMessage, SolanaSignTransaction],
         icon: 'data:image/svg+xml;base64,icon',

@@ -11,6 +11,7 @@ const DTS_OPTIONS: DtsOptions = {
     sourcemap: true,
 };
 const NODE_ENV_DEFINE_VALUE = process.env.NODE_ENV === undefined ? 'undefined' : JSON.stringify(process.env.NODE_ENV);
+const OPTIONAL_ENTRY_NAMES = ['encoding'];
 
 const SOURCE_CANDIDATE_EXTENSIONS = ['.cts', '.mts', '.ts', '.tsx'];
 const SOURCE_INDEX_EXTENSIONS = SOURCE_CANDIDATE_EXTENSIONS.map((extension) => `index${extension}`);
@@ -55,6 +56,20 @@ function runtimeForkPlugin(runtime: Runtime): TsdownPlugin {
     };
 }
 
+function createEntry(entryName: string): Record<string, string> {
+    const entry: Record<string, string> = {
+        [entryName]: 'src/index.ts',
+    };
+    const runtimeSuffix = entryName.slice('index'.length);
+    OPTIONAL_ENTRY_NAMES.forEach((optionalEntryName) => {
+        const optionalEntryPath = `src/${optionalEntryName}.ts`;
+        if (existsSync(path.join(process.cwd(), optionalEntryPath))) {
+            entry[`${optionalEntryName}${runtimeSuffix}`] = optionalEntryPath;
+        }
+    });
+    return entry;
+}
+
 function createConfig({
     entryName,
     format,
@@ -79,9 +94,7 @@ function createConfig({
             skipNodeModulesBundle: true,
         },
         dts: false,
-        entry: {
-            [entryName]: 'src/index.ts',
-        },
+        entry: createEntry(entryName),
         format,
         hash: false,
         outDir,
@@ -89,6 +102,9 @@ function createConfig({
             dts: '.d.ts',
             js: '.js',
         }),
+        outputOptions: {
+            chunkFileNames: 'chunks/[name].js',
+        },
         platform: format === 'esm' ? (runtime === 'browser' ? 'browser' : 'node') : undefined,
         plugins: [runtimeForkPlugin(runtime)],
         sourcemap: true,
@@ -101,9 +117,7 @@ function createDtsConfig(): UserConfig {
         clean: false,
         cwd: process.cwd(),
         dts: DTS_OPTIONS,
-        entry: {
-            index: 'src/index.ts',
-        },
+        entry: createEntry('index'),
         format: 'esm',
         hash: false,
         outDir: 'lib/types',

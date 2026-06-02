@@ -21,9 +21,11 @@ import {
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import bs58 from 'bs58';
-
-import { fromUint8Array, toUint8Array } from './base64Utils.js';
+import {
+    base58FromUint8Array,
+    base64FromUint8Array,
+    base64ToUint8Array,
+} from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 
 interface Web3SignAndSendTransactionsAPI {
     signAndSendTransactions<T extends LegacyTransaction | VersionedTransaction>(params: {
@@ -75,7 +77,7 @@ function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTra
                   requireAllSignatures: false,
                   verifySignatures: false,
               });
-    const payload = fromUint8Array(serializedTransaction);
+    const payload = base64FromUint8Array(serializedTransaction);
     return payload;
 }
 
@@ -138,7 +140,9 @@ function augmentWalletAPI(wallet: MobileWallet): Web3MobileWallet {
                                     : null),
                                 payloads,
                             });
-                            const signatures = base64EncodedSignatures.map(toUint8Array).map(bs58.encode);
+                            const signatures = base64EncodedSignatures
+                                .map(base64ToUint8Array)
+                                .map(base58FromUint8Array);
                             return signatures as TransactionSignature[];
                         } as Web3MobileWallet[TMethodName];
                         break;
@@ -147,12 +151,12 @@ function augmentWalletAPI(wallet: MobileWallet): Web3MobileWallet {
                             payloads,
                             ...rest
                         }: Parameters<Web3MobileWallet['signMessages']>[0]) {
-                            const base64EncodedPayloads = payloads.map(fromUint8Array);
+                            const base64EncodedPayloads = payloads.map(base64FromUint8Array);
                             const { signed_payloads: base64EncodedSignedMessages } = await wallet.signMessages({
                                 ...rest,
                                 payloads: base64EncodedPayloads,
                             });
-                            const signedMessages = base64EncodedSignedMessages.map(toUint8Array);
+                            const signedMessages = base64EncodedSignedMessages.map(base64ToUint8Array);
                             return signedMessages;
                         } as Web3MobileWallet[TMethodName];
                         break;
@@ -167,7 +171,7 @@ function augmentWalletAPI(wallet: MobileWallet): Web3MobileWallet {
                                     ...rest,
                                     payloads,
                                 });
-                            const compiledTransactions = base64EncodedCompiledTransactions.map(toUint8Array);
+                            const compiledTransactions = base64EncodedCompiledTransactions.map(base64ToUint8Array);
                             const signedTransactions = compiledTransactions.map(getTransactionFromWireMessage);
                             return signedTransactions;
                         } as Web3MobileWallet[TMethodName];

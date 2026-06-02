@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { Transaction as LegacyTransaction, VersionedTransaction } from '@solana/web3.js';
-import bs58 from 'bs58';
+import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const { mockBaseStartRemoteScenario, mockBaseTransact } = vi.hoisted(() => ({
@@ -104,7 +104,10 @@ describe('transact', () => {
                     waitForCommitmentToSendNextTransaction: false,
                 }),
             ),
-        ).resolves.toEqual([bs58.encode(new Uint8Array([4, 5, 6])), bs58.encode(new Uint8Array([7, 8, 9]))]);
+        ).resolves.toEqual([
+            base58FromUint8Array(new Uint8Array([4, 5, 6])),
+            base58FromUint8Array(new Uint8Array([7, 8, 9])),
+        ]);
 
         expect(legacyTransaction.serialize).toHaveBeenCalledWith({
             requireAllSignatures: false,
