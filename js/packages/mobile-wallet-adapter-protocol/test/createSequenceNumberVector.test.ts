@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import createSequenceNumberVector from '../src/createSequenceNumberVector.js';
+import { createSequenceNumberVector } from '../src/createSequenceNumberVector.js';
 
 describe('createSequenceNumberVector', () => {
     it('encodes a sequence number in big-endian byte order', () => {

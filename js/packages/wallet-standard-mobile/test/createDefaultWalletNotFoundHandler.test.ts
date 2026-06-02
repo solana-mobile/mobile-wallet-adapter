@@ -37,7 +37,8 @@ vi.mock('../src/wallet.js', () => ({
     SolanaMobileWalletAdapterWallet: class SolanaMobileWalletAdapterWallet {},
 }));
 
-import createDefaultWalletNotFoundHandler, {
+import {
+    createDefaultWalletNotFoundHandler,
     defaultErrorModalWalletNotFoundHandler,
 } from '../src/createDefaultWalletNotFoundHandler.js';
 

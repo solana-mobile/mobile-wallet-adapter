@@ -2,6 +2,11 @@ import { createDefaultAuthorizationCache as baseCreateDefaultAuthorizationCache 
 
 import { AuthorizationResultCache } from './adapter.js';
 
-export default function createDefaultAuthorizationResultCache(): AuthorizationResultCache {
+export function createDefaultAuthorizationResultCache(): AuthorizationResultCache {
     return baseCreateDefaultAuthorizationCache();
 }
+
+/**
+ * @deprecated Use {@link createDefaultAuthorizationResultCache} instead.
+ */
+export default createDefaultAuthorizationResultCache;

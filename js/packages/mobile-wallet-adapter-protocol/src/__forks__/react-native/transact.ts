@@ -1,7 +1,7 @@
 import { AppRegistry, Platform } from 'react-native';
 
 import NativeSolanaMobileWalletAdapter from '../../codegenSpec/NativeSolanaMobileWalletAdapter.js';
-import createMobileWalletProxy from '../../createMobileWalletProxy.js';
+import { createMobileWalletProxy } from '../../createMobileWalletProxy.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterProtocolError } from '../../errors.js';
 import { MobileWallet, SessionProperties, WalletAssociationConfig } from '../../types.js';
 

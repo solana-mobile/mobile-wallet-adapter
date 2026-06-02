@@ -213,7 +213,7 @@ async function importReactNativeTransact({
         default: nativeModule,
     }));
     vi.doMock('../src/createMobileWalletProxy.js', () => ({
-        default: mockCreateMobileWalletProxy,
+        createMobileWalletProxy: mockCreateMobileWalletProxy,
     }));
 
     const module = await import('../src/__forks__/react-native/transact.js');

@@ -1,6 +1,6 @@
 import { fromUint8Array, toUint8Array } from './base64Utils.js';
 import createHelloReq from './createHelloReq.js';
-import createMobileWalletProxy from './createMobileWalletProxy.js';
+import { createMobileWalletProxy } from './createMobileWalletProxy.js';
 import { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
 import { ENCODED_PUBLIC_KEY_LENGTH_BYTES } from './encryptedMessage.js';
 import {

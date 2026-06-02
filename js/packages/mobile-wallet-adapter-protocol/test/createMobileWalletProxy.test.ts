@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { fromUint8Array } from '../src/base64Utils.js';
-import createMobileWalletProxy from '../src/createMobileWalletProxy.js';
+import { createMobileWalletProxy } from '../src/createMobileWalletProxy.js';
 import { SolanaCloneAuthorization, SolanaSignTransactions } from '../src/types.js';
 
 const APP_IDENTITY = {
