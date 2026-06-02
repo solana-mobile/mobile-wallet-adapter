@@ -1,33 +1,26 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
   BackHandler,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import {
-  MobileWalletAdapterConfig,
   AuthorizeDappRequest,
   SignMessagesRequest,
   SignTransactionsRequest,
   SignAndSendTransactionsRequest,
-  useMobileWalletAdapterSession,
   MWARequestType,
-  MWARequest,
-  MWASessionEvent,
-  MWASessionEventType,
   resolve,
-  MWAResponse,
   AuthorizeDappResponse,
   MWARequestFailReason,
   SignAndSendTransactionsResponse,
   SignTransactionsResponse,
   SignMessagesResponse,
   UserDeclinedResponse,
-  AuthorizationNotValid,
+  AuthorizationNotValidResponse,
   InvalidSignaturesResponse,
   TooManyPayloadsResponse,
 } from '@solana-mobile/mobile-wallet-adapter-walletlib';
@@ -37,44 +30,52 @@ import {Keypair} from '@solana/web3.js';
 
 interface SendResponseButtonProps {
   title: string;
-  request: MWARequest;
-  response: MWAResponse;
 }
 
-const SendResponseButton = ({
-  title,
-  request,
-  response,
-}: SendResponseButtonProps) => {
-  let typedRequest;
-  let typedResponse;
-  switch (request.__type) {
-    case MWARequestType.AuthorizeDappRequest:
-      typedRequest = request as AuthorizeDappRequest;
-      typedResponse = response as AuthorizeDappResponse;
-      break;
-    case MWARequestType.SignMessagesRequest:
-      typedRequest = request as SignMessagesRequest;
-      typedResponse = response as SignMessagesResponse;
-      break;
-    case MWARequestType.SignTransactionsRequest:
-      typedRequest = request as SignTransactionsRequest;
-      typedResponse = response as SignTransactionsResponse;
-      break;
-    case MWARequestType.SignAndSendTransactionsRequest:
-      typedRequest = request as SignAndSendTransactionsRequest;
-      typedResponse = response as SignAndSendTransactionsResponse;
-      break;
-    default:
-      console.warn('Unsupported request type');
-      return null;
-  }
+type SendResponseButtonTypedProps =
+  | Readonly<{
+      requestType: MWARequestType.AuthorizeDappRequest;
+      request: AuthorizeDappRequest;
+      response: AuthorizeDappResponse;
+    }>
+  | Readonly<{
+      requestType: MWARequestType.SignAndSendTransactionsRequest;
+      request: SignAndSendTransactionsRequest;
+      response: SignAndSendTransactionsResponse;
+    }>
+  | Readonly<{
+      requestType: MWARequestType.SignMessagesRequest;
+      request: SignMessagesRequest;
+      response: SignMessagesResponse;
+    }>
+  | Readonly<{
+      requestType: MWARequestType.SignTransactionsRequest;
+      request: SignTransactionsRequest;
+      response: SignTransactionsResponse;
+    }>;
 
+const SendResponseButton = (
+  props: SendResponseButtonProps & SendResponseButtonTypedProps,
+) => {
+  const {title} = props;
   return (
     <TouchableOpacity
       style={styles.button}
       onPress={async () => {
-        await resolve(typedRequest, typedResponse);
+        switch (props.requestType) {
+          case MWARequestType.AuthorizeDappRequest:
+            await resolve(props.request, props.response);
+            break;
+          case MWARequestType.SignAndSendTransactionsRequest:
+            await resolve(props.request, props.response);
+            break;
+          case MWARequestType.SignMessagesRequest:
+            await resolve(props.request, props.response);
+            break;
+          case MWARequestType.SignTransactionsRequest:
+            await resolve(props.request, props.response);
+            break;
+        }
       }}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
@@ -92,47 +93,53 @@ export default function TestingEntrypointBottomSheet() {
   }, []);
 
   const genericRequest = {
+    authorizationScope: new Uint8Array([1, 2, 3, 4]),
+    chain: 'solana:devnet',
+    cluster: 'devnet',
     requestId: 'reqid',
     sessionId: 'sessionid',
-    cluster: 'devnet',
-    authorizationScope: new Uint8Array([1, 2, 3, 4]),
   };
 
-  const authorizeDappResponse = {
-    publicKey: Keypair.generate().publicKey.toBytes(),
-    label: 'Wallet Label',
-  } as AuthorizeDappResponse;
+  const authorizeDappResponse: AuthorizeDappResponse = {
+    accounts: [
+      {
+        accountLabel: 'Wallet Label',
+        chains: ['solana:devnet'],
+        publicKey: Keypair.generate().publicKey.toBytes(),
+      },
+    ],
+  };
 
-  const signPayloadsResponse = {
+  const signPayloadsResponse: SignMessagesResponse = {
     signedPayloads: [
       new Uint8Array([1, 2, 3]),
       new Uint8Array([1, 2, 3, 4, 5]),
     ],
   };
 
-  const signAndSendTransactionsResponse = {
+  const signAndSendTransactionsResponse: SignAndSendTransactionsResponse = {
     signedTransactions: [
       new Uint8Array([1, 2, 3]),
       new Uint8Array([1, 2, 3, 4, 5]),
     ],
   };
 
-  const userDeclinedResponse = {
+  const userDeclinedResponse: UserDeclinedResponse = {
     failReason: MWARequestFailReason.UserDeclined,
-  } as UserDeclinedResponse;
+  };
 
-  const authorizationNotValidResponse = {
+  const authorizationNotValidResponse: AuthorizationNotValidResponse = {
     failReason: MWARequestFailReason.AuthorizationNotValid,
-  } as AuthorizationNotValidResponse;
+  };
 
-  const invalidSignaturesResponse = {
+  const invalidSignaturesResponse: InvalidSignaturesResponse = {
     failReason: MWARequestFailReason.InvalidSignatures,
     valid: [false, true],
-  } as InvalidSignaturesResponse;
+  };
 
-  const tooManyPayloadsResponse = {
+  const tooManyPayloadsResponse: TooManyPayloadsResponse = {
     failReason: MWARequestFailReason.TooManyPayloads,
-  } as TooManyPayloadsResponse;
+  };
 
   return (
     <Modal
@@ -144,15 +151,15 @@ export default function TestingEntrypointBottomSheet() {
       <WalletProvider>
         <View style={styles.bottomSheet}>
           <SendResponseButton
-            title="Authorize Dapp"
             request={{
               ...genericRequest,
               __type: MWARequestType.AuthorizeDappRequest,
             }}
+            requestType={MWARequestType.AuthorizeDappRequest}
             response={authorizeDappResponse}
+            title="Authorize Dapp"
           />
           <SendResponseButton
-            title="Sign Transaction"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignTransactionsRequest,
@@ -161,10 +168,11 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignTransactionsRequest}
             response={signPayloadsResponse}
+            title="Sign Transaction"
           />
           <SendResponseButton
-            title="Sign Transaction"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignMessagesRequest,
@@ -173,10 +181,11 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignMessagesRequest}
             response={signPayloadsResponse}
+            title="Sign Transaction"
           />
           <SendResponseButton
-            title="Sign And Send Transaction"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignAndSendTransactionsRequest,
@@ -185,13 +194,14 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignAndSendTransactionsRequest}
             response={signAndSendTransactionsResponse}
+            title="Sign And Send Transaction"
           />
 
           <Text> Fail Responses </Text>
 
           <SendResponseButton
-            title="User Declined Sign And Send"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignAndSendTransactionsRequest,
@@ -200,11 +210,12 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignAndSendTransactionsRequest}
             response={userDeclinedResponse}
+            title="User Declined Sign And Send"
           />
 
           <SendResponseButton
-            title="Too many payloads"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignAndSendTransactionsRequest,
@@ -213,11 +224,12 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignAndSendTransactionsRequest}
             response={tooManyPayloadsResponse}
+            title="Too many payloads"
           />
 
           <SendResponseButton
-            title="Invalid Signatures"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignAndSendTransactionsRequest,
@@ -226,11 +238,12 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignAndSendTransactionsRequest}
             response={invalidSignaturesResponse}
+            title="Invalid Signatures"
           />
 
           <SendResponseButton
-            title="Auth not valid"
             request={{
               ...genericRequest,
               __type: MWARequestType.SignAndSendTransactionsRequest,
@@ -239,7 +252,9 @@ export default function TestingEntrypointBottomSheet() {
                 new Uint8Array([1, 2, 3, 4, 5]),
               ],
             }}
+            requestType={MWARequestType.SignAndSendTransactionsRequest}
             response={authorizationNotValidResponse}
+            title="Auth not valid"
           />
         </View>
       </WalletProvider>

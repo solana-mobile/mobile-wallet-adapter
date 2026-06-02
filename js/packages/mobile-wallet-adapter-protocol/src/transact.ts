@@ -63,7 +63,7 @@ type State =
     | { __type: 'hello_req_sent'; associationPublicKey: CryptoKey; ecdhPrivateKey: CryptoKey }
     | { __type: 'disconnected' };
 
-type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: ArrayBuffer };
+type RemoteState = State | { __type: 'reflector_id_received'; reflectorId: Uint8Array };
 
 type NostrState =
     | State
@@ -416,7 +416,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
         if (encoding == 'base64') {
             // base64 encoding
             const message = (await evt.data) as string;
-            return toUint8Array(message).buffer;
+            return toUint8Array(message).buffer as ArrayBuffer;
         } else {
             return await (evt.data as Blob).arrayBuffer();
         }
