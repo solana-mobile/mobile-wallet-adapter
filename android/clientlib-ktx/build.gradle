@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.solana.mobilewalletadapter.clientlib"
+    namespace = "com.solana.mobilewalletadapter.clientlib.ktx"
 
     compileSdk = 36
 

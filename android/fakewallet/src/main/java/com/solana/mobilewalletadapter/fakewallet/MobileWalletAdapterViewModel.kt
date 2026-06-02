@@ -96,7 +96,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 MobileWalletAdapterConfig(
                     10,
                     10,
-                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    arrayOf<Any>(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
                     LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
                     arrayOf(
                         ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS,
