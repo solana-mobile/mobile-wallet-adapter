@@ -5,7 +5,7 @@
 [![Sample App: clientlib-ktx](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/example-ktx.yml/badge.svg)](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/example-ktx.yml)
 [![Specification CI](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/spec.yml/badge.svg)](https://github.com/solana-mobile/mobile-wallet-adapter/actions/workflows/spec.yml)
 
-_Part of the [Solana Mobile Stack](https://github.com/solana-mobile/solana-mobile-stack-sdk)_
+_Part of the [Solana Mobile Stack](https://docs.solanamobile.com/solana-mobile-stack/)_
 
 Join us on [Discord](https://discord.gg/solanamobile)
 

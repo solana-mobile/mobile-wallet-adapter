@@ -13,7 +13,7 @@ export default async function getJWS(payload: string, privateKey: CryptoKey) {
             hash: 'SHA-256',
         },
         privateKey,
-        utf8ToUint8Array(message),
+        utf8ToUint8Array(message) as BufferSource,
     );
     const signature = arrayBufferToBase64String(signatureBuffer);
     const jws = `${message}.${signature}`;
