@@ -863,7 +863,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                             if (event.pubkey !== state.walletNostrPubkey) return;
                             if (event.content === '') return;
 
-                            const responseBuffer = toUint8Array(event.content).buffer;
+                            const responseBuffer = toUint8Array(event.content).buffer as ArrayBuffer;
                             const sharedSecret = await parseHelloRsp(
                                 responseBuffer,
                                 state.associationPublicKey,
@@ -946,7 +946,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                             if (event.pubkey !== state.walletNostrPubkey) return;
                             if (event.content === '') return;
                             try {
-                                const responseBuffer = toUint8Array(event.content).buffer;
+                                const responseBuffer = toUint8Array(event.content).buffer as ArrayBuffer;
                                 const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                                 const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
                                 if (sequenceNumber !== lastKnownInboundSequenceNumber + 1) {
