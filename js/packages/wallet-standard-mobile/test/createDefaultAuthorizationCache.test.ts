@@ -4,7 +4,7 @@ import { SOLANA_MAINNET_CHAIN } from '@solana/wallet-standard-chains';
 import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import createDefaultAuthorizationCache from '../src/createDefaultAuthorizationCache.js';
+import { createDefaultAuthorizationCache } from '../src/createDefaultAuthorizationCache.js';
 import type { Authorization } from '../src/wallet.js';
 
 const AUTHORIZATION_CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';

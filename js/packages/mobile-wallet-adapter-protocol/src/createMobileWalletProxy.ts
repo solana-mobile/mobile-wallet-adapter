@@ -21,7 +21,7 @@ import {
  * @param protocolRequestHandler callback function that handles sending the RPC request to the wallet endpoint.
  * @returns a {@link MobileWallet} proxy
  */
-export default function createMobileWalletProxy<
+export function createMobileWalletProxy<
     TMethodName extends keyof MobileWallet,
     TReturn extends Awaited<ReturnType<MobileWallet[TMethodName]>>,
 >(
@@ -66,6 +66,11 @@ export default function createMobileWalletProxy<
         },
     });
 }
+
+/**
+ * @deprecated Use {@link createMobileWalletProxy} instead.
+ */
+export default createMobileWalletProxy;
 
 /**
  * Handles all {@link MobileWallet} API requests and determines the correct MWA RPC method and params to call.

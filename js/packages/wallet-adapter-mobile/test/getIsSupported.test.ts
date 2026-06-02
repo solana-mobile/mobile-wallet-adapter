@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import getIsSupported from '../src/getIsSupported.js';
+import { getIsSupported } from '../src/getIsSupported.js';
 
 const ANDROID_BROWSER_USER_AGENT =
     'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Mobile Safari/537.36';

@@ -1,5 +1,10 @@
 import { Platform } from 'react-native';
 
-export default function getIsSupported() {
+export function getIsSupported() {
     return Platform.OS === 'android';
 }
+
+/**
+ * @deprecated Use {@link getIsSupported} instead.
+ */
+export default getIsSupported;

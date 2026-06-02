@@ -1,4 +1,4 @@
-import createSequenceNumberVector, { SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
+import { createSequenceNumberVector, SEQUENCE_NUMBER_BYTES } from './createSequenceNumberVector.js';
 import { utf8FromUint8Array, utf8ToUint8Array } from './encoding.js';
 import { SharedSecret } from './parseHelloRsp.js';
 

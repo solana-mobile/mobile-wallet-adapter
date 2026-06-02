@@ -25,7 +25,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
     default: asyncStorage,
 }));
 
-import createDefaultAuthorizationResultCache from '../src/__forks__/react-native/createDefaultAuthorizationResultCache.js';
+import { createDefaultAuthorizationResultCache } from '../src/__forks__/react-native/createDefaultAuthorizationResultCache.js';
 
 beforeEach(() => {
     resetAsyncStorage();

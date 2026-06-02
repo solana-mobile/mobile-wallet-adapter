@@ -4,7 +4,7 @@ import { Authorization, AuthorizationCache } from './wallet.js';
 
 const CACHE_KEY = 'SolanaMobileWalletAdapterDefaultAuthorizationCache';
 
-export default function createDefaultAuthorizationCache(): AuthorizationCache {
+export function createDefaultAuthorizationCache(): AuthorizationCache {
     let storage: Storage | null | undefined;
     try {
         storage = window.localStorage;
@@ -52,3 +52,8 @@ export default function createDefaultAuthorizationCache(): AuthorizationCache {
         },
     };
 }
+
+/**
+ * @deprecated Use {@link createDefaultAuthorizationCache} instead.
+ */
+export default createDefaultAuthorizationCache;
