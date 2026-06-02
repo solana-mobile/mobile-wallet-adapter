@@ -57,9 +57,7 @@
         "@solana/web3.js": "^1.98.4"
     },
     "dependencies": {
-        "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
-        "bs58": "^6.0.0",
-        "js-base64": "^3.7.5"
+        "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.98.4",

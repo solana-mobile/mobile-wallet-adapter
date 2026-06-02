@@ -40,6 +40,7 @@ import {
     Finality,
     SignInPayload,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import {
     Authorization,
     createDefaultChainSelector,
@@ -57,7 +58,6 @@ import {
     WalletAccount,
 } from '@wallet-standard/core';
 
-import { fromUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
 
 export interface AuthorizationResultCache {
@@ -141,11 +141,11 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
         // this.#chain = chainOrClusterToChainId(config.chain);
         this.#accountSelector = async (accounts: readonly WalletAccount[]) => {
             const selectedBase64EncodedAddress = await config.addressSelector.select(
-                accounts.map(({ publicKey }) => fromUint8Array(new Uint8Array(publicKey))),
+                accounts.map(({ publicKey }) => base64FromUint8Array(new Uint8Array(publicKey))),
             );
             return (
                 accounts.find(
-                    ({ publicKey }) => fromUint8Array(new Uint8Array(publicKey)) === selectedBase64EncodedAddress,
+                    ({ publicKey }) => base64FromUint8Array(new Uint8Array(publicKey)) === selectedBase64EncodedAddress,
                 ) ?? accounts[0]
             );
         };
@@ -351,7 +351,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                                 : undefined,
                         })
                     ).map((output) => {
-                        return fromUint8Array(output.signature);
+                        return base64FromUint8Array(output.signature);
                     });
 
                     return signature;

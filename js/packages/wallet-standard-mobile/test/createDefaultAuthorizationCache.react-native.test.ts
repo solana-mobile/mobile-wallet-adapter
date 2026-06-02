@@ -1,5 +1,5 @@
 import { SOLANA_MAINNET_CHAIN } from '@solana/wallet-standard-chains';
-import base58 from 'bs58';
+import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Authorization } from '../src/wallet.js';
@@ -78,7 +78,7 @@ describe('react-native createDefaultAuthorizationCache fork', () => {
             JSON.stringify({
                 accounts: [
                     {
-                        address: base58.encode(publicKey),
+                        address: base58FromUint8Array(publicKey),
                         chains: [SOLANA_MAINNET_CHAIN],
                         features: [],
                         icon: 'data:image/svg+xml;base64,icon',
@@ -135,7 +135,7 @@ function createAuthorization(publicKey: Uint8Array): Authorization {
     return {
         accounts: [
             {
-                address: base58.encode(publicKey),
+                address: base58FromUint8Array(publicKey),
                 chains: [SOLANA_MAINNET_CHAIN],
                 features: [],
                 icon: 'data:image/svg+xml;base64,icon',

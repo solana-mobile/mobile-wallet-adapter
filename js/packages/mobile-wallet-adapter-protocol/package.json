@@ -9,27 +9,51 @@
     },
     "license": "Apache-2.0",
     "exports": {
-        "edge-light": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
+        ".": {
+            "edge-light": {
+                "import": "./lib/esm/index.js",
+                "require": "./lib/cjs/index.js"
+            },
+            "workerd": {
+                "import": "./lib/esm/index.js",
+                "require": "./lib/cjs/index.js"
+            },
+            "browser": {
+                "import": "./lib/esm/index.browser.js",
+                "require": "./lib/cjs/index.browser.js"
+            },
+            "node": {
+                "import": "./lib/esm/index.js",
+                "require": "./lib/cjs/index.js"
+            },
+            "react-native": "./lib/cjs/index.native.js",
+            "types": "./lib/types/index.d.ts"
         },
-        "workerd": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
-        },
-        "browser": {
-            "import": "./lib/esm/index.browser.js",
-            "require": "./lib/cjs/index.browser.js"
-        },
-        "node": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
-        },
-        "react-native": "./lib/cjs/index.native.js",
-        "types": "./lib/types/index.d.ts"
+        "./encoding": {
+            "edge-light": {
+                "import": "./lib/esm/encoding.js",
+                "require": "./lib/cjs/encoding.js"
+            },
+            "workerd": {
+                "import": "./lib/esm/encoding.js",
+                "require": "./lib/cjs/encoding.js"
+            },
+            "browser": {
+                "import": "./lib/esm/encoding.browser.js",
+                "require": "./lib/cjs/encoding.browser.js"
+            },
+            "node": {
+                "import": "./lib/esm/encoding.js",
+                "require": "./lib/cjs/encoding.js"
+            },
+            "react-native": "./lib/cjs/encoding.native.js",
+            "types": "./lib/types/encoding.d.ts"
+        }
     },
     "browser": {
+        "./lib/cjs/encoding.js": "./lib/cjs/encoding.browser.js",
         "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
+        "./lib/esm/encoding.js": "./lib/esm/encoding.browser.js",
         "./lib/esm/index.js": "./lib/esm/index.browser.js"
     },
     "main": "lib/cjs/index.js",
@@ -59,11 +83,10 @@
     "dependencies": {
         "@noble/curves": "^2.2.0",
         "@noble/hashes": "^2.2.0",
-        "@solana/codecs-strings": "^6.0.0",
+        "@solana/kit": "^6.0.0",
         "@solana/wallet-standard-features": "^1.3.0",
         "@solana/wallet-standard-util": "^1.1.2",
-        "@wallet-standard/core": "^1.1.1",
-        "js-base64": "^3.7.5"
+        "@wallet-standard/core": "^1.1.1"
     },
     "devDependencies": {
         "@solana/web3.js": "^1.98.4",

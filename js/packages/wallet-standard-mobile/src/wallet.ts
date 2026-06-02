@@ -31,6 +31,11 @@ import {
     startRemoteScenario,
     startScenario,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import {
+    base58FromUint8Array,
+    base64FromUint8Array,
+    base64ToUint8Array,
+} from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import type { IdentifierArray, IdentifierString, Wallet, WalletAccount } from '@wallet-standard/base';
 import {
     StandardConnect,
@@ -45,9 +50,7 @@ import {
     type StandardEventsNames,
     type StandardEventsOnMethod,
 } from '@wallet-standard/features';
-import base58 from 'bs58';
 
-import { fromUint8Array, toUint8Array } from './base64Utils.js';
 import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import { checkLocalNetworkAccessPermission, isLocalWebSocketAvailable } from './getIsSupported.js';
@@ -466,9 +469,9 @@ export class LocalSolanaMobileWalletAdapterWallet
 
     #accountsToWalletStandardAccounts = (accounts: Account[]) => {
         return accounts.map((account) => {
-            const publicKey = toUint8Array(account.address);
+            const publicKey = base64ToUint8Array(account.address);
             return {
-                address: base58.encode(publicKey),
+                address: base58FromUint8Array(publicKey),
                 publicKey,
                 label: account.label,
                 icon: account.icon,
@@ -483,7 +486,7 @@ export class LocalSolanaMobileWalletAdapterWallet
         const { authToken, chain } = this.#assertIsAuthorized();
         try {
             const base64Transactions = transactions.map((tx) => {
-                return fromUint8Array(tx);
+                return base64FromUint8Array(tx);
             });
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
@@ -491,7 +494,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                     await wallet.signTransactions({
                         payloads: base64Transactions,
                     })
-                ).signed_payloads.map(toUint8Array);
+                ).signed_payloads.map(base64ToUint8Array);
                 return signedTransactions;
             });
         } catch (e) {
@@ -511,13 +514,13 @@ export class LocalSolanaMobileWalletAdapterWallet
                     this.#performReauthorization(wallet, authToken, chain),
                 ]);
                 if (capabilities.supports_sign_and_send_transactions) {
-                    const base64Transaction = fromUint8Array(transaction);
+                    const base64Transaction = base64FromUint8Array(transaction);
                     const signatures = (
                         await wallet.signAndSendTransactions({
                             ...options,
                             payloads: [base64Transaction],
                         })
-                    ).signatures.map(toUint8Array);
+                    ).signatures.map(base64ToUint8Array);
                     return signatures[0];
                 } else {
                     throw new Error('connected wallet does not support signAndSendTransaction');
@@ -549,8 +552,8 @@ export class LocalSolanaMobileWalletAdapterWallet
 
     #signMessage: SolanaSignMessageMethod = async (...inputs) => {
         const { authToken, chain } = this.#assertIsAuthorized();
-        const addresses = inputs.map(({ account }) => fromUint8Array(new Uint8Array(account.publicKey)));
-        const messages = inputs.map(({ message }) => fromUint8Array(message));
+        const addresses = inputs.map(({ account }) => base64FromUint8Array(new Uint8Array(account.publicKey)));
+        const messages = inputs.map(({ message }) => base64FromUint8Array(message));
         try {
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
@@ -559,7 +562,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                         addresses: addresses,
                         payloads: messages,
                     })
-                ).signed_payloads.map(toUint8Array);
+                ).signed_payloads.map(base64ToUint8Array);
                 return signedMessages.map((signedMessage) => {
                     return { signedMessage: signedMessage, signature: signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES) };
                 });
@@ -598,14 +601,14 @@ export class LocalSolanaMobileWalletAdapterWallet
             return {
                 account: {
                     ...(signedInAccount ?? {
-                        address: base58.encode(toUint8Array(signedInAddress)),
+                        address: base58FromUint8Array(base64ToUint8Array(signedInAddress)),
                     }),
-                    publicKey: toUint8Array(signedInAddress),
+                    publicKey: base64ToUint8Array(signedInAddress),
                     chains: signedInAccount?.chains ?? this.#chains,
                     features: signedInAccount?.features ?? authorizationResult.capabilities.features,
                 },
-                signedMessage: toUint8Array(authorizationResult.sign_in_result.signed_message),
-                signature: toUint8Array(authorizationResult.sign_in_result.signature),
+                signedMessage: base64ToUint8Array(authorizationResult.sign_in_result.signed_message),
+                signature: base64ToUint8Array(authorizationResult.sign_in_result.signature),
             };
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
@@ -982,9 +985,9 @@ export class RemoteSolanaMobileWalletAdapterWallet
 
     #accountsToWalletStandardAccounts = (accounts: Account[]) => {
         return accounts.map((account) => {
-            const publicKey = toUint8Array(account.address);
+            const publicKey = base64ToUint8Array(account.address);
             return {
-                address: base58.encode(publicKey),
+                address: base58FromUint8Array(publicKey),
                 publicKey,
                 label: account.label,
                 icon: account.icon,
@@ -1002,9 +1005,9 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 await this.#performReauthorization(wallet, authToken, chain);
                 const signedTransactions = (
                     await wallet.signTransactions({
-                        payloads: transactions.map(fromUint8Array),
+                        payloads: transactions.map(base64FromUint8Array),
                     })
-                ).signed_payloads.map(toUint8Array);
+                ).signed_payloads.map(base64ToUint8Array);
                 return signedTransactions;
             });
         } catch (e) {
@@ -1027,9 +1030,9 @@ export class RemoteSolanaMobileWalletAdapterWallet
                     const signatures = (
                         await wallet.signAndSendTransactions({
                             ...options,
-                            payloads: [fromUint8Array(transaction)],
+                            payloads: [base64FromUint8Array(transaction)],
                         })
-                    ).signatures.map(toUint8Array);
+                    ).signatures.map(base64ToUint8Array);
                     return signatures[0];
                 } else {
                     throw new Error('connected wallet does not support signAndSendTransaction');
@@ -1060,8 +1063,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
 
     #signMessage: SolanaSignMessageMethod = async (...inputs) => {
         const { authToken, chain } = this.#assertIsAuthorized();
-        const addresses = inputs.map(({ account }) => fromUint8Array(new Uint8Array(account.publicKey)));
-        const messages = inputs.map(({ message }) => fromUint8Array(message));
+        const addresses = inputs.map(({ account }) => base64FromUint8Array(new Uint8Array(account.publicKey)));
+        const messages = inputs.map(({ message }) => base64FromUint8Array(message));
         try {
             return await this.#transact(async (wallet) => {
                 await this.#performReauthorization(wallet, authToken, chain);
@@ -1070,7 +1073,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                         addresses: addresses,
                         payloads: messages,
                     })
-                ).signed_payloads.map(toUint8Array);
+                ).signed_payloads.map(base64ToUint8Array);
                 return signedMessages.map((signedMessage) => {
                     return { signedMessage: signedMessage, signature: signedMessage.slice(-SIGNATURE_LENGTH_IN_BYTES) };
                 });
@@ -1109,14 +1112,14 @@ export class RemoteSolanaMobileWalletAdapterWallet
             return {
                 account: {
                     ...(signedInAccount ?? {
-                        address: base58.encode(toUint8Array(signedInAddress)),
+                        address: base58FromUint8Array(base64ToUint8Array(signedInAddress)),
                     }),
-                    publicKey: toUint8Array(signedInAddress),
+                    publicKey: base64ToUint8Array(signedInAddress),
                     chains: signedInAccount?.chains ?? this.#chains,
                     features: signedInAccount?.features ?? authorizationResult.capabilities.features,
                 },
-                signedMessage: toUint8Array(authorizationResult.sign_in_result.signed_message),
-                signature: toUint8Array(authorizationResult.sign_in_result.signature),
+                signedMessage: base64ToUint8Array(authorizationResult.sign_in_result.signed_message),
+                signature: base64ToUint8Array(authorizationResult.sign_in_result.signature),
             };
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
