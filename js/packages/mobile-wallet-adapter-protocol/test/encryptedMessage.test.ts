@@ -44,6 +44,7 @@ describe('encryptedMessage', () => {
         const message = Uint8Array.of(...SEQUENCE_NUMBER_VECTOR, ...INITIALIZATION_VECTOR, ...CIPHERTEXT).buffer;
 
         await expect(decryptMessage(message, SHARED_SECRET)).resolves.toBe(PLAINTEXT);
+        await expect(decryptMessage(message, SHARED_SECRET)).resolves.toBe(PLAINTEXT);
 
         expect(mockDecrypt).toHaveBeenCalledWith(
             {

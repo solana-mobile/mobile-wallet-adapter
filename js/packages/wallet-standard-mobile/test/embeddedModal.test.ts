@@ -142,6 +142,19 @@ describe('EmbeddedLoadingSpinner', () => {
         expect(document.body.children).toHaveLength(1);
         expect(root.style.display).toBe('flex');
 
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        expect(root.style.display).toBe('flex');
+        expect(closeListener).not.toHaveBeenCalled();
+
+        getDom(spinner)
+            .querySelector('[data-modal-close]')
+            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        expect(root.style.display).toBe('none');
+        expect(closeListener).toHaveBeenCalledWith(expect.any(MouseEvent));
+
+        spinner.open();
+
         const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
 
         document.dispatchEvent(escapeEvent);

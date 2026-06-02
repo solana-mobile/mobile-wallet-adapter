@@ -6,27 +6,43 @@ const {
     mockGetUidForPackage,
     mockVerifyCallingPackage,
     nativeModules,
+    nativeDigitalAssetLinks,
     platform,
-} = vi.hoisted(() => ({
-    mockGetCallingPackage: vi.fn(),
-    mockGetCallingPackageUid: vi.fn(),
-    mockGetUidForPackage: vi.fn(),
-    mockVerifyCallingPackage: vi.fn(),
-    nativeModules: {
-        SolanaMobileDigitalAssetLinks: {
-            getCallingPackage: vi.fn(),
-            getCallingPackageUid: vi.fn(),
-            getUidForPackage: vi.fn(),
-            verifyCallingPackage: vi.fn(),
-        },
-    },
-    platform: { OS: 'android' },
-}));
+} = vi.hoisted(() => {
+    const mockGetCallingPackage = vi.fn();
+    const mockGetCallingPackageUid = vi.fn();
+    const mockGetUidForPackage = vi.fn();
+    const mockVerifyCallingPackage = vi.fn();
+    const nativeDigitalAssetLinks = {
+        getCallingPackage: vi.fn(),
+        getCallingPackageUid: vi.fn(),
+        getUidForPackage: vi.fn(),
+        verifyCallingPackage: vi.fn(),
+    };
+    nativeDigitalAssetLinks.getCallingPackage = mockGetCallingPackage;
+    nativeDigitalAssetLinks.getCallingPackageUid = mockGetCallingPackageUid;
+    nativeDigitalAssetLinks.getUidForPackage = mockGetUidForPackage;
+    nativeDigitalAssetLinks.verifyCallingPackage = mockVerifyCallingPackage;
 
-nativeModules.SolanaMobileDigitalAssetLinks.getCallingPackage = mockGetCallingPackage;
-nativeModules.SolanaMobileDigitalAssetLinks.getCallingPackageUid = mockGetCallingPackageUid;
-nativeModules.SolanaMobileDigitalAssetLinks.getUidForPackage = mockGetUidForPackage;
-nativeModules.SolanaMobileDigitalAssetLinks.verifyCallingPackage = mockVerifyCallingPackage;
+    return {
+        mockGetCallingPackage,
+        mockGetCallingPackageUid,
+        mockGetUidForPackage,
+        mockVerifyCallingPackage,
+        nativeDigitalAssetLinks,
+        nativeModules: {
+            SolanaMobileDigitalAssetLinks: nativeDigitalAssetLinks as
+                | {
+                      getCallingPackage: ReturnType<typeof vi.fn>;
+                      getCallingPackageUid: ReturnType<typeof vi.fn>;
+                      getUidForPackage: ReturnType<typeof vi.fn>;
+                      verifyCallingPackage: ReturnType<typeof vi.fn>;
+                  }
+                | undefined,
+        },
+        platform: { OS: 'android' },
+    };
+});
 
 vi.mock('react-native', () => ({
     NativeModules: nativeModules,
@@ -45,7 +61,9 @@ afterEach(() => {
     mockGetCallingPackageUid.mockReset();
     mockGetUidForPackage.mockReset();
     mockVerifyCallingPackage.mockReset();
+    nativeModules.SolanaMobileDigitalAssetLinks = nativeDigitalAssetLinks;
     platform.OS = 'android';
+    vi.resetModules();
 });
 
 describe('useDigitalAssetLinks helpers', () => {
@@ -75,5 +93,23 @@ describe('useDigitalAssetLinks helpers', () => {
 
         await expect(verifyCallingPackage('https://example.com')).resolves.toBe(true);
         expect(mockVerifyCallingPackage).toHaveBeenCalledWith('https://example.com');
+    });
+
+    it('throws a linking error when the Android native module is missing', async () => {
+        nativeModules.SolanaMobileDigitalAssetLinks = undefined;
+        vi.resetModules();
+        const { getCallingPackage } = await import('../src/useDigitalAssetLinks.js');
+
+        await expect(getCallingPackage()).rejects.toThrow(
+            "The package 'solana-mobile-wallet-adapter-walletlib' doesn't seem to be linked.",
+        );
+    });
+
+    it('throws a platform error outside Android', async () => {
+        platform.OS = 'ios';
+        vi.resetModules();
+        const { getCallingPackage } = await import('../src/useDigitalAssetLinks.js');
+
+        await expect(getCallingPackage()).rejects.toThrow('is only compatible with React Native Android');
     });
 });

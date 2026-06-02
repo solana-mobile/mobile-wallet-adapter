@@ -7,6 +7,7 @@ package com.solana.mobilewalletadapter.fakewallet
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.util.Base64 as AndroidBase64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +24,7 @@ import com.solana.mobilewalletadapter.walletlib.protocol.MobileWalletAdapterConf
 import com.solana.mobilewalletadapter.walletlib.scenario.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import java.nio.charset.StandardCharsets
 
@@ -142,9 +144,12 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                         Log.d(TAG, "Reusing known keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
                         publicKey.encoded
                     } ?: run {
-                        val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
+                        val keypair = if (it == 0) {
+                            getKeypair()
+                        } else {
+                            generateKeypair()
+                        }
                         val publicKey = keypair.public as Ed25519PublicKeyParameters
-                        Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
                         publicKey.encoded
                     }
                     buildAccount(publicKeyBytes, "fakewallet account $it")
@@ -187,9 +192,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
         viewModelScope.launch {
             if (authorizeSignIn) {
-                val keypair = getApplication<FakeWalletApplication>().keyRepository.generateKeypair()
+                val keypair = getKeypair()
                 val publicKey = keypair.public as Ed25519PublicKeyParameters
-                Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
 
                 val siwsMessage = request.signInPayload.prepareMessage(publicKey.encoded)
                 val signResult = try {
@@ -492,6 +496,32 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             else -> throw IllegalArgumentException("Unsupported chain/cluster: $chainOrCluster")
         }
     }
+
+    private suspend fun generateKeypair(): AsymmetricCipherKeyPair =
+        getApplication<FakeWalletApplication>().keyRepository.generateKeypair().also {
+            val publicKey = it.public as Ed25519PublicKeyParameters
+            Log.d(TAG, "Generated a new keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+        }
+
+    private suspend fun getKeypair(): AsymmetricCipherKeyPair =
+        BuildConfig.PRIVATE_KEY?.let(::decodePrivateKey)?.let { privateKeyRaw ->
+            getApplication<FakeWalletApplication>().keyRepository.getOrInsertKeypair(privateKeyRaw).also {
+                val publicKey = it.public as Ed25519PublicKeyParameters
+                Log.d(TAG, "Using local keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
+            }
+        } ?: generateKeypair()
+
+    private fun decodePrivateKey(privateKey: String): ByteArray =
+        try {
+            Base58.decode(privateKey)
+        } catch (_: Throwable) {
+            try {
+                val standardBase64NoPadding = privateKey.replace("-", "+").replace("_", "/").trimEnd('=')
+                AndroidBase64.decode(standardBase64NoPadding, AndroidBase64.NO_PADDING or AndroidBase64.NO_WRAP)
+            } catch (_: IllegalArgumentException) {
+                throw IllegalArgumentException("could not decode provided private key from local props")
+            }
+        }
 
     private inner class MobileWalletAdapterScenarioCallbacks : LocalScenario.Callbacks {
         override fun onScenarioReady() = Unit

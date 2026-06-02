@@ -238,6 +238,8 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         const spinnerCloseListener = loadingSpinnerInstances[0].addEventListener.mock.calls[0][1];
         spinnerCloseListener(new Event('close'));
         expect(scenarioClose).toHaveBeenCalledTimes(2);
+        spinnerCloseListener(undefined);
+        expect(scenarioClose).toHaveBeenCalledTimes(2);
 
         await expect(wallet.features[StandardConnect].connect()).resolves.toEqual({ accounts: wallet.accounts });
         expect(mockStartScenario).toHaveBeenCalledTimes(1);
@@ -274,6 +276,21 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         expect(authorizationCache.get).toHaveBeenCalledTimes(1);
         expect(changeListener).toHaveBeenCalledWith({ features: wallet.features });
         expect(changeListener).toHaveBeenCalledWith({ accounts: wallet.accounts });
+    });
+
+    it('uses cached authorization for interactive local connects without starting association', async () => {
+        const cachedAuthorization = createCachedAuthorization(Uint8Array.of(131, 132, 133));
+        const { authorizationCache, wallet } = createLocalWallet({
+            cachedAuthorization,
+        });
+
+        await expect(wallet.features[StandardConnect].connect()).resolves.toEqual({
+            accounts: [cachedAuthorization.accounts[0]],
+        });
+
+        expect(authorizationCache.get).toHaveBeenCalledTimes(1);
+        expect(mockStartScenario).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(true);
     });
 
     it('returns existing accounts without association for silent connects when nothing is cached', async () => {
@@ -560,6 +577,95 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
             },
         ]);
     });
+
+    it('defaults local account chains and features when authorization omits them', async () => {
+        const accountPublicKey = Uint8Array.of(122, 123, 124);
+        const authorization = createMwaAuthorization(accountPublicKey);
+        const authorizationAccount = authorization.accounts[0] as Partial<(typeof authorization.accounts)[number]>;
+        const mobileWallet = createMobileWallet({ authorization });
+        const { wallet } = createLocalWallet();
+
+        delete authorizationAccount.chains;
+        delete authorizationAccount.features;
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await wallet.features[StandardConnect].connect();
+
+        expect(wallet.accounts[0].chains).toEqual([SOLANA_MAINNET_CHAIN]);
+        expect(wallet.accounts[0].features).toEqual(
+            expect.arrayContaining([
+                SolanaSignAndSendTransaction,
+                SolanaSignIn,
+                SolanaSignMessage,
+                SolanaSignTransaction,
+            ]),
+        );
+    });
+
+    it('wraps local transaction signing failures', async () => {
+        const accountPublicKey = Uint8Array.of(125, 126, 127);
+        const mobileWallet = createMobileWallet({
+            authorization: createMwaAuthorization(accountPublicKey),
+        });
+        const { wallet } = createLocalWallet();
+
+        mobileWallet.signAndSendTransactions.mockRejectedValueOnce(new Error('sign and send failed'));
+        mobileWallet.signTransactions.mockRejectedValueOnce(new Error('sign transaction failed'));
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await wallet.features[StandardConnect].connect();
+
+        await expect(
+            getSignTransactionFeature(wallet).signTransaction({
+                account: wallet.accounts[0],
+                transaction: Uint8Array.of(1, 2, 3),
+            }),
+        ).rejects.toThrow('sign transaction failed');
+        await expect(
+            getSignAndSendFeature(wallet).signAndSendTransaction({
+                account: wallet.accounts[0],
+                chain: SOLANA_MAINNET_CHAIN,
+                transaction: Uint8Array.of(4, 5, 6),
+            }),
+        ).rejects.toThrow('sign and send failed');
+    });
+
+    it('disconnects local authorization when reauthorization fails', async () => {
+        const accountPublicKey = Uint8Array.of(134, 135, 136);
+        const mobileWallet = createMobileWallet({
+            authorization: createMwaAuthorization(accountPublicKey),
+        });
+        const { authorizationCache, wallet } = createLocalWallet();
+
+        mobileWallet.authorize
+            .mockResolvedValueOnce(createMwaAuthorization(accountPublicKey))
+            .mockRejectedValueOnce(new Error('reauthorize failed'));
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await wallet.features[StandardConnect].connect();
+
+        void wallet.features[SolanaSignMessage].signMessage({
+            account: wallet.accounts[0],
+            message: Uint8Array.of(1, 2, 3),
+        });
+
+        await vi.waitFor(() => {
+            expect(authorizationCache.clear).toHaveBeenCalledTimes(1);
+        });
+        expect(wallet.connected).toBe(false);
+    });
 });
 
 describe('RemoteSolanaMobileWalletAdapterWallet', () => {
@@ -616,6 +722,8 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         expect(remoteModalInstances[0].populateQRCode).toHaveBeenCalledWith('https://example.test/associate');
         expect(remoteModalInstances[0].close).toHaveBeenCalledTimes(1);
         remoteModalInstances[0].addEventListener.mock.calls[0][1](new Event('close'));
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        remoteModalInstances[0].addEventListener.mock.calls[0][1](undefined);
         expect(scenarioClose).toHaveBeenCalledTimes(1);
         expect(wallet.connected).toBe(true);
         expect(getSignAndSendFeature(wallet).supportedTransactionVersions).toEqual(['legacy', 0]);
@@ -777,6 +885,17 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         expect(mockStartRemoteScenario).not.toHaveBeenCalled();
     });
 
+    it('closes the remote modal for generic association failures', async () => {
+        const onWalletNotFound = vi.fn<WalletNotFoundHandler>().mockResolvedValue(undefined);
+        const { wallet } = createRemoteWallet({ onWalletNotFound });
+
+        mockStartRemoteScenario.mockRejectedValue(new Error('association failed'));
+
+        await expect(wallet.features[StandardConnect].connect()).rejects.toThrow('association failed');
+        expect(onWalletNotFound).not.toHaveBeenCalled();
+        expect(remoteModalInstances[0].close).toHaveBeenCalledTimes(1);
+    });
+
     it('runs the wallet-not-found handler for remote association failures', async () => {
         const onWalletNotFound = vi.fn<WalletNotFoundHandler>().mockResolvedValue(undefined);
         const { wallet } = createRemoteWallet({ onWalletNotFound });
@@ -868,6 +987,46 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
 
         await expect(wallet.features[SolanaSignIn].signIn()).rejects.toThrow(
             'Sign in failed, no sign in result returned by wallet',
+        );
+    });
+
+    it('updates remote features and defaults account metadata from wallet capabilities', async () => {
+        const accountPublicKey = Uint8Array.of(128, 129, 130);
+        const authorization = createMwaAuthorization(accountPublicKey);
+        const authorizationAccount = authorization.accounts[0] as Partial<(typeof authorization.accounts)[number]>;
+        const mobileWallet = createMobileWallet({
+            authorization,
+            capabilities: {
+                ...DEFAULT_CAPABILITIES,
+                features: [],
+                supports_sign_and_send_transactions: false,
+            },
+        });
+        const { wallet } = createRemoteWallet();
+        const changeListener = vi.fn();
+
+        delete authorizationAccount.chains;
+        delete authorizationAccount.features;
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+        wallet.features[StandardEvents].on('change', changeListener);
+
+        await wallet.features[StandardConnect].connect();
+
+        expect(SolanaSignAndSendTransaction in wallet.features).toBe(false);
+        expect(SolanaSignTransaction in wallet.features).toBe(false);
+        expect(changeListener).toHaveBeenCalledWith({ features: wallet.features });
+        expect(wallet.accounts[0].chains).toEqual([SOLANA_MAINNET_CHAIN]);
+        expect(wallet.accounts[0].features).toEqual(
+            expect.arrayContaining([
+                SolanaSignAndSendTransaction,
+                SolanaSignIn,
+                SolanaSignMessage,
+                SolanaSignTransaction,
+            ]),
         );
     });
 

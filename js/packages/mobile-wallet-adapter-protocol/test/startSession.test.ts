@@ -60,7 +60,7 @@ describe('startSession', () => {
         );
     });
 
-    it('launches custom protocol URLs through a hidden iframe in Firefox', async () => {
+    it('launches custom protocol URLs through a reused hidden iframe in Firefox', async () => {
         const associationUrl = new URL('solana-wallet:/v1/associate/local');
         const frame = {
             contentWindow: {
@@ -86,10 +86,13 @@ describe('startSession', () => {
         });
 
         await expect(startSession(ASSOCIATION_PUBLIC_KEY)).resolves.toBe(ASSOCIATION_PORT);
+        await expect(startSession(ASSOCIATION_PUBLIC_KEY)).resolves.toBe(ASSOCIATION_PORT);
 
         expect(frame.contentWindow.location.href).toBe(associationUrl.toString());
         expect(frame.style.display).toBe('none');
+        expect(mockAppendChild).toHaveBeenCalledTimes(1);
         expect(mockAppendChild).toHaveBeenCalledWith(frame);
+        expect(mockCreateElement).toHaveBeenCalledTimes(1);
         expect(mockCreateElement).toHaveBeenCalledWith('iframe');
     });
 
