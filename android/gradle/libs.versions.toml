@@ -1,7 +1,8 @@
 [versions]
 # plugin versions
-androidGradlePlugin = "8.13.1"
-kotlinAndroidPlugin = "2.2.21"
+androidGradlePlugin = "9.2.1"
+kotlinAndroidPlugin = "2.3.21"
+ksp = "2.3.9"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
@@ -87,4 +88,5 @@ zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", ve
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroidPlugin" }
+kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }

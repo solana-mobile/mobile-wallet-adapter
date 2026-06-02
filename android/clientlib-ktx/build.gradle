@@ -1,6 +1,7 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias libs.plugins.android.library
-    alias libs.plugins.kotlin.android
     id 'maven-publish'
     id 'signing'
 }
@@ -8,7 +9,7 @@ plugins {
 android {
     namespace = "com.solana.mobilewalletadapter.clientlib"
 
-    compileSdk 36
+    compileSdk = 36
 
     defaultConfig {
         minSdk 24
@@ -30,8 +31,10 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = '11'
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
     }
 
     buildFeatures {
@@ -81,7 +84,7 @@ publishing {
             }
 
             afterEvaluate {
-                from components.release
+                from components.findByName('release')
             }
         }
     }
@@ -96,24 +99,26 @@ signing {
     sign publishing.publications.release
 }
 
-// Define JavaDoc build task for all variants
-android.libraryVariants.all { variant ->
-    task("generate${variant.name.capitalize()}Javadoc", type: Javadoc) {
-        description "Generates Javadoc for $variant.name."
-        source = variant.javaCompileProvider.get().source
-        classpath = project.files(android.getBootClasspath().join(File.pathSeparator))
-        classpath += files(variant.javaCompileProvider.get().classpath)
-        options.links("https://docs.oracle.com/javase/8/docs/api/")
-        options.links("https://d.android.com/reference/")
-        exclude '**/BuildConfig.java'
-        exclude '**/R.java'
-    }
+// Define JavaDoc build task (AGP 9: libraryVariants API removed)
+def releaseBootClasspath = androidComponents.sdkComponents.bootClasspath
+tasks.register("generateReleaseJavadoc", Javadoc) {
+    description "Generates Javadoc for release."
+    source = android.sourceSets.main.java.srcDirs
+    include '**/*.java'
+    classpath = project.files(releaseBootClasspath)
+    classpath += configurations.getByName("releaseCompileClasspath").incoming.artifactView {
+        attributes { attribute(Attribute.of("artifactType", String), "android-classes-jar") }
+    }.files
+    options.links("https://docs.oracle.com/javase/8/docs/api/")
+    options.links("https://d.android.com/reference/")
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
 }
 
 // Build JavaDoc when making a release build
-tasks.whenTaskAdded { task ->
-    if (task.name == 'assembleRelease') {
-        task.dependsOn("generateReleaseJavadoc")
+afterEvaluate {
+    tasks.named("assembleRelease").configure {
+        dependsOn("generateReleaseJavadoc")
     }
 }
 
