@@ -1,11 +1,11 @@
-import { 
-  appendTransactionMessageInstruction, 
+import {
+  appendTransactionMessageInstruction,
   createTransactionMessage,
   pipe,
-  setTransactionMessageLifetimeUsingBlockhash,
-  TransactionSendingSigner,
   setTransactionMessageFeePayerSigner,
+  setTransactionMessageLifetimeUsingBlockhash,
   signAndSendTransactionMessageWithSigners,
+  type TransactionSendingSigner,
 } from '@solana/kit';
 import {
   createBlockHeightExceedencePromiseFactory,
@@ -13,10 +13,10 @@ import {
   waitForRecentTransactionConfirmation,
 } from '@solana/transaction-confirmation';
 import {
-  SignaturesMap,
+  type SignaturesMap,
   type Transaction,
-  TransactionWithBlockhashLifetime,
   compileTransaction,
+  type TransactionWithBlockhashLifetime,
 } from '@solana/transactions';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { getAddMemoInstruction } from "@solana-program/memo";
@@ -63,8 +63,10 @@ export default function RecordMessageButton({children, message}: Props) {
         // create an MWA transaction signer
         const mwaTransactionSigner: TransactionSendingSigner = {
           address: selectedAccount?.publicKey ?? freshAccount.publicKey,
-          signAndSendTransactions: async (transactions: Transaction[]) => {
-            return await wallet.signAndSendTransactions({ transactions });
+          signAndSendTransactions: async (transactions) => {
+            return await wallet.signAndSendTransactions({
+              transactions: [...transactions],
+            });
           }
         };
 
