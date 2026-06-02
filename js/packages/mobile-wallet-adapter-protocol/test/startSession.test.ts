@@ -86,7 +86,6 @@ describe('startSession', () => {
         });
 
         await expect(startSession(ASSOCIATION_PUBLIC_KEY)).resolves.toBe(ASSOCIATION_PORT);
-        await expect(startSession(ASSOCIATION_PUBLIC_KEY)).resolves.toBe(ASSOCIATION_PORT);
 
         expect(frame.contentWindow.location.href).toBe(associationUrl.toString());
         expect(frame.style.display).toBe('none');

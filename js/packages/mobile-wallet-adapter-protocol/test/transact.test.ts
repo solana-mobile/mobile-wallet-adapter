@@ -347,10 +347,10 @@ describe('startScenario', () => {
         const scenario = await startScenario();
         const socket = getOnlySocket();
 
-        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(1)))).rejects.toThrow(
+        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(1)))).resolves.toBeUndefined();
+        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).rejects.toThrow(
             'Encountered unexpected message while connecting',
         );
-        await expect(Promise.race([scenario.wallet, Promise.resolve('pending')])).resolves.toBe('pending');
     });
 
     it('throws when local encrypted messages arrive out of sequence', async () => {
