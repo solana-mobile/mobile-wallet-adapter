@@ -10,9 +10,9 @@ export async function encryptMessage(plaintext: string, sequenceNumber: number, 
     const initializationVector = new Uint8Array(INITIALIZATION_VECTOR_BYTES);
     crypto.getRandomValues(initializationVector);
     const ciphertext = await crypto.subtle.encrypt(
-        getAlgorithmParams(sequenceNumberVector, initializationVector),
+        getAlgorithmParams(sequenceNumberVector as BufferSource, initializationVector as BufferSource),
         sharedSecret,
-        utf8ToUint8Array(plaintext),
+        utf8ToUint8Array(plaintext) as BufferSource,
     );
     const response = new Uint8Array(
         sequenceNumberVector.byteLength + initializationVector.byteLength + ciphertext.byteLength,
@@ -39,7 +39,7 @@ export async function decryptMessage(message: ArrayBuffer, sharedSecret: SharedS
     return plaintext;
 }
 
-function getAlgorithmParams(sequenceNumber: ArrayBuffer, initializationVector: ArrayBuffer) {
+function getAlgorithmParams(sequenceNumber: BufferSource, initializationVector: BufferSource) {
     return {
         additionalData: sequenceNumber,
         iv: initializationVector,
