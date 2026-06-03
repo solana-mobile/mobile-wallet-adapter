@@ -135,7 +135,8 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
         walletName: String,
         config: String,
         promise: Promise,
-    ) = launch {
+    ) {
+        launch {
         // Get the intent that started this activity
         val intent = reactContext.getCurrentActivity()?.intent
         if (intent == null) {
@@ -193,6 +194,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
 
         promise.resolve(scenarioId)
         Log.d(TAG, "scenario created: $walletName")
+        }
     }
 
     /* Generic Request functions */
@@ -205,7 +207,8 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
     }
 
     @ReactMethod
-    fun resolve(requestJson: String, responseJson: String) = launch {
+    fun resolve(requestJson: String, responseJson: String) {
+        launch {
         val completedRequest =
             json.decodeFromString(
                 MobileWalletAdapterRequestSerializer,
@@ -409,6 +412,7 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                     else -> completeWithInvalidResponse()
                 }
         }
+        }
     }
 
     private fun checkSessionId(sessionId: String, doIfValid: (() -> Unit)) =
@@ -467,10 +471,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         request.request
                             .identityName,
                         request.request.identityUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .iconRelativeUri
-                            .toString(),
+                            ?.toString(),
                         request.request.features
                             ?.asList(),
                         request.request.addresses
@@ -486,10 +490,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         request.request
                             .identityName,
                         request.request.identityUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .iconRelativeUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .authorizationScope
                     )
@@ -501,10 +505,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         request.request
                             .identityName,
                         request.request.identityUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .iconRelativeUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .authorizationScope
                     )
@@ -516,10 +520,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         request.request
                             .identityName,
                         request.request.identityUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .iconRelativeUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .authorizationScope,
                         request.request.payloads
@@ -533,10 +537,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         request.request
                             .identityName,
                         request.request.identityUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .iconRelativeUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .authorizationScope,
                         request.request.payloads
@@ -550,10 +554,10 @@ class SolanaMobileWalletAdapterWalletLibModule(val reactContext: ReactApplicatio
                         request.request
                             .identityName,
                         request.request.identityUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .iconRelativeUri
-                            .toString(),
+                            ?.toString(),
                         request.request
                             .authorizationScope,
                         request.request.payloads

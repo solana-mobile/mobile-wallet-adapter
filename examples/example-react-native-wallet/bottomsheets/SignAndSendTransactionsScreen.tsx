@@ -50,6 +50,7 @@ const signAndSendTransactions = async (
     const signatures = await SendTransactionsUseCase.sendSignedTransactions(
       signedTransactions,
       request.minContextSlot ? request.minContextSlot : undefined,
+      request.chain,
     );
     resolve(request, {
       signedTransactions: signatures,

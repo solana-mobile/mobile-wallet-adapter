@@ -7,20 +7,10 @@ import {
   signAndSendTransactionMessageWithSigners,
   type TransactionSendingSigner,
 } from '@solana/kit';
-import {
-  createBlockHeightExceedencePromiseFactory,
-  createRecentSignatureConfirmationPromiseFactory,
-  waitForRecentTransactionConfirmation,
-} from '@solana/transaction-confirmation';
-import {
-  type SignaturesMap,
-  type Transaction,
-  compileTransaction,
-  type TransactionWithBlockhashLifetime,
-} from '@solana/transactions';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { getAddMemoInstruction } from "@solana-program/memo";
 import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-kit';
+import { getAddMemoInstruction } from '@solana-program/memo';
+import bs58 from 'bs58';
 import React, { useContext, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import {
@@ -30,12 +20,11 @@ import {
   Paragraph,
   Portal,
 } from 'react-native-paper';
-import bs58 from 'bs58';
 
+import { RpcContext } from '../context/RpcContext';
+import { SnackbarContext } from '../context/SnackbarProvider';
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
-import { SnackbarContext } from '../context/SnackbarProvider';
-import { RpcContext } from '../context/RpcContext';
 
 type Props = Readonly<{
   children?: React.ReactNode;
@@ -44,22 +33,22 @@ type Props = Readonly<{
 
 export default function RecordMessageButton({children, message}: Props) {
   const { authorizeSession, selectedAccount } = useAuthorization();
-  const { rpc, rpcSubscriptions } = useContext(RpcContext);
+  const { rpc } = useContext(RpcContext);
   const setSnackbarProps = useContext(SnackbarContext);
   const [recordMessageTutorialOpen, setRecordMessageTutorialOpen] =
     useState(false);
   const [recordingInProgress, setRecordingInProgress] = useState(false);
   const recordMessageGuarded = useGuardedCallback(
     async (
-      message: string,
-    ): Promise<[string, Promise<void>]> => {
-      const [transaction, signature] = await transact(async wallet => {
+      messageToRecord: string,
+    ): Promise<string> => {
+      return await transact(async wallet => {
         // Authorize session (get account) and fetch latest blockhash
         const [freshAccount, { value: latestBlockhash }] = await Promise.all([
           authorizeSession(wallet),
           rpc.getLatestBlockhash().send(),
         ]);
-        
+
         // create an MWA transaction signer
         const mwaTransactionSigner: TransactionSendingSigner = {
           address: selectedAccount?.publicKey ?? freshAccount.publicKey,
@@ -71,7 +60,7 @@ export default function RecordMessageButton({children, message}: Props) {
         };
 
         // Build memo transaction
-        const memoInstruction = getAddMemoInstruction({ memo: message });
+        const memoInstruction = getAddMemoInstruction({ memo: messageToRecord });
         const memoTransactionMessage = pipe(
           createTransactionMessage({ version: 0 }),
           (tx) => setTransactionMessageFeePayerSigner(mwaTransactionSigner, tx),
@@ -81,33 +70,11 @@ export default function RecordMessageButton({children, message}: Props) {
 
         // Sign transaction with MWA signer and prepare outputs
         const signature = await signAndSendTransactionMessageWithSigners(memoTransactionMessage);
-        const transaction = compileTransaction(memoTransactionMessage);
-        const signaturesMap: SignaturesMap = { [memoTransactionMessage.feePayer.address]: signature }
 
-        return [{ 
-          messageBytes: transaction.messageBytes, 
-          signatures: signaturesMap,
-          lifetimeConstraint: transaction.lifetimeConstraint,
-        } as Transaction & TransactionWithBlockhashLifetime, bs58.encode(signature)];
+        return bs58.encode(signature);
       });
-      const getBlockHeightExceedencePromise = createBlockHeightExceedencePromiseFactory({
-        rpc,
-        rpcSubscriptions,
-      });
-      const getRecentSignatureConfirmationPromise = createRecentSignatureConfirmationPromiseFactory({
-        rpc,
-        rpcSubscriptions,
-      });
-
-      // Return transaction signature and a promise that resolves when the transaction is confirmed
-      return [signature, waitForRecentTransactionConfirmation({
-        commitment: 'confirmed',
-        transaction: transaction,
-        getBlockHeightExceedencePromise,
-        getRecentSignatureConfirmationPromise
-      })];
     },
-    [authorizeSession, rpc, rpcSubscriptions, selectedAccount],
+    [authorizeSession, rpc, selectedAccount],
   );
   return (
     <>
@@ -121,12 +88,8 @@ export default function RecordMessageButton({children, message}: Props) {
             }
             setRecordingInProgress(true);
             try {
-              const result = await recordMessageGuarded(message);
-              if (result) {
-                const [signature, confirmationPromise] = result;
-                // TODO AbortController and AbortSignal are not fully implemented in RN so
-                // transaction confirmation with kit does not work. Need to find a polyfill
-                // await confirmationPromise;
+              const signature = await recordMessageGuarded(message);
+              if (signature) {
                 setSnackbarProps({
                   action: {
                     label: 'View',
