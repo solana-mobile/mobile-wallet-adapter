@@ -28,7 +28,7 @@
     "react-native": "0.85.3",
     "react-native-get-random-values": "^1.11.0",
     "react-native-paper": "^5.12.5",
-    "react-native-safe-area-context": "^5.5.2",
+    "react-native-safe-area-context": "^5.8.0",
     "react-native-url-polyfill": "^2.0.0",
     "swr": "^2.2.5",
     "text-encoding": "^0.7.0"
