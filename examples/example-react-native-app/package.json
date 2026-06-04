@@ -63,7 +63,7 @@
     "typescript": "^5.8.3"
   },
   "engines": {
-    "node": ">=20.19.4"
+    "node": "^24.3.0"
   },
   "pnpm": {
     "overrides": {
