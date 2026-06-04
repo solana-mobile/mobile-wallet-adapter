@@ -1,5 +1,12 @@
 # @solana-mobile/mobile-wallet-adapter-protocol
 
+## 2.2.9
+
+### Patch Changes
+
+- c4ffb7a: Prepare the JS packages for a future TypeScript 6 upgrade without changing the current TypeScript version.
+- c260601: Share protocol encoding helpers across JS mobile wallet packages.
+
 ## 2.2.8
 
 ### Patch Changes
