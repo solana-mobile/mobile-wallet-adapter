@@ -1,5 +1,12 @@
 # @solana-mobile/mobile-wallet-adapter-walletlib
 
+## 1.4.4
+
+### Patch Changes
+
+- c4ffb7a: Prepare the JS packages for a future TypeScript 6 upgrade without changing the current TypeScript version.
+- 62dbb48: Point the React Native package entrypoint at the native ESM build and include source files required by React Native codegen.
+
 ## 1.4.3
 
 ### Patch Changes
