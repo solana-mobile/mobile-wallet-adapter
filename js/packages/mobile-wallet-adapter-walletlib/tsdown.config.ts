@@ -64,6 +64,7 @@ function createConfig({ entryName, runtime }: { entryName: string; runtime: Runt
             'process.env.NODE_ENV': NODE_ENV_DEFINE_VALUE,
         },
         deps: {
+            onlyBundle: false,
             skipNodeModulesBundle: true,
         },
         dts: false,
@@ -88,6 +89,9 @@ function createDtsConfig(): UserConfig {
     return {
         clean: false,
         cwd: process.cwd(),
+        deps: {
+            onlyBundle: false,
+        },
         dts: DTS_OPTIONS,
         entry: {
             index: 'src/index.ts',
