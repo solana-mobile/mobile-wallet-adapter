@@ -8,7 +8,7 @@ import {
   DeauthorizeAPI,
   ReauthorizeAPI,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import {toUint8Array} from 'js-base64';
+import {base64ToUint8Array} from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import {useCallback, useMemo} from 'react';
 import useSWR from 'swr';
 
@@ -29,7 +29,7 @@ function getAccountFromAuthorizedAccount(account: AuthorizedAccount): Account {
   return {
     ...account,
     publicKey: getPublicKeyFromAddress(account.address),
-    publicKeyBytes: toUint8Array(account.address),
+    publicKeyBytes: base64ToUint8Array(account.address),
   };
 }
 
@@ -59,7 +59,7 @@ function getAuthorizationFromAuthorizationResult(
 }
 
 function getPublicKeyFromAddress(base64Address: Base64EncodedAddress): Address {
-  const publicKeyByteArray = toUint8Array(base64Address);
+  const publicKeyByteArray = base64ToUint8Array(base64Address);
   const addressDecoder = getAddressDecoder();
   return addressDecoder.decode(publicKeyByteArray);
 }

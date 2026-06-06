@@ -1,4 +1,5 @@
 import "fast-text-encoding";
+import { base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import React, { useEffect, useState } from 'react';
 import {StyleSheet, View} from 'react-native';
 import {Button, Divider, Text} from 'react-native-paper';
@@ -15,7 +16,6 @@ import { VerificationInProgress, VerificationState } from '../utils/ClientTrustU
 import { useClientTrust } from "../components/ClientTrustProvider";
 import { SolanaSignInInputWithRequiredFields, createSignInMessageText } from "@solana/wallet-standard-util";
 import { SolanaSigningUseCase } from "../utils/SolanaSigningUseCase";
-import { Base64 } from "js-base64";
 
 interface SignInScreenProps {
   request: AuthorizeDappRequest;
@@ -78,9 +78,9 @@ export default function SignInScreen({
               }],
               authorizationScope: new TextEncoder().encode(verificationState?.authorizationScope),
               signInResult: {
-                address: Base64.fromUint8Array(wallet.publicKey.toBytes()),
-                signed_message: Base64.fromUint8Array(messageBytes),
-                signature: Base64.fromUint8Array(signature)
+                address: base64FromUint8Array(wallet.publicKey.toBytes()),
+                signed_message: base64FromUint8Array(messageBytes),
+                signature: base64FromUint8Array(signature)
               }
             } as AuthorizeDappCompleteResponse);
           }}

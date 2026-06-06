@@ -8,9 +8,9 @@ import {
   type TransactionSendingSigner,
 } from '@solana/kit';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-kit';
 import { getAddMemoInstruction } from '@solana-program/memo';
-import bs58 from 'bs58';
 import React, { useContext, useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import {
@@ -71,7 +71,7 @@ export default function RecordMessageButton({children, message}: Props) {
         // Sign transaction with MWA signer and prepare outputs
         const signature = await signAndSendTransactionMessageWithSigners(memoTransactionMessage);
 
-        return bs58.encode(signature);
+        return base58FromUint8Array(signature);
       });
     },
     [authorizeSession, rpc, selectedAccount],

@@ -1,3 +1,4 @@
+import {base58ToUint8Array} from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import {
   Connection,
   VersionedTransaction,
@@ -5,7 +6,6 @@ import {
   SendOptions,
   clusterApiUrl,
 } from '@solana/web3.js';
-import {decode} from 'bs58';
 
 type SolanaCluster = Parameters<typeof clusterApiUrl>[0];
 
@@ -49,7 +49,7 @@ export class SendTransactionsUseCase {
           };
           const signature: TransactionSignature =
             await connection.sendTransaction(transaction, sendOptions);
-          const decoded = decode(signature);
+          const decoded = base58ToUint8Array(signature);
           return decoded;
         } catch (error) {
           console.log('Failed sending transaction ' + error);
