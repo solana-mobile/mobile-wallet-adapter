@@ -1,9 +1,10 @@
 import { Button } from '@mui/material';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { ComponentProps } from 'react';
-import useGuardedCallback from '../utils/useGuardedCallback';
 import { SolanaSignInInput } from '@solana/wallet-standard-features';
 import { verifySignIn } from '@solana/wallet-standard-util';
+import { ComponentProps } from 'react';
+
+import useGuardedCallback from '../utils/useGuardedCallback';
 
 type Props = Readonly<ComponentProps<typeof Button>>;
 
@@ -13,9 +14,9 @@ export default function SignInButton(props: Props) {
         if (signIn) {
             const input: SolanaSignInInput = {
                 domain: window.location.host,
-                statement: "Sign in to Example Web App",
+                statement: 'Sign in to Example Web App',
                 uri: window.location.origin,
-            }
+            };
             const output = await signIn(input);
             if (!verifySignIn(input, output)) {
                 throw new Error('Sign In verification failed!');
@@ -26,4 +27,3 @@ export default function SignInButton(props: Props) {
     }, [signIn]);
     return <Button {...props} disabled={connected} onClick={handleSignInClick} />;
 }
-

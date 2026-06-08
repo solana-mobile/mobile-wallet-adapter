@@ -29,8 +29,7 @@ export default function SignMessageButton({ children, message }: Props) {
     const [previewSignature, setPreviewSignature] = useState<Uint8Array | null>(null);
     const [signMessageTutorialOpen, setSignMessageTutorialOpen] = useState(false);
     const signMessageGuarded = useGuardedCallback(
-        async (buffer) => {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        async (buffer: Uint8Array) => {
             return await signMessage!(buffer);
         },
         [signMessage],
