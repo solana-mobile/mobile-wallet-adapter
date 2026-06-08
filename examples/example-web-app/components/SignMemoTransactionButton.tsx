@@ -1,6 +1,14 @@
 import InfoIcon from '@mui/icons-material/Info';
-import { LoadingButton } from '@mui/lab';
-import { Button, ButtonGroup, Dialog, DialogActions, DialogContent, DialogContentText, Typography } from '@mui/material';
+import {
+    Button,
+    ButtonGroup,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    Typography,
+} from '@mui/material';
+import { isVersionedTransaction } from '@solana/wallet-adapter-base';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import {
     PublicKey,
@@ -13,7 +21,6 @@ import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
 import useGuardedCallback from '../utils/useGuardedCallback';
-import { isVersionedTransaction } from '@solana/wallet-adapter-base';
 
 type Props = Readonly<{
     children?: React.ReactNode;
@@ -24,7 +31,7 @@ function getBase64SignatureFromTransaction(transaction: Transaction | VersionedT
     if (isVersionedTransaction(transaction)) {
         return btoa(String.fromCharCode.call(null, ...transaction.signatures[0]));
     } else {
-        return btoa(String.fromCharCode.call(null, ...new Uint8Array(transaction.signature!!)));
+        return btoa(String.fromCharCode.call(null, ...new Uint8Array(transaction.signature!)));
     }
 }
 
@@ -32,15 +39,15 @@ export default function SignMemoTransactionButton({ children, message }: Props) 
     const { enqueueSnackbar } = useSnackbar();
     const { connection } = useConnection();
     const { publicKey, signTransaction, wallet } = useWallet();
-    const [previewSignedTransaction, setPreviewSignedTransaction] = useState<Transaction | VersionedTransaction | null>(null);
+    const [previewSignedTransaction, setPreviewSignedTransaction] = useState<Transaction | VersionedTransaction | null>(
+        null,
+    );
     const [signMemoTransactionTutorialOpen, setSignMemoTransactionTutorialOpen] = useState(false);
     const supportedTxnVersions = wallet?.adapter.supportedTransactionVersions;
     const transactionVersion = supportedTxnVersions?.has(0) ? 0 : 'legacy';
     const signMemoTransactionGuarded = useGuardedCallback(
         async (messageBuffer: Buffer): Promise<Transaction | VersionedTransaction> => {
-            
             const {
-                context,
                 value: { blockhash, lastValidBlockHeight },
             } = await connection.getLatestBlockhashAndContext();
 
@@ -52,24 +59,24 @@ export default function SignMemoTransactionButton({ children, message }: Props) 
 
             let memoProgramTransaction: Transaction | VersionedTransaction;
 
-            // if the wallet only supports legacy transactions, use the web3.js legacy transaction 
+            // if the wallet only supports legacy transactions, use the web3.js legacy transaction
             if (transactionVersion === 'legacy') {
                 memoProgramTransaction = new Transaction({
                     blockhash: blockhash,
                     lastValidBlockHeight: lastValidBlockHeight,
                     feePayer: publicKey,
-                }).add(memoInstruction)
+                }).add(memoInstruction);
             } else {
                 // otherwise, if versioned transactions are supported, use a V0 versioned transaction
-                let memoProgramMessage = new TransactionMessage({
+                const memoProgramMessage = new TransactionMessage({
                     payerKey: publicKey!,
                     recentBlockhash: blockhash,
-                    instructions: [ memoInstruction ],
-                })
-                memoProgramTransaction = new VersionedTransaction(memoProgramMessage.compileToV0Message())
+                    instructions: [memoInstruction],
+                });
+                memoProgramTransaction = new VersionedTransaction(memoProgramMessage.compileToV0Message());
             }
 
-            return await signTransaction!!(memoProgramTransaction);
+            return await signTransaction!(memoProgramTransaction);
         },
         [connection, publicKey, signTransaction],
     );
@@ -77,7 +84,7 @@ export default function SignMemoTransactionButton({ children, message }: Props) 
         <>
             <ButtonGroup fullWidth={true} variant="contained">
                 <Button
-                    disabled={publicKey == null || !message }
+                    disabled={publicKey == null || !message}
                     onClick={async () => {
                         if (publicKey == null || signTransaction == null) {
                             return;
@@ -120,8 +127,9 @@ export default function SignMemoTransactionButton({ children, message }: Props) 
             >
                 <DialogContent>
                     <DialogContentText>
-                        Clicking &ldquo;Sign Tx&rdquo; will sign a memo transaction that records the text you&apos;ve written
-                        on the Solana blockchain using the Memo program. The transaction will not be sent to the network.
+                        Clicking &ldquo;Sign Tx&rdquo; will sign a memo transaction that records the text you&apos;ve
+                        written on the Solana blockchain using the Memo program. The transaction will not be sent to the
+                        network.
                     </DialogContentText>
                     <DialogActions>
                         <Button
@@ -144,7 +152,9 @@ export default function SignMemoTransactionButton({ children, message }: Props) 
                 <DialogContent>
                     <DialogContentText>
                         <Typography sx={{ wordBreak: 'break-all' }}>
-                            {previewSignedTransaction ? getBase64SignatureFromTransaction(previewSignedTransaction) : null}
+                            {previewSignedTransaction
+                                ? getBase64SignatureFromTransaction(previewSignedTransaction)
+                                : null}
                         </Typography>
                     </DialogContentText>
                     <DialogActions>

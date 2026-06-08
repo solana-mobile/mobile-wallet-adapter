@@ -6,9 +6,10 @@ import 'localstorage-polyfill'; // FIXME: Remove this after https://github.com/s
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 
-import {AppRegistry} from 'react-native';
+import { AppRegistry } from 'react-native';
+
 import App from './App';
-import {name as appName} from './app.json';
+import { name as appName } from './app.json';
 
 // Mock event listener functions to prevent them from fataling.
 window.addEventListener = () => {};

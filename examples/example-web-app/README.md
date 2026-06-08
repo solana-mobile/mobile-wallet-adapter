@@ -6,10 +6,10 @@ https://user-images.githubusercontent.com/13243/174901783-908885d5-08ba-49c4-9ef
 
 ## Features
 
--   Authorize the web app for use with a native mobile wallet app.
--   Record a message of your choosing on-chain, using the Memo program.
--   Sign a message of your choosing.
--   Request an airdrop of SOL on devnet.
+- Authorize the web app for use with a native mobile wallet app.
+- Record a message of your choosing on-chain, using the Memo program.
+- Sign a message of your choosing.
+- Request an airdrop of SOL on devnet.
 
 ## Prerequisites
 
