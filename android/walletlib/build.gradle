@@ -120,5 +120,6 @@ dependencies {
     compileOnly libs.androidx.annotation
     implementation libs.java.websocket
     implementation libs.slf4j.android // SLF4J logging facility for Java-WebSocket
+    implementation libs.bcprov.jdk18on
     api project(path: ':common')
 }

@@ -52,6 +52,26 @@ export function getIsPwaLaunchedAsApp() {
     return isAndroidTwa || isStandalone || isFullscreen || isMinimalUI;
 }
 
+export async function isLocalWebSocketAvailable(): Promise<boolean> {
+    if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
+        return true;
+    }
+    try {
+        const permission: PermissionStatus = await navigator.permissions.query({
+            name: 'loopback-network' as PermissionName,
+        });
+        return permission.state === 'granted';
+    } catch (e) {
+        if (
+            e instanceof TypeError &&
+            (e.message.includes('loopback-network') || e.message.includes('local-network-access'))
+        ) {
+            return true;
+        }
+        return false;
+    }
+}
+
 export async function checkLocalNetworkAccessPermission(): Promise<void> {
     if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
         // Solana Mobile Web Shell runs inside an Android WebView hosted by a

@@ -11,6 +11,7 @@ export const SolanaMobileWalletAdapterErrorCode = {
     ERROR_BROWSER_NOT_SUPPORTED: 'ERROR_BROWSER_NOT_SUPPORTED',
     ERROR_LOOPBACK_ACCESS_BLOCKED: 'ERROR_LOOPBACK_ACCESS_BLOCKED',
     ERROR_ASSOCIATION_CANCELLED: 'ERROR_ASSOCIATION_CANCELLED',
+    ERROR_ILLEGAL_TRANSPORT_STATE: 'ERROR_ILLEGAL_TRANSPORT_STATE',
 } as const;
 type SolanaMobileWalletAdapterErrorCodeEnum =
     (typeof SolanaMobileWalletAdapterErrorCode)[keyof typeof SolanaMobileWalletAdapterErrorCode];
@@ -35,6 +36,7 @@ type ErrorDataTypeMap = {
     [SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED]: {
         event: Event | undefined;
     };
+    [SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE]: undefined;
 };
 
 export class SolanaMobileWalletAdapterError<TErrorCode extends SolanaMobileWalletAdapterErrorCodeEnum> extends Error {

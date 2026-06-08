@@ -161,9 +161,8 @@ public class RemoteWebSocketServerScenario extends BaseScenario {
 
             mState = State.CONNECTING;
             future = super.startAsync();
-            doTryConnect();
-
             mConnectionBackoffExecutor = Executors.newScheduledThreadPool(1);
+            doTryConnect();
         }
 
         return future;
