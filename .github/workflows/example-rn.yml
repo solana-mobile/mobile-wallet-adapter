@@ -48,6 +48,12 @@ jobs:
       - name: '[Example App] Install dependencies'
         working-directory: 'examples/example-react-native-app/'
         run: pnpm install --frozen-lockfile
+      - name: '[Example App] Format Check'
+        working-directory: 'examples/example-react-native-app/'
+        run: pnpm format:check
+      - name: '[Example App] Lint'
+        working-directory: 'examples/example-react-native-app/'
+        run: pnpm lint:check
       - name: '[Example App] Type Check'
         working-directory: 'examples/example-react-native-app/'
         run: npx tsc --noEmit
@@ -58,6 +64,12 @@ jobs:
       - name: '[Example Wallet] Install dependencies'
         working-directory: 'examples/example-react-native-wallet/'
         run: pnpm install --frozen-lockfile
+      - name: '[Example Wallet] Format Check'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: pnpm format:check
+      - name: '[Example Wallet] Lint'
+        working-directory: 'examples/example-react-native-wallet/'
+        run: pnpm lint:check
       - name: '[Example Wallet] Type Check'
         working-directory: 'examples/example-react-native-wallet/'
         run: npx tsc --noEmit
