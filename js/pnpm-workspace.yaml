@@ -1,2 +1,3 @@
+minimumReleaseAge: 7200
 packages:
     - 'packages/*'

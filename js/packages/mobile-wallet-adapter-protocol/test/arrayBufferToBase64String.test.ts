@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import arrayBufferToBase64String from '../src/arrayBufferToBase64String.js';
+import { arrayBufferToBase64String } from '../src/arrayBufferToBase64String.js';
 
 describe('arrayBufferToBase64String', () => {
     it('encodes an array buffer to base64', () => {

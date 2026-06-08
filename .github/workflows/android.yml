@@ -20,9 +20,9 @@ jobs:
 
     steps:
       # Setup
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -46,7 +46,7 @@ jobs:
         run: ./gradlew build
 
       # Upload binaries to workflow artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: binaries
@@ -61,7 +61,7 @@ jobs:
           retention-days: 5
 
       # Upload javadoc to workflow artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: clientlib-javadoc
@@ -70,7 +70,7 @@ jobs:
             !android/clientlib/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: common-javadoc
@@ -79,7 +79,7 @@ jobs:
             !android/common/build/docs/**/*.zip
           if-no-files-found: error
           retention-days: 1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           name: walletlib-javadoc
@@ -112,28 +112,28 @@ jobs:
 
     steps:
       # Setup
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.9.16"
           architecture: "x64"
       - name: set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
 
       # Caching
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       # Create Genymotion instance
       - name: Start Genymotion Cloud SaaS instance
-        uses:  genymobile/genymotion-saas-github-action@v1
+        uses:  genymobile/genymotion-saas-github-action@2329faa7f6c4417645abaabfd2bd955f44149cf1 # v1
         with:
           api_token: ${{ secrets.GMSAAS_API_KEY }}
           recipe_uuid: ${{ matrix.recipe_uuid }}
@@ -149,14 +149,14 @@ jobs:
       # Archive test results
       - name: Archive fakewallet test results
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: fakewallet-connected-test-results-${{ matrix.api-level }}
           path: android/fakewallet/build/reports/androidTests/connected/
           retention-days: 7
       - name: Archive fakedapp test results
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: fakedapp-connected-test-results-${{ matrix.api-level }}
           path: android/fakedapp/build/reports/androidTests/connected/
@@ -171,7 +171,7 @@ jobs:
 
     steps:
       - name: Update clientlib javadoc
-        uses: solana-mobile/gha-commit-artifact-to-branch@v2
+        uses: solana-mobile/gha-commit-artifact-to-branch@4d6e4715d4d7eb83771e2e9d88bc11087c697682 # v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages
@@ -179,7 +179,7 @@ jobs:
           dest: clientlib
           commit-message: 'Update clientlib javadoc'
       - name: Update common javadoc
-        uses: solana-mobile/gha-commit-artifact-to-branch@v2
+        uses: solana-mobile/gha-commit-artifact-to-branch@4d6e4715d4d7eb83771e2e9d88bc11087c697682 # v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages
@@ -187,7 +187,7 @@ jobs:
           dest: common
           commit-message: 'Update common javadoc'
       - name: Update walletlib javadoc
-        uses: solana-mobile/gha-commit-artifact-to-branch@v2
+        uses: solana-mobile/gha-commit-artifact-to-branch@4d6e4715d4d7eb83771e2e9d88bc11087c697682 # v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages
@@ -204,19 +204,19 @@ jobs:
     if: ${{ github.event_name == 'release' && !github.event.repository.fork }}
 
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: binaries
           path: binaries
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: clientlib-javadoc
           path: clientlib-javadoc
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: common-javadoc
           path: common-javadoc
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: walletlib-javadoc
           path: walletlib-javadoc

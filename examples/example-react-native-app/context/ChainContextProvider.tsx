@@ -32,9 +32,9 @@ export function ChainContextProvider({ children }: { children: React.ReactNode }
             value={useMemo(
                 () => ({
                     ...contextValue,
-                    setChain(chain) {
-                        localStorage.setItem(STORAGE_KEY, chain);
-                        setChain(chain);
+                    setChain(nextChain) {
+                        localStorage.setItem(STORAGE_KEY, nextChain);
+                        setChain(nextChain);
                     },
                 }),
                 [contextValue],

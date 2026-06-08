@@ -7,4 +7,4 @@
 '@solana-mobile/wallet-standard-mobile': patch
 ---
 
-Prepare the JS packages for a future TypeScript 6 upgrade without changing the current TypeScript version.
+Migrate the JS package build and typecheck toolchain to TypeScript 6, and update Solana kit dependencies for TypeScript 6 peer compatibility.

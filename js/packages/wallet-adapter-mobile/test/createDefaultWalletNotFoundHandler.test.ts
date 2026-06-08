@@ -8,7 +8,7 @@ vi.mock('@solana-mobile/wallet-standard-mobile', () => ({
     defaultErrorModalWalletNotFoundHandler: mockDefaultErrorModalWalletNotFoundHandler,
 }));
 
-import createDefaultWalletNotFoundHandler from '../src/createDefaultWalletNotFoundHandler.js';
+import { createDefaultWalletNotFoundHandler } from '../src/createDefaultWalletNotFoundHandler.js';
 
 afterEach(() => {
     mockDefaultErrorModalWalletNotFoundHandler.mockReset();

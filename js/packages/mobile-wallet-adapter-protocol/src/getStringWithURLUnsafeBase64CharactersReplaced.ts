@@ -1,4 +1,4 @@
-export default function getStringWithURLUnsafeCharactersReplaced(unsafeBase64EncodedString: string): string {
+export function getStringWithURLUnsafeBase64CharactersReplaced(unsafeBase64EncodedString: string): string {
     return unsafeBase64EncodedString.replace(
         /[/+=]/g,
         (m) =>
@@ -9,3 +9,8 @@ export default function getStringWithURLUnsafeCharactersReplaced(unsafeBase64Enc
             })[m] as string,
     );
 }
+
+/**
+ * @deprecated Use {@link getStringWithURLUnsafeBase64CharactersReplaced} instead.
+ */
+export default getStringWithURLUnsafeBase64CharactersReplaced;

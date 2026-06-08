@@ -1,4 +1,4 @@
-export default function getIsSupported() {
+export function getIsSupported() {
     return (
         typeof window !== 'undefined' &&
         window.isSecureContext &&
@@ -6,3 +6,8 @@ export default function getIsSupported() {
         /android/i.test(navigator.userAgent)
     );
 }
+
+/**
+ * @deprecated Use {@link getIsSupported} instead.
+ */
+export default getIsSupported;

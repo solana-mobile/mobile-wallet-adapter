@@ -1,5 +1,6 @@
 import { LoadingButton } from '@mui/lab';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 import { useSWRConfig } from 'swr';
@@ -19,7 +20,7 @@ export default function FundAccountButton({ children }: Props) {
     const { enqueueSnackbar } = useSnackbar();
     const [airdropInProgress, setAirdropInProgress] = useState(false);
     const requestAirdropGuarded = useGuardedCallback(
-        async (publicKey) => {
+        async (publicKey: PublicKey) => {
             const signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_AIRDROP);
             return await connection.confirmTransaction(signature);
         },

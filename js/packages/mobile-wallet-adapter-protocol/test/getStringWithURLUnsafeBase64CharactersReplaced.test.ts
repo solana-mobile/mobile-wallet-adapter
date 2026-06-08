@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import getStringWithURLUnsafeBase64CharactersReplaced from '../src/getStringWithURLUnsafeBase64CharactersReplaced.js';
+import { getStringWithURLUnsafeBase64CharactersReplaced } from '../src/getStringWithURLUnsafeBase64CharactersReplaced.js';
 
 describe('getStringWithURLUnsafeBase64CharactersReplaced', () => {
     it('replaces URL-unsafe base64 characters', () => {
