@@ -6,8 +6,13 @@ async function defaultWalletNotFoundHandler(_mobileWalletAdapter: SolanaMobileWa
     return defaultErrorModalWalletNotFoundHandler();
 }
 
-export default function createDefaultWalletNotFoundHandler(): (
+export function createDefaultWalletNotFoundHandler(): (
     mobileWalletAdapter: SolanaMobileWalletAdapter,
 ) => Promise<void> {
     return defaultWalletNotFoundHandler;
 }
+
+/**
+ * @deprecated Use {@link createDefaultWalletNotFoundHandler} instead.
+ */
+export default createDefaultWalletNotFoundHandler;

@@ -28,24 +28,24 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.PR_BOT_APP_ID }}
           private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           token: ${{ steps.app-token.outputs.token }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
           persist-credentials: false
 
       - name: set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         with:
           cache: true
           cache_dependency_path: 'js/pnpm-lock.yaml'
@@ -89,24 +89,24 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.PR_BOT_APP_ID }}
           private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           token: ${{ steps.app-token.outputs.token }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
           persist-credentials: false
 
       - name: set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         with:
           cache: true
           cache_dependency_path: 'js/pnpm-lock.yaml'
@@ -116,7 +116,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Create Release PR or Publish to npm
-        uses: changesets/action@001cd79f0a536e733315164543a727bdf2d70aff # v1.5.1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           publish: pnpm publish-packages
           commit: "chore: version packages"

@@ -1,11 +1,9 @@
-// prettier-ignore
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",     /* Recommended React Native TSConfig base */
-  "compilerOptions": {
-    /* Visit https://aka.ms/tsconfig.json to read more about this file */
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-
-    /* Completeness */
-    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
-  }
+    "extends": "@react-native/typescript-config",
+    "compilerOptions": {
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "types": ["jest"]
+    },
+    "include": ["**/*.ts", "**/*.tsx"],
+    "exclude": ["**/node_modules", "**/Pods"]
 }

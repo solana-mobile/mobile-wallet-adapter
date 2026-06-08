@@ -16,15 +16,15 @@ jobs:
       NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY:  ${{ secrets.URL_REFLECTOR_DEV }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 20
+          node-version: 24
       
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         with:
           cache: true
           cache_dependency_path: 'examples/example-web-app/pnpm-lock.yaml'
@@ -39,6 +39,12 @@ jobs:
       - name: '[Example Web App] Install dependencies'
         working-directory: 'examples/example-web-app/'
         run: pnpm install
+      - name: '[Example Web App] Format Check'
+        working-directory: 'examples/example-web-app/'
+        run: pnpm format:check
+      - name: '[Example Web App] Lint'
+        working-directory: 'examples/example-web-app/'
+        run: pnpm lint:check
       - name: '[Example Web App] Type Check'
         working-directory: 'examples/example-web-app/'
         run: npx tsc --noEmit
@@ -47,7 +53,7 @@ jobs:
         working-directory: 'examples/example-web-app/'
         run: pnpm build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: example-web-app
           path: examples/example-web-app/out/*
@@ -62,7 +68,7 @@ jobs:
 
     steps:
       - name: Update Example Web App
-        uses: solana-mobile/gha-commit-artifact-to-branch@v2
+        uses: solana-mobile/gha-commit-artifact-to-branch@4d6e4715d4d7eb83771e2e9d88bc11087c697682 # v2
         with:
           token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
           branch: gh-pages

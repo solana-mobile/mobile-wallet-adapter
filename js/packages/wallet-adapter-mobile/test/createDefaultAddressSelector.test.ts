@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import createDefaultAddressSelector from '../src/createDefaultAddressSelector.js';
+import { createDefaultAddressSelector } from '../src/createDefaultAddressSelector.js';
 
 describe('createDefaultAddressSelector', () => {
     it('falls back to the first address when there are multiple options', async () => {

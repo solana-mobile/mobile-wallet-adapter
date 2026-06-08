@@ -30,3 +30,14 @@ updates:
     schedule:
       interval: "weekly"
 
+  # Mobile Wallet Adapter JavaScript SDK and TypeScript examples
+  - cooldown:
+      default-days: 5
+    directories:
+      - "/examples/example-react-native-app"
+      - "/examples/example-react-native-wallet"
+      - "/examples/example-web-app"
+      - "/js"
+    package-ecosystem: "npm"
+    schedule:
+      interval: "weekly"

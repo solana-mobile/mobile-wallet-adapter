@@ -1,22 +1,21 @@
 import '@solana/wallet-adapter-react-ui/styles.css';
 import '../styles/globals.css';
 
-import { ConnectionConfig, clusterApiUrl } from '@solana/web3.js';
+import { ThemeProvider } from '@emotion/react';
+import { createTheme } from '@mui/material';
+import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl, ConnectionConfig } from '@solana/web3.js';
+import {
+    createDefaultAuthorizationCache,
+    createDefaultChainSelector,
+    createDefaultWalletNotFoundHandler,
+    registerMwa,
+} from '@solana-mobile/wallet-standard-mobile';
 import type { AppProps } from 'next/app';
 import { SnackbarProvider, useSnackbar } from 'notistack';
-import { ThemeProvider } from '@emotion/react';
-import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { createTheme } from '@mui/material';
 import { ReactNode, useCallback, useMemo } from 'react';
-import { 
-    createDefaultAuthorizationCache, 
-    createDefaultChainSelector, 
-    createDefaultWalletNotFoundHandler,
-    registerMwa, 
-} from '@solana-mobile/wallet-standard-mobile';
 
 const NOSTR_RELAY = process.env.NEXT_PUBLIC_NOSTR_RELAY ?? undefined;
 const REFLECTOR_HOST_AUTHORITY = process.env.NEXT_PUBLIC_REFLECTOR_HOST_AUTHORITY ?? undefined;

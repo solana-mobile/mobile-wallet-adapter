@@ -38,7 +38,7 @@ describe('reflectorId', () => {
 
     it('derives a reflector id from window.crypto', () => {
         const getRandomValuesSpy = vi.spyOn(window.crypto, 'getRandomValues').mockImplementation((buffer) => {
-            const randomBuffer = buffer as Uint32Array;
+            const randomBuffer = buffer as Uint32Array<ArrayBuffer>;
 
             randomBuffer[0] = 0;
             return randomBuffer;

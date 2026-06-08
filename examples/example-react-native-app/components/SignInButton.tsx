@@ -7,15 +7,15 @@ import useAuthorization from '../utils/useAuthorization';
 type Props = Readonly<ComponentProps<typeof Button>>;
 
 export default function SignInButton(props: Props) {
-  const { authorizeSessionWithSignIn } = useAuthorization();
-  return (
-    <Button
-      {...props}
-      onPress={() => {
-        transact(async wallet => {
-          await authorizeSessionWithSignIn(wallet);
-        });
-      }}
-    />
-  );
+    const { authorizeSessionWithSignIn } = useAuthorization();
+    return (
+        <Button
+            {...props}
+            onPress={() => {
+                transact(async (wallet) => {
+                    await authorizeSessionWithSignIn(wallet);
+                });
+            }}
+        />
+    );
 }

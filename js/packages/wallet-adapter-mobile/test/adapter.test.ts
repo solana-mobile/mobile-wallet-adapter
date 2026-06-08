@@ -31,7 +31,7 @@ const {
 }));
 
 vi.mock('../src/getIsSupported.js', () => ({
-    default: getIsSupportedMock,
+    getIsSupported: getIsSupportedMock,
 }));
 
 vi.mock('@solana-mobile/wallet-standard-mobile', async () => {

@@ -58,7 +58,7 @@ import {
     WalletAccount,
 } from '@wallet-standard/core';
 
-import getIsSupported from './getIsSupported.js';
+import { getIsSupported } from './getIsSupported.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;

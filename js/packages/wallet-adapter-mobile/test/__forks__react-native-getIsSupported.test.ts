@@ -8,7 +8,7 @@ vi.mock('react-native', () => ({
     Platform: platform,
 }));
 
-import getIsSupported from '../src/__forks__/react-native/getIsSupported.js';
+import { getIsSupported } from '../src/__forks__/react-native/getIsSupported.js';
 
 afterEach(() => {
     platform.OS = 'android';

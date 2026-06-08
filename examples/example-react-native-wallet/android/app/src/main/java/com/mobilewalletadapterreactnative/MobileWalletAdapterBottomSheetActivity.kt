@@ -5,7 +5,6 @@ import android.view.Gravity
 import android.view.WindowManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
-import com.facebook.react.ReactRootView
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
@@ -15,7 +14,7 @@ class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
      * Returns the name of the main component registered from JavaScript. This is used to schedule
      * rendering of the component.
      */
-    override protected fun getMainComponentName() = "MobileWalletAdapterEntrypoint"
+    override fun getMainComponentName(): String = "MobileWalletAdapterEntrypoint"
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -34,7 +33,6 @@ class MobileWalletAdapterBottomSheetActivity : ReactActivity() {
      * can specify the renderer you wish to use - the new renderer (Fabric) or the old renderer
      * (Paper).
      */
-    override protected fun createReactActivityDelegate(): ReactActivityDelegate {
-        return DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
-    }
+    override fun createReactActivityDelegate(): ReactActivityDelegate =
+        DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 }

@@ -62,7 +62,7 @@ vi.mock('../src/createHelloReq.js', () => ({
 }));
 
 vi.mock('../src/createMobileWalletProxy.js', () => ({
-    default: mockCreateMobileWalletProxy,
+    createMobileWalletProxy: mockCreateMobileWalletProxy,
 }));
 
 vi.mock('../src/generateAssociationKeypair.js', () => ({

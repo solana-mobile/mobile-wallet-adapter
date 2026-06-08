@@ -1,13 +1,13 @@
 /**
  * @format
  */
-import 'react-native-get-random-values'
+import 'react-native-get-random-values';
 
-import {AppRegistry} from 'react-native';
+import { AppRegistry } from 'react-native';
+
 import App from './App';
+import { name as appName } from './app.json';
 import MobileWalletAdapterEntrypointBottomSheet from './screens/MobileWalletAdapterEntrypointBottomSheet';
-import TestingEntrypointBottomSheet from './screens/TestingEntrypointBottomSheet';
-import {name as appName} from './app.json';
 
 // Mock event listener functions to prevent them from fataling.
 window.addEventListener = () => {};
@@ -19,7 +19,4 @@ AppRegistry.registerComponent(appName, () => App);
 //   () => TestingEntrypointBottomSheet,
 // );
 
-AppRegistry.registerComponent(
-  'MobileWalletAdapterEntrypoint',
-  () => MobileWalletAdapterEntrypointBottomSheet,
-);
+AppRegistry.registerComponent('MobileWalletAdapterEntrypoint', () => MobileWalletAdapterEntrypointBottomSheet);

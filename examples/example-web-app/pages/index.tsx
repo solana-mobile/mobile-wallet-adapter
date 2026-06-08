@@ -1,22 +1,19 @@
 import { AppBar, Stack, TextField, Toolbar, Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { useWallet } from '@solana/wallet-adapter-react';
+import type { NextPage } from 'next';
+import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 
 import AccountInfo from '../components/AccountInfo';
 import DisconnectButton from '../components/DisconnectButton';
 import FundAccountButton from '../components/FundAccountButton';
-import type { NextPage } from 'next';
 import RecordMessageButton from '../components/RecordMessageButton';
 import SignInButton from '../components/SignInButton';
 import SignMemoTransactionButton from '../components/SignMemoTransactionButton';
 import SignMessageButton from '../components/SignMessageButton';
-import { styled } from '@mui/material/styles';
-import { useWallet } from '@solana/wallet-adapter-react';
-import dynamic from 'next/dynamic';
 
-const Offset = styled('div')(
-    // @ts-ignore
-    ({ theme }) => theme.mixins.toolbar,
-);
+const Offset = styled('div')(({ theme }) => theme.mixins.toolbar);
 
 const ConnectButtonDynamic = dynamic(() => import('../components/ConnectButton'), { ssr: false });
 
@@ -59,9 +56,7 @@ const Home: NextPage = () => {
                         Disconnect
                     </DisconnectButton>
                 ) : (
-                    <SignInButton variant="outlined">
-                        Sign In
-                    </SignInButton>
+                    <SignInButton variant="outlined">Sign In</SignInButton>
                 )}
             </Stack>
         </>

@@ -1,6 +1,6 @@
 export const SEQUENCE_NUMBER_BYTES = 4;
 
-export default function createSequenceNumberVector(sequenceNumber: number): Uint8Array {
+export function createSequenceNumberVector(sequenceNumber: number): Uint8Array {
     if (sequenceNumber >= 4294967296) {
         throw new Error('Outbound sequence number overflow. The maximum sequence number is 32-bytes.');
     }
@@ -9,3 +9,8 @@ export default function createSequenceNumberVector(sequenceNumber: number): Uint
     view.setUint32(0, sequenceNumber, /* littleEndian */ false);
     return new Uint8Array(byteArray);
 }
+
+/**
+ * @deprecated Use {@link createSequenceNumberVector} instead.
+ */
+export default createSequenceNumberVector;

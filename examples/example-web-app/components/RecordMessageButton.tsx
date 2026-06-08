@@ -32,7 +32,6 @@ export default function RecordMessageButton({ children, message }: Props) {
     const transactionVersion = supportedTxnVersions?.has(0) ? 0 : 'legacy';
     const recordMessageGuarded = useGuardedCallback(
         async (messageBuffer: Buffer): Promise<[string | null, RpcResponseAndContext<SignatureResult>]> => {
-            
             const {
                 context,
                 value: { blockhash, lastValidBlockHeight },
@@ -46,24 +45,26 @@ export default function RecordMessageButton({ children, message }: Props) {
 
             let memoProgramTransaction: Transaction | VersionedTransaction;
 
-            // if the wallet only supports legacy transactions, use the web3.js legacy transaction 
+            // if the wallet only supports legacy transactions, use the web3.js legacy transaction
             if (transactionVersion === 'legacy') {
                 memoProgramTransaction = new Transaction({
                     blockhash: blockhash,
                     lastValidBlockHeight: lastValidBlockHeight,
                     feePayer: publicKey,
-                }).add(memoInstruction)
+                }).add(memoInstruction);
             } else {
                 // otherwise, if versioned transactions are supported, use a V0 versioned transaction
-                let memoProgramMessage = new TransactionMessage({
+                const memoProgramMessage = new TransactionMessage({
                     payerKey: publicKey!,
                     recentBlockhash: blockhash,
-                    instructions: [ memoInstruction ],
-                })
-                memoProgramTransaction = new VersionedTransaction(memoProgramMessage.compileToV0Message())
+                    instructions: [memoInstruction],
+                });
+                memoProgramTransaction = new VersionedTransaction(memoProgramMessage.compileToV0Message());
             }
 
-            const signature = await sendTransaction(memoProgramTransaction, connection, { minContextSlot: context.slot});
+            const signature = await sendTransaction(memoProgramTransaction, connection, {
+                minContextSlot: context.slot,
+            });
             return [signature, await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature })];
         },
         [connection, publicKey, sendTransaction],
@@ -72,7 +73,7 @@ export default function RecordMessageButton({ children, message }: Props) {
         <>
             <ButtonGroup fullWidth={true} variant="contained">
                 <LoadingButton
-                    disabled={publicKey == null || !message }
+                    disabled={publicKey == null || !message}
                     loading={recordingInProgress}
                     onClick={async () => {
                         if (publicKey == null || sendTransaction == null) {
