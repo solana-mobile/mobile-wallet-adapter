@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {base58FromUint8Array} from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import {Keypair} from '@solana/web3.js';
 import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import {Appbar, Button, Text} from 'react-native-paper';
-import {encode} from 'bs58';
 
 const ASYNC_STORAGE_KEY: string = '@reactnativefakewallet_keypair_key';
 
@@ -15,7 +15,7 @@ type EncodedKeypair = {
 const encodeKeypair = (keypair: Keypair): EncodedKeypair => {
   return {
     publicKeyBase58: keypair.publicKey.toBase58(),
-    secretKeyBase58: encode(keypair.secretKey),
+    secretKeyBase58: base58FromUint8Array(keypair.secretKey),
   };
 };
 

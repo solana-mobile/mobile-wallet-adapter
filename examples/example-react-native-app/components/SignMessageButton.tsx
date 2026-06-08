@@ -1,5 +1,5 @@
+import { base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import { transact } from '@solana-mobile/mobile-wallet-adapter-protocol-kit';
-import { fromUint8Array } from 'js-base64';
 import React, { useContext, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -11,9 +11,9 @@ import {
   Text,
 } from 'react-native-paper';
 
+import { SnackbarContext } from '../context/SnackbarProvider';
 import useAuthorization from '../utils/useAuthorization';
 import useGuardedCallback from '../utils/useGuardedCallback';
-import { SnackbarContext } from '../context/SnackbarProvider';
 
 type Props = Readonly<{
   children?: React.ReactNode;
@@ -112,7 +112,7 @@ export default function SignMessageButton({children, message}: Props) {
           <Dialog.Content>
             <Paragraph>
               <Text>
-                {previewSignature ? fromUint8Array(previewSignature) : null}
+                {previewSignature ? base64FromUint8Array(previewSignature) : null}
               </Text>
             </Paragraph>
             <Dialog.Actions>

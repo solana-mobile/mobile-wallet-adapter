@@ -1,7 +1,10 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import {Keypair} from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {encode, decode} from 'bs58';
+import {
+  base58FromUint8Array,
+  base58ToUint8Array,
+} from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 
 interface WalletContextType {
   wallet: Keypair | null;
@@ -27,12 +30,12 @@ const ASYNC_STORAGE_KEY: string = '@reactnativefakewallet_keypair_key';
 const encodeKeypair = (keypair: Keypair): EncodedKeypair => {
   return {
     publicKeyBase58: keypair.publicKey.toBase58(),
-    secretKeyBase58: encode(keypair.secretKey),
+    secretKeyBase58: base58FromUint8Array(keypair.secretKey),
   };
 };
 
 const decodeKeypair = (keypair: EncodedKeypair): Keypair => {
-  var secretKey: Uint8Array = decode(keypair.secretKeyBase58);
+  var secretKey: Uint8Array = base58ToUint8Array(keypair.secretKeyBase58);
   return Keypair.fromSecretKey(secretKey);
 };
 
