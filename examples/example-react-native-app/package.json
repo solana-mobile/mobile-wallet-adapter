@@ -24,7 +24,7 @@
         "@solana/transaction-confirmation": "^6.5.0",
         "@solana/transactions": "^6.5.0",
         "@solana/wallet-adapter-base": "^0.9.27",
-        "@wallet-standard/react": "^1.0.1",
+        "@wallet-standard/react": "^1.0.3",
         "localstorage-polyfill": "^1.0.1",
         "react": "19.2.7",
         "react-native": "0.85.3",
