@@ -38,6 +38,55 @@ updates:
       - "/examples/example-react-native-wallet"
       - "/examples/example-web-app"
       - "/js"
+    groups:
+      babel:
+        patterns:
+          - "@babel/*"
+      eslint:
+        patterns:
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "eslint"
+          - "eslint-*"
+      prettier:
+        patterns:
+          - "prettier"
+      react:
+        patterns:
+          - "@types/react"
+          - "@types/react-test-renderer"
+          - "react"
+          - "react-dom"
+          - "react-test-renderer"
+      react-native:
+        patterns:
+          - "@react-native/*"
+          - "@react-native-community/*"
+          - "@react-native-vector-icons/*"
+          - "@types/react-native*"
+          - "react-native"
+          - "react-native-*"
+      solana:
+        exclude-patterns:
+          - "@solana/wallet-standard-*"
+        patterns:
+          - "@solana/*"
+          - "@solana-program/*"
+      testing:
+        patterns:
+          - "@jest/*"
+          - "@types/jest"
+          - "@vitest/*"
+          - "jest"
+          - "vitest"
+      typescript:
+        patterns:
+          - "@types/*"
+          - "typescript"
+      wallet-standard:
+        patterns:
+          - "@solana/wallet-standard-*"
+          - "@wallet-standard/*"
     package-ecosystem: "npm"
     schedule:
       interval: "weekly"
