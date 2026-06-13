@@ -12,8 +12,17 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.example }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: 'examples/example-react-native-app/'
+            example: 'Example App'
+          - directory: 'examples/example-react-native-wallet/'
+            example: 'Example Wallet'
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -45,34 +54,18 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
-      - name: '[Example App] Install dependencies'
-        working-directory: 'examples/example-react-native-app/'
+      - name: '[${{ matrix.example }}] Install dependencies'
+        working-directory: ${{ matrix.directory }}
         run: pnpm install --frozen-lockfile
-      - name: '[Example App] Format Check'
-        working-directory: 'examples/example-react-native-app/'
+      - name: '[${{ matrix.example }}] Format Check'
+        working-directory: ${{ matrix.directory }}
         run: pnpm format:check
-      - name: '[Example App] Lint'
-        working-directory: 'examples/example-react-native-app/'
+      - name: '[${{ matrix.example }}] Lint'
+        working-directory: ${{ matrix.directory }}
         run: pnpm lint:check
-      - name: '[Example App] Type Check'
-        working-directory: 'examples/example-react-native-app/'
+      - name: '[${{ matrix.example }}] Type Check'
+        working-directory: ${{ matrix.directory }}
         run: npx tsc --noEmit
-      - name: '[Example App] Build'
-        working-directory: 'examples/example-react-native-app/'
-        run: pnpm android:build
-
-      - name: '[Example Wallet] Install dependencies'
-        working-directory: 'examples/example-react-native-wallet/'
-        run: pnpm install --frozen-lockfile
-      - name: '[Example Wallet] Format Check'
-        working-directory: 'examples/example-react-native-wallet/'
-        run: pnpm format:check
-      - name: '[Example Wallet] Lint'
-        working-directory: 'examples/example-react-native-wallet/'
-        run: pnpm lint:check
-      - name: '[Example Wallet] Type Check'
-        working-directory: 'examples/example-react-native-wallet/'
-        run: npx tsc --noEmit
-      - name: '[Example Wallet] Build'
-        working-directory: 'examples/example-react-native-wallet/'
+      - name: '[${{ matrix.example }}] Build'
+        working-directory: ${{ matrix.directory }}
         run: pnpm android:build
