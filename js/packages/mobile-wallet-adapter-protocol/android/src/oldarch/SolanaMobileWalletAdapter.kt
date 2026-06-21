@@ -13,4 +13,6 @@ internal constructor(context: ReactApplicationContext) : ReactContextBaseJavaMod
     abstract fun invoke(method: String, params: ReadableMap?, promise: Promise)
 
     abstract fun endSession(promise: Promise)
+
+    abstract fun getInstalledWallets(promise: Promise)
 }
