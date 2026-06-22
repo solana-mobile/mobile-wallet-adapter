@@ -140,8 +140,8 @@ importers:
         specifier: ^12.1.1
         version: 12.1.1(eslint@8.57.1)
       hermes-compiler:
-        specifier: 250829098.0.10
-        version: 250829098.0.10
+        specifier: 250829098.0.14
+        version: 250829098.0.14
       jest:
         specifier: ^29.6.3
         version: 29.7.0(@types/node@25.3.0)
@@ -3043,6 +3043,9 @@ packages:
 
   hermes-compiler@250829098.0.10:
     resolution: {integrity: sha512-TcRlZ0/TlyfJqquRFAWoyElVNnkdYRi/sEp4/Qy8/GYxjg8j2cS9D4MjuaQ+qimkmLN7AmO+44IznRf06mAr0w==}
+
+  hermes-compiler@250829098.0.14:
+    resolution: {integrity: sha512-5meXwsZxgiqFaJjNzwjzI9IyUkuGGBisu+z9BvQWmGVpjH6nz11hgqkyxe4dl8UAdyIV4lTbz91+Dlnjz0VxqA==}
 
   hermes-estree@0.25.1:
     resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
@@ -8501,6 +8504,8 @@ snapshots:
       function-bind: 1.1.2
 
   hermes-compiler@250829098.0.10: {}
+
+  hermes-compiler@250829098.0.14: {}
 
   hermes-estree@0.25.1: {}
 
