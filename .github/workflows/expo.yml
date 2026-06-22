@@ -9,11 +9,19 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.example.name }} (${{ matrix.version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
+        example:
+          - name: App
+            package_name: mobile-wallet-adapter-protocol
+            suffix: app
+          - name: Wallet
+            package_name: mobile-wallet-adapter-walletlib
+            suffix: wallet
         version: [ 52, 53, 54, latest]
 
     steps:
@@ -46,46 +54,24 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
-      - name: 'Setup Expo App'
+      - name: 'Setup Expo ${{ matrix.example.name }}'
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
-            npx -y create-expo-app expo-${{ matrix.version }}-app --template blank
+            npx -y create-expo-app expo-${{ matrix.version }}-${{ matrix.example.suffix }} --template blank
           else
-            npx -y create-expo-app expo-${{ matrix.version }}-app --template blank@sdk-${{ matrix.version }}
+            npx -y create-expo-app expo-${{ matrix.version }}-${{ matrix.example.suffix }} --template blank@sdk-${{ matrix.version }}
           fi
 
-      - name: 'Install mobile-wallet-adapter-protocol'
+      - name: 'Install ${{ matrix.example.package_name }}'
         working-directory: 'js/'
         run: |
-          cd expo-${{ matrix.version }}-app
-          npm install file:../packages/mobile-wallet-adapter-protocol
+          cd expo-${{ matrix.version }}-${{ matrix.example.suffix }}
+          npm install file:../packages/${{ matrix.example.package_name }}
 
-      - name: 'Build Expo App'
+      - name: 'Build Expo ${{ matrix.example.name }}'
         working-directory: 'js/'
         run: |
-          cd expo-${{ matrix.version }}-app
-          npx expo prebuild --no-install
-          cd android && ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: 'Setup Expo Wallet'
-        working-directory: 'js/'
-        run: |
-          if [ "${{ matrix.version }}" = "latest" ]; then
-            npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank
-          else
-            npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank@sdk-${{ matrix.version }}
-          fi
-
-      - name: 'Install mobile-wallet-adapter-walletlib'
-        working-directory: 'js/'
-        run: |
-          cd expo-${{ matrix.version }}-wallet
-          npm install file:../packages/mobile-wallet-adapter-walletlib
-
-      - name: 'Build Expo Wallet'
-        working-directory: 'js/'
-        run: |
-          cd expo-${{ matrix.version }}-wallet
+          cd expo-${{ matrix.version }}-${{ matrix.example.suffix }}
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace
