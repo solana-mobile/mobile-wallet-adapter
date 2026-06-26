@@ -12,11 +12,19 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.example.name }} (${{ matrix.version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
+        example:
+          - name: App
+            package_name: mobile-wallet-adapter-protocol
+            suffix: App
+          - name: Wallet
+            package_name: mobile-wallet-adapter-walletlib
+            suffix: Wallet
         version: [ 74, 80, latest]
 
     steps:
@@ -49,44 +57,23 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
-      - name: 'Setup React Native App'
+      - name: 'Setup React Native ${{ matrix.example.name }}'
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
-            npx @react-native-community/cli@latest init React${{ matrix.version }}App
+            npx @react-native-community/cli@latest init React${{ matrix.version }}${{ matrix.example.suffix }}
           else
-            npx @react-native-community/cli@latest init React${{ matrix.version }}App --version 0.${{ matrix.version }}.0
+            npx @react-native-community/cli@latest init React${{ matrix.version }}${{ matrix.example.suffix }} --version 0.${{ matrix.version }}.0
           fi
 
-      - name: 'Install mobile-wallet-adapter-protocol'
+      - name: 'Install ${{ matrix.example.package_name }}'
         working-directory: 'js/'
         run: |
-          cd React${{ matrix.version }}App
-          npm install file:../packages/mobile-wallet-adapter-protocol
-          
-      - name: 'Build React Native App'
-        working-directory: 'js/'
-        run: |
-          cd React${{ matrix.version }}App/android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          cd React${{ matrix.version }}${{ matrix.example.suffix }}
+          npm install file:../packages/${{ matrix.example.package_name }}
 
-      - name: 'Setup React Native Wallet'
+      - name: 'Build React Native ${{ matrix.example.name }}'
         working-directory: 'js/'
         run: |
-          if [ "${{ matrix.version }}" = "latest" ]; then
-            npx @react-native-community/cli@latest init React${{ matrix.version }}Wallet
-          else
-            npx @react-native-community/cli@latest init React${{ matrix.version }}Wallet --version 0.${{ matrix.version }}.0
-          fi
-
-      - name: 'Install mobile-wallet-adapter-walletlib'
-        working-directory: 'js/'
-        run: |
-          cd React${{ matrix.version }}Wallet
-          npm install file:../packages/mobile-wallet-adapter-walletlib
-          
-      - name: 'Build React Native Wallet'
-        working-directory: 'js/'
-        run: |
-          cd React${{ matrix.version }}Wallet/android
+          cd React${{ matrix.version }}${{ matrix.example.suffix }}/android
           ./gradlew assembleDebug --no-daemon --stacktrace
