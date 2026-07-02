@@ -83,7 +83,7 @@ importers:
         version: 0.85.3(@babel/core@7.29.7)
       '@react-native/eslint-config':
         specifier: 0.85.3
-        version: 0.85.3(eslint@9.39.4)(jest@29.7.0(@types/node@25.3.0))(prettier@3.8.4)(typescript@5.9.3)
+        version: 0.85.3(eslint@9.39.4)(jest@29.7.0(@types/node@25.3.0))(prettier@3.8.5)(typescript@5.9.3)
       '@react-native/gradle-plugin':
         specifier: 0.85.3
         version: 0.85.3
@@ -115,8 +115,8 @@ importers:
         specifier: ^29.6.3
         version: 29.7.0(@types/node@25.3.0)
       prettier:
-        specifier: 3.8.4
-        version: 3.8.4
+        specifier: 3.8.5
+        version: 3.8.5
       react-test-renderer:
         specifier: 19.2.7
         version: 19.2.7(react@19.2.7)
@@ -3763,8 +3763,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.8.4:
-    resolution: {integrity: sha512-N2MylSdi48+5N/6S5j+maeHbUSIzzZ5uOcX5Hm4QpV8Dkb1HFjfAKTKX6yNPJQD9AhcT3ifHNB66tWTTJDi11Q==}
+  prettier@3.8.5:
+    resolution: {integrity: sha512-zxcTTCedNGJM4R8sj/Cq/F0W/c4iE0afWBcBwMTRtw4WHYP9TWkYjdiH3npPRUYsXQCPR0hTU9yjovOu+E6EQA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -6133,7 +6133,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@react-native/eslint-config@0.85.3(eslint@9.39.4)(jest@29.7.0(@types/node@25.3.0))(prettier@3.8.4)(typescript@5.9.3)':
+  '@react-native/eslint-config@0.85.3(eslint@9.39.4)(jest@29.7.0(@types/node@25.3.0))(prettier@3.8.5)(typescript@5.9.3)':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/eslint-parser': 7.28.6(@babel/core@7.29.7)(eslint@9.39.4)
@@ -6148,7 +6148,7 @@ snapshots:
       eslint-plugin-react: 7.37.5(eslint@9.39.4)
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.4)
       eslint-plugin-react-native: 5.0.0(eslint@9.39.4)
-      prettier: 3.8.4
+      prettier: 3.8.5
     transitivePeerDependencies:
       - jest
       - supports-color
@@ -9231,7 +9231,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.8.4: {}
+  prettier@3.8.5: {}
 
   pretty-format@29.7.0:
     dependencies:
