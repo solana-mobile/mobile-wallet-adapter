@@ -956,7 +956,7 @@ The wallet endpoint should present the provided messages for approval. If approv
 
 This method should not be used for transaction signing. The wallet endpoint should additionally check that the payloads to be signed are not a transaction message. If any payloads in the request can be successfully parsed as a Solana transaction message, the wallet should immediately reject the request and return `ERROR_INVALID_PAYLOADS` and appropriately indicate the invalid payloads as described above.
 
-#### sign_offchain_message
+#### sign_offchain_messages
 
 ##### JSON-RPC method specification
 
