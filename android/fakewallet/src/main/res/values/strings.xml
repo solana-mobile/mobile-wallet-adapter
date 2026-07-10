@@ -31,6 +31,7 @@
     <!-- Sign Payload fragment strings -->
     <string name="label_sign_transactions">Sign transaction(s)</string>
     <string name="label_sign_messages">Sign message(s)</string>
+    <string name="label_sign_offchain_messages">Sign off-chain (OCMS) message(s)</string>
     <string name="label_num_txns">Num payloads:</string>
     <string name="label_account">Account:</string>
     <string name="label_simulate_authorization_failed">Simulate auth token invalid</string>
