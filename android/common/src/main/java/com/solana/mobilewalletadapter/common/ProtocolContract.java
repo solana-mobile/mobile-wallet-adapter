@@ -60,12 +60,6 @@ public class ProtocolContract {
     // METHOD_SIGN_MESSAGES returns a RESULT_SIGNED_PAYLOADS
 
     public static final String METHOD_SIGN_OFFCHAIN_MESSAGES = "sign_offchain_messages";
-    public static final String PARAMETER_MESSAGES = "messages"; // type: JSON array of message objects
-    public static final String PARAMETER_MESSAGE = "message"; // type: String (UTF-8 encoded OCMS payload)
-    public static final String PARAMETER_MESSAGE_VERSION = "message_version"; // type: Number
-    public static final String PARAMETER_REQUIRED_SIGNERS = "required_signers"; // type: JSON array of String (address)
-    public static final String RESULT_SIGNED_MESSAGES = "signed_messages"; // type: JSON array of String (base64-encoded signed message envelopes)
-
     public static final String PARAMETER_IDENTITY = "identity"; // type: JSON object
     public static final String PARAMETER_IDENTITY_URI = "uri"; // type: String (absolute URI)
     public static final String PARAMETER_IDENTITY_ICON = "icon"; // type: String (relative URI)

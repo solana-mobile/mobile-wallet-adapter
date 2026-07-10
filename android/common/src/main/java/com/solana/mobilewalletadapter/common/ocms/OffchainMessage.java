@@ -4,9 +4,6 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
-import com.solana.mobilewalletadapter.common.ProtocolContract;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,10 +12,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 
 public class OffchainMessage {
 
@@ -77,19 +71,6 @@ public class OffchainMessage {
     public int getVersion() { return mMessageVersion; }
 
     public byte[][] getRequiredSigners() { return mOrderedRequiredSigners; }
-
-    public JSONObject toJson() {
-        final JSONObject messageJson = new JSONObject();
-        try {
-            messageJson.put(ProtocolContract.PARAMETER_MESSAGE, mContent);
-            messageJson.put(ProtocolContract.PARAMETER_MESSAGE_VERSION, mMessageVersion);
-            messageJson.put(ProtocolContract.PARAMETER_REQUIRED_SIGNERS, mOrderedRequiredSigners);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create off chain message JSON object", e);
-        }
-
-        return messageJson;
-    }
 
     public byte[] serialize() {
         final byte[] orderedSignersBytes = serializeOrderedRequiredSigners(mOrderedRequiredSigners);
