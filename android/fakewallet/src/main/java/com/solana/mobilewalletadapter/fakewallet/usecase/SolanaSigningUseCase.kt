@@ -91,13 +91,14 @@ object SolanaSigningUseCase {
         message: OffchainMessage,
         keypairs: List<AsymmetricCipherKeyPair>
     ): Result {
-        var signedOffchainMessage: ByteArray
         val signers = message.requiredSigners
-        val signatures = Array<ByteArray>(message.requiredSigners.size) { ByteArray(64) }
+        val signatures = Array(message.requiredSigners.size) { ByteArray(64) }
         val message = message.serialize()
         keypairs.forEach { keypair ->
             val privateKey = keypair.private as Ed25519PrivateKeyParameters
-            val signerIndex = signers.indexOfFirst { (keypair.public as Ed25519PublicKeyParameters).encoded.contentEquals(it) }
+            val signerIndex = signers.indexOfFirst {
+                (keypair.public as Ed25519PublicKeyParameters).encoded.contentEquals(it)
+            }
 
             val signer = Ed25519Signer()
             signer.init(true, privateKey)
@@ -108,7 +109,8 @@ object SolanaSigningUseCase {
             signatures[signerIndex] = sig
         }
 
-        val signedMessage = byteArrayOf(signatures.size.toByte()) + signatures.fold(ByteArray(0)) { acc, b -> acc + b } + message
+        val signedMessage = byteArrayOf(signatures.size.toByte()) +
+                signatures.fold(ByteArray(0)) { acc, b -> acc + b } + message
         return Result(signedMessage, signedMessage.sliceArray(1 until 1 + SIGNATURE_LEN))
     }
 
