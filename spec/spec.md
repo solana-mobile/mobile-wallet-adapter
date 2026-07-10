@@ -972,27 +972,20 @@ sign_offchain_messages
 
 ```
 {
-    “messages”: [{
-        "message": "<message>",
-        "message_version": 1,
-        "required_signers": ["<address>", ...],
-    }, ...],
+    “payloads”: ["<offchain_message>", ...],
 }
 ```
 
 where:
 
-- `messages`: one or more off-chian message objects to sign containing:
-  - `message`: UTF-8 message body, as string.
-  - `message_version`: off-chain message specification version, number.
-  - `required_signers`: one or more base64-encoded addresses of the accounts which are reequired signers for `message`. These should contain one or more of the addresses returned by [`authorize`](#authorize) for the current session's authorization.
+- `payloads`: one or more base64url-encoded full off-chain message byte string paylaods to sign.  
 
 ###### Result
 {: .no_toc }
 
 ```
 {
-    "signed_messages": ["<signed_offchain_message>"],
+    "signed_payloads": ["<signed_offchain_message>"],
 }
 ```
 
