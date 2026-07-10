@@ -371,6 +371,24 @@ public abstract class BaseScenario implements Scenario {
                 }
 
                 @Override
+                public void signOffchainMessages(@NonNull MobileWalletAdapterServer.SignOffchainMessagesRequest request) {
+                    final AuthRecord authRecord;
+                    synchronized (mLock) {
+                        authRecord = mActiveAuthorization;
+                    }
+                    if (authRecord == null || authRecord.isRevoked()) {
+                        mIoHandler.post(() -> request.completeExceptionally(
+                                new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
+                        return;
+                    }
+
+                    mIoHandler.post(() -> mCallbacks.onSignOffchainMessagesRequest(new SignOffchainMessagesRequest(
+                            request, authRecord.identity.getName(), authRecord.identity.getUri(),
+                            authRecord.identity.getRelativeIconUri(), authRecord.scope,
+                            authRecord.getAuthorizedAccounts(), authRecord.chain)));
+                }
+
+                @Override
                 public void signAndSendTransactions(
                         @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request) {
                     final AuthRecord authRecord;
