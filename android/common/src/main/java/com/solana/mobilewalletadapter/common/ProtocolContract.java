@@ -59,13 +59,12 @@ public class ProtocolContract {
     // METHOD_SIGN_MESSAGES takes a PARAMETER_PAYLOADS
     // METHOD_SIGN_MESSAGES returns a RESULT_SIGNED_PAYLOADS
 
-    public static final String METHOD_SIGN_OFFCHAIN_MESSAGE = "sign_offchain_message";
+    public static final String METHOD_SIGN_OFFCHAIN_MESSAGES = "sign_offchain_messages";
+    public static final String PARAMETER_MESSAGES = "messages"; // type: JSON array of message objects
     public static final String PARAMETER_MESSAGE = "message"; // type: String (UTF-8 encoded OCMS payload)
     public static final String PARAMETER_MESSAGE_VERSION = "message_version"; // type: Number
     public static final String PARAMETER_REQUIRED_SIGNERS = "required_signers"; // type: JSON array of String (address)
-    public static final String RESULT_SIGNED_OFFCHAIN_MESSAGE = "signed_offchain_message"; // type: String (base64-encoded signed message)
-    // METHOD_SIGN_OFFCHAIN_MESSAGE returns a RESULT_SIGNATURE
-    // METHOD_SIGN_OFFCHAIN_MESSAGE returns a RESULT_SIGNATURE_TYPE
+    public static final String RESULT_SIGNED_MESSAGES = "signed_messages"; // type: JSON array of String (base64-encoded signed message envelopes)
 
     public static final String PARAMETER_IDENTITY = "identity"; // type: JSON object
     public static final String PARAMETER_IDENTITY_URI = "uri"; // type: String (absolute URI)
@@ -97,11 +96,6 @@ public class ProtocolContract {
 
     public static final String RESULT_WALLET_URI_BASE = "wallet_uri_base"; // type: String (absolute URI)
     public static final String RESULT_WALLET_ICON = "wallet_icon"; // type: String (data URI)
-    
-    public static final String RESULT_ADDRESS = "address"; // type: String (address)
-    public static final String RESULT_SIGNED_MESSAGE = "signed_message"; // type: String (base64-encoded signed message)
-    public static final String RESULT_SIGNATURE = "signature"; // type: String (base64-encoded signature)
-    public static final String RESULT_SIGNATURE_TYPE = "signature_type"; // type: String
 
     public static final String RESULT_SIGN_IN = "sign_in_result"; // type JSON object
     public static final String RESULT_SIGN_IN_ADDRESS = "address"; // type: String (address)
@@ -142,7 +136,7 @@ public class ProtocolContract {
     // Optional Features
     public static final String FEATURE_ID_CLONE_AUTHORIZATION = "solana:cloneAuthorization";
     public static final String FEATURE_ID_SIGN_IN_WITH_SOLANA = "solana:signInWithSolana";
-    public static final String FEATURE_ID_SIGN_OFFCHAIN_MESSAGE = "solana:signOffChainMessage";
+    public static final String FEATURE_ID_SIGN_OFFCHAIN_MESSAGES = "solana:signOffChainMessages";
     public static final String FEATURE_ID_SIGN_TRANSACTIONS = "solana:signTransactions";
 
     private ProtocolContract() {}
