@@ -1,18 +1,19 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 /*
  * Copyright (c) 2022 Solana Mobile Inc.
  */
 
 plugins {
     alias libs.plugins.android.application
-    alias libs.plugins.kotlin.android
     id 'androidx.navigation.safeargs.kotlin'
-    id 'kotlin-kapt'
+    alias libs.plugins.kotlin.ksp
 }
 
 android {
     namespace = "com.solana.mobilewalletadapter.fakewallet"
 
-    compileSdk 36
+    compileSdk = 36
 
     defaultConfig {
         applicationId "com.solana.mobilewalletadapter.fakewallet"
@@ -84,13 +85,16 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = '11'
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
     }
 
     buildFeatures {
         viewBinding true
         buildConfig true
+        resValues true
     }
     
     packagingOptions {
@@ -134,5 +138,5 @@ dependencies {
     implementation libs.multimult
     implementation libs.zxing.android.embedded
     implementation project(path: ':walletlib')
-    kapt libs.androidx.room.compiler
+    ksp libs.androidx.room.compiler
 }
