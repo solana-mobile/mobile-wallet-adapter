@@ -6,11 +6,25 @@ updates:
     schedule:
       interval: "weekly"
 
+    # One grouped PR for minor + patch bumps; majors land individually.
+    groups:
+      github-actions:
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter Android SDK
     directory: "/android"
     schedule:
       interval: "weekly"
+
+    # One grouped PR for minor + patch bumps; majors land individually.
+    groups:
+      gradle-android:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter support for React Native
@@ -18,17 +32,38 @@ updates:
     schedule:
       interval: "weekly"
 
+    # One grouped PR for minor + patch bumps; majors land individually.
+    groups:
+      gradle-js-packages-mobile-wallet-adapter-protocol-android:
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter sample for React Native (Android)
     directory: "/examples/example-react-native-app/android"
     schedule:
       interval: "weekly"
 
+    # One grouped PR for minor + patch bumps; majors land individually.
+    groups:
+      gradle-examples-example-react-native-app-android:
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter sample for Kotlin
     directory: "/examples/example-clientlib-ktx-app"
     schedule:
       interval: "weekly"
+
+    # One grouped PR for minor + patch bumps; majors land individually.
+    groups:
+      gradle-examples-example-clientlib-ktx-app:
+        update-types:
+          - "minor"
+          - "patch"
 
   # Mobile Wallet Adapter JavaScript SDK and TypeScript examples
   - cooldown:
