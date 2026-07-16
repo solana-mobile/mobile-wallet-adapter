@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a bug in the Mobile Wallet Adapter SDK
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to file a bug report! We can only act on bugs
+        that are reproducible with the SDK directly or with an example/test app in
+        this repo — we don't control the code of third-party apps that integrate
+        the SDK. Please fill out every required field; issues missing this
+        information will be sent back for more detail automatically.
+
+  - type: input
+    id: sdk-version
+    attributes:
+      label: SDK version
+      description: The exact version of the affected Mobile Wallet Adapter package(s).
+      placeholder: e.g. 2.1.3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: android-versions
+    attributes:
+      label: Android versions tested
+      multiple: true
+      options:
+        - "Android 10"
+        - "Android 11"
+        - "Android 12"
+        - "Android 13"
+        - "Android 14"
+        - "Android 15"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproducible-test-app
+    attributes:
+      label: Is this reproducible using our example/test app?
+      description: >
+        We can only act on bugs reproducible in our own example apps — we don't
+        control the code of third-party apps that integrate the SDK.
+      options:
+        - "Yes - reproducible with the example app"
+        - "No - only seen in my own app"
+        - "Haven't tried the example app yet"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to reproduce with the example app
+      description: Which example app, exact steps, device/emulator used.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs/stack traces
+      render: shell
+    validations:
+      required: false

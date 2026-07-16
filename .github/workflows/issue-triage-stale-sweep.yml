@@ -1,0 +1,46 @@
+name: Issue Triage Stale Sweep
+
+# Deterministic (non-LLM) nightly sweep. Auto-closes issues that have sat in a
+# "waiting on reporter" state past the grace period, based on the timestamp of
+# the bot's most recent verdict comment (found via the hidden
+# `claude-triage-verdict` marker). This does NOT call Claude — it is plain
+# timestamp math so it stays cheap and predictable.
+
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-triage-stale-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sweep waiting-on-reporter issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          for label in "needs-info" "needs-test-app-repro" "needs-version-upgrade"; do
+            for num in $(gh issue list --label "$label" --state open --json number -q '.[].number'); do
+              last=$(gh api "repos/${GH_REPO}/issues/$num/comments" \
+                --jq '[.[]|select(.body|contains("claude-triage-verdict"))]|last|.created_at')
+              [ -z "$last" ] && continue
+              age=$(( ( $(date +%s) - $(date -d "$last" +%s) ) / 86400 ))
+              if [ "$age" -ge 7 ]; then
+                gh issue close "$num" --reason "not planned" \
+                  --comment "Closing due to inactivity — no update on the missing info above after 7 days. Reopen anytime once you're able to add it."
+              elif [ "$age" -ge 5 ]; then
+                gh issue comment "$num" \
+                  --body "Friendly reminder — this will auto-close in ~2 days without an update on the missing info above."
+              fi
+            done
+          done
