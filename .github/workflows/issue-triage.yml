@@ -73,12 +73,32 @@ jobs:
               `gh issue view ${{ github.event.issue.number }} --json title,body,author,labels,state,comments`
             - The reporter filled out a structured Bug report form
               (.github/ISSUE_TEMPLATE/bug_report.yml) with these fields:
-              description of the bug, SDK version, dependency versions, Android
-              versions tested, wallets tested (at least Mock MWA + 1 other is
-              required), "Is this reproducible using our example/test app?",
-              steps to reproduce with the example app, expected vs actual
-              behavior, and optional screenshots, device details, logs, and
-              additional context.
+              description of the bug, affected SDK/platform, SDK version,
+              dependency versions, Android versions tested, wallets tested (at
+              least Mock MWA + 1 other is required), "Is this reproducible using
+              our example/test app?", steps to reproduce with the example app,
+              expected vs actual behavior, and optional screenshots, device
+              details, logs, and additional context.
+
+            ## This is a MULTI-PLATFORM monorepo — anchor on the platform
+            The affected SDK/platform field is the master key: it selects the
+            library, the version line, and the relevant example app. Everything
+            below is platform-specific.
+            - Android (native / Java): Maven `com.solanamobile:mobile-wallet-adapter-clientlib`
+              (dApps) and `...-walletlib` (wallets); sources under android/.
+            - Android (Kotlin): Maven `com.solanamobile:mobile-wallet-adapter-clientlib-ktx`.
+            - Web (JS/TS) and React Native: the npm packages under js/packages/*
+              (`@solana-mobile/mobile-wallet-adapter-protocol`, `-protocol-web3js`,
+              `-protocol-kit`, `-walletlib`, `wallet-adapter-mobile`,
+              `wallet-standard-mobile`) — EACH has its OWN independent version
+              line, so only ever compare a version against the same package.
+            Example/test apps by platform (use these to judge repro adequacy):
+            Android (Java/Kotlin) -> android/fakedapp, android/fakewallet,
+            examples/example-clientlib-ktx-app; React Native ->
+            examples/example-react-native-app, examples/example-react-native-wallet;
+            Web -> examples/example-web-app. A repro that names an example app
+            from a DIFFERENT platform than the reported one is a red flag worth a
+            clarifying question.
 
             ## KNOWN FIRST-PARTY PRODUCTS (out of scope for this repo)
             Treat this block as ground truth — you cannot infer it, because
@@ -102,20 +122,31 @@ jobs:
                - When signals are mixed, choose `ambiguous` and ask for
                  clarification (`needs_more_info`) rather than redirecting.
 
-            2. VERSION STALENESS — only for a genuine `sdk_issue`. Compare the
-               reported SDK version against the latest using REAL semver
-               ordering (1.10.0 > 1.9.0 — never string-sort). The MWA JS
-               packages keep Changesets changelogs at
-               js/packages/*/CHANGELOG.md (format: `## X.Y.Z` headers with
-               commit-hash-prefixed bullet lines); the latest released version
-               is the top `## X.Y.Z` header in the relevant package. Use
-               `Read`/`Grep` on those files (and `git log` for Android, which has
-               no changelog).
-               - `behind_fix_confirmed` requires an ACTUAL quotable changelog
-                 line or commit that plausibly matches the reported bug. Never
-                 fabricate or guess a citation. If the reported version is behind
-                 but you cannot find a matching fix, that is
+            2. VERSION STALENESS — only for a genuine `sdk_issue`, and always
+               scoped to the reported platform + package. Use REAL semver
+               ordering (1.10.0 > 1.9.0 — never string-sort), comparing only
+               within the SAME package's version line.
+               - Web / React Native (npm packages): identify the specific
+                 `@solana-mobile/*` package, then read its changelog at
+                 js/packages/<package-dir>/CHANGELOG.md (Changesets format:
+                 `## X.Y.Z` headers with commit-hash-prefixed bullet lines). The
+                 latest released version is the top `## X.Y.Z` header IN THAT
+                 package's file. Do not compare across packages — protocol,
+                 walletlib, protocol-kit, etc. are on different version lines.
+               - Android (Java) / Kotlin (Maven): there is NO in-repo changelog
+                 (android/gradle.properties is `main-SNAPSHOT`). The latest
+                 released version comes from GitHub Releases / tags — use
+                 `gh release list`, `gh release view <tag>`, and
+                 `gh api "repos/${GH_REPO}/releases"`; you may also consult
+                 `git log`/`git tag`. Cite a real release-note line or commit.
+               - `behind_fix_confirmed` requires an ACTUAL quotable changelog /
+                 release-note line or commit that plausibly matches the reported
+                 bug. Never fabricate or guess a citation. If the reported
+                 version is behind but you cannot find a matching fix, that is
                  `behind_no_match_found` — do NOT emit `fixed_in_later_version`.
+               - If the platform is "Not sure / other" or the package can't be
+                 pinned down, skip the version verdict and prefer
+                 `needs_more_info` asking which package/version.
 
             3. TEMPLATE COMPLETENESS / REPRO QUALITY — only if not already
                routed away above. "Adequate" repro means SPECIFIC: it names an
@@ -143,6 +174,12 @@ jobs:
             REMOVE `needs-triage` and move the issue into exactly one state.
             First ensure every label you use exists (idempotent):
             `gh label create "<name>" --color <hex> --description "<desc>" --force`
+
+            ALSO, whenever the platform is identifiable (i.e. not "Not sure /
+            other"), add the matching platform label so engineering can route:
+            `platform: android`, `platform: kotlin`, `platform: javascript`, or
+            `platform: react-native`. Add it regardless of verdict (including on
+            issues you leave open) — it is orthogonal to the state label below.
 
             - ready_for_engineering: remove `needs-triage`, add
               `ready-for-engineering`. Post a short confirming comment. Leave
@@ -208,4 +245,4 @@ jobs:
           claude_args: |
             --model claude-sonnet-5
             --max-turns 30
-            --allowedTools "Read,Grep,Glob,Write,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh label:*),Bash(gh api:*),Bash(git log:*),Bash(git grep:*)"
+            --allowedTools "Read,Grep,Glob,Write,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh label:*),Bash(gh api:*),Bash(gh release list:*),Bash(gh release view:*),Bash(git log:*),Bash(git tag:*),Bash(git grep:*)"
