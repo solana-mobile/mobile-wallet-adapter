@@ -38,15 +38,38 @@ concurrency:
 jobs:
   triage:
     runs-on: ubuntu-latest
+    # Hard wall-clock cap so a stuck run can't burn a runner (or tokens) forever.
+    timeout-minutes: 10
 
-    # Only triage OPEN, non-PR issues. Skip comments authored by any bot
-    # (including this bot's own verdict/reminder comments) so we never loop.
+    # Cost gate: a Claude run is expensive the instant it launches, so we decide
+    # here — NOT inside the prompt — whether it's worth launching at all. Only
+    # OPEN, non-PR issues, and only in these cases:
+    #   - a newly OPENED bug (has needs-triage; feature/question templates don't,
+    #     so they never launch a run);
+    #   - an EDIT to an issue that is still in a triage/awaiting-reporter state;
+    #   - a COMMENT BY THE ORIGINAL REPORTER on an issue we're waiting on
+    #     (needs-*). Comments from bots, maintainers, or +1'ers do NOT re-triage,
+    #     and comments on already-resolved issues do NOT re-triage.
     if: >
-      (github.event_name == 'issues' && github.event.issue.state == 'open') ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.state == 'open' &&
-       !github.event.issue.pull_request &&
-       github.event.comment.user.type != 'Bot')
+      github.event.issue.state == 'open' &&
+      !github.event.issue.pull_request &&
+      (
+        (github.event_name == 'issues' && github.event.action == 'opened' &&
+         contains(github.event.issue.labels.*.name, 'needs-triage'))
+        ||
+        (github.event_name == 'issues' && github.event.action == 'edited' &&
+         (contains(github.event.issue.labels.*.name, 'needs-triage') ||
+          contains(github.event.issue.labels.*.name, 'needs-info') ||
+          contains(github.event.issue.labels.*.name, 'needs-test-app-repro') ||
+          contains(github.event.issue.labels.*.name, 'needs-version-upgrade')))
+        ||
+        (github.event_name == 'issue_comment' &&
+         github.event.comment.user.type != 'Bot' &&
+         github.event.comment.user.login == github.event.issue.user.login &&
+         (contains(github.event.issue.labels.*.name, 'needs-info') ||
+          contains(github.event.issue.labels.*.name, 'needs-test-app-repro') ||
+          contains(github.event.issue.labels.*.name, 'needs-version-upgrade')))
+      )
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -305,5 +328,5 @@ jobs:
             certain of; when in doubt, prefer needs_more_info.
           claude_args: |
             --model claude-sonnet-5
-            --max-turns 30
+            --max-turns 20
             --allowedTools "Read,Grep,Glob,Write,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh label:*),Bash(gh api:*),Bash(gh release list:*),Bash(gh release view:*),Bash(git log:*),Bash(git tag:*),Bash(git grep:*)"
