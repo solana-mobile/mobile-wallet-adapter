@@ -74,10 +74,11 @@ jobs:
             - The reporter filled out a structured Bug report form
               (.github/ISSUE_TEMPLATE/bug_report.yml) with these fields:
               description of the bug, affected SDK/platform, SDK version,
-              dependency versions, Android versions tested, wallets tested (at
-              least Mock MWA + 1 other is required), "Is this reproducible using
-              our example/test app?", steps to reproduce with the example app,
-              expected vs actual behavior, and optional screenshots, device
+              dependency versions, wallets tested (at least Mock MWA + 1 other is
+              required — MWA is always app-to-wallet, so even web/RN reports must
+              name a wallet), "Is this reproducible using our example/test app?",
+              steps to reproduce with the example app, expected vs actual
+              behavior, and optional Android versions tested, screenshots, device
               details, logs, and additional context.
 
             ## This is a MULTI-PLATFORM monorepo — anchor on the platform
@@ -101,14 +102,24 @@ jobs:
             clarifying question.
 
             ## KNOWN FIRST-PARTY PRODUCTS (out of scope for this repo)
-            Treat this block as ground truth — you cannot infer it, because
-            these apps are private. A maintainer must fill in the real values;
-            until then, DO NOT emit a `wrong_repo_first_party` verdict — fall
-            back to `ambiguous` -> `needs_more_info` instead.
+            Treat this block as ground truth. These are Solana-Mobile-owned
+            apps, NOT this SDK — issues about the app itself belong in our
+            support channels, not here.
             <<<
-            # TODO(maintainer): replace the placeholders below.
-            - "[App Name]" — package com.yourcompany.app — support: https://discord.gg/yourinvite
+            - "Seed Vault Wallet" — Solana Mobile's own wallet app, preinstalled
+              and available ONLY on the Seeker phone (not on the Play Store or
+              any other device). Support channel: our Discord,
+              https://discord.gg/solanamobile.
             >>>
+            IMPORTANT nuance — Seed Vault Wallet also appears as a choice in the
+            form's "wallets tested" field, and that is legitimate: a reporter may
+            use Seed Vault Wallet as the *counterparty wallet* while reproducing a
+            genuine SDK bug from a dApp/example app. Only treat it as
+            `wrong_repo_first_party` when the issue is ABOUT Seed Vault Wallet the
+            app itself — its UI, its on-device behavior, "the wallet won't
+            open/approve/sign", account/seed management, Seeker-specific behavior
+            — with no SDK-level or example-app repro. When Seed Vault is merely
+            the test wallet for an SDK-side bug, keep triaging it as an SDK issue.
 
             ## Classification order (follow strictly)
 
@@ -116,6 +127,15 @@ jobs:
                integrating the SDK (they show integration code, e.g. calling
                `SdkClient.connect()`, wallet-adapter APIs, stack traces through
                MWA packages) or an end user of some app with no code visibility.
+               - MWA is ALWAYS an app-to-wallet flow (dApp -> wallet). A very
+                 common mis-report here is a web/React Native dApp team blaming
+                 the SDK for what is really the WALLET's behavior. Separate the
+                 two: is the fault in the SDK/protocol layer (association,
+                 encoding, the client/wallet libraries in this repo) or in how a
+                 specific wallet app handled the request? If it's wallet-side and
+                 the wallet is Seed Vault Wallet -> `wrong_repo_first_party`; if
+                 it's a third-party wallet (Phantom, Solflare, Backpack, etc.)
+                 and there's no example/test-app repro -> `wrong_repo_third_party`.
                - Route to `wrong_repo_first_party` / `wrong_repo_third_party`
                  ONLY when there is no independent example/test-app repro AND the
                  reporter has no visibility into SDK-level behavior.
@@ -156,11 +176,27 @@ jobs:
                answered "No - only seen in my own app" was still forced to type
                something into the repro-steps box — filler there is exactly what
                you must catch.
+               - "Android versions tested" is now OPTIONAL on the form. Only
+                 treat it as a gap when it actually matters: if the platform is
+                 Android, Kotlin, or React Native and no Android version is
+                 given, ask for it (`needs_more_info`). For a purely web /
+                 build-time / TypeScript issue, a blank Android-versions field is
+                 fine — do not penalize it.
+               - "Wallets tested" is still required and matters for EVERY
+                 platform (App -> Wallet). A web/RN report that named no wallet,
+                 or only the Mock wallet, has not actually exercised the
+                 app-to-wallet path — treat that as inadequate (`needs_more_info`
+                 or `needs_test_app_repro`).
 
             ## Decide ONE verdict (enum)
             ready_for_engineering | needs_more_info | needs_test_app_repro |
             wrong_repo_first_party | wrong_repo_third_party |
-            fixed_in_later_version | spam_or_off_topic
+            fixed_in_later_version | not_a_bug | spam_or_off_topic
+
+            `not_a_bug` is for a legitimate report that simply isn't an SDK bug:
+            a usage/how-to QUESTION, or a FEATURE REQUEST. Do NOT use
+            `spam_or_off_topic` for these — reserve that for actual spam or
+            off-topic noise.
 
             Reason through the full schema internally before deciding
             (product_classification, repro_context, template_completeness{
@@ -198,6 +234,16 @@ jobs:
             - fixed_in_later_version: post the upgrade comment citing the real
               changelog line, then close `--reason "not planned"`. No label.
               (Immediate — resolved evidence; reporter can reopen.)
+            - not_a_bug: decide which kind it is:
+                * Usage / how-to QUESTION: add the existing `question` label and
+                  do NOT post your own comment or close it. A separate automation
+                  (.github/workflows/label-actions.yml) already redirects
+                  `question` issues to the Solana Stack Exchange and closes them —
+                  let it handle the reply so we don't double-comment.
+                * FEATURE REQUEST / enhancement: remove `needs-triage`, add
+                  `enhancement`, post a short comment acknowledging it's tracked
+                  as a feature request (not a bug), and leave it OPEN for
+                  maintainer triage (no grace period — not waiting on reporter).
             - spam_or_off_topic: close `--reason "not planned"` with a brief
               neutral comment. No label.
 
@@ -223,6 +269,12 @@ jobs:
               specific gap — e.g. "You listed Android 13 but didn't say which
               example app or version you tested with for the reproducibility
               question."
+            - not_a_bug (feature request): "Thanks for the suggestion! This is a
+              feature request rather than a bug, so I've labelled it
+              `enhancement` and left it open for the maintainers to consider.
+              [one sentence restating the request in your own words]." (For the
+              question sub-case, post NO comment — the `question` label
+              automation handles the reply.)
 
             ## Idempotency & the required marker (do this exactly)
             EVERY comment you post MUST end with the hidden marker on its own

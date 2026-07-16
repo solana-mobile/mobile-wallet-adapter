@@ -71,7 +71,10 @@ body:
     id: android-versions
     attributes:
       label: Android versions tested
-      description: The Android OS version(s) of the device(s)/emulator(s) you tested on.
+      description: >
+        The Android OS version(s) of the device(s)/emulator(s) you tested on.
+        Leave blank only if the issue is not tied to a device (e.g. a
+        build-time/TypeScript issue in a web package).
       multiple: true
       options:
         - "Android 10"
@@ -81,15 +84,17 @@ body:
         - "Android 14"
         - "Android 15"
     validations:
-      required: true
+      required: false
 
   - type: dropdown
     id: wallets-tested
     attributes:
       label: Wallets tested
       description: >
-        Select every wallet you reproduced this against. Before submitting, you
-        must test with at least the Mock MWA Wallet plus one other wallet.
+        Mobile Wallet Adapter is always an app-to-wallet flow, so every report —
+        including web and React Native dApp issues — must be reproduced against
+        a real wallet. Select every wallet you reproduced this against; you must
+        test with at least the Mock MWA Wallet plus one other wallet.
       multiple: true
       options:
         - "Mock MWA Wallet"
