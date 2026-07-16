@@ -11,12 +11,39 @@ body:
         the SDK. Please fill out every required field; issues missing this
         information will be sent back for more detail automatically.
 
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
   - type: input
     id: sdk-version
     attributes:
       label: SDK version
-      description: The exact version of the affected Mobile Wallet Adapter package(s).
+      description: The exact version of the primary affected Mobile Wallet Adapter package.
       placeholder: e.g. 2.1.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependency-versions
+    attributes:
+      label: Dependency versions
+      description: A list of relevant dependencies in your app and their versions.
+      render: shell
+      placeholder: |
+        // React Native
+        "react-native": "x.y.z"
+        "expo": "x.y.z"
+        "@solana-mobile/mobile-wallet-adapter-protocol": "x.y.z"
+        "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "x.y.z"
+
+        // Kotlin
+        com.solanamobile:mobile-wallet-adapter-clientlib-ktx:x.y.z
+        com.solanamobile:web3-solana:x.y.z
     validations:
       required: true
 
@@ -32,6 +59,23 @@ body:
         - "Android 13"
         - "Android 14"
         - "Android 15"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: wallets-tested
+    attributes:
+      label: Wallets tested
+      description: >
+        Select every wallet you reproduced this against. Before submitting, you
+        must test with at least the Mock MWA Wallet plus one other wallet.
+      multiple: true
+      options:
+        - "Mock MWA Wallet"
+        - "Seed Vault Wallet"
+        - "Phantom"
+        - "Solflare"
+        - "Backpack"
     validations:
       required: true
 
@@ -53,7 +97,14 @@ body:
     id: repro-steps
     attributes:
       label: Steps to reproduce with the example app
-      description: Which example app, exact steps, device/emulator used.
+      description: >
+        Which example app, exact steps, device/emulator used. Reports without
+        reproduction steps cannot be addressed.
+      placeholder: |
+        1. Install example app '...'
+        2. Go to '...'
+        3. Tap on '...'
+        4. See error
     validations:
       required: true
 
@@ -61,13 +112,43 @@ body:
     id: expected-actual
     attributes:
       label: Expected vs actual behavior
+      description: A clear and concise description of what you expected to happen, and what actually happened.
     validations:
       required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / screen recording
+      description: >
+        If applicable, add at least one screenshot or a screen recording to help
+        explain the problem. You can paste or drag images directly into this box.
+    validations:
+      required: false
+
+  - type: textarea
+    id: device-details
+    attributes:
+      label: Device details
+      description: >
+        Device (e.g. Seeker, Pixel 7), browser if this is a mobile-web issue
+        (e.g. Chrome, Firefox), and any other relevant details (e.g. low power
+        mode on, privacy mode on).
+    validations:
+      required: false
 
   - type: textarea
     id: logs
     attributes:
       label: Relevant logs/stack traces
       render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
     validations:
       required: false

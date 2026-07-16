@@ -72,10 +72,13 @@ jobs:
             - Read the full issue and every comment:
               `gh issue view ${{ github.event.issue.number }} --json title,body,author,labels,state,comments`
             - The reporter filled out a structured Bug report form
-              (.github/ISSUE_TEMPLATE/bug_report.yml) with these fields: SDK
-              version, Android versions tested, "Is this reproducible using our
-              example/test app?", steps to reproduce with the example app,
-              expected vs actual behavior, and optional logs.
+              (.github/ISSUE_TEMPLATE/bug_report.yml) with these fields:
+              description of the bug, SDK version, dependency versions, Android
+              versions tested, wallets tested (at least Mock MWA + 1 other is
+              required), "Is this reproducible using our example/test app?",
+              steps to reproduce with the example app, expected vs actual
+              behavior, and optional screenshots, device details, logs, and
+              additional context.
 
             ## KNOWN FIRST-PARTY PRODUCTS (out of scope for this repo)
             Treat this block as ground truth — you cannot infer it, because
