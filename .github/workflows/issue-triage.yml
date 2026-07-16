@@ -71,6 +71,15 @@ jobs:
             ## Gather context first
             - Read the full issue and every comment:
               `gh issue view ${{ github.event.issue.number }} --json title,body,author,labels,state,comments`
+            - Check existing labels FIRST. The repo has separate intake
+              templates: bugs arrive labelled `needs-triage`; feature requests
+              arrive labelled `enhancement` (via feature_request.yml). If the
+              issue already carries `enhancement` (or `question`), it was NOT
+              filed as a bug — do not demand bug-report fields. Treat it as
+              `not_a_bug`, make sure the right label is present, and only add a
+              brief comment if there is no prior verdict comment yet; otherwise
+              take no further action. Full bug triage below applies only to
+              issues in the `needs-triage` (bug) intake.
             - The reporter filled out a structured Bug report form
               (.github/ISSUE_TEMPLATE/bug_report.yml) with these fields:
               description of the bug, affected SDK/platform, SDK version,

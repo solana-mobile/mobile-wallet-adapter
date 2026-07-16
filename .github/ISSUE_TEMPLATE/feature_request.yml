@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest an idea or enhancement for the Mobile Wallet Adapter SDK
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Have an idea for the SDK? Great — this form is for enhancements, not
+        bugs. If something is broken, use the Bug report template instead. If
+        you just have a usage/how-to question, please use one of the links on
+        the issue chooser (Solana Stack Exchange or Discord).
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which SDK / platform is this for?
+      description: This is a monorepo with several platform SDKs. Pick the most relevant one (or "Not sure / other").
+      options:
+        - "Android (native / Java) — com.solanamobile:mobile-wallet-adapter-clientlib / walletlib"
+        - "Android (Kotlin) — com.solanamobile:mobile-wallet-adapter-clientlib-ktx"
+        - "Web (JavaScript / TypeScript) — @solana-mobile/* npm packages"
+        - "React Native — @solana-mobile/* npm packages"
+        - "Not sure / other"
+    validations:
+      required: false
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: A clear description of the motivation — the use case or pain point behind the request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Describe the solution you'd like
+      description: What you want to happen. API shape, behavior, or example usage if you have one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or alternative approaches you've thought about.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context, links, or references here.
+    validations:
+      required: false
