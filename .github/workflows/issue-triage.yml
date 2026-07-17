@@ -13,9 +13,12 @@ name: Issue Triage
 # inadequate, it is closed. If they never respond, the nightly sweep
 # (issue-triage-stale-sweep.yml) closes it after 7 days.
 #
-# Maintainers (org members/collaborators) can force a re-run by commenting
-# `@claude re-triage`. Plain comments from reporters/third parties never trigger
-# a run.
+# Nothing runs on the existing backlog automatically: triage only acts on new
+# events, and old issues lack the gating labels so even edits won't trigger them.
+# Maintainers (org members/collaborators) can force a run on ANY open issue —
+# including backlog issues — by commenting `@claude re-triage`. Plain comments
+# from reporters/third parties never trigger a run, and close/reopen does not
+# either (only `opened`/`edited` are watched).
 #
 # State = GitHub labels + a hidden marker (<!-- claude-triage-verdict: ... -->)
 # in the bot's own comment. No database. This job never reads repo files and
@@ -105,8 +108,14 @@ jobs:
               filed as a bug — do not demand bug-report fields. Treat it as
               `not_a_bug`, make sure the right label is present, and only add a
               brief comment if there is no prior verdict comment yet; otherwise
-              take no action. Full bug triage applies only to the `needs-triage`
-              (bug) intake.
+              take no action.
+            - Full bug triage applies to bug reports: any issue in the
+              `needs-triage` intake, AND any issue a maintainer explicitly asked
+              you to re-triage with `@claude re-triage` — including OLD backlog
+              issues filed via a previous template that have no `needs-*` label
+              at all. In that manual case, do a full fresh triage as if the issue
+              were newly filed; a missing `needs-triage` label is expected, not a
+              reason to skip.
             - The reporter filled out a structured Bug report form
               (.github/ISSUE_TEMPLATE/bug_report.yml) with these fields:
               description of the bug, affected SDK/platform, SDK version, a
@@ -134,10 +143,11 @@ jobs:
                   missing [X], and inviting them to open a fresh issue with the
                   details. This is the ONLY case where this bot closes an
                   incomplete bug directly.
-            - If this run is a maintainer `@claude re-triage` comment: re-run
-              classification, but NEVER auto-close for incompleteness here — a
-              human is in the loop; just set the right label/verdict and comment.
-              (Closing for wrong-repo / spam / not_a_bug is still fine.)
+            - If this run is a maintainer `@claude re-triage` comment: do a full
+              fresh triage (this is how backlog issues get processed on demand),
+              but NEVER auto-close for incompleteness here — a human is in the
+              loop; just set the right label/verdict and comment. (Closing for
+              wrong-repo / spam / not_a_bug is still fine.)
 
             ## Multi-platform monorepo — anchor on the platform
             The affected SDK/platform field selects the relevant library and
@@ -226,9 +236,10 @@ jobs:
             these — reserve that for actual spam / off-topic noise.
 
             ## Actions per verdict
-            The form applies `needs-triage`; your job is to REMOVE it and move the
-            issue into exactly one state. Ensure each label exists first
-            (idempotent): `gh label create "<name>" --color <hex> --description "<desc>" --force`.
+            The form applies `needs-triage`; your job is to remove it (only if
+            present — backlog issues may not have it) and move the issue into
+            exactly one state. Ensure each label exists first (idempotent):
+            `gh label create "<name>" --color <hex> --description "<desc>" --force`.
             Whenever the platform is identifiable (not "Not sure / other"), ALSO
             add the routing label `platform: android`, `platform: kotlin`,
             `platform: javascript`, or `platform: react-native` — orthogonal to
