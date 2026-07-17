@@ -1,0 +1,101 @@
+name: Claude Investigate
+
+# Maintainer-invoked, read-only code investigation built on
+# anthropics/claude-code-action. A maintainer comments `@claude investigate`
+# (optionally with extra instructions) on an issue; Claude reads the actual
+# repository code, analyses the reported problem, and posts a PROPOSED PLAN as a
+# comment. It makes NO code changes and opens NO pull request — that is the
+# separate `@claude implement` workflow.
+#
+# The plan comment carries a hidden marker (<!-- claude-plan -->) so the
+# implement workflow can find the most recent plan to execute.
+#
+# Gated to org members/collaborators only, so it cannot be triggered (and cannot
+# spend tokens) by outside users. This is the more expensive path — a run reads
+# real code and reasons deeply — so keep it manual and deliberate.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: claude-investigate-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  investigate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Only on real issues (not PRs), only when an org member/collaborator writes
+    # the exact phrase. Bots and outside users can never trigger this.
+    if: >
+      !github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@claude investigate') &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Full history so investigation can inspect prior changes if useful.
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            A maintainer asked you to investigate issue
+            #${{ github.event.issue.number }} in `${{ github.repository }}`
+            (the Solana Mobile Wallet Adapter SDK monorepo) by commenting
+            `@claude investigate`. Read the triggering comment for any extra
+            instructions they included.
+
+            Your job is to produce a PROPOSED PLAN — you are NOT implementing
+            anything and NOT opening a PR.
+
+            Steps:
+            1. Read the issue and its comments:
+               `gh issue view ${{ github.event.issue.number }} --json title,body,author,labels,comments`
+            2. Read the ACTUAL code. This is a monorepo: Android (Java) under
+               android/ (clientlib, walletlib, clientlib-ktx, common, fakedapp,
+               fakewallet), JavaScript/TypeScript packages under js/packages/*,
+               and example apps under examples/. Use Read/Grep/Glob and git to
+               find the relevant source, trace the reported behavior, and form a
+               concrete hypothesis about root cause.
+            3. Post ONE comment containing the plan, with these sections:
+               - **Root-cause hypothesis** — what's going wrong and where
+                 (cite files/functions as `path:line`).
+               - **Proposed fix** — the specific change(s), file by file.
+               - **Risks / alternatives** — anything that could go wrong, and
+                 options you considered.
+               - **Test plan** — how to verify (which example/test app, steps,
+                 or unit tests).
+               - **Confidence & open questions** — be honest about uncertainty
+                 and what you could not determine from the code alone.
+               If the issue is under-specified or you cannot locate the relevant
+               code, say so plainly and list what you'd need — do not invent a
+               fix.
+
+            The comment MUST end with this hidden marker on its own line so the
+            implement step can find your plan:
+              <!-- claude-plan -->
+            Write the comment body to a file and post it with
+            `gh issue comment ${{ github.event.issue.number }} --body-file <file>`.
+          # Manual, deeper-reasoning path: Sonnet + medium effort. Turn UP by
+          # raising --effort, or switch --model to claude-opus-4-8 for the
+          # hardest investigations.
+          claude_args: |
+            --model claude-sonnet-5
+            --effort medium
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Write,Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh api:*),Bash(git log:*),Bash(git grep:*),Bash(git show:*),Bash(git diff:*)"

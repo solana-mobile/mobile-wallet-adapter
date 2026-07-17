@@ -48,6 +48,18 @@ body:
     validations:
       required: true
 
+  - type: checkboxes
+    id: latest-version-check
+    attributes:
+      label: Latest version check
+      description: >
+        A lot of reported bugs are already fixed in a newer release. Please
+        confirm you're on the latest before filing — it's the fastest way to
+        get unblocked.
+      options:
+        - label: I have reproduced this on the latest released version of the affected SDK.
+          required: false
+
   - type: textarea
     id: dependency-versions
     attributes:

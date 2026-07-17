@@ -29,7 +29,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -uo pipefail
-          for label in "needs-info" "needs-test-app-repro" "needs-version-upgrade"; do
+          for label in "needs-info" "needs-test-app-repro"; do
             for num in $(gh issue list --label "$label" --state open --json number -q '.[].number'); do
               last=$(gh api "repos/${GH_REPO}/issues/$num/comments" \
                 --jq '[.[]|select(.body|contains("claude-triage-verdict"))]|last|.created_at')

@@ -30,7 +30,6 @@ jobs:
           create "needs-triage"          "ededed" "Awaiting automated triage"
           create "needs-info"            "d93f0b" "Waiting on the reporter for missing information"
           create "needs-test-app-repro"  "d93f0b" "Waiting on a reproduction using an example/test app"
-          create "needs-version-upgrade" "fbca04" "Reporter asked to upgrade to a newer version"
           create "ready-for-engineering" "0e8a16" "Triaged and actionable by engineering"
 
           # Platform routing labels
