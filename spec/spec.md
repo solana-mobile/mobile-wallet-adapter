@@ -997,7 +997,7 @@ where:
 {: .no_toc }
 
 - `-32602` (Invalid params) if the params object does not match the format defined above
-- `-32601` (Method not found) if `sign_and_send_transactions` is not supported by this wallet endpoint
+- `-32601` (Method not found) if `sign_offchain_messages` is not supported by this wallet endpoint
 - `ERROR_AUTHORIZATION_FAILED` if the current session is in the unauthorized state, either because [`authorize`](#authorize) has not been invoked for the current session, or because the current session's authorization has been revoked by the wallet endpoint
 - `ERROR_INVALID_PAYLOADS`
 
@@ -1017,7 +1017,7 @@ where:
 
 The wallet endpoint should validate and present the provided messages for approval, adhering to the UX guidelines provided by the [Off-chain message Signing specification](https://docs.anza.xyz/proposals/off-chain-message-signing). If approved, the wallet endpoint should sign the messages as described in the OCMS specification and return the signed message envelopes to the dapp endpoint. 
 
-The wallet endpoint should check that the provided message to be signed is a valid off-chain message for the specified message format version. If the payload in the request cannot be successfully parsed as a Solana off-chain message, the wallet should immediately reject the request and return `ERROR_INVALID_OFFCHAIN_MESSAGE`.
+The wallet endpoint should check that the provided messages to be signed are valid off-chain messages for the specified message format version. If the payloads in the request cannot be successfully parsed as a Solana off-chain messages, the wallet should immediately reject the request and return `ERROR_INVALID_PAYLOADS`.
 
 #### clone_authorization
 
