@@ -1,0 +1,43 @@
+name: Issue Triage Labels Bootstrap
+
+# One-time (manually run) job that creates the label set the triage bot and the
+# bug-report form depend on. Run it once from the Actions tab after merging.
+# `--force` makes it idempotent, so it is safe to re-run to reconcile
+# colors/descriptions. The triage bot also self-creates labels on demand, but
+# the form's `needs-triage` label must exist BEFORE the first issue is filed
+# (GitHub silently drops a template label that doesn't exist yet).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Create triage labels
+        run: |
+          set -euo pipefail
+          create() { gh label create "$1" --color "$2" --description "$3" --force; }
+
+          # Triage state labels
+          create "needs-triage"          "ededed" "Awaiting automated triage"
+          create "needs-info"            "d93f0b" "Waiting on the reporter for missing information"
+          create "needs-test-app-repro"  "d93f0b" "Waiting on a reproduction using an example/test app"
+          create "ready-for-engineering" "0e8a16" "Triaged and actionable by engineering"
+
+          # Platform routing labels
+          create "platform: android"      "1d76db" "Android (native / Java) SDK"
+          create "platform: kotlin"       "1d76db" "Android Kotlin (ktx) SDK"
+          create "platform: javascript"   "1d76db" "JavaScript / web npm packages"
+          create "platform: react-native" "1d76db" "React Native SDK"
+
+          # Reused by the not_a_bug verdict
+          create "question"    "cc317c" "A usage/how-to question; redirected to Solana Stack Exchange"
+          create "enhancement" "a2eeef" "Feature request / enhancement"

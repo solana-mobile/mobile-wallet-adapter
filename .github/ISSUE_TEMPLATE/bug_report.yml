@@ -1,0 +1,199 @@
+name: Bug report
+description: Report a bug in the Mobile Wallet Adapter SDK
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to file a bug report! We can only act on bugs
+        that are reproducible with the SDK directly or with an example/test app in
+        this repo — we don't control the code of third-party apps that integrate
+        the SDK. Please fill out every required field; issues missing this
+        information will be sent back for more detail automatically.
+
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which SDK / platform is affected?
+      description: >
+        This is a monorepo with several platform SDKs. Pick the one where you
+        hit the bug — it tells us which library, version line, and example app
+        apply.
+      options:
+        - "Android (native / Java) — com.solanamobile:mobile-wallet-adapter-clientlib / walletlib"
+        - "Android (Kotlin) — com.solanamobile:mobile-wallet-adapter-clientlib-ktx"
+        - "Web (JavaScript / TypeScript) — @solana-mobile/* npm packages"
+        - "React Native — @solana-mobile/* npm packages"
+        - "Not sure / other"
+    validations:
+      required: true
+
+  - type: input
+    id: sdk-version
+    attributes:
+      label: SDK version
+      description: >
+        The exact version of the primary affected package for the platform you
+        selected above (e.g. the npm package version, or the
+        com.solanamobile:… Maven version).
+      placeholder: e.g. 2.2.9 (npm) or 2.0.7 (Maven)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: latest-version-check
+    attributes:
+      label: Latest version check
+      description: >
+        A lot of reported bugs are already fixed in a newer release. Please
+        confirm you're on the latest before filing — it's the fastest way to
+        get unblocked.
+      options:
+        - label: I have reproduced this on the latest released version of the affected SDK.
+          required: false
+
+  - type: textarea
+    id: dependency-versions
+    attributes:
+      label: Dependency versions
+      description: A list of relevant dependencies in your app and their versions.
+      render: shell
+      placeholder: |
+        // React Native
+        "react-native": "x.y.z"
+        "expo": "x.y.z"
+        "@solana-mobile/mobile-wallet-adapter-protocol": "x.y.z"
+        "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "x.y.z"
+
+        // Kotlin
+        com.solanamobile:mobile-wallet-adapter-clientlib-ktx:x.y.z
+        com.solanamobile:web3-solana:x.y.z
+    validations:
+      required: true
+
+  - type: dropdown
+    id: android-versions
+    attributes:
+      label: Android versions tested
+      description: >
+        The Android OS version(s) of the device(s)/emulator(s) you tested on.
+        Leave blank only if the issue is not tied to a device (e.g. a
+        build-time/TypeScript issue in a web package).
+      multiple: true
+      options:
+        - "Android 10"
+        - "Android 11"
+        - "Android 12"
+        - "Android 13"
+        - "Android 14"
+        - "Android 15"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: wallets-tested
+    attributes:
+      label: Wallets tested
+      description: >
+        Mobile Wallet Adapter is always an app-to-wallet flow, so every report —
+        including web and React Native dApp issues — must be reproduced against
+        a real wallet. Select every wallet you reproduced this against; you must
+        test with at least the Mock MWA Wallet plus one other wallet.
+      multiple: true
+      options:
+        - "Mock MWA Wallet"
+        - "Seed Vault Wallet"
+        - "Phantom"
+        - "Solflare"
+        - "Backpack"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproducible-test-app
+    attributes:
+      label: Is this reproducible using our example/test app?
+      description: >
+        We can only act on bugs reproducible in our own example apps — we don't
+        control the code of third-party apps that integrate the SDK.
+      options:
+        - "Yes - reproducible with the example app"
+        - "No - only seen in my own app"
+        - "Haven't tried the example app yet"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to reproduce with the example app
+      description: >
+        Name the example/test app for your platform, the exact steps, and the
+        device/emulator used. Reports without reproduction steps cannot be
+        addressed. Example apps in this repo:
+        Android (Java/Kotlin) → android/fakedapp, android/fakewallet,
+        examples/example-clientlib-ktx-app;
+        React Native → examples/example-react-native-app,
+        examples/example-react-native-wallet;
+        Web → examples/example-web-app.
+      placeholder: |
+        Example app: examples/example-react-native-app
+        1. Install and launch the app on '...'
+        2. Go to '...'
+        3. Tap on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual behavior
+      description: A clear and concise description of what you expected to happen, and what actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / screen recording
+      description: >
+        If applicable, add at least one screenshot or a screen recording to help
+        explain the problem. You can paste or drag images directly into this box.
+    validations:
+      required: false
+
+  - type: textarea
+    id: device-details
+    attributes:
+      label: Device details
+      description: >
+        Device (e.g. Seeker, Pixel 7), browser if this is a mobile-web issue
+        (e.g. Chrome, Firefox), and any other relevant details (e.g. low power
+        mode on, privacy mode on).
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs/stack traces
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
+    validations:
+      required: false
