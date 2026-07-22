@@ -4,10 +4,12 @@
 
 package com.solana.mobilewalletadapter.fakewallet.usecase
 
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
+import kotlin.math.sign
 
 object SolanaSigningUseCase {
     // throws IllegalArgumentException
@@ -83,6 +85,33 @@ object SolanaSigningUseCase {
         }
 
         return Result(signedMessage, signedMessage.sliceArray(message.size until message.size + SIGNATURE_LEN))
+    }
+
+    fun signOffchainMessage(
+        message: OffchainMessage,
+        keypairs: List<AsymmetricCipherKeyPair>
+    ): Result {
+        val signers = message.requiredSigners
+        val signatures = Array(message.requiredSigners.size) { ByteArray(64) }
+        val message = message.serialize()
+        keypairs.forEach { keypair ->
+            val privateKey = keypair.private as Ed25519PrivateKeyParameters
+            val signerIndex = signers.indexOfFirst {
+                (keypair.public as Ed25519PublicKeyParameters).encoded.contentEquals(it)
+            }
+
+            val signer = Ed25519Signer()
+            signer.init(true, privateKey)
+            signer.update(message, 0, message.size)
+            val sig = signer.generateSignature()
+            assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
+
+            signatures[signerIndex] = sig
+        }
+
+        val signedMessage = byteArrayOf(signatures.size.toByte()) +
+                signatures.fold(ByteArray(0)) { acc, b -> acc + b } + message
+        return Result(signedMessage, signedMessage.sliceArray(1 until 1 + SIGNATURE_LEN))
     }
 
     fun getSignersForTransaction(

@@ -17,6 +17,7 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentCreator
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.fakedapp.usecase.*
@@ -373,6 +374,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     sm.second
                 )
             }
+            showMessage(R.string.msg_request_succeeded)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Failed verifying signature on message", e)
+            showMessage(R.string.msg_request_failed)
+        }
+    }
+
+    fun signOffchainMessage(
+        intentLauncher: ActivityResultLauncher<StartMobileWalletAdapterActivity.CreateParams>,
+    ) = viewModelScope.launch {
+        val content = "Hello\nSolana Offchain Message Signing!"
+        val message = OffchainMessage.V1(arrayOf(_uiState.value.selectedAccount!!.publicKey), content)
+        val signedPayloads = try {
+            doLocalAssociateAndExecute(intentLauncher, _uiState.value.walletUriBase) { client ->
+                doReauthorize(client, IDENTITY, _uiState.value.authToken!!).also {
+                    Log.d(TAG, "Reauthorized: $it")
+                }
+                client.signOffchainMessages(arrayOf(message.content), message.requiredSigners)
+            }
+        } catch (e: MobileWalletAdapterUseCase.LocalAssociationFailedException) {
+            Log.e(TAG, "Error associating", e)
+            showMessage(R.string.msg_association_failed)
+            return@launch
+        } catch (e: MobileWalletAdapterUseCase.MobileWalletAdapterOperationFailedException) {
+            Log.e(TAG, "Failed invoking reauthorize + sign_transactions", e)
+            showMessage(R.string.msg_request_failed)
+            return@launch
+        }
+
+        try {
+            Log.d(TAG, "Verifying signature of signed off chain message")
+            OffChainMessageSigningUseCase.verifyOffChainEnvelope(signedPayloads.first())
             showMessage(R.string.msg_request_succeeded)
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Failed verifying signature on message", e)

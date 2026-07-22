@@ -58,6 +58,7 @@ public interface Scenario {
         void onReauthorizeRequest(@NonNull ReauthorizeRequest request);
         void onSignTransactionsRequest(@NonNull SignTransactionsRequest request);
         void onSignMessagesRequest(@NonNull SignMessagesRequest request);
+        void onSignOffchainMessagesRequest(@NonNull SignOffchainMessagesRequest request);
         void onSignAndSendTransactionsRequest(@NonNull SignAndSendTransactionsRequest request);
 
         // Event callbacks

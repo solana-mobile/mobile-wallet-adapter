@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import com.funkatronics.encoders.Base58
 import com.funkatronics.encoders.Base64
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
 import com.solana.mobilewalletadapter.fakewallet.usecase.*
@@ -229,7 +230,6 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
 
         viewModelScope.launch {
-
             val valid = BooleanArray(request.request.payloads.size) { true }
             val signedPayloads = when (request) {
                 is MobileWalletAdapterServiceRequest.SignTransactions -> {
@@ -263,6 +263,24 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                         // TODO: wallet should check that the payload is NOT a transaction
                         //  to ensure the user is not being tricked into signing a transaction
                         SolanaSigningUseCase.signMessage(request.request.payloads[i], keypairs).signedPayload
+                    }
+                }
+                is MobileWalletAdapterServiceRequest.SignOffchainMessages -> {
+                    Array(request.request.payloads.size) { i ->
+                        val msg = try {
+                            OffchainMessage.deserialize(request.request.payloads[i])
+                        } catch (e: IllegalArgumentException) {
+                            Log.w(TAG, "Off-chain message [$i] is not a valid Solana off-chain message", e)
+                            valid[i] = false
+                            return@Array byteArrayOf()
+                        }
+                        val keypairs = msg.requiredSigners.mapNotNull {
+                            getApplication<FakeWalletApplication>().keyRepository.getKeypair(it)
+                        }
+                        Log.d(TAG, "Simulating off-chain message signing with ${keypairs.joinToString {
+                            Base58.encodeToString((it.public as Ed25519PublicKeyParameters).encoded)
+                        }}")
+                        SolanaSigningUseCase.signOffchainMessage(msg, keypairs).signedPayload
                     }
                 }
             }
@@ -632,6 +650,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             }
         }
 
+        override fun onSignOffchainMessagesRequest(request: SignOffchainMessagesRequest) {
+            if (verifyPrivilegedMethodSource(request)) {
+                cancelAndReplaceRequest(MobileWalletAdapterServiceRequest.SignOffchainMessages(request))
+            } else {
+                request.completeWithDecline()
+            }
+        }
+
         override fun onSignAndSendTransactionsRequest(request: SignAndSendTransactionsRequest) {
             if (verifyPrivilegedMethodSource(request)) {
                 val endpointUri = chainOrClusterToRpcUri(request.chain)
@@ -690,6 +716,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         data class SignMessages(
             override val request: SignMessagesRequest,
 //            val accounts: List<AuthorizedAccount>
+        ) : SignPayloads(request)
+        data class SignOffchainMessages(
+            override val request: SignOffchainMessagesRequest,
         ) : SignPayloads(request)
         data class SignAndSendTransactions(
             override val request: SignAndSendTransactionsRequest,

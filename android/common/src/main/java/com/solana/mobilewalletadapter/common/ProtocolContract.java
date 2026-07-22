@@ -59,6 +59,7 @@ public class ProtocolContract {
     // METHOD_SIGN_MESSAGES takes a PARAMETER_PAYLOADS
     // METHOD_SIGN_MESSAGES returns a RESULT_SIGNED_PAYLOADS
 
+    public static final String METHOD_SIGN_OFFCHAIN_MESSAGES = "sign_offchain_messages";
     public static final String PARAMETER_IDENTITY = "identity"; // type: JSON object
     public static final String PARAMETER_IDENTITY_URI = "uri"; // type: String (absolute URI)
     public static final String PARAMETER_IDENTITY_ICON = "icon"; // type: String (relative URI)
@@ -127,8 +128,9 @@ public class ProtocolContract {
     public static final String FEATURE_ID_SIGN_AND_SEND_TRANSACTIONS = "solana:signAndSendTransaction";
 
     // Optional Features
-    public static final String FEATURE_ID_SIGN_IN_WITH_SOLANA = "solana:signInWithSolana";
     public static final String FEATURE_ID_CLONE_AUTHORIZATION = "solana:cloneAuthorization";
+    public static final String FEATURE_ID_SIGN_IN_WITH_SOLANA = "solana:signInWithSolana";
+    public static final String FEATURE_ID_SIGN_OFFCHAIN_MESSAGES = "solana:signOffChainMessages";
     public static final String FEATURE_ID_SIGN_TRANSACTIONS = "solana:signTransactions";
 
     private ProtocolContract() {}
