@@ -493,6 +493,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             ProtocolContract.CHAIN_SOLANA_TESTNET,
             ProtocolContract.CLUSTER_TESTNET ->
                 Uri.parse("https://api.testnet.solana.com")
+            // reaches a test validator on the host via `adb reverse tcp:8899 tcp:8899`
+            CHAIN_SOLANA_LOCALNET, CLUSTER_LOCALNET ->
+                Uri.parse("http://localhost:8899")
             else -> throw IllegalArgumentException("Unsupported chain/cluster: $chainOrCluster")
         }
     }
@@ -701,6 +704,8 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
 
     companion object {
         private val TAG = MobileWalletAdapterViewModel::class.simpleName
+        private const val CHAIN_SOLANA_LOCALNET = "solana:localnet"
+        private const val CLUSTER_LOCALNET = "localnet"
         private const val SOURCE_VERIFICATION_TIMEOUT_MS = 3000L
         private const val LOW_POWER_NO_CONNECTION_TIMEOUT_MS = 3000L
     }
