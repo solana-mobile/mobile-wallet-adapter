@@ -54,7 +54,7 @@
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/kit": "^6.9.0"
+        "@solana/kit": "^7.0.0"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
