@@ -103,6 +103,8 @@ android {
 }
 
 dependencies {
+    testImplementation libs.junit
+
     androidTestImplementation libs.androidx.test.runner
     androidTestUtil libs.androidx.test.orchestrator
 

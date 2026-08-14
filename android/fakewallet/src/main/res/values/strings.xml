@@ -6,8 +6,24 @@
     <string name="app_name">Fake Wallet app</string>
 
     <!-- Main activity strings -->
-    <string name="label_hello_world">I\'m a wallet!</string>
+    <string name="label_active_account">Active account:</string>
+    <string name="label_active_account_path">Active account (%1$s):</string>
     <string name="label_start_remote_connection">Start Remote Connection</string>
+    <string name="str_active_account_ephemeral">Ephemeral — a new keypair per connection</string>
+    <string name="str_active_account_local_props">Active account (local.properties key):</string>
+    <string name="str_address_copied">Address copied to clipboard</string>
+
+    <!-- Seed phrase section strings -->
+    <string name="label_account_next">+</string>
+    <string name="label_account_prev">−</string>
+    <string name="label_clear_seed">Clear seed</string>
+    <string name="label_generate_seed">Generate</string>
+    <string name="label_import_seed">Import</string>
+    <string name="label_seed_section">Seed phrase</string>
+    <string name="str_clear_seed_confirm">Clear the seed phrase? The wallet will go back to using random keypairs.</string>
+    <string name="str_import_seed_hint">Enter a 12 or 24 word seed phrase</string>
+    <string name="str_seed_phrase_copied">Seed phrase copied to clipboard</string>
+    <string name="str_seed_phrase_hidden">Tap to reveal &amp; copy seed phrase</string>
 
     <!-- Associate fragment strings -->
     <string name="label_session_active">Session active, awaiting requests from dApp…</string>
