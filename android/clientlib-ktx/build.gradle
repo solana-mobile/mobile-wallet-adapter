@@ -9,11 +9,11 @@ plugins {
 android {
     namespace = "com.solana.mobilewalletadapter.clientlib.ktx"
 
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk 24
-        targetSdk 36
+        targetSdk 37
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
