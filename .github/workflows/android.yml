@@ -167,8 +167,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency: publish-to-gh-pages
-    permissions:
-      contents: write
     if: ${{ github.event_name == 'push' && !github.event.repository.fork }}
 
     steps:
