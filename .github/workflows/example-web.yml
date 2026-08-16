@@ -64,15 +64,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency: publish-to-gh-pages
-    permissions:
-      contents: write
     if: ${{ github.event_name == 'push' && !github.event.repository.fork }}
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
+
       - name: Checkout gh-pages branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: gh-pages
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Refresh example-web-app directory
         run: rm -rf example-web-app
