@@ -9,7 +9,7 @@ importers:
   .:
     devDependencies:
       '@changesets/cli':
-        specifier: ^2.31.1
+        specifier: ^2.29.8
         version: 2.31.1(@types/node@20.19.0)
       '@eslint/js':
         specifier: ^10.0.1
