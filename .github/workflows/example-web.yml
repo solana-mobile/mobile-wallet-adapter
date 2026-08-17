@@ -67,11 +67,36 @@ jobs:
     if: ${{ github.event_name == 'push' && !github.event.repository.fork }}
 
     steps:
-      - name: Update Example Web App
-        uses: solana-mobile/gha-commit-artifact-to-branch@4d6e4715d4d7eb83771e2e9d88bc11087c697682 # v2
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          token: ${{ secrets.UPDATE_GITHUB_PAGES_TOKEN }}
-          branch: gh-pages
-          artifact-name: example-web-app
-          dest: example-web-app
-          commit-message: 'Update Example Web App'
+          app-id: ${{ secrets.PR_BOT_APP_ID }}
+          private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: gh-pages
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Refresh example-web-app directory
+        run: rm -rf example-web-app
+
+      - name: Download Example Web App
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: example-web-app
+          path: example-web-app
+
+      - name: Commit and push to gh-pages
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to publish"
+          else
+            git commit -m "Update Example Web App"
+            git push origin gh-pages
+          fi
