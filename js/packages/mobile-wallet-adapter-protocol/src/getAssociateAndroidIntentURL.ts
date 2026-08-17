@@ -75,3 +75,23 @@ export async function getRemoteAssociateAndroidIntentURL(
     });
     return url;
 }
+
+export async function getNostrAssociateAndroidIntentURL(
+    associationPublicKey: CryptoKey,
+    connectionType: 'local' | 'remote',
+    relayDomain: string,
+    dappNostrPubkey: string,
+    associationURLBase?: string,
+    protocolVersions: ProtocolVersion[] = ['v1'],
+): Promise<URL> {
+    const exportedKey = await crypto.subtle.exportKey('raw', associationPublicKey);
+    const encodedKey = arrayBufferToBase64String(exportedKey);
+    const url = getIntentURL(`v1/associate/${connectionType}/nostr`, associationURLBase);
+    url.searchParams.set('association', getStringWithURLUnsafeBase64CharactersReplaced(encodedKey));
+    url.searchParams.set('relay', relayDomain);
+    url.searchParams.set('pubkey', dappNostrPubkey);
+    protocolVersions.forEach((version) => {
+        url.searchParams.set('v', version);
+    });
+    return url;
+}

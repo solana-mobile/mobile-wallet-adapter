@@ -3,11 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const ASSOCIATION_PORT = 51234;
 const ASSOCIATION_PUBLIC_KEY = {} as CryptoKey;
 const ASSOCIATION_URL_BASE = 'https://wallet.example';
+const NOSTR_CONNECTION_TYPE_LOCAL = 'local';
+const NOSTR_RELAY_AUTHORITY = 'relay.nostr.example';
+const NOSTR_PUBLIC_KEY = '8787456583922839823389245025520506';
 
-const { mockGetAssociateAndroidIntentURL, mockGetRandomAssociationPort } = vi.hoisted(() => ({
-    mockGetAssociateAndroidIntentURL: vi.fn(),
-    mockGetRandomAssociationPort: vi.fn(),
-}));
+const { mockGetAssociateAndroidIntentURL, mockGetNostrAssociateAndroidIntentURL, mockGetRandomAssociationPort } =
+    vi.hoisted(() => ({
+        mockGetAssociateAndroidIntentURL: vi.fn(),
+        mockGetNostrAssociateAndroidIntentURL: vi.fn(),
+        mockGetRandomAssociationPort: vi.fn(),
+    }));
 
 vi.mock('../src/associationPort.js', () => ({
     getRandomAssociationPort: mockGetRandomAssociationPort,
@@ -15,10 +20,11 @@ vi.mock('../src/associationPort.js', () => ({
 
 vi.mock('../src/getAssociateAndroidIntentURL.js', () => ({
     default: mockGetAssociateAndroidIntentURL,
+    getNostrAssociateAndroidIntentURL: mockGetNostrAssociateAndroidIntentURL,
 }));
 
 import { SolanaMobileWalletAdapterErrorCode } from '../src/errors.js';
-import { startSession } from '../src/startSession.js';
+import { startNostrSession, startSession } from '../src/startSession.js';
 
 beforeEach(() => {
     mockGetRandomAssociationPort.mockReturnValue(ASSOCIATION_PORT);
@@ -26,6 +32,7 @@ beforeEach(() => {
 
 afterEach(() => {
     mockGetAssociateAndroidIntentURL.mockReset();
+    mockGetNostrAssociateAndroidIntentURL.mockReset();
     mockGetRandomAssociationPort.mockReset();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -78,7 +85,6 @@ describe('startSession', () => {
             userAgent: 'Firefox/123',
         });
 
-        await expect(startSession(ASSOCIATION_PUBLIC_KEY)).resolves.toBe(ASSOCIATION_PORT);
         await expect(startSession(ASSOCIATION_PUBLIC_KEY)).resolves.toBe(ASSOCIATION_PORT);
 
         expect(frame.contentWindow.location.href).toBe(associationUrl.toString());
@@ -139,6 +145,153 @@ describe('startSession', () => {
         vi.useFakeTimers();
 
         const sessionPromise = startSession(ASSOCIATION_PUBLIC_KEY);
+        const expectation = expect(sessionPromise).rejects.toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+        await vi.advanceTimersByTimeAsync(3000);
+        await expectation;
+
+        expect(mockAssign).toHaveBeenCalledWith(associationUrl);
+        expect(mockRemoveEventListener).toHaveBeenCalledWith('blur', expect.any(Function));
+    });
+});
+
+describe('startNostrSession', () => {
+    it('launches https association URLs directly', async () => {
+        const associationUrl = new URL('https://wallet.example/v1/associate/local/nostr');
+        const mockAssign = vi.fn();
+        mockGetNostrAssociateAndroidIntentURL.mockResolvedValue(associationUrl);
+        vi.stubGlobal('window', {
+            location: {
+                assign: mockAssign,
+            },
+        });
+
+        await expect(
+            startNostrSession(
+                ASSOCIATION_PUBLIC_KEY,
+                NOSTR_CONNECTION_TYPE_LOCAL,
+                NOSTR_RELAY_AUTHORITY,
+                NOSTR_PUBLIC_KEY,
+                ASSOCIATION_URL_BASE,
+            ),
+        ).resolves.toBe(associationUrl);
+
+        expect(mockAssign).toHaveBeenCalledWith(associationUrl);
+        expect(mockGetNostrAssociateAndroidIntentURL).toHaveBeenCalledWith(
+            ASSOCIATION_PUBLIC_KEY,
+            NOSTR_CONNECTION_TYPE_LOCAL,
+            NOSTR_RELAY_AUTHORITY,
+            NOSTR_PUBLIC_KEY,
+            ASSOCIATION_URL_BASE,
+        );
+    });
+
+    it('launches custom protocol URLs through a hidden iframe in Firefox', async () => {
+        const associationUrl = new URL('solana-wallet:/v1/associate/local/nostr');
+        const frame = {
+            contentWindow: {
+                location: {
+                    href: '',
+                },
+            },
+            style: {
+                display: '',
+            },
+        };
+        const mockAppendChild = vi.fn();
+        const mockCreateElement = vi.fn(() => frame);
+        mockGetNostrAssociateAndroidIntentURL.mockResolvedValue(associationUrl);
+        vi.stubGlobal('document', {
+            body: {
+                appendChild: mockAppendChild,
+            },
+            createElement: mockCreateElement,
+        });
+        vi.stubGlobal('navigator', {
+            userAgent: 'Firefox/123',
+        });
+
+        await expect(
+            startNostrSession(
+                ASSOCIATION_PUBLIC_KEY,
+                NOSTR_CONNECTION_TYPE_LOCAL,
+                NOSTR_RELAY_AUTHORITY,
+                NOSTR_PUBLIC_KEY,
+            ),
+        ).resolves.toBe(associationUrl);
+
+        expect(frame.contentWindow.location.href).toBe(associationUrl.toString());
+        expect(frame.style.display).toBe('none');
+        expect(mockAppendChild).toHaveBeenCalledWith(frame);
+        expect(mockCreateElement).toHaveBeenCalledWith('iframe');
+    });
+
+    it('waits for blur after assigning custom protocol URLs in other browsers', async () => {
+        const associationUrl = new URL('solana-wallet:/v1/associate/local/nostr');
+        let blurHandler: (() => void) | undefined;
+        const mockAddEventListener = vi.fn((eventName: string, handler: () => void) => {
+            if (eventName === 'blur') {
+                blurHandler = handler;
+            }
+        });
+        const mockAssign = vi.fn(() => {
+            blurHandler?.();
+        });
+        const mockRemoveEventListener = vi.fn();
+        mockGetNostrAssociateAndroidIntentURL.mockResolvedValue(associationUrl);
+        vi.stubGlobal('navigator', {
+            userAgent: 'Chrome/123',
+        });
+        vi.stubGlobal('window', {
+            addEventListener: mockAddEventListener,
+            location: {
+                assign: mockAssign,
+            },
+            removeEventListener: mockRemoveEventListener,
+        });
+
+        await expect(
+            startNostrSession(
+                ASSOCIATION_PUBLIC_KEY,
+                NOSTR_CONNECTION_TYPE_LOCAL,
+                NOSTR_RELAY_AUTHORITY,
+                NOSTR_PUBLIC_KEY,
+            ),
+        ).resolves.toBe(associationUrl);
+
+        expect(mockAddEventListener).toHaveBeenCalledWith('blur', expect.any(Function));
+        expect(mockAssign).toHaveBeenCalledWith(associationUrl);
+        expect(mockRemoveEventListener).toHaveBeenCalledWith('blur', blurHandler);
+    });
+
+    it('rejects when a custom protocol URL does not navigate away', async () => {
+        const associationUrl = new URL('solana-wallet:/v1/associate/local/nostr');
+        const mockAddEventListener = vi.fn();
+        const mockAssign = vi.fn();
+        const mockRemoveEventListener = vi.fn();
+        mockGetNostrAssociateAndroidIntentURL.mockResolvedValue(associationUrl);
+        vi.stubGlobal('navigator', {
+            userAgent: 'Chrome/123',
+        });
+        vi.stubGlobal('window', {
+            addEventListener: mockAddEventListener,
+            location: {
+                assign: mockAssign,
+            },
+            removeEventListener: mockRemoveEventListener,
+        });
+        vi.useFakeTimers();
+
+        const sessionPromise = startNostrSession(
+            ASSOCIATION_PUBLIC_KEY,
+            NOSTR_CONNECTION_TYPE_LOCAL,
+            NOSTR_RELAY_AUTHORITY,
+            NOSTR_PUBLIC_KEY,
+        );
         const expectation = expect(sessionPromise).rejects.toEqual(
             expect.objectContaining({
                 code: SolanaMobileWalletAdapterErrorCode.ERROR_WALLET_NOT_FOUND,

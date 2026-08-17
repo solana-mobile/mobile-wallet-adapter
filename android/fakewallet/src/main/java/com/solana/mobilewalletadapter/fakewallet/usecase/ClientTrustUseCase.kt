@@ -11,8 +11,6 @@ import android.os.Build
 import android.util.Log
 import com.solana.digitalassetlinks.AndroidAppPackageVerifier
 import com.solana.mobilewalletadapter.walletlib.association.AssociationUri
-import com.solana.mobilewalletadapter.walletlib.association.LocalAssociationUri
-import com.solana.mobilewalletadapter.walletlib.association.RemoteAssociationUri
 import kotlinx.coroutines.*
 import java.net.URI
 
@@ -24,8 +22,8 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
     private val associationType: AssociationType
 
     init {
-        associationType = when (associationUri) {
-            is LocalAssociationUri -> {
+        associationType = when (associationUri.connectionType) {
+            AssociationUri.ConnectionType.LOCAL -> {
                 if (callingPackage != null) {
                     Log.d(TAG, "Creating client trust use case for a local app scenario")
                     AssociationType.LocalFromApp
@@ -34,11 +32,10 @@ class ClientTrustUseCase(private val repositoryScope: CoroutineScope,
                     AssociationType.LocalFromBrowser
                 }
             }
-            is RemoteAssociationUri -> {
+            AssociationUri.ConnectionType.REMOTE -> {
                 Log.d(TAG, "Creating client trust use case for a remote scenario")
                 AssociationType.Remote
             }
-            else -> throw UnsupportedOperationException("Unrecognized association URI type")
         }
     }
 

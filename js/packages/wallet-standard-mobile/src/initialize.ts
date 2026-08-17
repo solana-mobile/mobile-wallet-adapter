@@ -16,14 +16,15 @@ import {
     SolanaMobileWalletAdapterWallet,
 } from './wallet.js';
 
-export function registerMwa(config: {
-    appIdentity: AppIdentity;
-    authorizationCache: AuthorizationCache;
-    chains: IdentifierArray;
-    chainSelector: ChainSelector;
-    remoteHostAuthority?: string;
-    onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-}) {
+export function registerMwa(
+    config: {
+        appIdentity: AppIdentity;
+        authorizationCache: AuthorizationCache;
+        chains: IdentifierArray;
+        chainSelector: ChainSelector;
+        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+    } & ({ remoteHostAuthority?: string } | { nostrRelay: string }),
+) {
     if (typeof window === 'undefined') {
         console.warn(`MWA not registered: no window object`);
         return;
@@ -42,11 +43,22 @@ export function registerMwa(config: {
     // by default because it usually fails in the most common cases (e.g wallet browsers).
     if (allowLocalAssociation) {
         registerWallet(new LocalSolanaMobileWalletAdapterWallet(config));
-    } else if (getIsRemoteAssociationSupported() && config.remoteHostAuthority !== undefined) {
-        registerWallet(
-            new RemoteSolanaMobileWalletAdapterWallet({ ...config, remoteHostAuthority: config.remoteHostAuthority }),
-        );
+    } else if (
+        getIsRemoteAssociationSupported() &&
+        ('nostrRelay' in config || config.remoteHostAuthority !== undefined)
+    ) {
+        if ('nostrRelay' in config) {
+            registerWallet(new RemoteSolanaMobileWalletAdapterWallet({ ...config, nostrRelay: config.nostrRelay }));
+        } else {
+            registerWallet(
+                new RemoteSolanaMobileWalletAdapterWallet({
+                    ...config,
+                    remoteHostAuthority: config.remoteHostAuthority!,
+                }),
+            );
+        }
     } else {
         // currently not supported (non-Android mobile device)
+        console.warn(`MWA not registered: device or environment not supported`);
     }
 }

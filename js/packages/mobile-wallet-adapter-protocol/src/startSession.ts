@@ -1,6 +1,6 @@
 import { AssociationPort, getRandomAssociationPort } from './associationPort.js';
 import { SolanaMobileWalletAdapterError, SolanaMobileWalletAdapterErrorCode } from './errors.js';
-import getAssociateAndroidIntentURL from './getAssociateAndroidIntentURL.js';
+import getAssociateAndroidIntentURL, { getNostrAssociateAndroidIntentURL } from './getAssociateAndroidIntentURL.js';
 
 // Typescript `enums` thwart tree-shaking. See https://bargsten.org/jsts/enums/
 const Browser = {
@@ -40,7 +40,7 @@ function getDetectionPromise() {
 
 let _frame: HTMLIFrameElement | null = null;
 function launchUrlThroughHiddenFrame(url: URL) {
-    if (_frame == null) {
+    if (_frame == null || !_frame.isConnected) {
         _frame = document.createElement('iframe');
         _frame.style.display = 'none';
         document.body.appendChild(_frame);
@@ -95,4 +95,24 @@ export async function startSession(
     );
     await launchAssociation(associationUrl);
     return randomAssociationPort;
+}
+
+export async function startNostrSession(
+    associationPublicKey: CryptoKey,
+    connectionType: 'local' | 'remote',
+    relayDomain: string,
+    dappNostrPubkey: string,
+    associationURLBase?: string,
+): Promise<URL> {
+    const associationUrl = await getNostrAssociateAndroidIntentURL(
+        associationPublicKey,
+        connectionType,
+        relayDomain,
+        dappNostrPubkey,
+        associationURLBase,
+    );
+    if (connectionType == 'local') {
+        await launchAssociation(associationUrl);
+    }
+    return associationUrl;
 }

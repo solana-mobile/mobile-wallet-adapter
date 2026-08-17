@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SolanaMobileWalletAdapterErrorCode } from '../src/errors.js';
 import getAssociateAndroidIntentURL, {
+    getNostrAssociateAndroidIntentURL,
     getRemoteAssociateAndroidIntentURL,
 } from '../src/getAssociateAndroidIntentURL.js';
 
@@ -76,5 +77,76 @@ describe('getAssociateAndroidIntentURL', () => {
                 name: 'SolanaMobileWalletAdapterError',
             }),
         );
+    });
+});
+
+describe('getNostrAssociateAndroidIntentURL', () => {
+    it('creates a local Nostr association URL with the default wallet scheme', async () => {
+        const url = await getNostrAssociateAndroidIntentURL(
+            ASSOCIATION_PUBLIC_KEY,
+            'local',
+            'relay.example.com',
+            'aa'.repeat(32),
+        );
+
+        expect(mockExportKey).toHaveBeenCalledWith('raw', ASSOCIATION_PUBLIC_KEY);
+        expect(url.protocol).toBe('solana-wallet:');
+        expect(url.pathname).toBe('/v1/associate/local/nostr');
+        expect(url.searchParams.get('association')).toBe('-_8.');
+        expect(url.searchParams.get('relay')).toBe('relay.example.com');
+        expect(url.searchParams.get('pubkey')).toBe('aa'.repeat(32));
+        expect(url.searchParams.get('v')).toBe('v1');
+    });
+
+    it('creates a remote Nostr association URL', async () => {
+        const url = await getNostrAssociateAndroidIntentURL(
+            ASSOCIATION_PUBLIC_KEY,
+            'remote',
+            'relay.example.com',
+            'aa'.repeat(32),
+        );
+
+        expect(url.pathname).toBe('/v1/associate/remote/nostr');
+    });
+
+    it('creates a Nostr association URL with a custom wallet base URL', async () => {
+        const url = await getNostrAssociateAndroidIntentURL(
+            ASSOCIATION_PUBLIC_KEY,
+            'local',
+            'relay.example.com',
+            'bb'.repeat(32),
+            'https://wallet.example',
+        );
+
+        expect(url.protocol).toBe('https:');
+        expect(url.host).toBe('wallet.example');
+        expect(url.pathname).toBe('/v1/associate/local/nostr');
+        expect(url.searchParams.get('relay')).toBe('relay.example.com');
+        expect(url.searchParams.get('pubkey')).toBe('bb'.repeat(32));
+    });
+
+    it('includes the association token', async () => {
+        const url = await getNostrAssociateAndroidIntentURL(
+            ASSOCIATION_PUBLIC_KEY,
+            'local',
+            'relay.example.com',
+            'cc'.repeat(32),
+        );
+
+        expect(url.searchParams.has('association')).toBe(true);
+        expect(url.searchParams.get('association')).not.toBe('');
+    });
+
+    it('includes the protocol version', async () => {
+        const url = await getNostrAssociateAndroidIntentURL(
+            ASSOCIATION_PUBLIC_KEY,
+            'local',
+            'relay.example.com',
+            'dd'.repeat(32),
+            undefined,
+            ['v1'],
+        );
+
+        expect(url.searchParams.get('v')).toBe('v1');
     });
 });
