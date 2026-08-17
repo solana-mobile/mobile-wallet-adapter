@@ -77,7 +77,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 MobileWalletAdapterConfig(
                     10,
                     10,
-                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    arrayOf<Any>(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
                     LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
                     arrayOf(
                         ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS,
@@ -96,7 +96,7 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 MobileWalletAdapterConfig(
                     10,
                     10,
-                    arrayOf(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
+                    arrayOf<Any>(MobileWalletAdapterConfig.LEGACY_TRANSACTION_VERSION, 0),
                     LOW_POWER_NO_CONNECTION_TIMEOUT_MS,
                     arrayOf(
                         ProtocolContract.FEATURE_ID_SIGN_TRANSACTIONS,
@@ -493,6 +493,9 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
             ProtocolContract.CHAIN_SOLANA_TESTNET,
             ProtocolContract.CLUSTER_TESTNET ->
                 Uri.parse("https://api.testnet.solana.com")
+            // reaches a test validator on the host via `adb reverse tcp:8899 tcp:8899`
+            CHAIN_SOLANA_LOCALNET, CLUSTER_LOCALNET ->
+                Uri.parse("http://localhost:8899")
             else -> throw IllegalArgumentException("Unsupported chain/cluster: $chainOrCluster")
         }
     }
@@ -504,24 +507,22 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         }
 
     private suspend fun getKeypair(): AsymmetricCipherKeyPair =
-        BuildConfig.PRIVATE_KEY?.let(::decodePrivateKey)?.let { privateKeyRaw ->
+        getApplication<FakeWalletApplication>().keyRepository.getSeed()?.let { seed ->
+            val privateKeyRaw = withContext(Dispatchers.Default) {
+                Ed25519Slip10UseCase.derivePrivateKey(
+                    Bip39UseCase.toSeed(seed.mnemonic), seed.accountIndex)
+            }
+            getApplication<FakeWalletApplication>().keyRepository.getOrInsertKeypair(privateKeyRaw).also {
+                val publicKey = it.public as Ed25519PublicKeyParameters
+                Log.d(TAG, "Using seed-derived keypair (pub=${publicKey.encoded.contentToString()}, " +
+                        "path=${Ed25519Slip10UseCase.derivationPath(seed.accountIndex)}) for authorize request")
+            }
+        } ?: BuildConfig.PRIVATE_KEY?.let(::decodePrivateKey)?.let { privateKeyRaw ->
             getApplication<FakeWalletApplication>().keyRepository.getOrInsertKeypair(privateKeyRaw).also {
                 val publicKey = it.public as Ed25519PublicKeyParameters
                 Log.d(TAG, "Using local keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
             }
         } ?: generateKeypair()
-
-    private fun decodePrivateKey(privateKey: String): ByteArray =
-        try {
-            Base58.decode(privateKey)
-        } catch (_: Throwable) {
-            try {
-                val standardBase64NoPadding = privateKey.replace("-", "+").replace("_", "/").trimEnd('=')
-                AndroidBase64.decode(standardBase64NoPadding, AndroidBase64.NO_PADDING or AndroidBase64.NO_WRAP)
-            } catch (_: IllegalArgumentException) {
-                throw IllegalArgumentException("could not decode provided private key from local props")
-            }
-        }
 
     private inner class MobileWalletAdapterScenarioCallbacks : LocalScenario.Callbacks {
         override fun onScenarioReady() = Unit
@@ -700,7 +701,21 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
     }
 
     companion object {
+        internal fun decodePrivateKey(privateKey: String): ByteArray =
+            try {
+                Base58.decode(privateKey)
+            } catch (_: Throwable) {
+                try {
+                    val standardBase64NoPadding = privateKey.replace("-", "+").replace("_", "/").trimEnd('=')
+                    AndroidBase64.decode(standardBase64NoPadding, AndroidBase64.NO_PADDING or AndroidBase64.NO_WRAP)
+                } catch (_: IllegalArgumentException) {
+                    throw IllegalArgumentException("could not decode provided private key from local props")
+                }
+            }
+
         private val TAG = MobileWalletAdapterViewModel::class.simpleName
+        private const val CHAIN_SOLANA_LOCALNET = "solana:localnet"
+        private const val CLUSTER_LOCALNET = "localnet"
         private const val SOURCE_VERIFICATION_TIMEOUT_MS = 3000L
         private const val LOW_POWER_NO_CONNECTION_TIMEOUT_MS = 3000L
     }

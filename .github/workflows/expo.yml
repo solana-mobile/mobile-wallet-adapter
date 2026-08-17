@@ -9,15 +9,23 @@ on:
 
 jobs:
   build:
+    name: ${{ matrix.example.name }} (${{ matrix.version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
+        example:
+          - name: App
+            package_name: mobile-wallet-adapter-protocol
+            suffix: app
+          - name: Wallet
+            package_name: mobile-wallet-adapter-walletlib
+            suffix: wallet
         version: [ 52, 53, 54, latest]
 
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: set up Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -25,20 +33,20 @@ jobs:
           node-version: 24
       
       - name: Set up pnpm
-        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           cache: true
           cache_dependency_path: 'js/pnpm-lock.yaml'
           package_json_file: 'js/package.json'
 
       - name: set up JDK 17
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Gradle cache
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
       - name: 'Build Project'
         working-directory: 'js/'
@@ -46,46 +54,24 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
-      - name: 'Setup Expo App'
+      - name: 'Setup Expo ${{ matrix.example.name }}'
         working-directory: 'js/'
         run: |
           if [ "${{ matrix.version }}" = "latest" ]; then
-            npx -y create-expo-app expo-${{ matrix.version }}-app --template blank
+            npx -y create-expo-app expo-${{ matrix.version }}-${{ matrix.example.suffix }} --template blank
           else
-            npx -y create-expo-app expo-${{ matrix.version }}-app --template blank@sdk-${{ matrix.version }}
+            npx -y create-expo-app expo-${{ matrix.version }}-${{ matrix.example.suffix }} --template blank@sdk-${{ matrix.version }}
           fi
 
-      - name: 'Install mobile-wallet-adapter-protocol'
+      - name: 'Install ${{ matrix.example.package_name }}'
         working-directory: 'js/'
         run: |
-          cd expo-${{ matrix.version }}-app
-          npm install file:../packages/mobile-wallet-adapter-protocol
+          cd expo-${{ matrix.version }}-${{ matrix.example.suffix }}
+          npm install file:../packages/${{ matrix.example.package_name }}
 
-      - name: 'Build Expo App'
+      - name: 'Build Expo ${{ matrix.example.name }}'
         working-directory: 'js/'
         run: |
-          cd expo-${{ matrix.version }}-app
-          npx expo prebuild --no-install
-          cd android && ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: 'Setup Expo Wallet'
-        working-directory: 'js/'
-        run: |
-          if [ "${{ matrix.version }}" = "latest" ]; then
-            npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank
-          else
-            npx -y create-expo-app expo-${{ matrix.version }}-wallet --template blank@sdk-${{ matrix.version }}
-          fi
-
-      - name: 'Install mobile-wallet-adapter-walletlib'
-        working-directory: 'js/'
-        run: |
-          cd expo-${{ matrix.version }}-wallet
-          npm install file:../packages/mobile-wallet-adapter-walletlib
-
-      - name: 'Build Expo Wallet'
-        working-directory: 'js/'
-        run: |
-          cd expo-${{ matrix.version }}-wallet
+          cd expo-${{ matrix.version }}-${{ matrix.example.suffix }}
           npx expo prebuild --no-install
           cd android && ./gradlew assembleDebug --no-daemon --stacktrace

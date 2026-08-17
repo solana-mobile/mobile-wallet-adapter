@@ -1,19 +1,20 @@
 buildscript {
     ext {
-        kotlin_version = '2.4.0'
-        compose_version = '1.11.2'
-        compose_material_version = '1.7.8'
+        kotlin_version = '2.4.10'
+        compose_version = '1.12.0'
+        compose_material_version = '1.12.0'
     }
 
     dependencies {
-        classpath "com.google.dagger:hilt-android-gradle-plugin:2.57.2"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:2.60.1"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 plugins {
     alias libs.plugins.android.application apply false
     alias libs.plugins.android.library apply false
-    alias libs.plugins.kotlin.android apply false
+    alias libs.plugins.kotlin.ksp apply false
 }
 
 task clean(type: Delete) {

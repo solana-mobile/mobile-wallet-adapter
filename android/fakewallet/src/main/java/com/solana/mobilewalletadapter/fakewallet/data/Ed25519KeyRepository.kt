@@ -9,6 +9,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.room.Room
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair
 import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
@@ -19,7 +20,28 @@ import java.security.SecureRandom
 
 class Ed25519KeyRepository(private val application: Application) {
     private val db by lazy {
-        Room.databaseBuilder(application, Ed25519KeyDatabase::class.java, "keys").build()
+        Room.databaseBuilder(application, Ed25519KeyDatabase::class.java, "keys")
+            // this is a fake wallet; on schema changes, dropping previously stored keys is fine
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    internal val seed: Flow<Seed?> by lazy { db.seedDao().observe() }
+
+    internal suspend fun getSeed(): Seed? = withContext(Dispatchers.IO) {
+        db.seedDao().get()
+    }
+
+    suspend fun setSeed(mnemonic: String) = withContext(Dispatchers.IO) {
+        db.seedDao().upsert(Seed(mnemonic = mnemonic))
+    }
+
+    suspend fun setAccountIndex(accountIndex: Int) = withContext(Dispatchers.IO) {
+        db.seedDao().get()?.let { db.seedDao().upsert(it.copy(accountIndex = accountIndex)) }
+    }
+
+    suspend fun clearSeed() = withContext(Dispatchers.IO) {
+        db.seedDao().delete()
     }
 
     suspend fun generateKeypair(): AsymmetricCipherKeyPair {

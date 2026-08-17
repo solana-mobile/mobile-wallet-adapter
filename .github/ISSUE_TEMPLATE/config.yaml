@@ -1,6 +1,13 @@
 ---
 blank_issues_enabled: false
 contact_links:
-  - name: Solana Stack Exchange
-    url: https://github.com/orgs/community/discussions
-    about: For questions unrelated to Mobile Wallet Adapter make a post here with the #solana-mobile tag.
+  - name: Questions & usage help (Solana Stack Exchange)
+    url: https://solana.stackexchange.com/questions/ask
+    about: >
+      For how-to and usage questions about Mobile Wallet Adapter, ask here with
+      the #solana-mobile tag — the issue tracker is for SDK bugs only.
+  - name: Solana Mobile Discord
+    url: https://discord.gg/solanamobile
+    about: >
+      General discussion and support, including help with Seed Vault Wallet and
+      the Seeker device (these are not maintained in this SDK repo).

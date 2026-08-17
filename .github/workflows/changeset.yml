@@ -33,7 +33,7 @@ jobs:
           app-id: ${{ secrets.PR_BOT_APP_ID }}
           private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
@@ -45,7 +45,7 @@ jobs:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           cache: true
           cache_dependency_path: 'js/pnpm-lock.yaml'
@@ -94,7 +94,7 @@ jobs:
           app-id: ${{ secrets.PR_BOT_APP_ID }}
           private-key: ${{ secrets.PR_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
@@ -106,7 +106,7 @@ jobs:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           cache: true
           cache_dependency_path: 'js/pnpm-lock.yaml'

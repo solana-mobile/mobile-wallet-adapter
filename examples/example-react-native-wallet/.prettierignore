@@ -2,3 +2,4 @@ android/app/build/
 android/build/
 ios/Pods/
 node_modules/
+pnpm-lock.yaml
