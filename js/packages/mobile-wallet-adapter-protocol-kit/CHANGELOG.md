@@ -1,5 +1,18 @@
 # @solana-mobile/mobile-wallet-adapter-protocol-kit
 
+## 0.4.0
+
+### Minor Changes
+
+- 0c55575: Bump the `@solana/kit` peer dependency from `^6.9.0` to `^7.0.0`.
+
+### Patch Changes
+
+- 0bfe9bf: Migrate the JS package build and typecheck toolchain to TypeScript 6, and update Solana kit dependencies for TypeScript 6 peer compatibility.
+- Updated dependencies [0bfe9bf]
+- Updated dependencies [25296e1]
+    - @solana-mobile/mobile-wallet-adapter-protocol@2.3.0
+
 ## 0.3.2
 
 ### Patch Changes
