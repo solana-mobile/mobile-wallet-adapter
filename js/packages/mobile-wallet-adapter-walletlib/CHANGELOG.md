@@ -1,5 +1,11 @@
 # @solana-mobile/mobile-wallet-adapter-walletlib
 
+## 1.4.5
+
+### Patch Changes
+
+- 0bfe9bf: Migrate the JS package build and typecheck toolchain to TypeScript 6, and update Solana kit dependencies for TypeScript 6 peer compatibility.
+
 ## 1.4.4
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @solana-mobile/wallet-adapter-mobile
 
+## 2.3.0
+
+### Minor Changes
+
+- 25296e1: Add support for a new local and remote MWA transport: Nostr Relays!
+
+### Patch Changes
+
+- 0bfe9bf: Migrate the JS package build and typecheck toolchain to TypeScript 6, and update Solana kit dependencies for TypeScript 6 peer compatibility.
+- Updated dependencies [0bfe9bf]
+- Updated dependencies [25296e1]
+    - @solana-mobile/mobile-wallet-adapter-protocol@2.3.0
+    - @solana-mobile/mobile-wallet-adapter-protocol-web3js@2.3.0
+    - @solana-mobile/wallet-standard-mobile@0.6.0
+
 ## 2.2.9
 
 ### Patch Changes
