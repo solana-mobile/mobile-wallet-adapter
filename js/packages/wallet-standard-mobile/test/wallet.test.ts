@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+// @vitest-environment-options {"url": "https://dapp.example.com/"}
 import { SOLANA_MAINNET_CHAIN } from '@solana/wallet-standard-chains';
 import {
     SolanaSignAndSendTransaction,
