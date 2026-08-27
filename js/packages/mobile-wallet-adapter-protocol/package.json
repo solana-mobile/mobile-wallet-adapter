@@ -98,6 +98,11 @@
     "peerDependencies": {
         "react-native": ">0.74"
     },
+    "peerDependenciesMeta": {
+        "react-native": {
+            "optional": true
+        }
+    },
     "codegenConfig": {
         "name": "SolanaMobileWalletAdapter",
         "type": "all",

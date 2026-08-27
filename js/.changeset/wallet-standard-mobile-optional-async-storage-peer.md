@@ -1,0 +1,9 @@
+---
+'@solana-mobile/wallet-standard-mobile': minor
+---
+
+Move `@react-native-async-storage/async-storage` from `optionalDependencies` to an optional peer dependency, widen the accepted range to `^1.17.7 || ^2.0.0`, and load it lazily.
+
+`optionalDependencies` are installed by default by every package manager — "optional" means only that a failed install is tolerated, not that the package is skipped — so browser-only consumers were pulling async-storage and, through its own peer dependency on `react-native`, the entire React Native toolchain into `node_modules`. Together with the matching fix in `@solana-mobile/mobile-wallet-adapter-protocol`, a browser-only install of this package drops from about 207 MB to about 42 MB and from 334 packages to 93, and the seven high-severity `metro` advisories it used to surface in `npm audit` go away entirely. Downstream lockfiles will shrink substantially on the next update; that is this change taking effect, not packages going missing.
+
+**Action required for React Native consumers that use the default authorization cache.** If you call `createDefaultAuthorizationCache()`, add `@react-native-async-storage/async-storage` to your own app dependencies — it is no longer installed transitively. The release also adds runtime validation: async-storage is now resolved lazily, on first use, and `createDefaultAuthorizationCache()` throws a descriptive error when it is missing or unusable (such as when its native module has not been linked) instead of failing silently into an inert cache. Apps that pass their own `authorizationCache` never load async-storage and do not need it installed; the lazy `require` sits inside a `try` block, which Metro's default `allowOptionalDependencies` configuration treats as an optional dependency, so their builds keep working without it.
