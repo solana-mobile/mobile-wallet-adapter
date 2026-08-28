@@ -33,8 +33,8 @@ const { asyncStorage, resetAsyncStorage } = vi.hoisted(() => {
     };
 });
 
-vi.mock('@react-native-async-storage/async-storage', () => ({
-    default: asyncStorage,
+vi.mock('../src/__forks__/react-native/getAsyncStorage.js', () => ({
+    getAsyncStorage: () => asyncStorage,
 }));
 
 import { createDefaultAuthorizationCache } from '../src/__forks__/react-native/createDefaultAuthorizationCache.js';
