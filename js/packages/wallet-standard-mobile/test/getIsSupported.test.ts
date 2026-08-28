@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+// @vitest-environment-options {"url": "https://dapp.example.com/"}
 import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
@@ -107,6 +108,7 @@ import {
     getIsLocalAssociationSupported,
     getIsPwaLaunchedAsApp,
     getIsRemoteAssociationSupported,
+    isLoopbackHost,
     isSolanaMobileWebShell,
     isWebView,
 } from '../src/getIsSupported.js';
@@ -327,6 +329,19 @@ describe('getIsSupported helpers', () => {
 
         installBrowserGlobals({ isSecureContext: true, userAgent: ANDROID_BROWSER_USER_AGENT });
         expect(getIsRemoteAssociationSupported()).toBe(false);
+    });
+
+    it('recognizes loopback hosts', () => {
+        expect(isLoopbackHost('127.0.0.1')).toBe(true);
+        expect(isLoopbackHost('127.255.255.254')).toBe(true);
+        expect(isLoopbackHost('[::1]')).toBe(true);
+        expect(isLoopbackHost('app.localhost')).toBe(true);
+        expect(isLoopbackHost('localhost')).toBe(true);
+
+        expect(isLoopbackHost('128.0.0.1')).toBe(false);
+        expect(isLoopbackHost('192.168.1.1')).toBe(false);
+        expect(isLoopbackHost('dapp.example.com')).toBe(false);
+        expect(isLoopbackHost('notlocalhost')).toBe(false);
     });
 
     it('recognizes WebView user agents', () => {

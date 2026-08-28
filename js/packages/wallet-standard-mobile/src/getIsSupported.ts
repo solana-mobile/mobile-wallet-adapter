@@ -52,8 +52,42 @@ export function getIsPwaLaunchedAsApp() {
     return isAndroidTwa || isStandalone || isFullscreen || isMinimalUI;
 }
 
+/**
+ * Returns true when a hostname is a loopback host per the URL spec: `localhost`,
+ * `*.localhost`, any 127.0.0.0/8 address, or `[::1]`. Hostnames from
+ * `location.hostname` are already lowercased and normalized by the browser's URL parser.
+ */
+export function isLoopbackHost(hostname: string): boolean {
+    return (
+        hostname === 'localhost' ||
+        hostname.endsWith('.localhost') ||
+        hostname === '[::1]' ||
+        /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)
+    );
+}
+
+/** Returns true when the current page is served from a loopback origin. */
+function isLoopbackOrigin(): boolean {
+    return typeof window !== 'undefined' && !!window.location && isLoopbackHost(window.location.hostname);
+}
+
+/**
+ * Returns true when a local websocket connection to the wallet can be attempted without
+ * going through the Local Network Access permission flow: inside the Solana Mobile Web
+ * Shell, on a loopback origin (exempt from LNA gating), or in browsers that don't
+ * implement the LNA permission. Returns false when the permission exists but has not
+ * been granted.
+ */
 export async function isLocalWebSocketAvailable(): Promise<boolean> {
     if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
+        return true;
+    }
+    if (isLoopbackOrigin()) {
+        // Local Network Access only gates requests that cross into a more private
+        // address space. A page served from a loopback origin (e.g. localhost dev
+        // via `adb reverse`) fetching loopback is same-space and exempt, so the
+        // permission state can never leave "prompt" — the browser will never show
+        // its prompt. The permission is irrelevant here; connect directly.
         return true;
     }
     try {
@@ -72,6 +106,13 @@ export async function isLocalWebSocketAvailable(): Promise<boolean> {
     }
 }
 
+/**
+ * Ensures the Local Network Access permission is granted before local association,
+ * walking the user through the permission prompt flow when the state is "prompt".
+ * Resolves immediately when the permission is granted, irrelevant (Web Shell, loopback
+ * origins), or unsupported by the browser. Throws a SolanaMobileWalletAdapterError when
+ * the permission is denied or the user cancels.
+ */
 export async function checkLocalNetworkAccessPermission(): Promise<void> {
     if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
         // Solana Mobile Web Shell runs inside an Android WebView hosted by a
@@ -80,6 +121,13 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
         // check throws even though the shell can still proceed with local
         // association. Keep this bypass scoped to the explicit Web Shell user
         // agent marker so the normal browser permission flow remains unchanged.
+        return;
+    }
+
+    if (isLoopbackOrigin()) {
+        // See isLocalWebSocketAvailable: loopback-origin pages are exempt from
+        // Local Network Access gating, so there is nothing to prompt for. Showing
+        // the permission modal here would deadlock — the state never changes.
         return;
     }
 
