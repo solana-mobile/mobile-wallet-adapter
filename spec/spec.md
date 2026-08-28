@@ -915,7 +915,7 @@ sign_messages
 where:
 
 - `addresses`: one or more base64-encoded addresses of the accounts which should be used to sign `message`. These should be a subset of the addresses returned by [`authorize`](#authorize) for the current session's authorization.
-- `payloads`: one or more base64url-encoded message payloads to sign
+- `payloads`: one or more base64-encoded message payloads to sign
 
 ###### Result
 {: .no_toc }
