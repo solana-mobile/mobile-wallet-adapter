@@ -54,12 +54,12 @@
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/kit": "^7.0.0"
+        "@solana/kit": "^7.0.0 || ^8.0.0"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
-        "@solana/transaction-messages": "^7.0.0",
-        "@solana/transactions": "^7.0.0"
+        "@solana/transaction-messages": "^7.0.0 || ^8.0.0",
+        "@solana/transactions": "^7.0.0 || ^8.0.0"
     },
     "devDependencies": {
         "@solana/keys": "^7.0.0",
