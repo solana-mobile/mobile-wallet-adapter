@@ -40,7 +40,7 @@ jobs:
           package_json_file: 'js/package.json'
 
       - name: set up JDK 17
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           java-version: '17'
           distribution: 'temurin'
