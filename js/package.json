@@ -27,7 +27,7 @@
         "eslint": "^10.8.1",
         "eslint-plugin-simple-import-sort": "^12.1.1",
         "jsdom": "^29.1.1",
-        "prettier": "3.8.4",
+        "prettier": "3.9.6",
         "shx": "^0.4.0",
         "tsdown": "^0.22.14",
         "turbo": "^2.10.9",
