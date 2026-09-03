@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
                         viewBinding.btnReauthorize.isEnabled = isAuthorized
                         viewBinding.btnDeauthorize.isEnabled = isAuthorized
                         viewBinding.btnRequestAirdrop.isEnabled = isAuthorized
+                        viewBinding.btnSignOffchainMessage.isEnabled = isAuthorized
                         viewBinding.btnSignTxnX1.isEnabled = isAuthorized
                         viewBinding.btnSignTxnX3.isEnabled = isAuthorized
                         viewBinding.btnSignTxnX20.isEnabled = isAuthorized
@@ -132,6 +133,10 @@ class MainActivity : AppCompatActivity() {
 
         viewBinding.btnRequestAirdrop.setOnClickListener {
             viewModel.requestAirdrop()
+        }
+
+        viewBinding.btnSignOffchainMessage.setOnClickListener {
+            viewModel.signOffchainMessage(mwaLauncher)
         }
 
         viewBinding.btnSignTxnX1.setOnClickListener {
