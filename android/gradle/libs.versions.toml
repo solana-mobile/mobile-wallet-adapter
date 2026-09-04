@@ -1,8 +1,8 @@
 [versions]
 # plugin versions
-androidGradlePlugin = "9.2.1"
+androidGradlePlugin = "9.4.0"
 kotlinAndroidPlugin = "2.4.10"
-ksp = "2.3.9"
+ksp = "2.3.11"
 nexusPublishPlugin = "2.0.0"
 
 # library versions
@@ -13,7 +13,7 @@ androidxCoreKtx = "1.19.0"
 androidxCoreTesting = "2.2.0"
 androidxJunit = "1.3.0"
 androidxLifecycle = "2.11.0"
-androidxNavigation = "2.9.8"
+androidxNavigation = "2.10.0"
 androidxRoom = "2.8.4"
 androidxTest = "1.7.0"
 androidxTestOrchestrator = "1.6.1"
