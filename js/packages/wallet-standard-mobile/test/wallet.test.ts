@@ -1112,7 +1112,9 @@ function createRemoteWallet({
     return { authorizationCache, chainSelector, onWalletNotFound, wallet };
 }
 
-type WalletNotFoundHandler = ConstructorParameters<typeof LocalSolanaMobileWalletAdapterWallet>[0]['onWalletNotFound'];
+type WalletNotFoundHandler = NonNullable<
+    ConstructorParameters<typeof LocalSolanaMobileWalletAdapterWallet>[0]['onWalletNotFound']
+>;
 
 function createAuthorizationCache(cachedAuthorization?: Authorization) {
     return {

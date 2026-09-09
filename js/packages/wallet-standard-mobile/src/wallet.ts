@@ -51,6 +51,9 @@ import {
     type StandardEventsOnMethod,
 } from '@wallet-standard/features';
 
+import { createDefaultAuthorizationCache } from './createDefaultAuthorizationCache.js';
+import { createDefaultChainSelector } from './createDefaultChainSelector.js';
+import { createDefaultWalletNotFoundHandler } from './createDefaultWalletNotFoundHandler.js';
 import EmbeddedLoadingSpinner from './embedded-modal/loadingSpinner.js';
 import RemoteConnectionModal from './embedded-modal/remoteConnectionModal.js';
 import { checkLocalNetworkAccessPermission, isLocalWebSocketAvailable } from './getIsSupported.js';
@@ -98,6 +101,26 @@ interface SolanaMobileWalletAdapterAuthorization {
     get isAuthorized(): boolean;
     get currentAuthorization(): Authorization | undefined;
     get cachedAuthorizationResult(): Promise<Authorization | undefined>;
+}
+
+export interface SolanaMobileWalletAdapterWalletConfig {
+    appIdentity: AppIdentity;
+    authorizationCache?: AuthorizationCache;
+    chains: IdentifierArray;
+    chainSelector?: ChainSelector;
+    onWalletNotFound?: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
+}
+
+export interface LocalSolanaMobileWalletAdapterWalletConfig extends SolanaMobileWalletAdapterWalletConfig {
+    nostrRelay?: string;
+}
+
+export interface NostrSolanaMobileWalletAdapterWalletConfig extends SolanaMobileWalletAdapterWalletConfig {
+    nostrRelay: string;
+}
+
+export interface RemoteSolanaMobileWalletAdapterWalletConfig extends SolanaMobileWalletAdapterWalletConfig {
+    remoteHostAuthority: string;
 }
 
 export class LocalSolanaMobileWalletAdapterWallet
@@ -180,20 +203,20 @@ export class LocalSolanaMobileWalletAdapterWallet
         return (this.#authorization?.accounts as WalletAccount[]) ?? [];
     }
 
-    constructor(config: {
-        appIdentity: AppIdentity;
-        authorizationCache: AuthorizationCache;
-        chains: IdentifierArray;
-        chainSelector: ChainSelector;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-        nostrRelay?: string;
-    }) {
-        this.#authorizationCache = config.authorizationCache;
-        this.#appIdentity = config.appIdentity;
-        this.#chains = config.chains;
-        this.#chainSelector = config.chainSelector;
-        this.#onWalletNotFound = config.onWalletNotFound;
-        this.#nostrRelay = config.nostrRelay;
+    constructor({
+        appIdentity,
+        authorizationCache = createDefaultAuthorizationCache(),
+        chains,
+        chainSelector = createDefaultChainSelector(),
+        onWalletNotFound = createDefaultWalletNotFoundHandler(),
+        nostrRelay,
+    }: LocalSolanaMobileWalletAdapterWalletConfig) {
+        this.#authorizationCache = authorizationCache;
+        this.#appIdentity = appIdentity;
+        this.#chains = chains;
+        this.#chainSelector = chainSelector;
+        this.#onWalletNotFound = onWalletNotFound;
+        this.#nostrRelay = nostrRelay;
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
             // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid
@@ -699,40 +722,25 @@ export class RemoteSolanaMobileWalletAdapterWallet
         return (this.#authorization?.accounts as WalletAccount[]) ?? [];
     }
 
-    constructor(config: {
-        appIdentity: AppIdentity;
-        authorizationCache: AuthorizationCache;
-        chains: IdentifierArray;
-        chainSelector: ChainSelector;
-        remoteHostAuthority: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    });
-    constructor(config: {
-        appIdentity: AppIdentity;
-        authorizationCache: AuthorizationCache;
-        chains: IdentifierArray;
-        chainSelector: ChainSelector;
-        nostrRelay: string;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    });
-    constructor(
-        config: {
-            appIdentity: AppIdentity;
-            authorizationCache: AuthorizationCache;
-            chains: IdentifierArray;
-            chainSelector: ChainSelector;
-            onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-        } & ({ remoteHostAuthority: string } | { nostrRelay: string }),
-    ) {
-        this.#authorizationCache = config.authorizationCache;
-        this.#appIdentity = config.appIdentity;
-        this.#chains = config.chains;
-        this.#chainSelector = config.chainSelector;
+    constructor(config: RemoteSolanaMobileWalletAdapterWalletConfig);
+    constructor(config: NostrSolanaMobileWalletAdapterWalletConfig);
+    constructor(config: RemoteSolanaMobileWalletAdapterWalletConfig | NostrSolanaMobileWalletAdapterWalletConfig) {
+        const {
+            appIdentity,
+            authorizationCache = createDefaultAuthorizationCache(),
+            chains,
+            chainSelector = createDefaultChainSelector(),
+            onWalletNotFound = createDefaultWalletNotFoundHandler(),
+        } = config;
+        this.#authorizationCache = authorizationCache;
+        this.#appIdentity = appIdentity;
+        this.#chains = chains;
+        this.#chainSelector = chainSelector;
         this.#relay =
             'remoteHostAuthority' in config
                 ? { kind: 'reflector', domain: config.remoteHostAuthority }
                 : { kind: 'nostr', domain: config.nostrRelay };
-        this.#onWalletNotFound = config.onWalletNotFound;
+        this.#onWalletNotFound = onWalletNotFound;
         this.#optionalFeatures = {
             // In MWA 1.0, signAndSend is optional and signTransaction is mandatory. Whereas in MWA 2.0+,
             // signAndSend is mandatory and signTransaction is optional (and soft deprecated). As of mid

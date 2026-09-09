@@ -1,5 +1,3 @@
-import { AppIdentity } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { IdentifierArray } from '@wallet-standard/base';
 import { registerWallet } from '@wallet-standard/wallet';
 
 import {
@@ -9,21 +7,13 @@ import {
     isWebView,
 } from './getIsSupported.js';
 import {
-    AuthorizationCache,
-    ChainSelector,
     LocalSolanaMobileWalletAdapterWallet,
     RemoteSolanaMobileWalletAdapterWallet,
-    SolanaMobileWalletAdapterWallet,
+    SolanaMobileWalletAdapterWalletConfig,
 } from './wallet.js';
 
 export function registerMwa(
-    config: {
-        appIdentity: AppIdentity;
-        authorizationCache: AuthorizationCache;
-        chains: IdentifierArray;
-        chainSelector: ChainSelector;
-        onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
-    } & ({ remoteHostAuthority?: string } | { nostrRelay: string }),
+    config: SolanaMobileWalletAdapterWalletConfig & ({ remoteHostAuthority?: string } | { nostrRelay: string }),
 ) {
     if (typeof window === 'undefined') {
         console.warn(`MWA not registered: no window object`);
