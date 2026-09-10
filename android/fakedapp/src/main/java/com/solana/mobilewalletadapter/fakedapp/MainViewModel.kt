@@ -140,6 +140,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d(TAG, "Capabilities: $it")
                 Log.d(TAG, "Supports legacy transactions: ${TransactionVersion.supportsLegacy(it.supportedTransactionVersions)}")
                 Log.d(TAG, "Supports v0 transactions: ${TransactionVersion.supportsVersion(it.supportedTransactionVersions, 0)}")
+                Log.d(TAG, "Supports v1 transactions: ${TransactionVersion.supportsVersion(it.supportedTransactionVersions, 1)}")
                 Log.d(TAG, "Supported features: ${it.supportedOptionalFeatures.contentToString()}")
                 showMessage(R.string.msg_request_succeeded)
             }
