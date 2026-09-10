@@ -77,8 +77,6 @@ sealed class MemoTransactionUseCase {
 
 // Memo Transaction using Legacy Transaction format
 object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
-    // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It
-    // is for test purposes only.
     override val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
         0x01.toByte(), // 1 signature required (fee payer)
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // First signature (fee payer account)
@@ -142,8 +140,6 @@ object MemoTransactionLegacyUseCase : MemoTransactionUseCase() {
 
 // Memo Transaction using V0 Transaction format
 object MemoTransactionV0UseCase : MemoTransactionUseCase() {
-    // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It
-    // is for test purposes only.
     override val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
         //region signature
         0x01.toByte(), // 1 signature required (fee payer)
@@ -217,17 +213,15 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
 
 // Memo Transaction using V1 Transaction format
 object MemoTransactionV1UseCase : MemoTransactionUseCase() {
-    // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It
-    // is for test purposes only.
     override val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
         0x81.toByte(), // version prefix byte
         //region header
         0x01.toByte(), // 1 signature required (fee payer)
         0x00.toByte(), // 0 read-only account signatures
-        0x02.toByte(), // 2 read-only account not requiring a signature
+        0x01.toByte(), // 1 read-only account not requiring a signature
         //endregion
         //region config mask
-        0xF0.toByte(), // set bits 1 (priority fee) 2 (compute unit limit) & 3 (loaded accounts data size limit)
+        0x0F.toByte(), // set bits 1 (priority fee) 2 (compute unit limit) & 3 (loaded accounts data size limit)
         0x00.toByte(),
         0x00.toByte(),
         0x00.toByte(),
@@ -258,7 +252,7 @@ object MemoTransactionV1UseCase : MemoTransactionUseCase() {
         //region instruction headers
         0x01.toByte(), // program ID (index into list of accounts)
         0x01.toByte(), // 1 account
-        0x00.toByte(), 0x14.toByte(), // 20 byte payload
+        0x14.toByte(), 0x00.toByte(), // 20 byte payload
         //endregion
         //region instruction payloads
         0x00.toByte(), // account index 0
