@@ -221,7 +221,7 @@ object MemoTransactionV1UseCase : MemoTransactionUseCase() {
         0x01.toByte(), // 1 read-only account not requiring a signature
         //endregion
         //region config mask
-        0x0F.toByte(), // set bits 1 (priority fee) 2 (compute unit limit) & 3 (loaded accounts data size limit)
+        0x0F.toByte(), // set bits 0-1 (priority fee) 2 (compute unit limit) & 3 (loaded accounts data size limit)
         0x00.toByte(),
         0x00.toByte(),
         0x00.toByte(),
