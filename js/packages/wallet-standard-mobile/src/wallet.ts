@@ -15,6 +15,7 @@ import {
     SolanaSignTransaction,
     type SolanaSignTransactionFeature,
     type SolanaSignTransactionMethod,
+    type SolanaTransactionVersion,
 } from '@solana/wallet-standard-features';
 import {
     type Account,
@@ -88,6 +89,24 @@ const DEFAULT_FEATURES = [
     SolanaSignIn,
 ] as const;
 const WALLET_ASSOCIATION_TIMEOUT = 30_000;
+
+function areTransactionVersionsEqual(
+    a: readonly SolanaTransactionVersion[] | undefined,
+    b: readonly SolanaTransactionVersion[] | undefined,
+): boolean {
+    return a?.length === b?.length && (a ?? []).every((version, ii) => version === b?.[ii]);
+}
+
+function getSupportedTransactionVersions(
+    features: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature,
+): readonly SolanaTransactionVersion[] | undefined {
+    if (SolanaSignAndSendTransaction in features) {
+        return features[SolanaSignAndSendTransaction].supportedTransactionVersions;
+    } else if (SolanaSignTransaction in features) {
+        return features[SolanaSignTransaction].supportedTransactionVersions;
+    }
+    return undefined;
+}
 
 function getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
@@ -354,19 +373,23 @@ export class LocalSolanaMobileWalletAdapterWallet
         const supportsSignAndSendTransaction = capabilities.supports_sign_and_send_transactions;
         const didCapabilitiesChange =
             SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
-            SolanaSignTransaction in this.features !== supportsSignTransaction;
+            SolanaSignTransaction in this.features !== supportsSignTransaction ||
+            !areTransactionVersionsEqual(
+                getSupportedTransactionVersions(this.#optionalFeatures),
+                capabilities.supported_transaction_versions,
+            );
         this.#optionalFeatures = {
             ...((supportsSignAndSendTransaction || (!supportsSignAndSendTransaction && !supportsSignTransaction)) && {
                 [SolanaSignAndSendTransaction]: {
                     version: '1.0.0',
-                    supportedTransactionVersions: ['legacy', 0],
+                    supportedTransactionVersions: capabilities.supported_transaction_versions,
                     signAndSendTransaction: this.#signAndSendTransaction,
                 },
             }),
             ...(supportsSignTransaction && {
                 [SolanaSignTransaction]: {
                     version: '1.0.0',
-                    supportedTransactionVersions: ['legacy', 0],
+                    supportedTransactionVersions: capabilities.supported_transaction_versions,
                     signTransaction: this.#signTransaction,
                 },
             }),
@@ -871,7 +894,11 @@ export class RemoteSolanaMobileWalletAdapterWallet
             capabilities.features.includes('solana:signAndSendTransaction');
         const didCapabilitiesChange =
             SolanaSignAndSendTransaction in this.features !== supportsSignAndSendTransaction ||
-            SolanaSignTransaction in this.features !== supportsSignTransaction;
+            SolanaSignTransaction in this.features !== supportsSignTransaction ||
+            !areTransactionVersionsEqual(
+                getSupportedTransactionVersions(this.#optionalFeatures),
+                capabilities.supported_transaction_versions,
+            );
         this.#optionalFeatures = {
             ...(supportsSignAndSendTransaction && {
                 [SolanaSignAndSendTransaction]: {
