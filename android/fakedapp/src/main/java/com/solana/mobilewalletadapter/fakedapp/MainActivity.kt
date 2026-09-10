@@ -161,6 +161,7 @@ class MainActivity : AppCompatActivity() {
                     getString(when (txnVersion) {
                         MemoTransactionVersion.Legacy -> R.string.string_txn_version_legacy
                         MemoTransactionVersion.V0 -> R.string.string_txn_version_v0
+                        MemoTransactionVersion.V1 -> R.string.string_txn_version_v1
                     })
                 }
             )
