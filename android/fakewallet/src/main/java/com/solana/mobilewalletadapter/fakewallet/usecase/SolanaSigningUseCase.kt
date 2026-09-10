@@ -110,7 +110,7 @@ object SolanaSigningUseCase {
             System.arraycopy(sig, 0, partiallySignedTx, signaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
         }
 
-        return Result(partiallySignedTx, partiallySignedTx.sliceArray(1 until 1 + SIGNATURE_LEN))
+        return Result(partiallySignedTx,partiallySignedTx.sliceArray(signaturesOffset until signaturesOffset + SIGNATURE_LEN))
     }
 
     fun signMessage(
