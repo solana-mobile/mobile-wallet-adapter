@@ -21,6 +21,17 @@ type ExportsNode = string | null | ExportsNode[] | { [condition: string]: Export
 
 const manifest: { exports?: ExportsNode } = JSON.parse(readFileSync(path.join(PACKAGE_ROOT, 'package.json'), 'utf8'));
 
+/**
+ * Walks an exports field and collects every relative target it can resolve to.
+ *
+ * Targets can sit at any depth — nested condition maps, and fallback arrays — so the whole tree has
+ * to be walked rather than just its top level. Bare specifiers such as `react-native` are skipped;
+ * only `./`-prefixed paths point at files this package ships.
+ *
+ * @param node The `exports` field, or a node within it.
+ * @param found Accumulator, for the recursive calls.
+ * @returns Every relative target found, in declaration order and possibly with duplicates.
+ */
 function collectTargets(node: ExportsNode, found: string[] = []): string[] {
     if (typeof node === 'string') {
         if (node.startsWith('./')) {
