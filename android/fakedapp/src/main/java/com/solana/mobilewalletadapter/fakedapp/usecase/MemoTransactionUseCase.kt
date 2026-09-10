@@ -10,7 +10,7 @@ import org.bouncycastle.crypto.signers.Ed25519Signer
 import kotlin.random.Random
 
 enum class MemoTransactionVersion {
-    Legacy, V0
+    Legacy, V0, V1
 }
 
 // NOTE: this is just a minimal implementation of this Solana transaction, for testing purposes. It
@@ -49,7 +49,12 @@ sealed class MemoTransactionUseCase {
         val publicKeyParams = Ed25519PublicKeyParameters(publicKey, 0)
         val signer = Ed25519Signer()
         signer.init(false, publicKeyParams)
-        signer.update(signedTransaction, HEADER_OFFSET, signedTransaction.size - HEADER_OFFSET)
+        when (this) {
+            is MemoTransactionLegacyUseCase, is MemoTransactionV0UseCase ->
+                signer.update(signedTransaction, HEADER_OFFSET, signedTransaction.size - HEADER_OFFSET)
+            is MemoTransactionV1UseCase ->
+                signer.update(signedTransaction, 0, SIGNATURE_OFFSET)
+        }
         val signature = signedTransaction.copyOfRange(SIGNATURE_OFFSET, SIGNATURE_OFFSET + SIGNATURE_LEN)
         val verified = signer.verifySignature(signature)
         require(verified) { "Transaction signature is invalid" }
@@ -207,5 +212,79 @@ object MemoTransactionV0UseCase : MemoTransactionUseCase() {
     override val BLOCKHASH_OFFSET = 166
     override val BLOCKHASH_LEN = 32
     override val SUFFIX_DIGITS_OFFSET = 235
+    override val SUFFIX_DIGITS_LEN = 8
+}
+
+// Memo Transaction using V1 Transaction format
+object MemoTransactionV1UseCase : MemoTransactionUseCase() {
+    // NOTE: the blockhash of this transaction is fixed, and will be too old to actually execute. It
+    // is for test purposes only.
+    override val MEMO_TRANSACTION_TEMPLATE = byteArrayOf(
+        0x81.toByte(), // version prefix byte
+        //region header
+        0x01.toByte(), // 1 signature required (fee payer)
+        0x00.toByte(), // 0 read-only account signatures
+        0x02.toByte(), // 2 read-only account not requiring a signature
+        //endregion
+        //region config mask
+        0xF0.toByte(), // set bits 1 (priority fee) 2 (compute unit limit) & 3 (loaded accounts data size limit)
+        0x00.toByte(),
+        0x00.toByte(),
+        0x00.toByte(),
+        //endregion
+        //region blockhash
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // Recent blockhash (placeholder)
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        //endregion
+        //region sign data
+        0x01.toByte(), // 1 instruction (memo)
+        0x02.toByte(), // 2 accounts
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // Fee payer account public key
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x05.toByte(), 0x4a.toByte(), 0x53.toByte(), 0x5a.toByte(), 0x99.toByte(), 0x29.toByte(), 0x21.toByte(), 0x06.toByte(), // Memo program v2 account address
+        0x4d.toByte(), 0x24.toByte(), 0xe8.toByte(), 0x71.toByte(), 0x60.toByte(), 0xda.toByte(), 0x38.toByte(), 0x7c.toByte(),
+        0x7c.toByte(), 0x35.toByte(), 0xb5.toByte(), 0xdd.toByte(), 0xbc.toByte(), 0x92.toByte(), 0xbb.toByte(), 0x81.toByte(),
+        0xe4.toByte(), 0x1f.toByte(), 0xa8.toByte(), 0x40.toByte(), 0x41.toByte(), 0x05.toByte(), 0x44.toByte(), 0x8d.toByte(),
+        //endregion
+        //region config values
+        0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // priority fee (1 ulamports)
+        0x93.toByte(), 0x57.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit limit (22419 units)
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x04.toByte(), // loaded accounts data size limit (67,108,864 bytes = 64 MiB)
+        //endregion
+        //region instruction headers
+        0x01.toByte(), // program ID (index into list of accounts)
+        0x01.toByte(), // 1 account
+        0x00.toByte(), 0x14.toByte(), // 20 byte payload
+        //endregion
+        //region instruction payloads
+        0x00.toByte(), // account index 0
+        0x68.toByte(), 0x65.toByte(), 0x6c.toByte(), 0x6c.toByte(), 0x6f.toByte(), 0x20.toByte(), 0x77.toByte(), 0x6f.toByte(), // "hello world "
+        0x72.toByte(), 0x6c.toByte(), 0x64.toByte(), 0x20.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // 8-digit random suffix
+        //endregion
+        //region signature
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // First signature (fee payer account)
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+        //endregion
+    )
+
+    override val SIGNATURE_OFFSET = 147
+    override val SIGNATURE_LEN = 64
+    override val HEADER_OFFSET = 0
+    override val ACCOUNT_PUBLIC_KEY_OFFSET = 42
+    override val ACCOUNT_PUBLIC_KEY_LEN = 32
+    override val BLOCKHASH_OFFSET = 8
+    override val BLOCKHASH_LEN = 32
+    override val SUFFIX_DIGITS_OFFSET = 139
     override val SUFFIX_DIGITS_LEN = 8
 }

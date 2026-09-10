@@ -30,10 +30,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
-    val supportedTxnVersions = listOf(MemoTransactionVersion.Legacy, MemoTransactionVersion.V0)
+    val supportedTxnVersions = listOf(MemoTransactionVersion.Legacy, MemoTransactionVersion.V0, MemoTransactionVersion.V1)
     private val transactionUseCase get() = when(_uiState.value.txnVersion) {
         MemoTransactionVersion.Legacy -> MemoTransactionLegacyUseCase
         MemoTransactionVersion.V0 -> MemoTransactionV0UseCase
+        MemoTransactionVersion.V1 -> MemoTransactionV1UseCase
     }
 
     private var isWalletEndpointAvailable = false

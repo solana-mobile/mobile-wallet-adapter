@@ -15,6 +15,15 @@ object SolanaSigningUseCase {
         transaction: ByteArray,
         keypairs: List<AsymmetricCipherKeyPair>
     ): Result {
+        return if (transaction[0] == 0x81.toByte()) signV1Transaction(transaction, keypairs)
+        else signLegacyV0Transaction(transaction, keypairs)
+    }
+
+    // throws IllegalArgumentException
+    fun signLegacyV0Transaction(
+        transaction: ByteArray,
+        keypairs: List<AsymmetricCipherKeyPair>
+    ): Result {
         // Validate the transaction only up through the account addresses array
         val (numSignatures, numSignaturesOffset) = readCompactArrayLen(transaction, 0)
         val prefixOffset = numSignaturesOffset + (SIGNATURE_LEN * numSignatures)
@@ -63,6 +72,47 @@ object SolanaSigningUseCase {
         return Result(partiallySignedTx, partiallySignedTx.sliceArray(1 until 1 + SIGNATURE_LEN))
     }
 
+    // throws IllegalArgumentException
+    fun signV1Transaction(
+        transaction: ByteArray,
+        keypairs: List<AsymmetricCipherKeyPair>
+    ): Result {
+        // Validate the transaction only up through the account addresses array
+        val numSignatures = transaction[1].toInt()
+        val numAccounts = transaction[41].toInt()
+        val accountsArrayOffset = 42
+        require(numAccounts >= numSignatures) { "Accounts array is smaller than number of required signatures" }
+
+        val partiallySignedTx = transaction.clone()
+        val signaturesOffset = transaction.size - SIGNATURE_LEN * numSignatures
+
+        keypairs.forEach { keypair ->
+            val publicKey = keypair.public as Ed25519PublicKeyParameters
+            val privateKey = keypair.private as Ed25519PrivateKeyParameters
+            val publicKeyBytes = publicKey.encoded
+            var accountIndex = -1
+            for (i in 0 until numSignatures) {
+                val accountOff = accountsArrayOffset + PUBLIC_KEY_LEN * i
+                val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
+                if (publicKeyBytes contentEquals accountPublicKey) {
+                    accountIndex = i
+                    break
+                }
+            }
+            require(accountIndex != -1) { "Transaction does not require a signature with the requested keypair" }
+
+            val signer = Ed25519Signer()
+            signer.init(true, privateKey)
+            signer.update(transaction, 0, signaturesOffset)
+            val sig = signer.generateSignature()
+            assert(sig.size == SIGNATURE_LEN) { "Unexpected signature length" }
+
+            System.arraycopy(sig, 0, partiallySignedTx, signaturesOffset + SIGNATURE_LEN * accountIndex, sig.size)
+        }
+
+        return Result(partiallySignedTx, partiallySignedTx.sliceArray(1 until 1 + SIGNATURE_LEN))
+    }
+
     fun signMessage(
         message: ByteArray,
         keypairs: List<AsymmetricCipherKeyPair>
@@ -88,7 +138,13 @@ object SolanaSigningUseCase {
     fun getSignersForTransaction(
         transaction: ByteArray
     ): List<ByteArray> {
+        return if (transaction[0] == 0x81.toByte()) getSignersForV1Transaction(transaction)
+        else getSignersForLegacyV0Transaction(transaction)
+    }
 
+    fun getSignersForLegacyV0Transaction(
+        transaction: ByteArray
+    ): List<ByteArray> {
         val signers = mutableListOf<ByteArray>()
 
         // Validate the transaction only up through the account addresses array
@@ -111,6 +167,27 @@ object SolanaSigningUseCase {
         require(blockhashOffset <= transaction.size) { "Accounts array extends beyond buffer bounds" }
         for (i in 0 until numSignatures) {
             val accountOff = accountsArrayOffset + numAccountsOffset + PUBLIC_KEY_LEN * i
+            val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
+            signers.add(accountPublicKey)
+        }
+
+        return signers.toList()
+    }
+
+    fun getSignersForV1Transaction(
+        transaction: ByteArray
+    ): List<ByteArray> {
+
+        val signers = mutableListOf<ByteArray>()
+
+        // Validate the transaction only up through the account addresses array
+        val numSignatures = transaction[1].toInt()
+        val numAccounts = transaction[41].toInt()
+        val accountsArrayOffset = 42
+        require(numAccounts >= numSignatures) { "Accounts array is smaller than number of required signatures" }
+
+        for (i in 0 until numSignatures) {
+            val accountOff = accountsArrayOffset + PUBLIC_KEY_LEN * i
             val accountPublicKey = transaction.copyOfRange(accountOff, accountOff + PUBLIC_KEY_LEN)
             signers.add(accountPublicKey)
         }
