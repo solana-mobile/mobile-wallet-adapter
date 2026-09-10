@@ -9,6 +9,8 @@
     },
     "license": "Apache-2.0",
     "exports": {
+        "types": "./lib/types/index.d.ts",
+        "react-native": "./lib/cjs/index.native.js",
         "edge-light": {
             "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
@@ -24,9 +26,7 @@
         "node": {
             "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
-        },
-        "react-native": "./lib/cjs/index.native.js",
-        "types": "./lib/types/index.d.ts"
+        }
     },
     "browser": {
         "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
