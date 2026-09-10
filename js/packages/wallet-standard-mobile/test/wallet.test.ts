@@ -667,6 +667,56 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         });
         expect(wallet.connected).toBe(false);
     });
+
+    it('advertises the transaction versions reported by the local wallet, including v1', async () => {
+        const capabilities: Authorization['capabilities'] = {
+            ...DEFAULT_CAPABILITIES,
+            supported_transaction_versions: ['legacy', 0, 1],
+        };
+        const mobileWallet = createMobileWallet({
+            authorization: createMwaAuthorization(Uint8Array.of(7, 8, 9)),
+            capabilities,
+        });
+        const { wallet } = createLocalWallet();
+        const changeListener = vi.fn();
+        wallet.features[StandardEvents].on('change', changeListener);
+
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        expect(getSignAndSendFeature(wallet).supportedTransactionVersions).toEqual(['legacy', 0]);
+        expect(getSignTransactionFeature(wallet).supportedTransactionVersions).toEqual(['legacy', 0]);
+
+        await wallet.features[StandardConnect].connect();
+
+        expect(getSignAndSendFeature(wallet).supportedTransactionVersions).toEqual(['legacy', 0, 1]);
+        expect(getSignTransactionFeature(wallet).supportedTransactionVersions).toEqual(['legacy', 0, 1]);
+        // The set of features is unchanged, but their transaction versions are, so listeners must hear about it.
+        expect(changeListener).toHaveBeenCalledWith({ features: wallet.features });
+    });
+
+    it('does not emit a features change when the local wallet reports the versions already advertised', async () => {
+        const mobileWallet = createMobileWallet({
+            authorization: createMwaAuthorization(Uint8Array.of(7, 8, 9)),
+        });
+        const { wallet } = createLocalWallet();
+        const changeListener = vi.fn();
+        wallet.features[StandardEvents].on('change', changeListener);
+
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await wallet.features[StandardConnect].connect();
+
+        expect(getSignAndSendFeature(wallet).supportedTransactionVersions).toEqual(['legacy', 0]);
+        expect(changeListener).not.toHaveBeenCalledWith(expect.objectContaining({ features: expect.anything() }));
+    });
 });
 
 describe('RemoteSolanaMobileWalletAdapterWallet', () => {
