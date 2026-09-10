@@ -10,25 +10,35 @@ import { describe, expect, it } from 'vitest';
  * bundle. For these packages that means `transact` keeps its `assertSecureContext()` call, which
  * throws `The mobile wallet adapter protocol must be used in a secure context (https)` on a
  * device. See #1179 and #1302, which are the same defect reported twice.
+ *
+ * Every subpath is checked, not just `.`, since each one carries its own condition map.
  */
 
 const PACKAGES_DIR = path.resolve(__dirname, '..', '..');
 
 type ExportsNode = string | null | ExportsNode[] | { [condition: string]: ExportsNode };
+type ConditionMap = Record<string, ExportsNode>;
 
 function readManifest(packageName: string): { exports?: ExportsNode } {
     return JSON.parse(readFileSync(path.join(PACKAGES_DIR, packageName, 'package.json'), 'utf8'));
 }
 
-function rootConditions(exportsField: ExportsNode | undefined): Record<string, ExportsNode> | undefined {
-    if (exportsField == null || typeof exportsField !== 'object' || Array.isArray(exportsField)) {
-        return undefined;
+function isConditionMap(node: ExportsNode | undefined): node is ConditionMap {
+    return node != null && typeof node === 'object' && !Array.isArray(node);
+}
+
+/** Every subpath in an exports field, as `[subpath, conditions]` pairs. */
+function conditionMapsBySubpath(exportsField: ExportsNode | undefined): [string, ConditionMap][] {
+    if (!isConditionMap(exportsField)) {
+        return [];
     }
-    const hasSubpaths = Object.keys(exportsField).some((key) => key.startsWith('.'));
-    const root = hasSubpaths ? exportsField['.'] : exportsField;
-    return root != null && typeof root === 'object' && !Array.isArray(root)
-        ? (root as Record<string, ExportsNode>)
-        : undefined;
+    const subpaths = Object.keys(exportsField).filter((key) => key.startsWith('.'));
+    if (subpaths.length === 0) {
+        return [['.', exportsField]];
+    }
+    return subpaths
+        .map((subpath): [string, ExportsNode] => [subpath, exportsField[subpath]])
+        .filter((entry): entry is [string, ConditionMap] => isConditionMap(entry[1]));
 }
 
 /** Node's condition matching: first declared key that is asserted, or `default`, wins. */
@@ -59,21 +69,23 @@ function resolveWithConditions(node: ExportsNode, conditions: Set<string>): stri
     return undefined;
 }
 
-const packageNames = readdirSync(PACKAGES_DIR, { withFileTypes: true })
+const cases = readdirSync(PACKAGES_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .filter((name) => {
+    .flatMap((entry) => {
+        let exportsField: ExportsNode | undefined;
         try {
-            return rootConditions(readManifest(name).exports) !== undefined;
+            exportsField = readManifest(entry.name).exports;
         } catch {
-            return false;
+            return [];
         }
+        return conditionMapsBySubpath(exportsField).map(([subpath, conditions]) => ({
+            conditions,
+            declared: Object.keys(conditions),
+            label: `${entry.name} ${subpath}`,
+        }));
     });
 
-describe.each(packageNames)('%s package.json exports', (packageName) => {
-    const conditions = rootConditions(readManifest(packageName).exports)!;
-    const declared = Object.keys(conditions);
-
+describe.each(cases)('$label exports conditions', ({ conditions, declared }) => {
     it.runIf(declared.includes('react-native') && declared.includes('browser'))(
         'declares `react-native` before `browser`',
         () => {
