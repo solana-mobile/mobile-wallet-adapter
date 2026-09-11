@@ -137,22 +137,25 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
         viewModelScope.launch {
             if (authorized) {
                 val accounts = (0 until numAccounts).map {
-                    val publicKeyBytes = request.request.addresses?.get(it)?.let { address ->
+                    request.request.addresses?.getOrNull(it)?.let { address ->
                         val keypair = getApplication<FakeWalletApplication>().keyRepository
                             .getKeypair(Base64.decode(address)) ?: return@let null
                         val publicKey = keypair.public as Ed25519PublicKeyParameters
                         Log.d(TAG, "Reusing known keypair (pub=${publicKey.encoded.contentToString()}) for authorize request")
-                        publicKey.encoded
-                    } ?: run {
-                        val keypair = if (it == 0) {
-                            getKeypair()
-                        } else {
-                            generateKeypair()
-                        }
+                        buildAccount(publicKey.encoded, "fakewallet account $it")
+                    } ?: if (it == 0) {
+                        // getKeypair() derives from the stored seed's account index when a
+                        // seed is active; label with that derivation index, not the payload index
+                        val keypair = getKeypair()
                         val publicKey = keypair.public as Ed25519PublicKeyParameters
-                        publicKey.encoded
+                        val derivationIndex = getApplication<FakeWalletApplication>()
+                            .keyRepository.getSeed()?.accountIndex
+                        buildAccount(publicKey.encoded, "fakewallet account ${derivationIndex ?: it}")
+                    } else {
+                        val keypair = generateKeypair()
+                        val publicKey = keypair.public as Ed25519PublicKeyParameters
+                        buildAccount(publicKey.encoded, "fakewallet account $it")
                     }
-                    buildAccount(publicKeyBytes, "fakewallet account $it")
                 }
                 request.request.completeWithAuthorize(accounts.toTypedArray(), null,
                     request.sourceVerificationState.authorizationScope.encodeToByteArray(), null)
@@ -418,9 +421,14 @@ class MobileWalletAdapterViewModel(application: Application) : AndroidViewModel(
                 )
                 Log.d(TAG, "All transactions submitted via RPC")
                 request.request.completeWithSignatures(request.signatures)
-            } catch (e: SendTransactionsUseCase.InvalidTransactionsException) {
+            } catch (e: SendTransactionsUseCase.SubmitTransactionsException) {
+                // the payloads were valid and signed; only RPC submission failed, so report
+                // not-submitted (with signatures for any transactions that did land)
                 Log.e(TAG, "Failed submitting transactions via RPC", e)
-                request.request.completeWithInvalidSignatures(e.valid)
+                val notSubmittedSignatures = Array(request.signatures.size) { i ->
+                    if (e.submitted[i]) request.signatures[i] else null
+                }
+                request.request.completeWithNotSubmitted(notSubmittedSignatures)
             }
         }
     }

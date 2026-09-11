@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -36,44 +37,49 @@ object SendTransactionsUseCase {
                 val transactionBase64 = Base64.encodeToString(transaction, Base64.NO_WRAP)
                 Log.d(TAG, "Sending transaction: '$transactionBase64' with minContextSlot=$minContextSlot")
 
-                val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.readTimeout = TIMEOUT_MS
-                conn.connectTimeout = TIMEOUT_MS
-                conn.doOutput = true
-                conn.outputStream.use { outputStream ->
-                    outputStream.write(
-                        createSendTransactionRequest(
-                            transactionBase64,
-                            minContextSlot,
-                            commitment,
-                            skipPreflight,
-                            maxRetries
-                        ).encodeToByteArray()
-                    )
-                }
-                conn.connect()
-                signatures[i] = if (conn.responseCode == HttpURLConnection.HTTP_OK) {
-                    val result = conn.inputStream.use { inputStream ->
-                        inputStream.readBytes()
+                signatures[i] = try {
+                    val conn = URL(rpcUri.toString()).openConnection() as HttpURLConnection
+                    conn.requestMethod = "POST"
+                    conn.setRequestProperty("Content-Type", "application/json")
+                    conn.readTimeout = TIMEOUT_MS
+                    conn.connectTimeout = TIMEOUT_MS
+                    conn.doOutput = true
+                    conn.outputStream.use { outputStream ->
+                        outputStream.write(
+                            createSendTransactionRequest(
+                                transactionBase64,
+                                minContextSlot,
+                                commitment,
+                                skipPreflight,
+                                maxRetries
+                            ).encodeToByteArray()
+                        )
                     }
-                    try {
-                        parseSendTransactionResult(result)
-                    } catch (e: IllegalArgumentException) {
-                        Log.e(TAG, "sendTransaction did not return a signature, response=${String(result)}")
+                    conn.connect()
+                    if (conn.responseCode == HttpURLConnection.HTTP_OK) {
+                        val result = conn.inputStream.use { inputStream ->
+                            inputStream.readBytes()
+                        }
+                        try {
+                            parseSendTransactionResult(result)
+                        } catch (e: IllegalArgumentException) {
+                            Log.e(TAG, "sendTransaction did not return a signature, response=${String(result)}")
+                            null
+                        }
+                    } else {
+                        Log.e(TAG, "Failed sending transaction, response code=${conn.responseCode}")
                         null
                     }
-                } else {
-                    Log.e(TAG, "Failed sending transaction, response code=${conn.responseCode}")
+                } catch (e: IOException) {
+                    Log.e(TAG, "Failed sending transaction via RPC", e)
                     null
                 }
             }
 
             // Ensure all transactions were submitted successfully
-            val valid = signatures.map { signature -> signature != null }
-            if (valid.any { !it }) {
-                throw InvalidTransactionsException(valid.toBooleanArray())
+            val submitted = signatures.map { signature -> signature != null }
+            if (submitted.any { !it }) {
+                throw SubmitTransactionsException(submitted.toBooleanArray())
             }
         }
     }
@@ -129,5 +135,5 @@ object SendTransactionsUseCase {
     private val TAG = SendTransactionsUseCase::class.simpleName
     private const val TIMEOUT_MS = 20000
 
-    class InvalidTransactionsException(val valid: BooleanArray, message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
+    class SubmitTransactionsException(val submitted: BooleanArray, message: String? = null, cause: Throwable? = null) : RuntimeException(message, cause)
 }
