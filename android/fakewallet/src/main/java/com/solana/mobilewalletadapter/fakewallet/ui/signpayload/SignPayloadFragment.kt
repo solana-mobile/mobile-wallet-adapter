@@ -44,6 +44,8 @@ class SignPayloadFragment : Fragment() {
                             val res =
                                 if (request is MobileWalletAdapterServiceRequest.SignTransactions) {
                                     R.string.label_sign_transactions
+                                } else if (request is MobileWalletAdapterServiceRequest.SignOffchainMessages) {
+                                    R.string.label_sign_offchain_messages
                                 } else {
                                     R.string.label_sign_messages
                                 }

@@ -136,6 +136,8 @@ public class LocalWebSocketServerScenarioTest {
         @Override
         public void onSignMessagesRequest(SignMessagesRequest request) {}
         @Override
+        public void onSignOffchainMessagesRequest(SignOffchainMessagesRequest request) {}
+        @Override
         public void onSignAndSendTransactionsRequest(SignAndSendTransactionsRequest request) {}
         @Override
         public void onDeauthorizedEvent(DeauthorizedEvent event) {}

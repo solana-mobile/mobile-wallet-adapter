@@ -15,6 +15,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.solana.mobilewalletadapter.clientlib.transaction.TransactionVersion;
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage;
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -1051,6 +1051,36 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
         public void notifyOnComplete(@NonNull OnCompleteCallback<? super NotifyOnCompleteFuture<SignMessagesResult>> cb) {
             mMethodCallFuture.notifyOnComplete((f) -> cb.onComplete(this));
         }
+    }
+
+    // =============================================================================================
+    // sign_offchain_message
+    // =============================================================================================
+
+    @NonNull
+    public SignPayloadsFuture signOffchainMessages(@NonNull @Size(min=1) byte[][] messages)
+            throws IOException {
+        final JSONObject signPayloads = new JSONObject();
+        try {
+            final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(messages);
+            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
+        }
+
+        return new SignPayloadsFuture(
+                methodCall(ProtocolContract.METHOD_SIGN_OFFCHAIN_MESSAGES, signPayloads, mClientTimeoutMs),
+                messages.length);
+    }
+
+    @NonNull
+    public SignPayloadsFuture signOffchainMessages(@NonNull @Size(min=1) OffchainMessage[] messages)
+            throws IOException {
+        final byte[][] serializedMessages = new byte[messages.length][];
+        for (int i = 0; i < messages.length; i++) {
+            serializedMessages[i] = messages[i].serialize();
+        }
+        return signOffchainMessages(serializedMessages);
     }
 
     // =============================================================================================

@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage;
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
@@ -49,6 +50,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         void signTransactions(@NonNull SignTransactionsRequest request);
         void signMessages(@NonNull SignMessagesRequest request);
         void signAndSendTransactions(@NonNull SignAndSendTransactionsRequest request);
+        void signOffchainMessages(@NonNull SignOffchainMessagesRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
@@ -86,6 +88,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     break;
                 case ProtocolContract.METHOD_SIGN_MESSAGES:
                     handleSignMessages(id, params);
+                    break;
+                case ProtocolContract.METHOD_SIGN_OFFCHAIN_MESSAGES:
+                    handleSignOffchainMessages(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS:
                     handleSignAndSendTransactions(id, params);
@@ -808,6 +813,53 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return "SignMessagesRequest{" +
                     "addresses=" + Arrays.toString(addresses) +
                     ", super=" + super.toString() +
+                    '}';
+        }
+    }
+
+    // =============================================================================================
+    // sign_offchain_messages
+    // =============================================================================================
+
+    private void handleSignOffchainMessages(@Nullable Object id,
+                                            @Nullable Object params)
+            throws IOException {
+        if (!(params instanceof JSONObject)) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be a JSONObject", null);
+            return;
+        }
+
+        final JSONObject o = (JSONObject) params;
+
+        final byte[][] payloads;
+        try {
+            payloads = unpackPayloadsArray(o);
+        } catch (IllegalArgumentException e) {
+            handleRpcError(id, ERROR_INVALID_PARAMS, "request contains an invalid payloads entry", null);
+            return;
+        }
+
+        if (checkExceedsSigningLimits(payloads.length, SigningType.Transaction)) {
+            handleRpcError(id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of payloads provided for signing exceeds implementation limit", null);
+            return;
+        }
+
+        final SignOffchainMessagesRequest request = new SignOffchainMessagesRequest(id, payloads);
+        request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadsComplete(f)));
+        mMethodHandlers.signOffchainMessages(request);
+    }
+
+    public static class SignOffchainMessagesRequest extends SignRequest<SignedPayloadsResult> {
+        protected SignOffchainMessagesRequest(@Nullable Object id,
+                                              @NonNull byte[][] payloads) {
+            super(id, payloads);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "SignTransactionsRequest{" +
+                    "super=" + super.toString() +
                     '}';
         }
     }
