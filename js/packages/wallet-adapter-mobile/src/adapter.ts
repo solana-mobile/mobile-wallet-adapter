@@ -94,6 +94,27 @@ function chainOrClusterToChainId(chain: Cluster | Chain): IdentifierString {
     }
 }
 
+function getWalletStandardSendOptions(options?: SendOptions) {
+    if (options == null) {
+        return undefined;
+    }
+    const mapped: {
+        maxRetries?: number;
+        minContextSlot?: number;
+        skipPreflight?: boolean;
+    } = {};
+    if (options.maxRetries != null) {
+        mapped.maxRetries = options.maxRetries;
+    }
+    if (options.minContextSlot != null) {
+        mapped.minContextSlot = options.minContextSlot;
+    }
+    if (options.skipPreflight != null) {
+        mapped.skipPreflight = options.skipPreflight;
+    }
+    return Object.keys(mapped).length > 0 ? mapped : undefined;
+}
+
 function getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
 }
@@ -343,12 +364,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                             account,
                             transaction: transaction.serialize(),
                             chain: chain,
-                            options: options
-                                ? {
-                                      skipPreflight: options.skipPreflight,
-                                      maxRetries: options.maxRetries,
-                                  }
-                                : undefined,
+                            options: getWalletStandardSendOptions(options),
                         })
                     ).map((output) => {
                         return base64FromUint8Array(output.signature);
