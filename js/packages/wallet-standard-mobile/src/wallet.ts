@@ -93,6 +93,31 @@ function getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
 }
 
+function getProtocolSignAndSendOptions(options?: SolanaSignAndSendTransactionOptions) {
+    if (options == null) {
+        return undefined;
+    }
+    const protocolOptions: {
+        min_context_slot?: number;
+        commitment?: string;
+        skip_preflight?: boolean;
+        max_retries?: number;
+    } = {};
+    if (options.minContextSlot != null) {
+        protocolOptions.min_context_slot = options.minContextSlot;
+    }
+    if (options.commitment != null || options.preflightCommitment != null) {
+        protocolOptions.commitment = options.commitment ?? options.preflightCommitment;
+    }
+    if (options.skipPreflight != null) {
+        protocolOptions.skip_preflight = options.skipPreflight;
+    }
+    if (options.maxRetries != null) {
+        protocolOptions.max_retries = options.maxRetries;
+    }
+    return Object.keys(protocolOptions).length > 0 ? protocolOptions : undefined;
+}
+
 export interface SolanaMobileWalletAdapterWallet extends Wallet {
     url: string;
 }
@@ -537,11 +562,11 @@ export class LocalSolanaMobileWalletAdapterWallet
                     this.#performReauthorization(wallet, authToken, chain),
                 ]);
                 if (capabilities.supports_sign_and_send_transactions) {
-                    const base64Transaction = base64FromUint8Array(transaction);
+                    const protocolOptions = getProtocolSignAndSendOptions(options);
                     const signatures = (
                         await wallet.signAndSendTransactions({
-                            ...options,
-                            payloads: [base64Transaction],
+                            payloads: [base64FromUint8Array(transaction)],
+                            ...(protocolOptions != null ? { options: protocolOptions } : null),
                         })
                     ).signatures.map(base64ToUint8Array);
                     return signatures[0];
@@ -1035,10 +1060,11 @@ export class RemoteSolanaMobileWalletAdapterWallet
                     this.#performReauthorization(wallet, authToken, chain),
                 ]);
                 if (capabilities.supports_sign_and_send_transactions) {
+                    const protocolOptions = getProtocolSignAndSendOptions(options);
                     const signatures = (
                         await wallet.signAndSendTransactions({
-                            ...options,
                             payloads: [base64FromUint8Array(transaction)],
+                            ...(protocolOptions != null ? { options: protocolOptions } : null),
                         })
                     ).signatures.map(base64ToUint8Array);
                     return signatures[0];

@@ -347,7 +347,9 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
             }),
         ).resolves.toEqual([{ signature: Uint8Array.of(10, 11, 12) }]);
         expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
-            minContextSlot: 123,
+            options: {
+                min_context_slot: 123,
+            },
             payloads: [encodeBytes(Uint8Array.of(4, 5, 6))],
         });
 
@@ -369,6 +371,71 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
                 name: 'Example App',
                 uri: 'https://example.test',
             },
+        });
+    });
+
+    it('maps Wallet Standard sign-and-send options onto the protocol options object', async () => {
+        const accountPublicKey = Uint8Array.of(201, 202, 203);
+        const authorization = createMwaAuthorization(accountPublicKey);
+        const mobileWallet = createMobileWallet({ authorization });
+        const { wallet } = createLocalWallet();
+
+        mobileWallet.signAndSendTransactions.mockResolvedValue({
+            signatures: [encodeBytes(Uint8Array.of(10, 11, 12))],
+        });
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await wallet.features[StandardConnect].connect();
+
+        await getSignAndSendFeature(wallet).signAndSendTransaction({
+            account: wallet.accounts[0],
+            chain: SOLANA_MAINNET_CHAIN,
+            options: {
+                commitment: 'confirmed',
+                maxRetries: 3,
+                minContextSlot: 123,
+                skipPreflight: true,
+            },
+            transaction: Uint8Array.of(4, 5, 6),
+        });
+        expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
+            options: {
+                commitment: 'confirmed',
+                max_retries: 3,
+                min_context_slot: 123,
+                skip_preflight: true,
+            },
+            payloads: [encodeBytes(Uint8Array.of(4, 5, 6))],
+        });
+
+        mobileWallet.signAndSendTransactions.mockClear();
+        await getSignAndSendFeature(wallet).signAndSendTransaction({
+            account: wallet.accounts[0],
+            chain: SOLANA_MAINNET_CHAIN,
+            transaction: Uint8Array.of(7, 8, 9),
+        });
+        expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
+            payloads: [encodeBytes(Uint8Array.of(7, 8, 9))],
+        });
+
+        mobileWallet.signAndSendTransactions.mockClear();
+        await getSignAndSendFeature(wallet).signAndSendTransaction({
+            account: wallet.accounts[0],
+            chain: SOLANA_MAINNET_CHAIN,
+            options: {
+                preflightCommitment: 'processed',
+            },
+            transaction: Uint8Array.of(1, 1, 1),
+        });
+        expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
+            options: {
+                commitment: 'processed',
+            },
+            payloads: [encodeBytes(Uint8Array.of(1, 1, 1))],
         });
     });
 
@@ -785,7 +852,9 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
             }),
         ).resolves.toEqual([{ signature: Uint8Array.of(44, 45, 46) }]);
         expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
-            minContextSlot: 123,
+            options: {
+                min_context_slot: 123,
+            },
             payloads: [encodeBytes(Uint8Array.of(4, 5, 6))],
         });
 
