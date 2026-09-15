@@ -26,3 +26,37 @@ question:
 
     # Close the issue
     close: true
+
+# Applied by a maintainer to a PR that was opened without an accepted issue.
+needs-issue:
+  prs:
+    comment: >
+      Hi @{issue-author},
+
+
+      Thanks for the pull request! We ask that every PR references an accepted
+      issue, and we couldn't find one linked here.
+
+
+      Reviewing a PR means we have to reproduce the problem and then verify the
+      fix. Opening an issue first lets us do the reproduction once, confirm it's
+      a bug in this SDK rather than an integrating app, and agree on the change
+      before code is written. See
+      [CONTRIBUTING.md](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/CONTRIBUTING.md)
+      for the full workflow.
+
+
+      Please open an issue using one of the
+      [issue templates](https://github.com/solana-mobile/mobile-wallet-adapter/issues/new/choose).
+      Once a maintainer has triaged it, you're welcome to reopen this PR (or open
+      a fresh one) with `Fixes #<issue>` in the description.
+
+
+      ---
+
+      _This
+      [automated message](https://github.com/solana-mobile/mobile-wallet-adapter/blob/main/.github/label-actions.yml)
+      is a result of having added the &lsquo;needs-issue&rsquo; label._
+
+    # Close the pull request
+    close: true
