@@ -1,5 +1,14 @@
 # @solana-mobile/mobile-wallet-adapter-protocol-web3js
 
+## 2.4.0
+
+### Patch Changes
+
+- Updated dependencies [c258ef8]
+- Updated dependencies [e9f68c2]
+- Updated dependencies [784619b]
+    - @solana-mobile/mobile-wallet-adapter-protocol@2.4.0
+
 ## 2.3.0
 
 ### Patch Changes
