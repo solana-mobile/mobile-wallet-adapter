@@ -10,6 +10,8 @@
     "license": "Apache-2.0",
     "exports": {
         ".": {
+            "types": "./lib/types/index.d.ts",
+            "react-native": "./lib/cjs/index.native.js",
             "edge-light": {
                 "import": "./lib/esm/index.js",
                 "require": "./lib/cjs/index.js"
@@ -25,11 +27,11 @@
             "node": {
                 "import": "./lib/esm/index.js",
                 "require": "./lib/cjs/index.js"
-            },
-            "react-native": "./lib/cjs/index.native.js",
-            "types": "./lib/types/index.d.ts"
+            }
         },
         "./encoding": {
+            "types": "./lib/types/encoding.d.ts",
+            "react-native": "./lib/cjs/encoding.native.js",
             "edge-light": {
                 "import": "./lib/esm/encoding.js",
                 "require": "./lib/cjs/encoding.js"
@@ -45,9 +47,7 @@
             "node": {
                 "import": "./lib/esm/encoding.js",
                 "require": "./lib/cjs/encoding.js"
-            },
-            "react-native": "./lib/cjs/encoding.native.js",
-            "types": "./lib/types/encoding.d.ts"
+            }
         }
     },
     "browser": {
