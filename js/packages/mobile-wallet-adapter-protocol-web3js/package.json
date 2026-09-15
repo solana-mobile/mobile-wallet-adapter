@@ -54,13 +54,13 @@
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/web3.js": "^1.98.4"
+        "@solana/web3.js": "^1.99.0"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^"
     },
     "devDependencies": {
-        "@solana/web3.js": "^1.98.4",
+        "@solana/web3.js": "^1.99.0",
         "agadoo": "^3.0.0",
         "cross-env": "^10.1.0",
         "shx": "^0.4.0"
