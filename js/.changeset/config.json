@@ -3,11 +3,19 @@
     "changelog": "@changesets/cli/changelog",
     "commit": false,
     "fixed": [
-        ["@solana-mobile/mobile-wallet-adapter-protocol", "@solana-mobile/mobile-wallet-adapter-protocol-web3js"]
+        [
+            "@solana-mobile/mobile-wallet-adapter-protocol",
+            "@solana-mobile/mobile-wallet-adapter-protocol-web3js",
+            "@solana-mobile/mobile-wallet-adapter-protocol-kit"
+        ]
     ],
     "linked": [],
     "access": "public",
     "baseBranch": "main",
     "updateInternalDependencies": "patch",
-    "ignore": []
+    "ignore": [],
+    "snapshot": {
+        "useCalculatedVersion": true,
+        "prereleaseTemplate": "{tag}-{datetime}"
+    }
 }
