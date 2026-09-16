@@ -65,6 +65,7 @@ jobs:
           else
             npx @react-native-community/cli@latest init React${{ matrix.version }}${{ matrix.example.suffix }} --version 0.${{ matrix.version }}.0
           fi
+          sed -i 's/-Xmx2048m/-Xmx4g/' React${{ matrix.version }}${{ matrix.example.suffix }}/android/gradle.properties
 
       - name: 'Install ${{ matrix.example.package_name }}'
         working-directory: 'js/'
