@@ -40,7 +40,7 @@ import {
     Finality,
     SignInPayload,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
+import { base58FromUint8Array, base64FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import {
     Authorization,
     createDefaultChainSelector,
@@ -351,7 +351,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                                 : undefined,
                         })
                     ).map((output) => {
-                        return base64FromUint8Array(output.signature);
+                        return base58FromUint8Array(output.signature);
                     });
 
                     return signature;

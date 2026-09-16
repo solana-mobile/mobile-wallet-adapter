@@ -12,6 +12,7 @@ import {
 } from '@solana/wallet-adapter-base';
 import { SolanaSignAndSendTransaction, SolanaSignTransaction } from '@solana/wallet-standard-features';
 import { PublicKey, Transaction, VersionedMessage, VersionedTransaction } from '@solana/web3.js';
+import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
@@ -548,9 +549,13 @@ describe('adapter', () => {
         wallet.signAndSendImpl.mockResolvedValue([{ signature: Uint8Array.of(8, 8, 8) }]);
         await flushPromises();
 
-        await expect(
-            adapter.sendTransaction(transaction as never, {} as never, { maxRetries: 2, skipPreflight: true }),
-        ).resolves.toBe(encodeAddress(Uint8Array.of(8, 8, 8)));
+        const signatureBytes = Uint8Array.of(8, 8, 8);
+        const signature = await adapter.sendTransaction(transaction as never, {} as never, {
+            maxRetries: 2,
+            skipPreflight: true,
+        });
+        expect(signature).toBe(base58FromUint8Array(signatureBytes));
+        expect(signature).not.toBe(encodeAddress(signatureBytes));
         expect(wallet.signAndSendImpl).toHaveBeenCalledWith({
             account,
             chain: 'solana:mainnet',
