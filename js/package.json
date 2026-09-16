@@ -6,7 +6,7 @@
     "scripts": {
         "build": "turbo run build",
         "changeset:check": "node ./scripts/check-changesets.mjs",
-        "check-types": "turbo run check-types",
+        "check-types": "tsc -p tsconfig.json --noEmit && turbo run check-types",
         "clean": "turbo run clean",
         "format:check": "prettier . --check --cache",
         "format:fix": "prettier . --write",
