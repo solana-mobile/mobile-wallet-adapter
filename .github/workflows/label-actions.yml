@@ -1,12 +1,17 @@
-name: "Issue Label Actions"
+name: "Label Actions"
 
 on:
   issues:
+    types: [labeled, unlabeled]
+  # pull_request_target so the token can comment on and close PRs from forks.
+  # Safe here because the workflow never checks out or runs PR code.
+  pull_request_target:
     types: [labeled, unlabeled]
 
 permissions:
   contents: read
   issues: write
+  pull-requests: write
 
 jobs:
   action:
