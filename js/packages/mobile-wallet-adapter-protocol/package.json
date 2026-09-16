@@ -10,57 +10,30 @@
     "license": "Apache-2.0",
     "exports": {
         ".": {
-            "edge-light": {
-                "import": "./lib/esm/index.js",
-                "require": "./lib/cjs/index.js"
-            },
-            "workerd": {
-                "import": "./lib/esm/index.js",
-                "require": "./lib/cjs/index.js"
-            },
-            "browser": {
-                "import": "./lib/esm/index.browser.js",
-                "require": "./lib/cjs/index.browser.js"
-            },
-            "node": {
-                "import": "./lib/esm/index.js",
-                "require": "./lib/cjs/index.js"
-            },
-            "react-native": "./lib/cjs/index.native.js",
-            "types": "./lib/types/index.d.ts"
+            "types": "./lib/types/index.d.ts",
+            "browser": "./lib/esm/index.browser.js",
+            "react-native": "./lib/esm/index.native.js",
+            "default": "./lib/esm/index.js"
         },
         "./encoding": {
-            "edge-light": {
-                "import": "./lib/esm/encoding.js",
-                "require": "./lib/cjs/encoding.js"
-            },
-            "workerd": {
-                "import": "./lib/esm/encoding.js",
-                "require": "./lib/cjs/encoding.js"
-            },
-            "browser": {
-                "import": "./lib/esm/encoding.browser.js",
-                "require": "./lib/cjs/encoding.browser.js"
-            },
-            "node": {
-                "import": "./lib/esm/encoding.js",
-                "require": "./lib/cjs/encoding.js"
-            },
-            "react-native": "./lib/cjs/encoding.native.js",
-            "types": "./lib/types/encoding.d.ts"
+            "types": "./lib/types/encoding.d.ts",
+            "browser": "./lib/esm/encoding.browser.js",
+            "react-native": "./lib/esm/encoding.native.js",
+            "default": "./lib/esm/encoding.js"
         }
     },
     "browser": {
-        "./lib/cjs/encoding.js": "./lib/cjs/encoding.browser.js",
-        "./lib/cjs/index.js": "./lib/cjs/index.browser.js",
         "./lib/esm/encoding.js": "./lib/esm/encoding.browser.js",
         "./lib/esm/index.js": "./lib/esm/index.browser.js"
     },
-    "main": "lib/cjs/index.js",
+    "main": "lib/esm/index.js",
     "module": "lib/esm/index.js",
-    "react-native": "lib/cjs/index.native.js",
+    "react-native": "lib/esm/index.native.js",
     "types": "lib/types/index.d.ts",
     "type": "module",
+    "engines": {
+        "node": ">=20.19.0"
+    },
     "files": [
         "android",
         "src/codegenSpec",
@@ -77,7 +50,6 @@
         "build": "pnpm clean && tsdown --config ../../tsdown.config.ts",
         "build:watch": "pnpm clean && tsdown --config ../../tsdown.config.ts --watch",
         "check-types": "tsc -p tsconfig.json --noEmit",
-        "postbuild": "printf '%s' '{\"type\":\"commonjs\"}' > lib/cjs/package.json && printf '%s' '{\"type\":\"module\"}' > lib/esm/package.json",
         "prepublishOnly": "agadoo"
     },
     "dependencies": {
