@@ -13,6 +13,14 @@ export default defineConfig({
                 url: 'https://example.test',
             },
         },
-        projects: ['packages/*'],
+        projects: [
+            'packages/*',
+            {
+                test: {
+                    include: ['test/**/*.test.ts'],
+                    name: 'workspace',
+                },
+            },
+        ],
     },
 });
