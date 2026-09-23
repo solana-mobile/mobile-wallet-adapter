@@ -394,10 +394,14 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
 
         await expect(wallet.features[SolanaSignIn].signIn({ statement: 'Sign in' })).resolves.toEqual([
             {
-                account: expect.objectContaining({
+                account: {
                     address: base58FromUint8Array(accountPublicKey),
+                    chains: [SOLANA_MAINNET_CHAIN],
+                    features: [SolanaSignAndSendTransaction, SolanaSignMessage, SolanaSignTransaction],
+                    icon: 'data:image/svg+xml;base64,icon',
+                    label: 'Primary',
                     publicKey: accountPublicKey,
-                }),
+                },
                 signature,
                 signedMessage,
             },
@@ -880,10 +884,14 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
             }),
         ).resolves.toEqual([
             {
-                account: expect.objectContaining({
+                account: {
                     address: base58FromUint8Array(accountPublicKey),
+                    chains: [SOLANA_MAINNET_CHAIN],
+                    features: [SolanaSignAndSendTransaction, SolanaSignMessage, SolanaSignTransaction],
+                    icon: 'data:image/svg+xml;base64,icon',
+                    label: 'Primary',
                     publicKey: accountPublicKey,
-                }),
+                },
                 signature,
                 signedMessage,
             },
