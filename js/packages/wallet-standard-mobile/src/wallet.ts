@@ -643,7 +643,9 @@ export class LocalSolanaMobileWalletAdapterWallet
                 throw new Error('Sign in failed, no sign in result returned by wallet');
             }
             const signedInAddress = authorizationResult.sign_in_result.address;
-            const signedInAccount = authorizationResult.accounts.find((acc) => acc.address == signedInAddress);
+            const signedInAccount = authorizationResult.accounts.find(
+                (acc) => acc.address === base58FromUint8Array(base64ToUint8Array(signedInAddress)),
+            );
             return {
                 account: {
                     ...(signedInAccount ?? {
@@ -1143,7 +1145,9 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 throw new Error('Sign in failed, no sign in result returned by wallet');
             }
             const signedInAddress = authorizationResult.sign_in_result.address;
-            const signedInAccount = authorizationResult.accounts.find((acc) => acc.address == signedInAddress);
+            const signedInAccount = authorizationResult.accounts.find(
+                (acc) => acc.address === base58FromUint8Array(base64ToUint8Array(signedInAddress)),
+            );
             return {
                 account: {
                     ...(signedInAccount ?? {
