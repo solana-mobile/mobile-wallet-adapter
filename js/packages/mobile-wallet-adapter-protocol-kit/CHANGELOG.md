@@ -1,5 +1,22 @@
 # @solana-mobile/mobile-wallet-adapter-protocol-kit
 
+## 2.4.0
+
+### Minor Changes
+
+- 1de01bd: Align the package version with `@solana-mobile/mobile-wallet-adapter-protocol` and `@solana-mobile/mobile-wallet-adapter-protocol-web3js`. The three protocol packages are now released together as a fixed group, so from this release onward they always share the same version number. This is a versioning change only; there are no code or API changes in this package beyond those listed separately.
+
+### Patch Changes
+
+- 784619b: Accept `@solana/kit` v8 alongside v7.
+
+    `mobile-wallet-adapter-protocol-kit` widens its `@solana/kit` peer dependency and its `@solana/transaction-messages` / `@solana/transactions` dependencies to `^7.0.0 || ^8.0.0`, and `mobile-wallet-adapter-protocol` widens its `@solana/kit` dependency the same way. Apps on kit 8 previously ended up with a duplicate kit 7 tree in `node_modules` (and a peer-dependency conflict on `@solana/kit`); with the widened ranges everything dedupes against the app's kit tree, whichever major it uses. Every kit API these packages touch is unchanged between v7 and v8, so no code changes were needed.
+
+- Updated dependencies [c258ef8]
+- Updated dependencies [e9f68c2]
+- Updated dependencies [784619b]
+    - @solana-mobile/mobile-wallet-adapter-protocol@2.4.0
+
 ## 0.4.0
 
 ### Minor Changes
