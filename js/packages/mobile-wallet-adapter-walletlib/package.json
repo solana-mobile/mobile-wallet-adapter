@@ -6,10 +6,7 @@
     "repository": "https://github.com/solana-mobile/mobile-wallet-adapter",
     "license": "Apache-2.0",
     "exports": {
-        "node": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
-        },
+        "node": "./lib/esm/index.js",
         "react-native": "./lib/esm/index.native.js",
         "types": "./lib/types/index.d.ts"
     },
