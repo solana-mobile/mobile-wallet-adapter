@@ -41,3 +41,7 @@ jobs:
           # Reused by the not_a_bug verdict
           create "question"    "cc317c" "A usage/how-to question; redirected to Solana Stack Exchange"
           create "enhancement" "a2eeef" "Feature request / enhancement"
+
+          # Applied by maintainers to PRs opened without an accepted issue
+          # (see .github/label-actions.yml)
+          create "needs-issue" "d93f0b" "Pull request opened without an accepted issue"
