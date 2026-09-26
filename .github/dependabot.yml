@@ -122,6 +122,13 @@ updates:
         patterns:
           - "@solana/wallet-standard-*"
           - "@wallet-standard/*"
+    # The protocol packages deliberately accept `^7.0.0 || ^8.0.0` for these so apps on either kit
+    # major dedupe against their own tree. Dependabot cannot express `||` ranges and rewrites them to a
+    # single caret (see #1666), so keep it away from them.
+    ignore:
+      - dependency-name: "@solana/kit"
+      - dependency-name: "@solana/transaction-messages"
+      - dependency-name: "@solana/transactions"
     package-ecosystem: "npm"
     schedule:
       interval: "weekly"

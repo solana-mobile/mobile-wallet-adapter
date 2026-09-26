@@ -100,10 +100,10 @@ importers:
         specifier: workspace:^
         version: link:../mobile-wallet-adapter-protocol
       '@solana/transaction-messages':
-        specifier: ^8.2.0
+        specifier: ^7.0.0 || ^8.0.0
         version: 8.2.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)
       '@solana/transactions':
-        specifier: ^8.2.0
+        specifier: ^7.0.0 || ^8.0.0
         version: 8.2.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)
     devDependencies:
       '@solana/keys':

@@ -58,8 +58,8 @@
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
-        "@solana/transaction-messages": "^8.2.0",
-        "@solana/transactions": "^8.2.0"
+        "@solana/transaction-messages": "^7.0.0 || ^8.0.0",
+        "@solana/transactions": "^7.0.0 || ^8.0.0"
     },
     "devDependencies": {
         "@solana/keys": "^8.0.0",
