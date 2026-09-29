@@ -70,19 +70,21 @@ function createEntry(entryName: string): Record<string, string> {
     return entry;
 }
 
-function createConfig({
-    entryName,
-    format,
-    outDir,
-    runtime,
-    tsconfig,
-}: {
-    entryName: string;
-    format: 'cjs' | 'esm';
-    outDir: string;
-    runtime: Runtime;
-    tsconfig: string;
-}): UserConfig {
+function platformForRuntime(runtime: Runtime): NonNullable<UserConfig['platform']> {
+    switch (runtime) {
+        case 'browser':
+            return 'browser';
+        case 'node':
+            return 'node';
+        case 'react-native':
+            return 'neutral';
+    }
+}
+
+function createConfig({ entryName, runtime }: { entryName: string; runtime: Runtime }): UserConfig {
+    // Every runtime build lands in `lib/esm`, so chunks carry the same suffix as their entry
+    // (`index.js` / `index.browser.js` / `index.native.js`) to keep the builds from overwriting each other.
+    const runtimeSuffix = entryName.slice('index'.length);
     return {
         clean: false,
         cwd: process.cwd(),
@@ -96,20 +98,20 @@ function createConfig({
         },
         dts: false,
         entry: createEntry(entryName),
-        format,
+        format: 'esm',
         hash: false,
-        outDir,
+        outDir: 'lib/esm',
         outExtensions: () => ({
             dts: '.d.ts',
             js: '.js',
         }),
         outputOptions: {
-            chunkFileNames: 'chunks/[name].js',
+            chunkFileNames: `chunks/[name]${runtimeSuffix}.js`,
         },
-        platform: format === 'esm' ? (runtime === 'browser' ? 'browser' : 'node') : undefined,
+        platform: platformForRuntime(runtime),
         plugins: [runtimeForkPlugin(runtime)],
         sourcemap: true,
-        tsconfig,
+        tsconfig: 'tsconfig.json',
     };
 }
 
@@ -138,38 +140,15 @@ function createDtsConfig(): UserConfig {
 export default defineConfig([
     createConfig({
         entryName: 'index',
-        format: 'cjs',
-        outDir: 'lib/cjs',
         runtime: 'node',
-        tsconfig: 'tsconfig.cjs.json',
     }),
     createConfig({
         entryName: 'index.browser',
-        format: 'cjs',
-        outDir: 'lib/cjs',
         runtime: 'browser',
-        tsconfig: 'tsconfig.cjs.json',
-    }),
-    createConfig({
-        entryName: 'index',
-        format: 'esm',
-        outDir: 'lib/esm',
-        runtime: 'node',
-        tsconfig: 'tsconfig.json',
-    }),
-    createConfig({
-        entryName: 'index.browser',
-        format: 'esm',
-        outDir: 'lib/esm',
-        runtime: 'browser',
-        tsconfig: 'tsconfig.json',
     }),
     createConfig({
         entryName: 'index.native',
-        format: 'cjs',
-        outDir: 'lib/cjs',
         runtime: 'react-native',
-        tsconfig: 'tsconfig.cjs.json',
     }),
     createDtsConfig(),
 ]);
