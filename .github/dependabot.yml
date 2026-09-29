@@ -65,13 +65,73 @@ updates:
           - "minor"
           - "patch"
 
-  # Mobile Wallet Adapter JavaScript SDK and TypeScript examples
+  # Mobile Wallet Adapter TypeScript examples
   - cooldown:
       default-days: 5
     directories:
       - "/examples/example-react-native-app"
       - "/examples/example-react-native-wallet"
       - "/examples/example-web-app"
+    groups:
+      babel:
+        patterns:
+          - "@babel/*"
+      eslint:
+        patterns:
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "eslint"
+          - "eslint-*"
+      prettier:
+        patterns:
+          - "prettier"
+      react:
+        patterns:
+          - "@types/react"
+          - "react"
+          - "react-dom"
+      react-native:
+        patterns:
+          - "@react-native/*"
+          - "@react-native-community/*"
+          - "@react-native-vector-icons/*"
+          - "@types/react-native*"
+          - "react-native"
+          - "react-native-*"
+      solana:
+        exclude-patterns:
+          - "@solana/wallet-standard-*"
+        patterns:
+          - "@solana/*"
+          - "@solana-program/*"
+      testing:
+        patterns:
+          - "@vitest/*"
+          - "vitest"
+      typescript:
+        patterns:
+          - "@types/*"
+          - "typescript"
+      wallet-standard:
+        patterns:
+          - "@solana/wallet-standard-*"
+          - "@wallet-standard/*"
+    # @react-native/eslint-config does not support ESLint 10 yet.
+    ignore:
+      - dependency-name: "@eslint/*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
+    package-ecosystem: "npm"
+    schedule:
+      interval: "weekly"
+
+  # Mobile Wallet Adapter JavaScript SDK
+  - cooldown:
+      default-days: 5
+    directories:
       - "/js"
     groups:
       babel:
