@@ -92,7 +92,7 @@ function createConfig({
         },
         deps: {
             onlyBundle: false,
-            skipNodeModulesBundle: true,
+            neverBundle: true,
         },
         dts: false,
         entry: createEntry(entryName),
