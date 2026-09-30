@@ -158,6 +158,40 @@ describe('react-native transact fork', () => {
         expect(nativeModule.endSession).toHaveBeenCalledTimes(1);
     });
 
+    it('maps native JSON-RPC rejections from invoke inside the transact callback', async () => {
+        const nativeModule = createNativeModule();
+        let invokePromise: Promise<unknown> | undefined;
+        mockCreateMobileWalletProxy.mockImplementation((_protocolVersion, requestHandler) => {
+            const pendingInvokePromise = requestHandler('authorize', { chain: 'solana:devnet' });
+            invokePromise = pendingInvokePromise;
+            void pendingInvokePromise.catch(() => undefined);
+            return WALLET;
+        });
+        // The real native module rejects asynchronously (it never throws synchronously).
+        nativeModule.invoke.mockRejectedValue(
+            Object.assign(new Error('authorization request failed'), {
+                code: 'JSON_RPC_ERROR',
+                userInfo: { jsonRpcErrorCode: -1 },
+            }),
+        );
+
+        const { transact } = await importReactNativeTransact({ nativeModule });
+
+        await expect(transact(() => 'done')).resolves.toBe('done');
+        if (!invokePromise) {
+            throw new Error('Expected invoke promise to be captured');
+        }
+        await expect(invokePromise).rejects.toEqual(
+            expect.objectContaining({
+                code: -1,
+                jsonRpcMessageId: 0,
+                message: 'authorization request failed',
+                name: 'SolanaMobileWalletAdapterProtocolError',
+            }),
+        );
+        expect(nativeModule.endSession).toHaveBeenCalledTimes(1);
+    });
+
     it('throws the platform compatibility error on non-Android platforms', async () => {
         const { transact } = await importReactNativeTransact({
             nativeModule: null,

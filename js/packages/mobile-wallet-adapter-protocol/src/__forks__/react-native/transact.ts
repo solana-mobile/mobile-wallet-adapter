@@ -86,7 +86,12 @@ export async function transact<TReturn>(
         didSuccessfullyConnect = true;
         const wallet = createMobileWalletProxy(sessionProperties.protocol_version, async (method, params) => {
             try {
-                return SolanaMobileWalletAdapter.invoke(method, params);
+                // `invoke` returns a promise; without `await` a rejection skips this
+                // `catch` and reaches the caller un-mapped (raw React Native error
+                // instead of `SolanaMobileWalletAdapterProtocolError`), so callers
+                // that branch on the mapped error inside the `transact` callback
+                // (e.g. reauthorize -> authorize fallbacks) never see it.
+                return await SolanaMobileWalletAdapter.invoke(method, params);
             } catch (e) {
                 return handleError(e);
             }
