@@ -41,16 +41,16 @@
         "prepublishOnly": "agadoo"
     },
     "peerDependencies": {
-        "@solana/kit": "^7.0.0 || ^8.0.0"
+        "@solana/kit": "^8.0.0"
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
-        "@solana/transaction-messages": "^8.2.0",
-        "@solana/transactions": "^8.2.0"
+        "@solana/transaction-messages": "^8.3.0",
+        "@solana/transactions": "^8.3.0"
     },
     "devDependencies": {
-        "@solana/keys": "^8.0.0",
-        "@solana/kit": "^8.0.0",
+        "@solana/keys": "^8.3.0",
+        "@solana/kit": "^8.3.0",
         "agadoo": "^3.0.0",
         "cross-env": "^10.1.0",
         "shx": "^0.4.0"
