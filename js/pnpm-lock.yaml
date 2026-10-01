@@ -79,7 +79,7 @@ importers:
         version: 1.1.1
       react-native:
         specifier: '>0.74'
-        version: 0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10)
+        version: 0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10)
     devDependencies:
       '@types/react-native':
         specifier: ^0.69.3
@@ -145,14 +145,14 @@ importers:
     dependencies:
       react-native:
         specifier: '>0.74'
-        version: 0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10)
+        version: 0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10)
     devDependencies:
       '@solana/web3.js':
         specifier: ^1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@6.0.3)(utf-8-validate@5.0.10)
       '@types/react':
-        specifier: ^19.2.18
-        version: 19.2.18
+        specifier: ^19.3.0
+        version: 19.3.0
       '@types/react-native':
         specifier: ^0.69.3
         version: 0.69.26
@@ -163,8 +163,8 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
       react:
-        specifier: ^19.2.8
-        version: 19.2.8
+        specifier: ^19.3.0
+        version: 19.3.0
       shx:
         specifier: ^0.4.0
         version: 0.4.0
@@ -173,7 +173,7 @@ importers:
     dependencies:
       '@react-native-async-storage/async-storage':
         specifier: ^1.17.7 || ^2.0.0
-        version: 2.2.0(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10))
+        version: 2.2.0(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10))
       '@solana-mobile/mobile-wallet-adapter-protocol':
         specifier: workspace:^
         version: link:../mobile-wallet-adapter-protocol
@@ -194,7 +194,7 @@ importers:
         version: 1.1.1
       react-native:
         specifier: '>0.74'
-        version: 0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10)
+        version: 0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -219,7 +219,7 @@ importers:
     dependencies:
       '@react-native-async-storage/async-storage':
         specifier: ^1.17.7 || ^2.0.0
-        version: 2.2.0(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10))
+        version: 2.2.0(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10))
       '@solana-mobile/mobile-wallet-adapter-protocol':
         specifier: workspace:^
         version: link:../mobile-wallet-adapter-protocol
@@ -1863,8 +1863,8 @@ packages:
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
 
-  '@types/react@19.2.18':
-    resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
+  '@types/react@19.3.0':
+    resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
@@ -3536,8 +3536,8 @@ packages:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
 
-  react@19.2.8:
-    resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
+  react@19.3.0:
+    resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
     engines: {node: '>=0.10.0'}
 
   read-yaml-file@1.1.0:
@@ -4935,10 +4935,10 @@ snapshots:
     dependencies:
       quansync: 1.0.0
 
-  '@react-native-async-storage/async-storage@2.2.0(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10))':
+  '@react-native-async-storage/async-storage@2.2.0(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10))':
     dependencies:
       merge-options: 3.0.4
-      react-native: 0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10)
+      react-native: 0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10)
 
   '@react-native/assets-registry@0.84.0': {}
 
@@ -5001,14 +5001,14 @@ snapshots:
 
   '@react-native/normalize-colors@0.84.0': {}
 
-  '@react-native/virtualized-lists@0.84.0(@types/react@19.2.18)(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10))(react@19.2.8)':
+  '@react-native/virtualized-lists@0.84.0(@types/react@19.3.0)(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10))(react@19.3.0)':
     dependencies:
       invariant: 2.2.4
       nullthrows: 1.1.1
-      react: 19.2.8
-      react-native: 0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10)
+      react: 19.3.0
+      react-native: 0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10)
     optionalDependencies:
-      '@types/react': 19.2.18
+      '@types/react': 19.3.0
 
   '@rolldown/binding-android-arm-eabi@1.2.11':
     optional: true
@@ -5981,7 +5981,7 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@types/react@19.2.18':
+  '@types/react@19.3.0':
     dependencies:
       csstype: 3.2.3
 
@@ -7779,7 +7779,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10):
+  react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10):
     dependencies:
       '@jest/create-cache-key-function': 29.7.0
       '@react-native/assets-registry': 0.84.0
@@ -7788,7 +7788,7 @@ snapshots:
       '@react-native/gradle-plugin': 0.84.0
       '@react-native/js-polyfills': 0.84.0
       '@react-native/normalize-colors': 0.84.0
-      '@react-native/virtualized-lists': 0.84.0(@types/react@19.2.18)(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@5.0.10))(react@19.2.8)
+      '@react-native/virtualized-lists': 0.84.0(@types/react@19.3.0)(react-native@0.84.0(@babel/core@7.29.7)(@types/react@19.3.0)(bufferutil@4.1.0)(react@19.3.0)(utf-8-validate@5.0.10))(react@19.3.0)
       abort-controller: 3.0.0
       anser: 1.4.10
       ansi-regex: 5.0.1
@@ -7806,7 +7806,7 @@ snapshots:
       nullthrows: 1.1.1
       pretty-format: 29.7.0
       promise: 8.3.0
-      react: 19.2.8
+      react: 19.3.0
       react-devtools-core: 6.1.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       react-refresh: 0.14.2
       regenerator-runtime: 0.13.11
@@ -7818,7 +7818,7 @@ snapshots:
       ws: 7.5.13(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       yargs: 17.7.3
     optionalDependencies:
-      '@types/react': 19.2.18
+      '@types/react': 19.3.0
     transitivePeerDependencies:
       - '@babel/core'
       - '@react-native-community/cli'
@@ -7829,7 +7829,7 @@ snapshots:
 
   react-refresh@0.14.2: {}
 
-  react@19.2.8: {}
+  react@19.3.0: {}
 
   read-yaml-file@1.1.0:
     dependencies:

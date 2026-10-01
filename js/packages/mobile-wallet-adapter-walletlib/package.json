@@ -38,10 +38,10 @@
     },
     "devDependencies": {
         "@solana/web3.js": "^1.99.0",
-        "@types/react": "^19.2.18",
+        "@types/react": "^19.3.0",
         "@types/react-native": "^0.69.3",
         "@wallet-standard/core": "^1.1.1",
-        "react": "^19.2.8",
+        "react": "^19.3.0",
         "cross-env": "^10.1.0",
         "shx": "^0.4.0"
     },
