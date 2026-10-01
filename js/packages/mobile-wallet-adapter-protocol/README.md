@@ -30,9 +30,7 @@ The callback you provide will be called once a session has been established with
 const signedPayloads = await transact(async (wallet) => {
     const { signed_payloads } = await wallet.signMessages({
         auth_token,
-        payloads: [
-            /* ... */
-        ],
+        payloads: [/* ... */],
     });
     return signed_payloads;
 });

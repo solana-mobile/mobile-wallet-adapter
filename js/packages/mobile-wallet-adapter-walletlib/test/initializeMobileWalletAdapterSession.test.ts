@@ -11,8 +11,7 @@ const { mockCreateScenario, nativeModules, nativeWalletLib, platform } = vi.hois
         mockCreateScenario,
         nativeModules: {
             SolanaMobileWalletAdapterWalletLib: nativeWalletLib as
-                | { createScenario: ReturnType<typeof vi.fn> }
-                | undefined,
+                { createScenario: ReturnType<typeof vi.fn> } | undefined,
         },
         nativeWalletLib,
         platform: { OS: 'android' },
