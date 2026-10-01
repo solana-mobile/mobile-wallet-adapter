@@ -45,7 +45,7 @@
         "@types/react": "^19.2.17",
         "eslint": "^9.39.4",
         "eslint-plugin-simple-import-sort": "^14.0.0",
-        "hermes-compiler": "250829098.0.15",
+        "hermes-compiler": "250829098.0.19",
         "prettier": "3.9.9",
         "typescript": "^5.8.3"
     },
