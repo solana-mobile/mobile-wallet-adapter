@@ -116,12 +116,20 @@ updates:
         patterns:
           - "@solana/wallet-standard-*"
           - "@wallet-standard/*"
+    # @react-native/babel-preset requires Babel 7.
     # @react-native/eslint-config does not support ESLint 10 yet.
+    # typescript-eslint does not support TypeScript 7 yet.
     ignore:
+      - dependency-name: "@babel/*"
+        update-types:
+          - "version-update:semver-major"
       - dependency-name: "@eslint/*"
         update-types:
           - "version-update:semver-major"
       - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "typescript"
         update-types:
           - "version-update:semver-major"
     package-ecosystem: "npm"
@@ -177,6 +185,11 @@ updates:
         patterns:
           - "@solana/wallet-standard-*"
           - "@wallet-standard/*"
+    # typescript-eslint does not support TypeScript 7 yet.
+    ignore:
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     package-ecosystem: "npm"
     schedule:
       interval: "weekly"
