@@ -1,5 +1,45 @@
 # @solana-mobile/mobile-wallet-adapter-protocol
 
+## 3.0.0
+
+### Major Changes
+
+- da43b96: Ship ESM only and drop the CommonJS build.
+
+    - The `exports` map now resolves every condition to the ESM build under `lib/esm`. The `lib/cjs` directory is no longer published.
+    - `require()` callers need Node 20.19 or later on the 20.x line, or Node 22.12 and later, which load ES modules through `require()` without a flag. Node 21 and 22.0 to 22.11 are not supported. CommonJS consumers such as `@solana/wallet-adapter-react` keep working unchanged on supported versions. Each package declares this range in `engines.node`.
+    - React Native (Metro), Vite, webpack and Next.js consumers are unaffected. The `react-native` condition already resolved to a bundler-transpiled entry and now points at `lib/esm/index.native.js`.
+    - `@solana-mobile/mobile-wallet-adapter-walletlib` was already ESM only. Its `node` condition is now the `default` condition so every resolver, not only Node, can load it.
+
+- 16a532e: Require `@solana/kit` 8.
+
+    - `mobile-wallet-adapter-protocol-kit` declares `@solana/kit@^8.0.0` as its peer and depends on `@solana/transaction-messages` and `@solana/transactions` `^8.3.0`. The previous `^7.0.0 || ^8.0.0` peer was misleading: the dependencies already required Kit 8 internals, so Kit 7 apps got a duplicate Kit 8 subtree.
+    - `mobile-wallet-adapter-protocol` depends on `@solana/kit@^8.3.0`.
+    - Apps on Kit 7 must upgrade to `@solana/kit@^8.3.0`. The Kit changesets cover the migration.
+
+### Minor Changes
+
+- c258ef8: Declare `react-native` as an optional peer dependency.
+
+    It was previously a required peer dependency, which npm 7 and later install automatically, so browser-only consumers were pulling the entire React Native toolchain into `node_modules` — roughly 32 MB of `react-native` itself, plus `metro` and the transitive advisories it carries — even though no browser code path imports it. React Native is reached only through the `react-native` export condition, so nothing about which code runs where has changed; only the manifest was wrong.
+
+    React Native consumers are unaffected: they already depend on `react-native` directly, and an optional peer dependency resolves identically for them.
+
+### Patch Changes
+
+- e9f68c2: Support Solana v1 transactions.
+
+    `wallet-standard-mobile`
+
+    - The local wallet now advertises the `supportedTransactionVersions` the connected MWA wallet reports, instead of always `['legacy', 0]`. The remote wallet already did this.
+    - A wallet that reports `1` is now advertised as supporting v1 transactions. A wallet that reports only `legacy` is no longer advertised as supporting v0.
+
+    `mobile-wallet-adapter-protocol`
+
+    - `supported_transaction_versions` is typed with `SolanaTransactionVersion` from `@solana/wallet-standard-features` instead of `TransactionVersion` from `@solana/web3.js`, so it includes `1`.
+    - Requires `@solana/wallet-standard-features` `^1.5.0` (also bumped in `wallet-standard-mobile` and `wallet-adapter-mobile`).
+    - Dropped the unused `@solana/web3.js` devDependency.
+
 ## 2.3.0
 
 ### Minor Changes
