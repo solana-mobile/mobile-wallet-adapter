@@ -23,7 +23,7 @@
         "@types/node-fetch": "^2.6.13",
         "@typescript-eslint/eslint-plugin": "^8.70.1",
         "@typescript-eslint/parser": "^8.70.1",
-        "@vitest/coverage-v8": "^4.1.10",
+        "@vitest/coverage-v8": "^5.0.2",
         "eslint": "^10.11.0",
         "eslint-plugin-simple-import-sort": "^14.0.0",
         "jsdom": "^29.1.1",
@@ -32,6 +32,6 @@
         "tsdown": "^0.23.0",
         "turbo": "^2.10.9",
         "typescript": "^6.0.3",
-        "vitest": "^4.1.10"
+        "vitest": "^5.0.2"
     }
 }
