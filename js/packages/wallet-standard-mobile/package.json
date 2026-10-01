@@ -39,11 +39,11 @@
     },
     "dependencies": {
         "@solana-mobile/mobile-wallet-adapter-protocol": "workspace:^",
-        "@solana/wallet-standard-chains": "^1.1.1",
+        "@solana/wallet-standard-chains": "^1.1.2",
         "@solana/wallet-standard-features": "^1.5.0",
-        "@wallet-standard/base": "^1.0.1",
-        "@wallet-standard/features": "^1.0.3",
-        "@wallet-standard/wallet": "^1.1.0",
+        "@wallet-standard/base": "^1.1.1",
+        "@wallet-standard/features": "^1.1.1",
+        "@wallet-standard/wallet": "^1.1.1",
         "qrcode": "^1.5.4",
         "tslib": "^2.8.1"
     },
