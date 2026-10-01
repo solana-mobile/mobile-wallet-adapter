@@ -10,7 +10,7 @@ export default function useGuardedCallback<TArgs extends Array<unknown>, TReturn
                 return await cb(...args);
             } catch {}
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
         [...(dependencies || [])],
     ) as (...args: TArgs) => Promise<Awaited<TReturn> | void>;
 }
