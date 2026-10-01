@@ -44,7 +44,7 @@
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.6",
         "@eslint/js": "^9.39.5",
-        "@types/node": "20.19.0",
+        "@types/node": "26.6.3",
         "@types/react": "^19.3.0",
         "eslint": "^9.39.5",
         "eslint-config-next": "15.5.12",
@@ -54,7 +54,7 @@
         "postinstall-postinstall": "^2.1.0",
         "prettier": "3.9.9",
         "shx": "^0.4.0",
-        "typescript": "~5.6.3"
+        "typescript": "~5.9.3"
     },
     "pnpm": {
         "overrides": {
