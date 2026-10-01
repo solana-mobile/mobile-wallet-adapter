@@ -1,5 +1,46 @@
 # @solana-mobile/wallet-standard-mobile
 
+## 0.7.0
+
+### Minor Changes
+
+- da43b96: Ship ESM only and drop the CommonJS build.
+
+    - The `exports` map now resolves every condition to the ESM build under `lib/esm`. The `lib/cjs` directory is no longer published.
+    - `require()` callers need Node 20.19 or later on the 20.x line, or Node 22.12 and later, which load ES modules through `require()` without a flag. Node 21 and 22.0 to 22.11 are not supported. CommonJS consumers such as `@solana/wallet-adapter-react` keep working unchanged on supported versions. Each package declares this range in `engines.node`.
+    - React Native (Metro), Vite, webpack and Next.js consumers are unaffected. The `react-native` condition already resolved to a bundler-transpiled entry and now points at `lib/esm/index.native.js`.
+    - `@solana-mobile/mobile-wallet-adapter-walletlib` was already ESM only. Its `node` condition is now the `default` condition so every resolver, not only Node, can load it.
+
+- c258ef8: Move `@react-native-async-storage/async-storage` from `optionalDependencies` to an optional peer dependency, widen the accepted range to `^1.17.7 || ^2.0.0`, and load it lazily.
+
+    `optionalDependencies` are installed by default by every package manager — "optional" means only that a failed install is tolerated, not that the package is skipped — so browser-only consumers were pulling async-storage and, through its own peer dependency on `react-native`, the entire React Native toolchain into `node_modules`. Together with the matching fix in `@solana-mobile/mobile-wallet-adapter-protocol`, a browser-only install of this package drops from about 207 MB to about 42 MB and from 334 packages to 93, and the seven high-severity `metro` advisories it used to surface in `npm audit` go away entirely. Downstream lockfiles will shrink substantially on the next update; that is this change taking effect, not packages going missing.
+
+    **Action required for React Native consumers that use the default authorization cache.** If you call `createDefaultAuthorizationCache()`, add `@react-native-async-storage/async-storage` to your own app dependencies — it is no longer installed transitively. The release also adds runtime validation: async-storage is now resolved lazily, on first use, and `createDefaultAuthorizationCache()` throws a descriptive error when it is missing or unusable (such as when its native module has not been linked) instead of failing silently into an inert cache. Apps that pass their own `authorizationCache` never load async-storage and do not need it installed; the lazy `require` sits inside a `try` block, which Metro's default `allowOptionalDependencies` configuration treats as an optional dependency, so their builds keep working without it.
+
+- 50ccaca: Make `authorizationCache`, `chainSelector` and `onWalletNotFound` optional in `registerMwa` and the wallet constructors, defaulting to `createDefaultAuthorizationCache()`, `createDefaultChainSelector()` and `createDefaultWalletNotFoundHandler()` respectively. The config shapes are now exported as `SolanaMobileWalletAdapterWalletConfig`, with `LocalSolanaMobileWalletAdapterWalletConfig`, `RemoteSolanaMobileWalletAdapterWalletConfig` and `NostrSolanaMobileWalletAdapterWalletConfig` extending it. Existing callers that pass all properties are unaffected.
+
+### Patch Changes
+
+- f72388e: Fix connection deadlock on loopback-origin dapps (localhost dev via `adb reverse`). Local Network Access only gates requests that cross into a more private address space, so a page served from `localhost`, `*.localhost`, `127.0.0.0/8`, or `[::1]` fetching loopback is exempt — the browser never shows the permission prompt and the permission state can never leave "prompt", which left the connection hanging until the association timeout. Loopback origins now skip the permission gate entirely and go straight to the association intent; non-loopback origins keep the existing prompt flow.
+- e9f68c2: Support Solana v1 transactions.
+
+    `wallet-standard-mobile`
+
+    - The local wallet now advertises the `supportedTransactionVersions` the connected MWA wallet reports, instead of always `['legacy', 0]`. The remote wallet already did this.
+    - A wallet that reports `1` is now advertised as supporting v1 transactions. A wallet that reports only `legacy` is no longer advertised as supporting v0.
+
+    `mobile-wallet-adapter-protocol`
+
+    - `supported_transaction_versions` is typed with `SolanaTransactionVersion` from `@solana/wallet-standard-features` instead of `TransactionVersion` from `@solana/web3.js`, so it includes `1`.
+    - Requires `@solana/wallet-standard-features` `^1.5.0` (also bumped in `wallet-standard-mobile` and `wallet-adapter-mobile`).
+    - Dropped the unused `@solana/web3.js` devDependency.
+
+- Updated dependencies [da43b96]
+- Updated dependencies [c258ef8]
+- Updated dependencies [16a532e]
+- Updated dependencies [e9f68c2]
+    - @solana-mobile/mobile-wallet-adapter-protocol@3.0.0
+
 ## 0.6.0
 
 ### Minor Changes
