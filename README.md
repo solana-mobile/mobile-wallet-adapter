@@ -39,7 +39,8 @@ This repository is intended for consumption by Solana mobile developers.
 - An Android library for [dapps](android/clientlib) to consume Mobile Wallet Adapter transaction signing services
 - A [fake wallet](android/fakewallet) and a [fake dapp](android/fakedapp) demonstrating how to integrate walletlib and clientlib
 - A JavaScript [reference implementation](js/packages/mobile-wallet-adapter-protocol) of the Mobile Wallet Adapter protocol
-- A JavaScript [convenience wrapper](js/packages/mobile-wallet-adapter-protocol-web3js) that lets you use familiar datatypes from `@solana/web3.js` as inputs to the Mobile Wallet Adapter protocol.
+- A JavaScript [convenience wrapper](js/packages/mobile-wallet-adapter-protocol-kit) that lets you use datatypes from [`@solana/kit`](https://github.com/anza-xyz/kit) as inputs to the Mobile Wallet Adapter protocol (recommended)
+- A legacy JavaScript [convenience wrapper](js/packages/mobile-wallet-adapter-protocol-web3js) for apps still on `@solana/web3.js` v1
 - A JavaScript [mobile wallet adapter plugin](js/packages/wallet-adapter-mobile) for use with the [Solana wallet adapter](https://github.com/solana-labs/wallet-adapter)
 - An [example web app](examples/example-web-app) that demonstrates how to use the mobile wallet adapter plugin to sign messages and send transactions
 - An [example React Native app](examples/example-react-native-app) that demonstrates how to use the Mobile Wallet Adapter protocol to interact with a mobile wallet
