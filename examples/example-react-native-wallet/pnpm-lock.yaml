@@ -97,8 +97,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0(eslint@9.39.4(supports-color@8.1.1))
       hermes-compiler:
-        specifier: 250829098.0.15
-        version: 250829098.0.15
+        specifier: 250829098.0.19
+        version: 250829098.0.19
       prettier:
         specifier: 3.9.9
         version: 3.9.9
@@ -2474,8 +2474,8 @@ packages:
   hermes-compiler@250829098.0.10:
     resolution: {integrity: sha512-TcRlZ0/TlyfJqquRFAWoyElVNnkdYRi/sEp4/Qy8/GYxjg8j2cS9D4MjuaQ+qimkmLN7AmO+44IznRf06mAr0w==}
 
-  hermes-compiler@250829098.0.15:
-    resolution: {integrity: sha512-GJiEBl2JgT8FsRcY9DOBYW9L0KGRij58y7FeINJOaqWdYIrf/o3hi8NCsW3CV+XbG1vAwEeuXvwg4+xMJ8cc3g==}
+  hermes-compiler@250829098.0.19:
+    resolution: {integrity: sha512-qMdHsuntdFVNqx3EPOZyyQd4qHD2g0o3y32SYX2Z7jKG1uF7B2WDBHeZK/6qOnl06BQiXPhBuD6SdZv10ngtyw==}
 
   hermes-estree@0.25.1:
     resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
@@ -7221,7 +7221,7 @@ snapshots:
 
   hermes-compiler@250829098.0.10: {}
 
-  hermes-compiler@250829098.0.15: {}
+  hermes-compiler@250829098.0.19: {}
 
   hermes-estree@0.25.1: {}
 
