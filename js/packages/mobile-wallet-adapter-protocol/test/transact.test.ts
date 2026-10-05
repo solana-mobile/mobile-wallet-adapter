@@ -980,6 +980,177 @@ describe('startNostrScenario', () => {
         );
         expect(socket.close).toHaveBeenCalledTimes(1);
     });
+
+    describe('after the session is established', () => {
+        async function establishNostrSessionWithPendingRequest() {
+            vi.useFakeTimers();
+            vi.setSystemTime(0);
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await socket.dispatch('open', new Event('open'));
+            await socket.dispatch('message', createNostrRelayEventMessage(''));
+            await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+            await scenario.wallet;
+            const requestHandler = getLastProtocolRequestHandler();
+            const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+            responsePromise.catch(() => {});
+            await flushPromises();
+            return { requestHandler, responsePromise, scenario, socket };
+        }
+
+        const expectSessionClosed = (promise: Promise<unknown>) =>
+            expect(promise).rejects.toEqual(
+                expect.objectContaining({
+                    code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                    name: 'SolanaMobileWalletAdapterError',
+                }),
+            );
+
+        it('rejects pending requests on a clean close', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch('close', new CloseEvent('close', { code: 1000, wasClean: true }));
+
+            await expectSessionClosed(responsePromise);
+        });
+
+        it('rejects pending requests on an error after the connection timeout', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            vi.setSystemTime(45_000);
+            await socket.dispatch('error', new Event('error'));
+
+            await expectSessionClosed(responsePromise);
+        });
+
+        it('rejects pending requests on an error within the connection timeout without reconnecting', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch('error', new Event('error'));
+            await vi.advanceTimersByTimeAsync(5_000);
+
+            await expectSessionClosed(responsePromise);
+            expect(MockWebSocket.instances).toHaveLength(1);
+            expect(socket.close).toHaveBeenCalled();
+        });
+
+        it('rejects pending requests on an unclean close', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch('close', new CloseEvent('close', { code: 1006, wasClean: false }));
+
+            await expectSessionClosed(responsePromise);
+        });
+
+        it('rejects pending requests when the relay closes the subscription', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch(
+                'message',
+                new MessageEvent('message', {
+                    data: JSON.stringify(['CLOSED', getNostrSubscriptionId(socket), 'error: shutting down']),
+                }),
+            );
+
+            await expectSessionClosed(responsePromise);
+            expect(socket.close).toHaveBeenCalled();
+        });
+
+        it('ignores CLOSED messages for other subscriptions', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+            const onSettled = vi.fn();
+            responsePromise.then(onSettled, onSettled);
+
+            await socket.dispatch(
+                'message',
+                new MessageEvent('message', { data: JSON.stringify(['CLOSED', 'other-sub-id', 'error: closed']) }),
+            );
+            await flushPromises();
+
+            expect(onSettled).not.toHaveBeenCalled();
+            expect(socket.close).not.toHaveBeenCalled();
+        });
+
+        it('rejects pending requests when the scenario is closed', async () => {
+            const { responsePromise, scenario } = await establishNostrSessionWithPendingRequest();
+
+            scenario.close();
+
+            await expectSessionClosed(responsePromise);
+        });
+
+        it('rejects pending requests when the wallet ends the session', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch(
+                'message',
+                createNostrRelayEventMessage('', 'wallet-nostr-pubkey', [
+                    ['d', 'mock-session-id'],
+                    ['msg', 'SESSION_END'],
+                ]),
+            );
+
+            await expectSessionClosed(responsePromise);
+            expect(socket.close).toHaveBeenCalled();
+        });
+
+        it('ignores SESSION_END events from other pubkeys', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+            const onSettled = vi.fn();
+            responsePromise.then(onSettled, onSettled);
+
+            await socket.dispatch(
+                'message',
+                createNostrRelayEventMessage('', 'dapp-nostr-pubkey', [['msg', 'SESSION_END']]),
+            );
+            await flushPromises();
+
+            expect(onSettled).not.toHaveBeenCalled();
+        });
+
+        it('rejects new requests once the session has ended', async () => {
+            const { requestHandler, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch('close', new CloseEvent('close', { code: 1006, wasClean: false }));
+
+            await expectSessionClosed(requestHandler('sign_messages', { addresses: [], payloads: [] }));
+        });
+
+        it('rejects pending requests when a wallet message arrives out of sequence', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            await socket.dispatch(
+                'message',
+                createNostrRelayEventMessage(fromUint8Array(Uint8Array.of(0, 0, 0, 2, 99))),
+            );
+
+            await expectSessionClosed(responsePromise);
+            expect(mockDecryptJsonRpcMessage).not.toHaveBeenCalled();
+        });
+
+        it('rejects pending requests when a wallet message fails to decrypt', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+
+            mockDecryptJsonRpcMessage.mockRejectedValue(new Error('decrypt failed'));
+            await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+
+            await expectSessionClosed(responsePromise);
+        });
+
+        it('ignores responses with unknown ids', async () => {
+            const { responsePromise, socket } = await establishNostrSessionWithPendingRequest();
+            const onSettled = vi.fn();
+            responsePromise.then(onSettled, onSettled);
+
+            mockDecryptJsonRpcMessage.mockResolvedValue({ id: 42, jsonrpc: '2.0', result: {} });
+            await expect(
+                socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE))),
+            ).resolves.toBeUndefined();
+            await flushPromises();
+
+            expect(onSettled).not.toHaveBeenCalled();
+        });
+    });
 });
 
 async function establishLocalSession(socket: MockWebSocket) {
@@ -1019,7 +1190,7 @@ function createStringMessageEvent(data: string) {
     });
 }
 
-function createNostrRelayEventMessage(content: string, pubkey = 'wallet-nostr-pubkey') {
+function createNostrRelayEventMessage(content: string, pubkey = 'wallet-nostr-pubkey', tags: string[][] = []) {
     return new MessageEvent('message', {
         data: JSON.stringify([
             'EVENT',
@@ -1029,7 +1200,7 @@ function createNostrRelayEventMessage(content: string, pubkey = 'wallet-nostr-pu
                 pubkey,
                 created_at: 1000,
                 kind: 20012,
-                tags: [],
+                tags,
                 content,
                 sig: 'mock-wallet-sig',
             },
@@ -1042,6 +1213,12 @@ function getLastProtocolRequestHandler() {
         [protocolVersion: string, requestHandler: (method: string, params?: unknown) => Promise<unknown>] | undefined;
     expect(lastCall).toBeDefined();
     return lastCall![1];
+}
+
+function getNostrSubscriptionId(socket: MockWebSocket) {
+    const req = socket.sent.map((message) => JSON.parse(message as string)).find(([type]) => type === 'REQ');
+    expect(req).toBeDefined();
+    return req[1] as string;
 }
 
 function getOnlySocket() {

@@ -719,6 +719,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
     let state: NostrState & { walletNostrPubkey?: string } = { __type: 'disconnected' };
     let socket: WebSocket;
     let sessionEstablished = false;
+    let sessionEnded = false;
     let handleForceClose: () => void;
     const sendNostrEvent = (content: string, walletPubkey: string) => {
         const event = createNostrEvent(
@@ -757,6 +758,31 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
         wallet: new Promise<MobileWallet>((resolve, reject) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const failPending = (error: unknown) => {
+                for (const id of Object.keys(jsonRpcResponsePromises).map(Number)) {
+                    const responsePromise = jsonRpcResponsePromises[id];
+                    delete jsonRpcResponsePromises[id];
+                    responsePromise.reject(error);
+                }
+            };
+            // Once the session is established, the relay subscription is the session: there is no way to
+            // resume it, so any loss of the connection ends the session and settles every pending request.
+            const endSession = (message: string, closeEvent: CloseEvent) => {
+                if (sessionEnded) return;
+                sessionEnded = true;
+                disposeSocket();
+                socket.close();
+                state = { __type: 'disconnected' };
+                failPending(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        message,
+                        {
+                            closeEvent,
+                        },
+                    ),
+                );
+            };
             const handleOpen = async () => {
                 if (state.__type !== 'connecting') {
                     console.warn(
@@ -781,6 +807,10 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 };
             };
             const handleClose = (evt: CloseEvent) => {
+                if (sessionEstablished) {
+                    endSession(`The Nostr session was closed (${evt.code}: ${evt.reason}).`, evt);
+                    return;
+                }
                 if (evt.wasClean) {
                     state = { __type: 'disconnected' };
                 } else {
@@ -795,6 +825,13 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 disposeSocket();
             };
             const handleError = async () => {
+                if (sessionEstablished) {
+                    endSession(
+                        `The connection to the Nostr relay at ${config.relayDomain} failed.`,
+                        new CloseEvent('socket errored after connection'),
+                    );
+                    return;
+                }
                 disposeSocket();
                 if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                     reject(
@@ -829,7 +866,15 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
 
                 const type = msg[0];
                 if (type === 'CLOSED') {
-                    disposeSocket();
+                    if (sessionEstablished) {
+                        if (msg[1] !== subscriptionId) return;
+                        endSession(
+                            `The Nostr relay closed the subscription${typeof msg[2] === 'string' ? ` (${msg[2]})` : ''}.`,
+                            new CloseEvent('relay closed the subscription'),
+                        );
+                    } else {
+                        disposeSocket();
+                    }
                 } else if (type === 'EVENT') {
                     const event = msg[2] as NostrEvent;
                     if (!event || !verifyNostrEvent(event)) return;
@@ -906,6 +951,13 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                         { id, jsonrpc: '2.0' as const, method, params: params ?? {} },
                                         sharedSecret,
                                     );
+                                    if (sessionEnded) {
+                                        throw new SolanaMobileWalletAdapterError(
+                                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                                            'The Nostr session has already ended.',
+                                            { closeEvent: new CloseEvent('session already ended') },
+                                        );
+                                    }
                                     sendNostrEvent(fromUint8Array(binaryMsg), state.walletNostrPubkey!);
                                     return new Promise((resolve, reject) => {
                                         jsonRpcResponsePromises[id] = {
@@ -944,6 +996,13 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                         }
                         case 'connected': {
                             if (event.pubkey !== state.walletNostrPubkey) return;
+                            if (event.tags.some(([name, value]) => name === 'msg' && value === 'SESSION_END')) {
+                                endSession(
+                                    'The wallet ended the Nostr session.',
+                                    new CloseEvent('wallet ended the session'),
+                                );
+                                return;
+                            }
                             if (event.content === '') return;
                             try {
                                 const responseBuffer = toUint8Array(event.content).buffer as ArrayBuffer;
@@ -960,15 +1019,22 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                 lastKnownInboundSequenceNumber = sequenceNumber;
                                 const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                                 const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                                if (!responsePromise) return;
                                 delete jsonRpcResponsePromises[jsonRpcMessage.id];
                                 responsePromise.resolve(jsonRpcMessage.result);
                             } catch (e) {
                                 if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                     const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                    if (!responsePromise) return;
                                     delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                     responsePromise.reject(e);
                                 } else {
-                                    throw e;
+                                    // The failed message can't be matched to a request, so end the session rather
+                                    // than leave every pending request waiting on a reply that will never be read.
+                                    endSession(
+                                        `The Nostr session failed to read a wallet message: ${e instanceof Error ? e.message : String(e)}`,
+                                        new CloseEvent('wallet message could not be read'),
+                                    );
                                 }
                             }
                             break;
@@ -977,17 +1043,19 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 }
             };
             handleForceClose = () => {
+                if (sessionEstablished) {
+                    endSession('The Nostr session was closed by the dapp.', new CloseEvent('session closed by dapp'));
+                    return;
+                }
                 socket.removeEventListener('message', handleMessage);
                 disposeSocket();
-                if (!sessionEstablished) {
-                    reject(
-                        new SolanaMobileWalletAdapterError(
-                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
-                            `The wallet session was closed before connection.`,
-                            { closeEvent: new CloseEvent('socket was closed before connection') },
-                        ),
-                    );
-                }
+                reject(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session was closed before connection.`,
+                        { closeEvent: new CloseEvent('socket was closed before connection') },
+                    ),
+                );
             };
             let disposeSocket: () => void;
             let retryWaitTimeoutId: number;
