@@ -456,6 +456,54 @@ describe('startScenario', () => {
         );
         expect(socket.close).toHaveBeenCalledTimes(1);
     });
+
+    it('rejects an in-flight local RPC request when the socket closes cleanly', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight local RPC request when the socket closes uncleanly', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: 'dropped', wasClean: false }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
 });
 
 describe('startRemoteScenario', () => {
@@ -593,6 +641,68 @@ describe('startRemoteScenario', () => {
         );
 
         await expect(Promise.race([scenarioPromise, Promise.resolve('pending')])).resolves.toBe('pending');
+    });
+
+    it('rejects an in-flight remote RPC request when the reflector socket closes cleanly', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight remote RPC request when the reflector socket closes uncleanly', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: 'dropped', wasClean: false }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
     });
 
     it('throws when the reflector sends an empty id message while connecting', async () => {
@@ -934,6 +1044,90 @@ describe('startNostrScenario', () => {
         await expect(responsePromise).rejects.toBe(protocolError);
     });
 
+    it('rejects an in-flight relay RPC request when the relay socket closes cleanly', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight relay RPC request when the relay sends CLOSED', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch(
+            'message',
+            createStringMessageEvent(JSON.stringify(['CLOSED', 'mock-sub-id', 'rate-limited'])),
+        );
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight relay RPC request when the relay socket closes uncleanly', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: 'dropped', wasClean: false }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
     it('rejects nostr authorization responses with insecure wallet base URLs', async () => {
         const scenario = await startNostrScenario(createNostrConfig('local'));
         const socket = getOnlySocket();
@@ -990,6 +1184,20 @@ async function establishLocalSession(socket: MockWebSocket) {
 async function flushPromises() {
     await Promise.resolve();
     await Promise.resolve();
+}
+
+function observeOutcome(promise: Promise<unknown>) {
+    const outcome: { state: 'pending' | 'resolved' | 'rejected'; reason?: unknown } = { state: 'pending' };
+    void promise.then(
+        () => {
+            outcome.state = 'resolved';
+        },
+        (reason) => {
+            outcome.state = 'rejected';
+            outcome.reason = reason;
+        },
+    );
+    return outcome;
 }
 
 function createBlobMessageEvent(bytes: Uint8Array) {
