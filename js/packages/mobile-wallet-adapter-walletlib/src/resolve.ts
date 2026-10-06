@@ -204,7 +204,10 @@ export type DeauthorizeDappResponse = DeauthorizeDappCompleteResponse | Authoriz
 /* Sign Transactions/Messages */
 export type SignPayloadsCompleteResponse = Readonly<{ signedPayloads: Uint8Array[] }>;
 export type SignPayloadsFailResponse =
-    UserDeclinedResponse | TooManyPayloadsResponse | AuthorizationNotValidResponse | InvalidSignaturesResponse;
+    | UserDeclinedResponse
+    | TooManyPayloadsResponse
+    | AuthorizationNotValidResponse
+    | InvalidSignaturesResponse;
 
 export type SignTransactionsResponse = SignPayloadsCompleteResponse | SignPayloadsFailResponse;
 export type SignMessagesResponse = SignPayloadsCompleteResponse | SignPayloadsFailResponse;
