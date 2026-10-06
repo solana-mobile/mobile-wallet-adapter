@@ -213,6 +213,12 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                 disposeSocket();
             };
             const handleError = async (_evt: Event) => {
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session encountered a transport error before a response was received.',
+                    ),
+                );
                 disposeSocket();
                 if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                     reject(
@@ -252,6 +258,7 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                         break;
                     }
                     case 'connected':
+                        if (responseBuffer.byteLength === 0) break;
                         try {
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
@@ -274,7 +281,8 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                                 delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                 responsePromise.reject(e);
                             } else {
-                                throw e;
+                                rejectPendingRequests(e);
+                                socket.close();
                             }
                         }
                         break;
@@ -589,6 +597,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                         break;
                     }
                     case 'connected':
+                        if (responseBuffer.byteLength === 0) break;
                         try {
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
@@ -611,7 +620,8 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                                 delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                 responsePromise.reject(e);
                             } else {
-                                throw e;
+                                rejectPendingRequests(e);
+                                socket.close();
                             }
                         }
                         break;
@@ -706,6 +716,14 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
                         'The wallet session closed before a response was received.',
+                    ),
+                ),
+            );
+            socket.addEventListener('error', () =>
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session encountered a transport error before a response was received.',
                     ),
                 ),
             );
@@ -841,6 +859,12 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 disposeSocket();
             };
             const handleError = async () => {
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session encountered a transport error before a response was received.',
+                    ),
+                );
                 disposeSocket();
                 if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                     reject(
@@ -1020,7 +1044,8 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                     delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                     responsePromise.reject(e);
                                 } else {
-                                    throw e;
+                                    rejectPendingRequests(e);
+                                    doClose();
                                 }
                             }
                             break;
