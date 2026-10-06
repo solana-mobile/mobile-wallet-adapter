@@ -158,6 +158,14 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
         wallet: new Promise((resolve, reject) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const rejectPendingRequests = (reason: unknown) => {
+                for (const id of Object.keys(jsonRpcResponsePromises)) {
+                    const numericId = Number(id);
+                    const responsePromise = jsonRpcResponsePromises[numericId];
+                    delete jsonRpcResponsePromises[numericId];
+                    responsePromise.reject(reason);
+                }
+            };
             const handleOpen = async () => {
                 if (state.__type !== 'connecting') {
                     console.warn(
@@ -195,9 +203,23 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                         ),
                     );
                 }
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session closed before a response was received (${evt.code}: ${evt.reason}).`,
+                        { closeEvent: evt },
+                    ),
+                );
                 disposeSocket();
             };
             const handleError = async (_evt: Event) => {
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session encountered a transport error before a response was received.',
+                        { closeEvent: new CloseEvent('transport error') },
+                    ),
+                );
                 disposeSocket();
                 if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                     reject(
@@ -237,6 +259,7 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                         break;
                     }
                     case 'connected':
+                        if (responseBuffer.byteLength === 0) break;
                         try {
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
@@ -251,15 +274,18 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                             lastKnownInboundSequenceNumber = sequenceNumber;
                             const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                             const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                            if (!responsePromise) break;
                             delete jsonRpcResponsePromises[jsonRpcMessage.id];
                             responsePromise.resolve(jsonRpcMessage.result);
                         } catch (e) {
                             if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                 const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                if (!responsePromise) break;
                                 delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                 responsePromise.reject(e);
                             } else {
-                                throw e;
+                                rejectPendingRequests(e);
+                                socket.close();
                             }
                         }
                         break;
@@ -537,6 +563,14 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
         wallet: new Promise((resolve, reject) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const rejectPendingRequests = (reason: unknown) => {
+                for (const id of Object.keys(jsonRpcResponsePromises)) {
+                    const numericId = Number(id);
+                    const responsePromise = jsonRpcResponsePromises[numericId];
+                    delete jsonRpcResponsePromises[numericId];
+                    responsePromise.reject(reason);
+                }
+            };
             const handleMessage = async (evt: MessageEvent<string | Blob>) => {
                 const responseBuffer = await decodeBytes(evt);
                 switch (state.__type) {
@@ -566,6 +600,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                         break;
                     }
                     case 'connected':
+                        if (responseBuffer.byteLength === 0) break;
                         try {
                             const sequenceNumberVector = responseBuffer.slice(0, SEQUENCE_NUMBER_BYTES);
                             const sequenceNumber = getSequenceNumberFromByteArray(sequenceNumberVector);
@@ -580,15 +615,18 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                             lastKnownInboundSequenceNumber = sequenceNumber;
                             const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                             const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                            if (!responsePromise) break;
                             delete jsonRpcResponsePromises[jsonRpcMessage.id];
                             responsePromise.resolve(jsonRpcMessage.result);
                         } catch (e) {
                             if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                 const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                if (!responsePromise) break;
                                 delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                 responsePromise.reject(e);
                             } else {
-                                throw e;
+                                rejectPendingRequests(e);
+                                socket.close();
                             }
                         }
                         break;
@@ -678,6 +716,24 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                 }
             };
             socket.addEventListener('message', handleMessage);
+            socket.addEventListener('close', () =>
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session closed before a response was received.',
+                        { closeEvent: new CloseEvent('session closed') },
+                    ),
+                ),
+            );
+            socket.addEventListener('error', () =>
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session encountered a transport error before a response was received.',
+                        { closeEvent: new CloseEvent('transport error') },
+                    ),
+                ),
+            );
             handleClose = () => {
                 socket.removeEventListener('message', handleMessage);
                 disposeSocket();
@@ -757,6 +813,14 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
         wallet: new Promise<MobileWallet>((resolve, reject) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            const rejectPendingRequests = (reason: unknown) => {
+                for (const id of Object.keys(jsonRpcResponsePromises)) {
+                    const numericId = Number(id);
+                    const responsePromise = jsonRpcResponsePromises[numericId];
+                    delete jsonRpcResponsePromises[numericId];
+                    responsePromise.reject(reason);
+                }
+            };
             const handleOpen = async () => {
                 if (state.__type !== 'connecting') {
                     console.warn(
@@ -792,9 +856,23 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                         ),
                     );
                 }
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        `The wallet session closed before a response was received (${evt.code}: ${evt.reason}).`,
+                        { closeEvent: evt },
+                    ),
+                );
                 disposeSocket();
             };
             const handleError = async () => {
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session encountered a transport error before a response was received.',
+                        { closeEvent: new CloseEvent('transport error') },
+                    ),
+                );
                 disposeSocket();
                 if (Date.now() - connectionStartTime >= WEBSOCKET_CONNECTION_CONFIG.timeoutMs) {
                     reject(
@@ -829,6 +907,13 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
 
                 const type = msg[0];
                 if (type === 'CLOSED') {
+                    rejectPendingRequests(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            'The Nostr relay closed the session subscription before a response was received.',
+                            { closeEvent: new CloseEvent('session closed') },
+                        ),
+                    );
                     disposeSocket();
                 } else if (type === 'EVENT') {
                     const event = msg[2] as NostrEvent;
@@ -960,15 +1045,18 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                 lastKnownInboundSequenceNumber = sequenceNumber;
                                 const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                                 const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                                if (!responsePromise) break;
                                 delete jsonRpcResponsePromises[jsonRpcMessage.id];
                                 responsePromise.resolve(jsonRpcMessage.result);
                             } catch (e) {
                                 if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                     const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                    if (!responsePromise) break;
                                     delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                     responsePromise.reject(e);
                                 } else {
-                                    throw e;
+                                    rejectPendingRequests(e);
+                                    doClose();
                                 }
                             }
                             break;
