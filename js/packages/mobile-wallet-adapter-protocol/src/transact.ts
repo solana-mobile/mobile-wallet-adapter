@@ -217,6 +217,7 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
                         'The wallet session encountered a transport error before a response was received.',
+                        { closeEvent: new CloseEvent('transport error') },
                     ),
                 );
                 disposeSocket();
@@ -720,6 +721,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
                         'The wallet session closed before a response was received.',
+                        { closeEvent: new CloseEvent('session closed') },
                     ),
                 ),
             );
@@ -728,6 +730,7 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
                         'The wallet session encountered a transport error before a response was received.',
+                        { closeEvent: new CloseEvent('transport error') },
                     ),
                 ),
             );
@@ -867,6 +870,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                     new SolanaMobileWalletAdapterError(
                         SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
                         'The wallet session encountered a transport error before a response was received.',
+                        { closeEvent: new CloseEvent('transport error') },
                     ),
                 );
                 disposeSocket();
@@ -907,6 +911,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                         new SolanaMobileWalletAdapterError(
                             SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
                             'The Nostr relay closed the session subscription before a response was received.',
+                            { closeEvent: new CloseEvent('session closed') },
                         ),
                     );
                     disposeSocket();
