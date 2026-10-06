@@ -162,6 +162,10 @@ public class NostrRelay implements MessageSender {
     }
 
     public synchronized void close() {
+        doClose(true);
+    }
+
+    private void doClose(boolean notifyDapp) {
         Log.v(TAG, "close");
         switch (mState) {
             case NOT_CONNECTED:
@@ -175,6 +179,9 @@ public class NostrRelay implements MessageSender {
             case CONNECTED:
             case SUBSCRIBED:
             case REFLECTION_ESTABLISHED:
+                if (notifyDapp && mState == State.REFLECTION_ESTABLISHED) {
+                    doSendSessionEndEvent();
+                }
                 mState = State.CLOSING;
                 mWebSocketClient.close();
                 break;
@@ -212,6 +219,10 @@ public class NostrRelay implements MessageSender {
 
     private void doSendConnectEvent() {
         sendEvent(new String[][]{{"msg", "CONNECT"}});
+    }
+
+    private void doSendSessionEndEvent() {
+        sendEvent(new String[][]{{"msg", "SESSION_END"}});
     }
 
     private void doReflectionEstablished() {
@@ -281,7 +292,7 @@ public class NostrRelay implements MessageSender {
             if (Arrays.toString(tags.get("msg")).contains("SESSION_END")
                     || content.isEmpty()) {
                 Log.d(TAG, "Received SESSION_END event from Dapp");
-                close();
+                doClose(false);
                 return;
             }
 
