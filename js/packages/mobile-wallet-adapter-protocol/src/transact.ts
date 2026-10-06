@@ -1085,6 +1085,13 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
             handleForceClose = () => {
                 socket.removeEventListener('message', handleMessage);
                 disposeSocket();
+                rejectPendingRequests(
+                    new SolanaMobileWalletAdapterError(
+                        SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                        'The wallet session was closed before a response was received.',
+                        { closeEvent: new CloseEvent('session closed') },
+                    ),
+                );
                 if (!sessionEstablished) {
                     reject(
                         new SolanaMobileWalletAdapterError(
