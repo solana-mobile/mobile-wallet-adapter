@@ -48,6 +48,7 @@ const WEBSOCKET_CONNECTION_CONFIG = {
     retryDelayScheduleMs: [150, 150, 200, 500, 500, 750, 750, 1000],
     timeoutMs: 30000,
 } as const;
+const NOSTR_SUBSCRIPTION_REFRESH_INTERVAL_MS = 30000;
 const WEBSOCKET_PROTOCOL_BINARY = 'com.solana.mobilewalletadapter.v1';
 const WEBSOCKET_PROTOCOL_BASE64 = 'com.solana.mobilewalletadapter.v1.base64';
 type PROTOCOL_ENCODING = 'binary' | 'base64';
@@ -764,6 +765,11 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
     );
     const sessionIdentifier = await deriveSessionIdentifier(associationKeypair.publicKey);
     const subscriptionId = crypto.randomUUID();
+    const subscriptionRequest = JSON.stringify([
+        'REQ',
+        subscriptionId,
+        { kinds: [NOSTR_EVENT_KIND_MWA], '#d': [sessionIdentifier] },
+    ]);
     const webSocketURL = `wss://${config.relayDomain}`;
     const connectionStartTime = Date.now();
     const getNextRetryDelayMs = (() => {
@@ -813,6 +819,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
         wallet: new Promise<MobileWallet>((resolve, reject) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const jsonRpcResponsePromises: JsonResponsePromises<any> = {};
+            let subscriptionRefreshIntervalId: number | undefined;
             const rejectPendingRequests = (reason: unknown) => {
                 for (const id of Object.keys(jsonRpcResponsePromises)) {
                     const numericId = Number(id);
@@ -830,13 +837,10 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                     return;
                 }
                 socket.removeEventListener('open', handleOpen);
-                socket.send(
-                    JSON.stringify([
-                        'REQ',
-                        subscriptionId,
-                        { kinds: [NOSTR_EVENT_KIND_MWA], '#d': [sessionIdentifier] },
-                    ]),
-                );
+                socket.send(subscriptionRequest);
+                subscriptionRefreshIntervalId = window.setInterval(() => {
+                    if (Object.keys(jsonRpcResponsePromises).length > 0) socket.send(subscriptionRequest);
+                }, NOSTR_SUBSCRIPTION_REFRESH_INTERVAL_MS);
                 state = {
                     __type: 'subscribed',
                     dappNostrPrivateKey,
@@ -918,6 +922,20 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 } else if (type === 'EVENT') {
                     const event = msg[2] as NostrEvent;
                     if (!event || !verifyNostrEvent(event)) return;
+                    if (
+                        event.pubkey === state.walletNostrPubkey &&
+                        event.tags.some(([name, value]) => name === 'msg' && value === 'SESSION_END')
+                    ) {
+                        const sessionEnded = new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                            'The wallet ended the session.',
+                            { closeEvent: new CloseEvent('session ended by wallet') },
+                        );
+                        reject(sessionEnded);
+                        rejectPendingRequests(sessionEnded);
+                        socket.close();
+                        return;
+                    }
 
                     switch (state.__type) {
                         case 'subscribed': {
@@ -1090,6 +1108,7 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                 socket.addEventListener('error', handleError);
                 socket.addEventListener('message', handleMessage);
                 disposeSocket = () => {
+                    window.clearInterval(subscriptionRefreshIntervalId);
                     window.clearTimeout(retryWaitTimeoutId);
                     socket.removeEventListener('open', handleOpen);
                     socket.removeEventListener('close', handleClose);
