@@ -1494,8 +1494,7 @@ function createNostrRelayEventMessage(content: string, pubkey = 'wallet-nostr-pu
 
 function getLastProtocolRequestHandler() {
     const lastCall = mockCreateMobileWalletProxy.mock.lastCall as
-        | [protocolVersion: string, requestHandler: (method: string, params?: unknown) => Promise<unknown>]
-        | undefined;
+        [protocolVersion: string, requestHandler: (method: string, params?: unknown) => Promise<unknown>] | undefined;
     expect(lastCall).toBeDefined();
     return lastCall![1];
 }

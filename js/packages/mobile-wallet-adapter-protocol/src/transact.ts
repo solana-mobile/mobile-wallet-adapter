@@ -273,11 +273,13 @@ export async function startScenario(config?: WalletAssociationConfig): Promise<S
                             lastKnownInboundSequenceNumber = sequenceNumber;
                             const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                             const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                            if (!responsePromise) break;
                             delete jsonRpcResponsePromises[jsonRpcMessage.id];
                             responsePromise.resolve(jsonRpcMessage.result);
                         } catch (e) {
                             if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                 const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                if (!responsePromise) break;
                                 delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                 responsePromise.reject(e);
                             } else {
@@ -612,11 +614,13 @@ export async function startRemoteScenario(config: RemoteWalletAssociationConfig)
                             lastKnownInboundSequenceNumber = sequenceNumber;
                             const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                             const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                            if (!responsePromise) break;
                             delete jsonRpcResponsePromises[jsonRpcMessage.id];
                             responsePromise.resolve(jsonRpcMessage.result);
                         } catch (e) {
                             if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                 const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                if (!responsePromise) break;
                                 delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                 responsePromise.reject(e);
                             } else {
@@ -1036,11 +1040,13 @@ export async function startNostrScenario(config: NostrWalletAssociationConfig): 
                                 lastKnownInboundSequenceNumber = sequenceNumber;
                                 const jsonRpcMessage = await decryptJsonRpcMessage(responseBuffer, state.sharedSecret);
                                 const responsePromise = jsonRpcResponsePromises[jsonRpcMessage.id];
+                                if (!responsePromise) break;
                                 delete jsonRpcResponsePromises[jsonRpcMessage.id];
                                 responsePromise.resolve(jsonRpcMessage.result);
                             } catch (e) {
                                 if (e instanceof SolanaMobileWalletAdapterProtocolError) {
                                     const responsePromise = jsonRpcResponsePromises[e.jsonRpcMessageId];
+                                    if (!responsePromise) break;
                                     delete jsonRpcResponsePromises[e.jsonRpcMessageId];
                                     responsePromise.reject(e);
                                 } else {
