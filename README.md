@@ -86,4 +86,4 @@ dependencies {
 
 ## Get involved
 
-Contributions are welcome! Go ahead and file Issues, open Pull Requests, or join us on our [Discord](https://discord.gg/solanamobile) to discuss this SDK.
+Contributions are welcome! Found a bug or have an idea? [Open an issue](https://github.com/solana-mobile/mobile-wallet-adapter/issues/new/choose). Pull requests are limited to collaborators; see [CONTRIBUTING.md](CONTRIBUTING.md) for how issues are triaged and fixed. For questions and discussion, join us on [Discord](https://discord.gg/solanamobile).
