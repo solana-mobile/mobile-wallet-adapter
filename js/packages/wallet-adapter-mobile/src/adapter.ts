@@ -197,11 +197,11 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
     }
 
     async autoConnect(): Promise<void> {
-        this.#connect(true);
+        return await this.#connect(true);
     }
 
     async connect(): Promise<void> {
-        this.#connect();
+        return await this.#connect();
     }
 
     async #connect(autoConnect: boolean = false): Promise<void> {

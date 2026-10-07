@@ -335,13 +335,54 @@ describe('adapter', () => {
 
         const firstConnect = adapter.connect();
         const secondConnect = adapter.connect();
+        let firstConnectSettled = false;
+        firstConnect.then(
+            () => {
+                firstConnectSettled = true;
+            },
+            () => {
+                firstConnectSettled = true;
+            },
+        );
         await flushPromises();
 
         expect(wallet.connectImpl).toHaveBeenCalledTimes(1);
+        expect(firstConnectSettled).toBe(false);
+        await expect(secondConnect).resolves.toBeUndefined();
 
         pendingConnect.resolve();
         await expect(firstConnect).resolves.toBeUndefined();
-        await expect(secondConnect).resolves.toBeUndefined();
+    });
+
+    it('wraps connection failures in WalletConnectionError', async () => {
+        const { adapter, wallet } = createLocalAdapter();
+
+        wallet.connectImpl.mockRejectedValue('rejected');
+
+        await expect(adapter.connect()).rejects.toBeInstanceOf(WalletConnectionError);
+    });
+
+    it('waits for the underlying connection during autoConnect', async () => {
+        const pendingConnect = createDeferred<void>();
+        const { adapter, wallet } = createLocalAdapter();
+
+        wallet.connectImpl.mockImplementation(async () => pendingConnect.promise);
+
+        const autoConnect = adapter.autoConnect();
+        let autoConnectSettled = false;
+        autoConnect.then(
+            () => {
+                autoConnectSettled = true;
+            },
+            () => {
+                autoConnectSettled = true;
+            },
+        );
+        await flushPromises();
+
+        expect(autoConnectSettled).toBe(false);
+        pendingConnect.resolve();
+        await expect(autoConnect).resolves.toBeUndefined();
     });
 
     it('passes a silent connect request during autoConnect', async () => {
