@@ -1,5 +1,25 @@
 # @solana-mobile/mobile-wallet-adapter-protocol-web3js
 
+## 3.0.0
+
+### Major Changes
+
+- da43b96: Ship ESM only and drop the CommonJS build.
+
+    - The `exports` map now resolves every condition to the ESM build under `lib/esm`. The `lib/cjs` directory is no longer published.
+    - `require()` callers need Node 20.19 or later on the 20.x line, or Node 22.12 and later, which load ES modules through `require()` without a flag. Node 21 and 22.0 to 22.11 are not supported. CommonJS consumers such as `@solana/wallet-adapter-react` keep working unchanged on supported versions. Each package declares this range in `engines.node`.
+    - React Native (Metro), Vite, webpack and Next.js consumers are unaffected. The `react-native` condition already resolved to a bundler-transpiled entry and now points at `lib/esm/index.native.js`.
+    - `@solana-mobile/mobile-wallet-adapter-walletlib` was already ESM only. Its `node` condition is now the `default` condition so every resolver, not only Node, can load it.
+
+### Patch Changes
+
+- Updated dependencies [da43b96]
+- Updated dependencies [c258ef8]
+- Updated dependencies [8835782]
+- Updated dependencies [16a532e]
+- Updated dependencies [e9f68c2]
+    - @solana-mobile/mobile-wallet-adapter-protocol@3.0.0
+
 ## 2.3.0
 
 ### Patch Changes
