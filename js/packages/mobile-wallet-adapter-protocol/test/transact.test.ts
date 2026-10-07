@@ -1421,7 +1421,267 @@ describe('startNostrScenario', () => {
         );
         expect(socket.close).toHaveBeenCalledTimes(1);
     });
+
+    describe('subscription refresh', () => {
+        const SUBSCRIPTION_REFRESH_INTERVAL_MS = 30000;
+
+        beforeEach(() => {
+            vi.useFakeTimers();
+            vi.setSystemTime(0);
+        });
+
+        it('does not refresh the subscription before the session is established', async () => {
+            await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+
+            await socket.dispatch('open', new Event('open'));
+            await socket.dispatch('message', createNostrRelayEventMessage(''));
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+
+            expect(getSubscriptionRequests(socket)).toHaveLength(1);
+        });
+
+        it('does not refresh the subscription while no request is pending', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+
+            expect(getSubscriptionRequests(socket)).toHaveLength(1);
+        });
+
+        it('repeats the original subscription request while a request awaits its response', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+            const [initialSubscriptionRequest] = getSubscriptionRequests(socket);
+
+            const outcome = observeOutcome(
+                getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] }),
+            );
+            await flushPromises();
+            const nostrEventsBeforeRefresh = mockCreateNostrEvent.mock.calls.length;
+
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS - 1);
+            expect(getSubscriptionRequests(socket)).toHaveLength(1);
+            await vi.advanceTimersByTimeAsync(1);
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 2);
+
+            expect(getSubscriptionRequests(socket)).toEqual([
+                initialSubscriptionRequest,
+                initialSubscriptionRequest,
+                initialSubscriptionRequest,
+                initialSubscriptionRequest,
+            ]);
+            expect(mockCreateNostrEvent).toHaveBeenCalledTimes(nostrEventsBeforeRefresh);
+            expect(outcome.state).toBe('pending');
+        });
+
+        it('stops refreshing once the pending request is answered', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+
+            const responsePromise = getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] });
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 2);
+            expect(getSubscriptionRequests(socket)).toHaveLength(3);
+
+            mockDecryptJsonRpcMessage.mockResolvedValue({ id: 1, jsonrpc: '2.0', result: { signatures: [] } });
+            await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+            await expect(responsePromise).resolves.toEqual({ signatures: [] });
+
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+            expect(getSubscriptionRequests(socket)).toHaveLength(3);
+        });
+
+        it('keeps the session healthy when the relay answers each refresh with EOSE', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+            const requestHandler = getLastProtocolRequestHandler();
+
+            const firstResponse = requestHandler('sign_and_send_transactions', { payloads: [] });
+            await flushPromises();
+            for (let refresh = 0; refresh < 3; refresh++) {
+                await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS);
+                await socket.dispatch('message', createStringMessageEvent(JSON.stringify(['EOSE', 'mock-sub-id'])));
+            }
+            mockDecryptJsonRpcMessage.mockResolvedValue({ id: 1, jsonrpc: '2.0', result: { signatures: [] } });
+            await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+            await expect(firstResponse).resolves.toEqual({ signatures: [] });
+
+            const secondResponse = requestHandler('sign_messages', { addresses: [], payloads: [] });
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS);
+            await socket.dispatch('message', createStringMessageEvent(JSON.stringify(['EOSE', 'mock-sub-id'])));
+            mockDecryptJsonRpcMessage.mockResolvedValue({ id: 2, jsonrpc: '2.0', result: { signed_payloads: [] } });
+            await socket.dispatch(
+                'message',
+                createNostrRelayEventMessage(fromUint8Array(Uint8Array.of(0, 0, 0, 2, 99))),
+            );
+
+            await expect(secondResponse).resolves.toEqual({ signed_payloads: [] });
+            expect(socket.close).not.toHaveBeenCalled();
+            expect(getSubscriptionRequests(socket)).toHaveLength(5);
+        });
+
+        it('keeps refreshing until every concurrent request is answered', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+            const requestHandler = getLastProtocolRequestHandler();
+
+            const firstResponse = requestHandler('sign_messages', { addresses: [], payloads: [] });
+            const secondResponse = requestHandler('sign_and_send_transactions', { payloads: [] });
+            await flushPromises();
+
+            mockDecryptJsonRpcMessage.mockResolvedValue({ id: 1, jsonrpc: '2.0', result: { signed_payloads: [] } });
+            await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+            await expect(firstResponse).resolves.toEqual({ signed_payloads: [] });
+
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS);
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+
+            mockDecryptJsonRpcMessage.mockResolvedValue({ id: 2, jsonrpc: '2.0', result: { signatures: [] } });
+            await socket.dispatch(
+                'message',
+                createNostrRelayEventMessage(fromUint8Array(Uint8Array.of(0, 0, 0, 2, 99))),
+            );
+            await expect(secondResponse).resolves.toEqual({ signatures: [] });
+
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+        });
+
+        it('stops refreshing when the wallet rejects the pending request', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+
+            const responsePromise = getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] });
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS);
+
+            const protocolError = new SolanaMobileWalletAdapterProtocolError(1, -3, 'not signed');
+            mockDecryptJsonRpcMessage.mockRejectedValue(protocolError);
+            await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)));
+            await expect(responsePromise).rejects.toBe(protocolError);
+
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+        });
+
+        it.each([
+            {
+                name: 'the relay socket closes cleanly',
+                interrupt: (socket: MockWebSocket) =>
+                    socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true })),
+            },
+            {
+                name: 'the relay socket closes uncleanly',
+                interrupt: (socket: MockWebSocket) =>
+                    socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: '', wasClean: false })),
+            },
+            {
+                name: 'the relay socket errors',
+                interrupt: async (socket: MockWebSocket) => {
+                    vi.setSystemTime(Date.now() + 30000);
+                    await socket.dispatch('error', new Event('error'));
+                },
+            },
+            {
+                name: 'the relay sends CLOSED',
+                interrupt: (socket: MockWebSocket) =>
+                    socket.dispatch('message', createStringMessageEvent(JSON.stringify(['CLOSED', 'mock-sub-id', '']))),
+            },
+        ])('stops refreshing and rejects the pending request when $name', async ({ interrupt }) => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+
+            const outcome = observeOutcome(
+                getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] }),
+            );
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS);
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+
+            await interrupt(socket);
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+
+            expect(outcome.state).toBe('rejected');
+            expect(outcome.reason).toEqual(
+                expect.objectContaining({ code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED }),
+            );
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+            expect(MockWebSocket.instances).toHaveLength(1);
+        });
+
+        it('stops refreshing when the scenario is closed with a request pending', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+
+            getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] }).catch(() => {});
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS);
+
+            scenario.close();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+
+            expect(socket.close).toHaveBeenCalled();
+            expect(getSubscriptionRequests(socket)).toHaveLength(2);
+        });
+
+        it('does not start refreshing for a request made after the relay socket is gone', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const socket = getOnlySocket();
+            await establishNostrSession(scenario, socket);
+            await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: '', wasClean: false }));
+
+            getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] }).catch(() => {});
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 4);
+
+            expect(getSubscriptionRequests(socket)).toHaveLength(1);
+        });
+
+        it('refreshes only on the replacement socket after a reconnect', async () => {
+            const scenario = await startNostrScenario(createNostrConfig('local'));
+            const firstSocket = getOnlySocket();
+            await firstSocket.dispatch('open', new Event('open'));
+
+            const dispatchPromise = firstSocket.dispatch('error', new Event('error'));
+            await vi.advanceTimersByTimeAsync(150);
+            await dispatchPromise;
+            expect(MockWebSocket.instances).toHaveLength(2);
+            const secondSocket = MockWebSocket.instances[1];
+            await establishNostrSession(scenario, secondSocket);
+
+            getLastProtocolRequestHandler()('sign_and_send_transactions', { payloads: [] }).catch(() => {});
+            await flushPromises();
+            await vi.advanceTimersByTimeAsync(SUBSCRIPTION_REFRESH_INTERVAL_MS * 2);
+
+            expect(getSubscriptionRequests(firstSocket)).toHaveLength(1);
+            expect(getSubscriptionRequests(secondSocket)).toHaveLength(3);
+        });
+    });
 });
+
+async function establishNostrSession(scenario: { wallet: Promise<unknown> }, socket: MockWebSocket) {
+    await socket.dispatch('open', new Event('open'));
+    await socket.dispatch('message', createNostrRelayEventMessage(''));
+    await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+    await scenario.wallet;
+}
+
+function getSubscriptionRequests(socket: MockWebSocket) {
+    return socket.sent.filter((message) => typeof message === 'string' && JSON.parse(message)[0] === 'REQ');
+}
 
 async function establishLocalSession(socket: MockWebSocket) {
     await socket.dispatch('open', new Event('open'));
