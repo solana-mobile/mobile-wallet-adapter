@@ -1,20 +1,13 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { FlatCompat } from '@eslint/eslintrc';
-import js from '@eslint/js';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
-
-const compat = new FlatCompat({
-    baseDirectory: dirname(fileURLToPath(import.meta.url)),
-    recommendedConfig: js.configs.recommended,
-});
 
 const eslintConfig = [
     {
         ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**', 'out/**'],
     },
-    ...compat.extends('next/core-web-vitals', 'next/typescript'),
+    ...nextCoreWebVitals,
+    ...nextTypescript,
     {
         files: ['**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}'],
         plugins: {

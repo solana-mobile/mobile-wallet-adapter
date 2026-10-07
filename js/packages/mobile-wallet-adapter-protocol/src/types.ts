@@ -1,5 +1,4 @@
-import type { SolanaSignInInput } from '@solana/wallet-standard-features';
-import type { TransactionVersion } from '@solana/web3.js';
+import type { SolanaSignInInput, SolanaTransactionVersion } from '@solana/wallet-standard-features';
 import type { IdentifierArray, IdentifierString, WalletAccount, WalletIcon } from '@wallet-standard/core';
 
 export type Account =
@@ -113,7 +112,7 @@ export interface GetCapabilitiesAPI {
         Readonly<{
             max_transactions_per_request: number;
             max_messages_per_request: number;
-            supported_transaction_versions: ReadonlyArray<TransactionVersion>;
+            supported_transaction_versions: ReadonlyArray<SolanaTransactionVersion>;
             features: IdentifierArray;
             /**
              * @deprecated Replaced by features array.

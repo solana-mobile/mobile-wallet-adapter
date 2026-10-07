@@ -353,17 +353,6 @@ describe('startScenario', () => {
         );
     });
 
-    it('throws when local encrypted messages arrive out of sequence', async () => {
-        const scenario = await startScenario();
-        const socket = getOnlySocket();
-        await establishLocalSession(socket);
-        await scenario.wallet;
-
-        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(0, 0, 0, 2, 99)))).rejects.toThrow(
-            'Encrypted message has invalid sequence number',
-        );
-    });
-
     it('throws when local session properties arrive out of sequence', async () => {
         const scenario = await startScenario();
         const socket = getOnlySocket();
@@ -455,6 +444,148 @@ describe('startScenario', () => {
             }),
         );
         expect(socket.close).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects an in-flight local RPC request when the socket closes cleanly', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight local RPC request when the socket closes uncleanly', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: 'dropped', wasClean: false }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight local RPC request when the socket errors', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        vi.setSystemTime(30000);
+        await socket.dispatch('error', new Event('error'));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('closes the local session and rejects pending requests on an out-of-order sequence number', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(0, 0, 0, 2))).catch(() => {});
+        await flushPromises();
+
+        expect(socket.close).toHaveBeenCalled();
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('closes the local session and rejects pending requests on an undecryptable message', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        mockDecryptJsonRpcMessage.mockRejectedValue(new Error('could not decrypt'));
+        await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE)).catch(() => {});
+        await flushPromises();
+
+        expect(socket.close).toHaveBeenCalled();
+        expect(outcome.state).toBe('rejected');
+    });
+
+    it('ignores an empty message in the local encrypted session', async () => {
+        const scenario = await startScenario();
+        const socket = getOnlySocket();
+        await establishLocalSession(socket);
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await flushPromises();
+
+        expect(socket.close).not.toHaveBeenCalled();
+        expect(outcome.state).toBe('pending');
+
+        mockDecryptJsonRpcMessage.mockResolvedValue({ id: 1, jsonrpc: '2.0', result: { ok: true } });
+        await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE));
+        await flushPromises();
+
+        expect(outcome.state).toBe('resolved');
     });
 });
 
@@ -595,6 +726,190 @@ describe('startRemoteScenario', () => {
         await expect(Promise.race([scenarioPromise, Promise.resolve('pending')])).resolves.toBe('pending');
     });
 
+    it('rejects an in-flight remote RPC request when the reflector socket closes cleanly', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight remote RPC request when the reflector socket closes uncleanly', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: 'dropped', wasClean: false }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight remote RPC request when the reflector socket errors', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        vi.setSystemTime(30000);
+        await socket.dispatch('error', new Event('error'));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('closes the remote session and rejects pending requests on an out-of-order sequence number', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(0, 0, 0, 2))).catch(() => {});
+        await flushPromises();
+
+        expect(socket.close).toHaveBeenCalled();
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('closes the remote session and rejects pending requests on an undecryptable message', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        mockDecryptJsonRpcMessage.mockRejectedValue(new Error('could not decrypt'));
+        await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE)).catch(() => {});
+        await flushPromises();
+
+        expect(socket.close).toHaveBeenCalled();
+        expect(outcome.state).toBe('rejected');
+    });
+
+    it('ignores an empty message in the remote encrypted session', async () => {
+        const scenarioPromise = startRemoteScenario(createRemoteConfig());
+        await flushPromises();
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
+        const scenario = await scenarioPromise;
+        const walletPromise = scenario.wallet;
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
+        await walletPromise;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
+        await flushPromises();
+
+        expect(socket.close).not.toHaveBeenCalled();
+        expect(outcome.state).toBe('pending');
+
+        mockDecryptJsonRpcMessage.mockResolvedValue({ id: 1, jsonrpc: '2.0', result: { ok: true } });
+        await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE));
+        await flushPromises();
+
+        expect(outcome.state).toBe('resolved');
+    });
+
     it('throws when the reflector sends an empty id message while connecting', async () => {
         const scenarioPromise = startRemoteScenario(createRemoteConfig());
         await flushPromises();
@@ -667,47 +982,6 @@ describe('startRemoteScenario', () => {
         await socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE));
 
         await expect(responsePromise).rejects.toBe(protocolError);
-    });
-
-    it('throws when remote encrypted messages arrive out of sequence', async () => {
-        const scenarioPromise = startRemoteScenario(createRemoteConfig());
-        await flushPromises();
-        const socket = getOnlySocket();
-
-        await socket.dispatch('open', new Event('open'));
-        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
-
-        const scenario = await scenarioPromise;
-        const walletPromise = scenario.wallet;
-        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
-        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
-        await walletPromise;
-
-        await expect(socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(0, 0, 0, 2, 99)))).rejects.toThrow(
-            'Encrypted message has invalid sequence number',
-        );
-    });
-
-    it('throws non-protocol remote decrypt errors', async () => {
-        const scenarioPromise = startRemoteScenario(createRemoteConfig());
-        await flushPromises();
-        const socket = getOnlySocket();
-
-        await socket.dispatch('open', new Event('open'));
-        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of(3, 7, 8, 9)));
-
-        const scenario = await scenarioPromise;
-        const walletPromise = scenario.wallet;
-        await socket.dispatch('message', createBlobMessageEvent(Uint8Array.of()));
-        await socket.dispatch('message', createBlobMessageEvent(HELLO_RSP));
-        await walletPromise;
-
-        const thrownError = new Error('decrypt failed');
-        mockDecryptJsonRpcMessage.mockRejectedValue(thrownError);
-
-        await expect(socket.dispatch('message', createBlobMessageEvent(INBOUND_SEQUENCE_ONE))).rejects.toBe(
-            thrownError,
-        );
     });
 
     it('rejects remote authorization responses with insecure wallet base URLs', async () => {
@@ -934,6 +1208,173 @@ describe('startNostrScenario', () => {
         await expect(responsePromise).rejects.toBe(protocolError);
     });
 
+    it('rejects an in-flight relay RPC request when the relay socket closes cleanly', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1000, reason: '', wasClean: true }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight relay RPC request when the relay sends CLOSED', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch(
+            'message',
+            createStringMessageEvent(JSON.stringify(['CLOSED', 'mock-sub-id', 'rate-limited'])),
+        );
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight relay RPC request when the relay socket closes uncleanly', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        await socket.dispatch('close', new CloseEvent('close', { code: 1006, reason: 'dropped', wasClean: false }));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('rejects an in-flight relay RPC request when the relay socket errors', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+        expect(outcome.state).toBe('pending');
+
+        vi.setSystemTime(30000);
+        await socket.dispatch('error', new Event('error'));
+        await flushPromises();
+
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('closes the relay session and rejects pending requests on an out-of-order sequence number', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        await socket
+            .dispatch('message', createNostrRelayEventMessage(fromUint8Array(Uint8Array.of(0, 0, 0, 2))))
+            .catch(() => {});
+        await flushPromises();
+
+        expect(socket.close).toHaveBeenCalled();
+        expect(outcome.state).toBe('rejected');
+        expect(outcome.reason).toEqual(
+            expect.objectContaining({
+                code: SolanaMobileWalletAdapterErrorCode.ERROR_ILLEGAL_TRANSPORT_STATE,
+                name: 'SolanaMobileWalletAdapterError',
+            }),
+        );
+    });
+
+    it('closes the relay session and rejects pending requests on an undecryptable message', async () => {
+        const scenario = await startNostrScenario(createNostrConfig('local'));
+        const socket = getOnlySocket();
+
+        await socket.dispatch('open', new Event('open'));
+        await socket.dispatch('message', createNostrRelayEventMessage(''));
+        await socket.dispatch('message', createNostrRelayEventMessage(fromUint8Array(HELLO_RSP)));
+        await scenario.wallet;
+
+        const requestHandler = getLastProtocolRequestHandler();
+        const responsePromise = requestHandler('sign_and_send_transactions', { payloads: [] });
+        const outcome = observeOutcome(responsePromise);
+        await flushPromises();
+
+        mockDecryptJsonRpcMessage.mockRejectedValue(new Error('could not decrypt'));
+        await socket
+            .dispatch('message', createNostrRelayEventMessage(fromUint8Array(INBOUND_SEQUENCE_ONE)))
+            .catch(() => {});
+        await flushPromises();
+
+        expect(socket.close).toHaveBeenCalled();
+        expect(outcome.state).toBe('rejected');
+    });
+
     it('rejects nostr authorization responses with insecure wallet base URLs', async () => {
         const scenario = await startNostrScenario(createNostrConfig('local'));
         const socket = getOnlySocket();
@@ -992,6 +1433,20 @@ async function flushPromises() {
     await Promise.resolve();
 }
 
+function observeOutcome(promise: Promise<unknown>) {
+    const outcome: { state: 'pending' | 'resolved' | 'rejected'; reason?: unknown } = { state: 'pending' };
+    void promise.then(
+        () => {
+            outcome.state = 'resolved';
+        },
+        (reason) => {
+            outcome.state = 'rejected';
+            outcome.reason = reason;
+        },
+    );
+    return outcome;
+}
+
 function createBlobMessageEvent(bytes: Uint8Array) {
     return new MessageEvent('message', {
         data: new Blob([bytes as BlobPart]),
@@ -1039,8 +1494,7 @@ function createNostrRelayEventMessage(content: string, pubkey = 'wallet-nostr-pu
 
 function getLastProtocolRequestHandler() {
     const lastCall = mockCreateMobileWalletProxy.mock.lastCall as
-        | [protocolVersion: string, requestHandler: (method: string, params?: unknown) => Promise<unknown>]
-        | undefined;
+        [protocolVersion: string, requestHandler: (method: string, params?: unknown) => Promise<unknown>] | undefined;
     expect(lastCall).toBeDefined();
     return lastCall![1];
 }
