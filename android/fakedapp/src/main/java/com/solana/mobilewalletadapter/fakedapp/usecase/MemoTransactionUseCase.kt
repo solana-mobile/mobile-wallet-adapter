@@ -247,7 +247,6 @@ object MemoTransactionV1UseCase : MemoTransactionUseCase() {
         //region config values
         0x01.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // priority fee (1 ulamports)
         0x50.toByte(), 0xC3.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit limit (22419 units measured, 50000 used)
-        0x93.toByte(), 0x57.toByte(), 0x00.toByte(), 0x00.toByte(), // compute unit limit (22419 units)
         0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x04.toByte(), // loaded accounts data size limit (67,108,864 bytes = 64 MiB)
         //endregion
         //region instruction headers
