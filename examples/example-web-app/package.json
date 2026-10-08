@@ -45,7 +45,7 @@
         "@types/node": "26.6.4",
         "@types/react": "^19.3.0",
         "eslint": "^9.39.5",
-        "eslint-config-next": "16.3.6",
+        "eslint-config-next": "16.3.8",
         "eslint-plugin-simple-import-sort": "^14.0.0",
         "ngrok": "^4.3.3",
         "patch-package": "^8.0.1",
