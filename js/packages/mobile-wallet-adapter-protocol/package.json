@@ -55,7 +55,7 @@
     "dependencies": {
         "@noble/curves": "^2.4.0",
         "@noble/hashes": "^2.2.0",
-        "@solana/kit": "^8.3.0",
+        "@solana/kit": "^8.4.0",
         "@solana/wallet-standard-features": "^1.5.0",
         "@solana/wallet-standard-util": "^1.1.2",
         "@wallet-standard/core": "^1.1.1"
