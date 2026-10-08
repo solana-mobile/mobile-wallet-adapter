@@ -19,9 +19,6 @@ import {
     GetCapabilitiesAPI,
     MobileWallet,
     ReauthorizeAPI,
-    RemoteWalletAssociationConfig,
-    startRemoteScenario as baseStartRemoteScenario,
-    TerminateSessionAPI,
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -63,17 +60,10 @@ export interface KitMobileWallet
         KitSignTransactionsAPI,
         KitSignMessagesAPI {}
 
-export interface KitRemoteMobileWallet extends KitMobileWallet, TerminateSessionAPI {}
-
 export type KitScenario = Readonly<{
     wallet: Promise<KitMobileWallet>;
     close: () => void;
 }>;
-
-export type KitRemoteScenario = KitScenario &
-    Readonly<{
-        associationUrl: URL;
-    }>;
 
 function getPayloadFromTransaction(transaction: Transaction | SignAndSendTransactionMessage): Base64EncodedTransaction {
     if ('messageBytes' in transaction) {
@@ -101,15 +91,7 @@ export async function transact<TReturn>(
     return await baseTransact(augmentedCallback, config);
 }
 
-export async function startRemoteScenario(config: RemoteWalletAssociationConfig): Promise<KitRemoteScenario> {
-    const { wallet, close, associationUrl } = await baseStartRemoteScenario(config);
-    const augmentedPromise = wallet.then((wallet) => {
-        return augmentWalletAPI(wallet);
-    });
-    return { wallet: augmentedPromise, close, associationUrl };
-}
-
-function augmentWalletAPI(wallet: MobileWallet): KitMobileWallet {
+export function augmentWalletAPI(wallet: MobileWallet): KitMobileWallet {
     return new Proxy<KitMobileWallet>({} as KitMobileWallet, {
         get<TMethodName extends keyof KitMobileWallet>(target: KitMobileWallet, p: TMethodName) {
             if (target[p] == null) {
