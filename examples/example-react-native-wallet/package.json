@@ -47,7 +47,7 @@
         "eslint-plugin-simple-import-sort": "^14.0.0",
         "hermes-compiler": "250829098.0.19",
         "prettier": "3.9.9",
-        "typescript": "^5.8.3"
+        "typescript": "^6.0.3"
     },
     "engines": {
         "node": "^24.3.0"
