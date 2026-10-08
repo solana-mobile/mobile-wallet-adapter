@@ -39,7 +39,7 @@ vi.mock('@solana/web3.js', () => ({
     },
 }));
 
-import { startRemoteScenario, transact } from '../src/transact.js';
+import { startRemoteScenario, transact } from '../src/index.js';
 
 afterEach(() => {
     mockBaseStartRemoteScenario.mockReset();

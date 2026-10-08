@@ -31,7 +31,7 @@ vi.mock('@solana/transactions', () => ({
     getTransactionDecoder: mockGetTransactionDecoder,
 }));
 
-import { type SignAndSendTransactionMessage, startRemoteScenario, transact } from '../src/transact.js';
+import { type SignAndSendTransactionMessage, startRemoteScenario, transact } from '../src/index.js';
 
 afterEach(() => {
     mockBaseStartRemoteScenario.mockReset();

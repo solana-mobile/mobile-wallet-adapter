@@ -15,9 +15,6 @@ import {
     GetCapabilitiesAPI,
     MobileWallet,
     ReauthorizeAPI,
-    RemoteWalletAssociationConfig,
-    startRemoteScenario as baseStartRemoteScenario,
-    TerminateSessionAPI,
     transact as baseTransact,
     WalletAssociationConfig,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
@@ -57,17 +54,10 @@ export interface Web3MobileWallet
         Web3SignTransactionsAPI,
         Web3SignMessagesAPI {}
 
-export interface Web3RemoteMobileWallet extends Web3MobileWallet, TerminateSessionAPI {}
-
 export type Web3Scenario = Readonly<{
     wallet: Promise<Web3MobileWallet>;
     close: () => void;
 }>;
-
-export type Web3RemoteScenario = Web3Scenario &
-    Readonly<{
-        associationUrl: URL;
-    }>;
 
 function getPayloadFromTransaction(transaction: LegacyTransaction | VersionedTransaction): Base64EncodedTransaction {
     const serializedTransaction =
@@ -102,15 +92,7 @@ export async function transact<TReturn>(
     return await baseTransact(augmentedCallback, config);
 }
 
-export async function startRemoteScenario(config: RemoteWalletAssociationConfig): Promise<Web3RemoteScenario> {
-    const { wallet, close, associationUrl } = await baseStartRemoteScenario(config);
-    const augmentedPromise = wallet.then((wallet) => {
-        return augmentWalletAPI(wallet);
-    });
-    return { wallet: augmentedPromise, close, associationUrl };
-}
-
-function augmentWalletAPI(wallet: MobileWallet): Web3MobileWallet {
+export function augmentWalletAPI(wallet: MobileWallet): Web3MobileWallet {
     return new Proxy<Web3MobileWallet>({} as Web3MobileWallet, {
         get<TMethodName extends keyof Web3MobileWallet>(target: Web3MobileWallet, p: TMethodName) {
             if (target[p] == null) {
