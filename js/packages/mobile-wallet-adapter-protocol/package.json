@@ -57,8 +57,8 @@
         "@noble/hashes": "^2.2.0",
         "@solana/kit": "^8.4.0",
         "@solana/wallet-standard-features": "^1.5.0",
-        "@solana/wallet-standard-util": "^1.1.2",
-        "@wallet-standard/core": "^1.1.1"
+        "@solana/wallet-standard-util": "^1.1.4",
+        "@wallet-standard/core": "^1.1.2"
     },
     "devDependencies": {
         "@types/react-native": "^0.73.0",

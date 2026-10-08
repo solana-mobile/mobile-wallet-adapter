@@ -59,7 +59,7 @@
         "@solana-mobile/wallet-standard-mobile": "workspace:^",
         "@solana/wallet-adapter-base": "^0.9.28",
         "@solana/wallet-standard-features": "^1.5.0",
-        "@wallet-standard/core": "^1.1.1",
+        "@wallet-standard/core": "^1.1.2",
         "tslib": "^2.8.1"
     },
     "devDependencies": {
