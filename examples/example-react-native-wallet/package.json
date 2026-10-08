@@ -14,7 +14,7 @@
         "start": "react-native start"
     },
     "dependencies": {
-        "@react-native-async-storage/async-storage": "^2.0.0",
+        "@react-native-async-storage/async-storage": "^3.1.1",
         "@solana-mobile/mobile-wallet-adapter-protocol": "file:../../js/packages/mobile-wallet-adapter-protocol",
         "@solana-mobile/mobile-wallet-adapter-walletlib": "file:../../js/packages/mobile-wallet-adapter-walletlib",
         "@solana/wallet-standard-util": "^1.1.1",
