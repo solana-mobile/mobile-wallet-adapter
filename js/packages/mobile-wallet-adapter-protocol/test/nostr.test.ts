@@ -29,9 +29,7 @@ describe('generateNostrKeypair', () => {
 describe('deriveSessionIdentifier', () => {
     const EXPORTED_KEY_BYTES = Uint8Array.of(1, 2, 3, 4);
 
-    const { mockExportKey } = vi.hoisted(() => ({
-        mockExportKey: vi.fn(),
-    }));
+    const mockExportKey = vi.fn();
 
     beforeEach(() => {
         mockExportKey.mockResolvedValue(EXPORTED_KEY_BYTES.buffer);
