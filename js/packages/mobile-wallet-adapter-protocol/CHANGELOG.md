@@ -1,5 +1,7 @@
 # @solana-mobile/mobile-wallet-adapter-protocol
 
+## 3.0.1
+
 ## 3.0.0
 
 ### Major Changes
