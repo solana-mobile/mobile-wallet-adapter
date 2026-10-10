@@ -21,6 +21,7 @@ import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationIntentC
 import com.solana.mobilewalletadapter.clientlib.scenario.LocalAssociationScenario
 import com.solana.mobilewalletadapter.clientlib.scenario.Scenario
 import com.solana.mobilewalletadapter.common.ProtocolContract
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties.ProtocolVersion
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana
@@ -279,6 +280,53 @@ object MobileWalletAdapterUseCase {
                     }
                     is JsonRpc20Client.JsonRpc20Exception -> throw MobileWalletAdapterOperationFailedException(
                         "JSON-RPC client exception for sign_messages", cause
+                    )
+                    else -> throw MobileWalletAdapterOperationFailedException(null, e)
+                }
+            } catch (e: CancellationException) {
+                Log.w(TAG, "sign_messages request was cancelled", e)
+                throw e
+            }
+        }
+
+        suspend fun signOffchainMessages(
+            messages: Array<String>,
+            addresses: Array<ByteArray>
+        ): Array<ByteArray> = coroutineScope {
+            try {
+                runInterruptible(Dispatchers.IO) {
+                    client.signOffchainMessages(messages.map { m ->
+                        OffchainMessage.V1(addresses, m).serialize()
+                    }.toTypedArray()).get()!!
+                }.signedPayloads
+            } catch (e: ExecutionException) {
+                when (val cause = e.cause) {
+                    is IOException -> throw MobileWalletAdapterOperationFailedException(
+                        "IO error while sending sign_offchain_messages", cause
+                    )
+                    is TimeoutException -> throw MobileWalletAdapterOperationFailedException(
+                        "Timed out while waiting for sign_offchain_messages result", cause
+                    )
+                    is MobileWalletAdapterClient.InvalidPayloadsException -> throw MobileWalletAdapterOperationFailedException(
+                        "Message payloads invalid", cause
+                    )
+                    is JsonRpc20Client.JsonRpc20RemoteException -> when (cause.code) {
+                        ProtocolContract.ERROR_AUTHORIZATION_FAILED -> throw MobileWalletAdapterOperationFailedException(
+                            "Authorization invalid, authorization or reauthorization required",
+                            cause
+                        )
+                        ProtocolContract.ERROR_NOT_SIGNED -> throw MobileWalletAdapterOperationFailedException(
+                            "User did not authorize signing", cause
+                        )
+                        ProtocolContract.ERROR_TOO_MANY_PAYLOADS -> throw MobileWalletAdapterOperationFailedException(
+                            "Too many payloads to sign", cause
+                        )
+                        else -> throw MobileWalletAdapterOperationFailedException(
+                            "Remote exception for sign_offchain_messages", cause
+                        )
+                    }
+                    is JsonRpc20Client.JsonRpc20Exception -> throw MobileWalletAdapterOperationFailedException(
+                        "JSON-RPC client exception for sign_offchain_messages", cause
                     )
                     else -> throw MobileWalletAdapterOperationFailedException(null, e)
                 }

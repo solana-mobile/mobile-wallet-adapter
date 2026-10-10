@@ -52,13 +52,20 @@
         app:layout_constraintTop_toBottomOf="@id/btn_deauthorize"
         android:text="@string/label_request_airdrop" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_sign_offchain_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btn_request_airdrop"
+        android:text="@string/label_sign_offchain_message" />
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/label_txn_ver"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
         android:textAppearance="?textAppearanceBody1"
-        app:layout_constraintTop_toBottomOf="@id/btn_request_airdrop"
+        app:layout_constraintTop_toBottomOf="@id/btn_sign_offchain_message"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/spinner_txn_ver"
         android:text="@string/label_txn_version" />

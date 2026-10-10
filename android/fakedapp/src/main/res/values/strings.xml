@@ -19,6 +19,7 @@
     <string name="label_reauthorize">Reauthorize</string>
     <string name="label_deauthorize">Deauthorize</string>
     <string name="label_request_airdrop">Request airdrop</string>
+    <string name="label_sign_offchain_message">Sign Off-chain Message</string>
     <string name="label_sign_txn_x1">Sign txn x1</string>
     <string name="label_sign_txn_x3">x3</string>
     <string name="label_sign_txn_x20">x20</string>
