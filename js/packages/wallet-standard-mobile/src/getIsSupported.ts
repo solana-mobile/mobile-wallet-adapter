@@ -113,7 +113,7 @@ export async function isLocalWebSocketAvailable(): Promise<boolean> {
  * origins), or unsupported by the browser. Throws a SolanaMobileWalletAdapterError when
  * the permission is denied or the user cancels.
  */
-export async function checkLocalNetworkAccessPermission(): Promise<void> {
+export async function checkLocalNetworkAccessPermission(signal?: AbortSignal): Promise<void> {
     if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
         // Solana Mobile Web Shell runs inside an Android WebView hosted by a
         // native app, not a regular mobile browser tab. The WebView currently
@@ -135,6 +135,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
         const lnaPermission: PermissionStatus = await navigator.permissions.query({
             name: 'loopback-network' as PermissionName,
         });
+        signal?.throwIfAborted();
         if (lnaPermission.state === 'granted') {
             // LNA permission already granted, continuing
             return;
@@ -153,6 +154,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
             const updatedState = await new Promise((resolve, reject) => {
                 modal.addEventListener('close', (event) => {
                     if (event) {
+                        lnaPermission.onchange = null;
                         reject(
                             new SolanaMobileWalletAdapterError(
                                 SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
@@ -164,8 +166,14 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                 });
                 lnaPermission.onchange = () => {
                     lnaPermission.onchange = null; // cleanup
+                    modal.close();
                     resolve(lnaPermission.state);
                 };
+                signal?.addEventListener('abort', () => {
+                    lnaPermission.onchange = null;
+                    modal.close();
+                    reject(signal.reason);
+                });
                 modal.init();
                 modal.open();
             });
@@ -186,6 +194,10 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                             );
                         }
                     });
+                    signal?.addEventListener('abort', () => {
+                        modal.close();
+                        reject(signal.reason);
+                    });
                     modal.initWithCallback(async () => {
                         resolve(true);
                     });
@@ -194,7 +206,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                 return;
             } else {
                 // recurse, to avoid duplicating above logic
-                return await checkLocalNetworkAccessPermission();
+                return await checkLocalNetworkAccessPermission(signal);
             }
         }
 

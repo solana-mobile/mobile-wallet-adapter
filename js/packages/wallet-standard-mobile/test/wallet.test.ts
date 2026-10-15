@@ -428,20 +428,60 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         expect(mockStartScenario).not.toHaveBeenCalled();
     });
 
-    it('rejects connect when local association times out', async () => {
+    it('does not time out connect while the permission flow waits on the user', async () => {
         vi.useFakeTimers();
+        const mobileWallet = createMobileWallet({ authorization: createMwaAuthorization(Uint8Array.of(1, 2, 3)) });
         const { wallet } = createLocalWallet();
+        let grantPermission: () => void = () => undefined;
 
-        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
-        mockStartScenario.mockReturnValue(new Promise(() => undefined));
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(
+            new Promise<void>((resolve) => (grantPermission = resolve)),
+        );
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
 
         const connectPromise = wallet.features[StandardConnect].connect();
-        const expectation = expect(connectPromise).rejects.toThrow('Wallet connection timed out');
-        await vi.advanceTimersByTimeAsync(30000);
+        await vi.advanceTimersByTimeAsync(60_000);
+        grantPermission();
 
-        await expectation;
-        expect(loadingSpinnerInstances[0].close).toHaveBeenCalledTimes(1);
+        await expect(connectPromise).resolves.toMatchObject({ accounts: [expect.anything()] });
+        expect(mobileWallet.authorize).toHaveBeenCalledTimes(1);
         vi.useRealTimers();
+    });
+
+    it('does not associate when disconnect runs while the permission flow is pending', async () => {
+        const mobileWallet = createMobileWallet({ authorization: createMwaAuthorization(Uint8Array.of(1, 2, 3)) });
+        const { authorizationCache, wallet } = createLocalWallet();
+        let grantPermission: () => void = () => undefined;
+
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(
+            new Promise<void>((resolve) => (grantPermission = resolve)),
+        );
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        void wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mockCheckLocalNetworkAccessPermission).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        grantPermission();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mockStartScenario).not.toHaveBeenCalled();
+        expect(mobileWallet.authorize).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+    });
+
+    it('aborts the permission flow on disconnect', async () => {
+        const { wallet } = createLocalWallet();
+
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(new Promise(() => undefined));
+
+        void wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mockCheckLocalNetworkAccessPermission).toHaveBeenCalledTimes(1));
+        const [signal] = mockCheckLocalNetworkAccessPermission.mock.calls[0] as [AbortSignal];
+        expect(signal.aborted).toBe(false);
+
+        await wallet.features[StandardDisconnect].disconnect();
+
+        expect(signal.aborted).toBe(true);
     });
 
     it('runs the wallet-not-found handler for local association failures', async () => {
