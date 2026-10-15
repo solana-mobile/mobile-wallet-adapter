@@ -11,17 +11,14 @@ export default class LoopbackPermissionModal extends EmbeddedModal {
 
     #prepareLaunchAction() {
         const launchButton = this.dom?.getElementById('mobile-wallet-adapter-launch-action');
-        const listener = async () => {
-            launchButton?.removeEventListener('click', listener);
+        launchButton?.addEventListener('click', async () => {
             try {
                 // Trigger LNA permission prompting
                 await fetch('http://localhost');
             } catch {
                 /* Ignore errors from fetch */
             }
-            this.close();
-        };
-        launchButton?.addEventListener('click', listener);
+        });
     }
 }
 

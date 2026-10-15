@@ -437,10 +437,79 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
 
         const connectPromise = wallet.features[StandardConnect].connect();
         const expectation = expect(connectPromise).rejects.toThrow('Wallet connection timed out');
-        await vi.advanceTimersByTimeAsync(30000);
+        await vi.advanceTimersByTimeAsync(30_000);
 
         await expectation;
         expect(loadingSpinnerInstances[0].close).toHaveBeenCalledTimes(1);
+        vi.useRealTimers();
+    });
+
+    it('does not time out connect while the permission flow waits on the user', async () => {
+        vi.useFakeTimers();
+        const mobileWallet = createMobileWallet({ authorization: createMwaAuthorization(Uint8Array.of(1, 2, 3)) });
+        const { wallet } = createLocalWallet();
+        let grantPermission: () => void = () => undefined;
+
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(
+            new Promise<void>((resolve) => (grantPermission = resolve)),
+        );
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        const connectPromise = wallet.features[StandardConnect].connect();
+        await vi.advanceTimersByTimeAsync(60_000);
+        grantPermission();
+
+        await expect(connectPromise).resolves.toMatchObject({ accounts: [expect.anything()] });
+        expect(mobileWallet.authorize).toHaveBeenCalledTimes(1);
+        vi.useRealTimers();
+    });
+
+    it('does not associate when disconnect runs while the permission flow is pending', async () => {
+        const mobileWallet = createMobileWallet({ authorization: createMwaAuthorization(Uint8Array.of(1, 2, 3)) });
+        const { authorizationCache, wallet } = createLocalWallet();
+        let grantPermission: () => void = () => undefined;
+
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(
+            new Promise<void>((resolve) => (grantPermission = resolve)),
+        );
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        void wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mockCheckLocalNetworkAccessPermission).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        grantPermission();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mockStartScenario).not.toHaveBeenCalled();
+        expect(mobileWallet.authorize).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+    });
+
+    it('closes a late association without authorizing after connect timed out', async () => {
+        vi.useFakeTimers();
+        const mobileWallet = createMobileWallet({ authorization: createMwaAuthorization(Uint8Array.of(1, 2, 3)) });
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createLocalWallet();
+        let finishAssociation: () => void = () => undefined;
+
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockReturnValue(
+            new Promise((resolve) => {
+                finishAssociation = () => resolve({ close: scenarioClose, wallet: Promise.resolve(mobileWallet) });
+            }),
+        );
+
+        const connectPromise = wallet.features[StandardConnect].connect();
+        const expectation = expect(connectPromise).rejects.toThrow('Wallet connection timed out');
+        await vi.advanceTimersByTimeAsync(30_000);
+        await expectation;
+
+        finishAssociation();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(mobileWallet.authorize).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
         vi.useRealTimers();
     });
 

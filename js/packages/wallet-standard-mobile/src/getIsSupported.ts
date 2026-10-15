@@ -153,6 +153,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
             const updatedState = await new Promise((resolve, reject) => {
                 modal.addEventListener('close', (event) => {
                     if (event) {
+                        lnaPermission.onchange = null;
                         reject(
                             new SolanaMobileWalletAdapterError(
                                 SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
@@ -164,6 +165,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                 });
                 lnaPermission.onchange = () => {
                     lnaPermission.onchange = null; // cleanup
+                    modal.close();
                     resolve(lnaPermission.state);
                 };
                 modal.init();
