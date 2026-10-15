@@ -26,10 +26,13 @@ const {
         callback: (() => Promise<void>) | undefined;
         initWithCallback: ReturnType<typeof vi.fn>;
     };
+    type MockPermissionModalInstance = MockModalInstance & {
+        close: ReturnType<typeof vi.fn>;
+    };
 
     const blockedModalInstances: MockModalInstance[] = [];
     const localConnectionModalInstances: MockLocalConnectionModalInstance[] = [];
-    const permissionModalInstances: MockModalInstance[] = [];
+    const permissionModalInstances: MockPermissionModalInstance[] = [];
 
     class LoopbackPermissionBlockedModalMock {
         addEventListener = vi.fn((_: string, listener: ModalEventListener) => {
@@ -65,6 +68,7 @@ const {
         addEventListener = vi.fn((_: string, listener: ModalEventListener) => {
             this.closeListener = listener;
         });
+        close = vi.fn();
         closeListener: ModalEventListener | undefined;
         init = vi.fn();
         open = vi.fn();
@@ -221,6 +225,7 @@ describe('getIsSupported helpers', () => {
             message: 'Wallet connection cancelled by user',
             name: 'SolanaMobileWalletAdapterError',
         });
+        expect(permission.onchange).toBeNull();
         expect(localConnectionModalInstances).toHaveLength(0);
     });
 
@@ -236,6 +241,7 @@ describe('getIsSupported helpers', () => {
         await vi.waitFor(() => {
             expect(permissionModalInstances).toHaveLength(1);
         });
+        expect(permissionModalInstances[0].close).not.toHaveBeenCalled();
 
         permission.state = 'granted';
         permission.onchange?.(new Event('change'));
@@ -244,6 +250,7 @@ describe('getIsSupported helpers', () => {
             expect(localConnectionModalInstances).toHaveLength(1);
         });
 
+        expect(permissionModalInstances[0].close).toHaveBeenCalledTimes(1);
         expect(permission.onchange).toBeNull();
         expect(permissionModalInstances[0].init).toHaveBeenCalledTimes(1);
         expect(permissionModalInstances[0].open).toHaveBeenCalledTimes(1);
