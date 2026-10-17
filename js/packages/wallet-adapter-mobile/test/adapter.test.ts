@@ -562,6 +562,60 @@ describe('adapter', () => {
         });
     });
 
+    it('forwards skipPreflight, maxRetries, and minContextSlot to signAndSendTransaction', async () => {
+        const account = createWalletAccount(34);
+        const { adapter, wallet } = createLocalAdapter();
+        const transaction = {
+            serialize: vi.fn(() => Uint8Array.of(7, 8, 9)),
+        };
+
+        wallet.emitAccounts([account], 'mainnet-beta');
+        wallet.signAndSendImpl.mockResolvedValue([{ signature: Uint8Array.of(8, 8, 8) }]);
+        await flushPromises();
+
+        await adapter.sendTransaction(transaction as never, {} as never, {
+            maxRetries: 2,
+            minContextSlot: 123,
+            skipPreflight: true,
+        });
+        expect(wallet.signAndSendImpl).toHaveBeenCalledWith({
+            account,
+            chain: 'solana:mainnet',
+            options: {
+                maxRetries: 2,
+                minContextSlot: 123,
+                skipPreflight: true,
+            },
+            transaction: Uint8Array.of(7, 8, 9),
+        });
+    });
+
+    it('forwards minContextSlot 0 and skipPreflight false without inventing maxRetries', async () => {
+        const account = createWalletAccount(35);
+        const { adapter, wallet } = createLocalAdapter();
+        const transaction = {
+            serialize: vi.fn(() => Uint8Array.of(7, 8, 9)),
+        };
+
+        wallet.emitAccounts([account], 'mainnet-beta');
+        wallet.signAndSendImpl.mockResolvedValue([{ signature: Uint8Array.of(8, 8, 8) }]);
+        await flushPromises();
+
+        await adapter.sendTransaction(transaction as never, {} as never, {
+            minContextSlot: 0,
+            skipPreflight: false,
+        });
+        expect(wallet.signAndSendImpl).toHaveBeenCalledWith({
+            account,
+            chain: 'solana:mainnet',
+            options: {
+                minContextSlot: 0,
+                skipPreflight: false,
+            },
+            transaction: Uint8Array.of(7, 8, 9),
+        });
+    });
+
     it('falls back to signTransaction and sendRawTransaction when signAndSend is unavailable', async () => {
         const account = createWalletAccount(7);
         const connection = {
