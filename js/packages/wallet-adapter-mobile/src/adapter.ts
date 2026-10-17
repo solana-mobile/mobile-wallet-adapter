@@ -81,6 +81,18 @@ function isVersionedTransaction(
     return 'version' in transaction;
 }
 
+function serializeTransactionForWallet(transaction: LegacyTransaction | VersionedTransaction): Uint8Array {
+    if (isVersionedTransaction(transaction)) {
+        return transaction.serialize();
+    }
+    return new Uint8Array(
+        transaction.serialize({
+            requireAllSignatures: false,
+            verifySignatures: false,
+        }),
+    );
+}
+
 function chainOrClusterToChainId(chain: Cluster | Chain): IdentifierString {
     switch (chain) {
         case 'mainnet-beta':
@@ -341,7 +353,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                     const [signature] = (
                         await this.#wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
                             account,
-                            transaction: transaction.serialize(),
+                            transaction: serializeTransactionForWallet(transaction),
                             chain: chain,
                             options: options
                                 ? {
@@ -406,7 +418,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             if (SolanaSignTransaction in this.#wallet.features) {
                 return this.#wallet.features[SolanaSignTransaction].signTransaction(
                     ...transactions.map((value) => {
-                        return { account, transaction: value.serialize() };
+                        return { account, transaction: serializeTransactionForWallet(value) };
                     }),
                 ).then((outputs) => {
                     return outputs.map((output: SolanaSignTransactionOutput) => {

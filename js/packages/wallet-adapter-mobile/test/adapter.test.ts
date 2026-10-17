@@ -711,6 +711,35 @@ describe('adapter', () => {
         expect(connection.sendTransaction).toHaveBeenCalledWith(versionedTransaction);
     });
 
+    it('serializes unsigned legacy transactions when sending through signAndSendTransaction', async () => {
+        const account = createWalletAccount(32);
+        const { adapter, wallet } = createLocalAdapter();
+        const transaction = {
+            serialize: vi.fn((config?: { requireAllSignatures?: boolean; verifySignatures?: boolean }) => {
+                if (config?.requireAllSignatures !== false || config?.verifySignatures !== false) {
+                    throw new Error('Missing signature for public key [`11111111111111111111111111111111`].');
+                }
+                return Uint8Array.of(7, 8, 9);
+            }),
+        };
+
+        wallet.emitAccounts([account], 'mainnet-beta');
+        wallet.signAndSendImpl.mockResolvedValue([{ signature: Uint8Array.of(8, 8, 8) }]);
+        await flushPromises();
+
+        await expect(adapter.sendTransaction(transaction as never, {} as never)).resolves.toEqual(expect.any(String));
+        expect(transaction.serialize).toHaveBeenCalledWith({
+            requireAllSignatures: false,
+            verifySignatures: false,
+        });
+        expect(wallet.signAndSendImpl).toHaveBeenCalledWith({
+            account,
+            chain: 'solana:mainnet',
+            options: undefined,
+            transaction: Uint8Array.of(7, 8, 9),
+        });
+    });
+
     it('wraps sendTransaction failures in WalletSendTransactionError', async () => {
         const account = createWalletAccount(13);
         const transaction = {
@@ -747,6 +776,63 @@ describe('adapter', () => {
         await flushPromises();
 
         await expect(adapter.signTransaction(transaction as never)).resolves.toBe(signedTransaction);
+        expect(wallet.signTransactionImpl).toHaveBeenCalledWith({
+            account,
+            transaction: Uint8Array.of(1, 2, 3),
+        });
+    });
+
+    it('serializes unsigned legacy transactions without requiring signatures', async () => {
+        const account = createWalletAccount(31);
+        const { adapter, wallet } = createLocalAdapter();
+        const signedTransaction = {
+            serialize: vi.fn(() => Uint8Array.of(4, 5, 6)),
+        };
+        const transaction = {
+            serialize: vi.fn((config?: { requireAllSignatures?: boolean; verifySignatures?: boolean }) => {
+                if (config?.requireAllSignatures !== false || config?.verifySignatures !== false) {
+                    throw new Error('Missing signature for public key [`11111111111111111111111111111111`].');
+                }
+                return Uint8Array.of(1, 2, 3);
+            }),
+        };
+
+        wallet.emitAccounts([account]);
+        wallet.signTransactionImpl.mockResolvedValue([{ signedTransaction: Uint8Array.of(1) }]);
+        vi.spyOn(Transaction, 'from').mockReturnValue(signedTransaction as never);
+        vi.spyOn(VersionedMessage, 'deserializeMessageVersion').mockReturnValue('legacy');
+        await flushPromises();
+
+        await expect(adapter.signTransaction(transaction as never)).resolves.toBe(signedTransaction);
+        expect(transaction.serialize).toHaveBeenCalledWith({
+            requireAllSignatures: false,
+            verifySignatures: false,
+        });
+        expect(wallet.signTransactionImpl).toHaveBeenCalledWith({
+            account,
+            transaction: Uint8Array.of(1, 2, 3),
+        });
+    });
+
+    it('serializes versioned transactions without partial-signature options', async () => {
+        const account = createWalletAccount(33);
+        const { adapter, wallet } = createLocalAdapter();
+        const signedTransaction = {
+            version: 0,
+        };
+        const transaction = {
+            serialize: vi.fn(() => Uint8Array.of(1, 2, 3)),
+            version: 0,
+        };
+
+        wallet.emitAccounts([account]);
+        wallet.signTransactionImpl.mockResolvedValue([{ signedTransaction: Uint8Array.of(1) }]);
+        vi.spyOn(VersionedMessage, 'deserializeMessageVersion').mockReturnValue(0);
+        vi.spyOn(VersionedTransaction, 'deserialize').mockReturnValue(signedTransaction as never);
+        await flushPromises();
+
+        await expect(adapter.signTransaction(transaction as never)).resolves.toBe(signedTransaction);
+        expect(transaction.serialize).toHaveBeenCalledWith();
         expect(wallet.signTransactionImpl).toHaveBeenCalledWith({
             account,
             transaction: Uint8Array.of(1, 2, 3),
