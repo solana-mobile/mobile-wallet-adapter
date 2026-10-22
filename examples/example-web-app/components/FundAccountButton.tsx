@@ -51,7 +51,7 @@ export default function FundAccountButton({ children }: Props) {
                             mutate(
                                 'accountBalance',
                                 // Optimistic update; will be revalidated automatically by SWR.
-                                (currentBalance: number) => currentBalance + LAMPORTS_PER_AIRDROP,
+                                (currentBalance?: number) => (currentBalance ?? 0) + LAMPORTS_PER_AIRDROP,
                             );
                         }
                     }
