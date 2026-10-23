@@ -444,6 +444,71 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         vi.useRealTimers();
     });
 
+    it('does not authorize when disconnect runs while the wallet is authorizing', async () => {
+        let resolveAuthorize!: (authorization: ReturnType<typeof createMwaAuthorization>) => void;
+        const mobileWallet = createMobileWallet();
+        mobileWallet.authorize.mockReturnValue(new Promise((resolve) => (resolveAuthorize = resolve)));
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createLocalWallet();
+        const settled = vi.fn();
+
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({
+            close: scenarioClose,
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        wallet.features[StandardConnect].connect().then(settled, settled);
+        await vi.waitFor(() => expect(mobileWallet.authorize).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveAuthorize(createMwaAuthorization(Uint8Array.of(1, 2, 3)));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(loadingSpinnerInstances[0].close).toHaveBeenCalledTimes(1);
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+        expect(settled).not.toHaveBeenCalled();
+    });
+
+    it('does not open the wallet when disconnect runs during chain selection', async () => {
+        let resolveSelect!: (chain: typeof SOLANA_MAINNET_CHAIN) => void;
+        const { authorizationCache, chainSelector, wallet } = createLocalWallet();
+        const settled = vi.fn();
+
+        chainSelector.select.mockReturnValue(new Promise((resolve) => (resolveSelect = resolve)));
+
+        wallet.features[StandardConnect].connect().then(settled, settled);
+        await vi.waitFor(() => expect(chainSelector.select).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveSelect(SOLANA_MAINNET_CHAIN);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mockStartScenario).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
+        expect(settled).not.toHaveBeenCalled();
+    });
+
+    it('does not restore a cached authorization when disconnect runs during the cache read', async () => {
+        let resolveGet!: (authorization: Authorization) => void;
+        const { authorizationCache, wallet } = createLocalWallet();
+        const settled = vi.fn();
+
+        authorizationCache.get.mockReturnValue(new Promise((resolve) => (resolveGet = resolve)));
+
+        wallet.features[StandardConnect].connect().then(settled, settled);
+        await vi.waitFor(() => expect(authorizationCache.get).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveGet(createCachedAuthorization(Uint8Array.of(1, 2, 3)));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+        expect(settled).not.toHaveBeenCalled();
+    });
+
     it('runs the wallet-not-found handler for local association failures', async () => {
         const onWalletNotFound = vi.fn<WalletNotFoundHandler>().mockResolvedValue(undefined);
         const { wallet } = createLocalWallet({ onWalletNotFound });
@@ -945,6 +1010,70 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         await expect(wallet.features[StandardConnect].connect()).rejects.toThrow('association failed');
         expect(onWalletNotFound).not.toHaveBeenCalled();
         expect(remoteModalInstances[0].close).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not authorize when disconnect runs while the remote wallet is authorizing', async () => {
+        let resolveAuthorize!: (authorization: ReturnType<typeof createMwaAuthorization>) => void;
+        const mobileWallet = createMobileWallet();
+        mobileWallet.authorize.mockReturnValue(new Promise((resolve) => (resolveAuthorize = resolve)));
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createRemoteWallet();
+        const settled = vi.fn();
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: scenarioClose,
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        wallet.features[StandardConnect].connect().then(settled, settled);
+        await vi.waitFor(() => expect(mobileWallet.authorize).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveAuthorize(createMwaAuthorization(Uint8Array.of(1, 2, 3)));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+        expect(settled).not.toHaveBeenCalled();
+    });
+
+    it('does not open the remote wallet when disconnect runs during chain selection', async () => {
+        let resolveSelect!: (chain: typeof SOLANA_MAINNET_CHAIN) => void;
+        const { authorizationCache, chainSelector, wallet } = createRemoteWallet();
+        const settled = vi.fn();
+
+        chainSelector.select.mockReturnValue(new Promise((resolve) => (resolveSelect = resolve)));
+
+        wallet.features[StandardConnect].connect().then(settled, settled);
+        await vi.waitFor(() => expect(chainSelector.select).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveSelect(SOLANA_MAINNET_CHAIN);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mockStartRemoteScenario).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
+        expect(settled).not.toHaveBeenCalled();
+    });
+
+    it('does not restore a cached remote authorization when disconnect runs during the cache read', async () => {
+        let resolveGet!: (authorization: Authorization) => void;
+        const { authorizationCache, wallet } = createRemoteWallet();
+        const settled = vi.fn();
+
+        authorizationCache.get.mockReturnValue(new Promise((resolve) => (resolveGet = resolve)));
+
+        wallet.features[StandardConnect].connect().then(settled, settled);
+        await vi.waitFor(() => expect(authorizationCache.get).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveGet(createCachedAuthorization(Uint8Array.of(1, 2, 3)));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+        expect(settled).not.toHaveBeenCalled();
     });
 
     it('runs the wallet-not-found handler for remote association failures', async () => {

@@ -313,14 +313,21 @@ export class LocalSolanaMobileWalletAdapterWallet
 
     #performAuthorization = async (signInPayload?: SignInPayload) => {
         try {
+            const connectionGeneration = this.#connectionGeneration;
             const cachedAuthorizationResult = await this.#authorizationCache.get();
+            if (this.#connectionGeneration !== connectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.#handleAuthorizationResult(cachedAuthorizationResult);
                 return cachedAuthorizationResult;
             }
             const selectedChain = await this.#chainSelector.select(this.#chains);
-            return await this.#transact(async (wallet) => {
+            if (this.#connectionGeneration !== connectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
+            const authorization = await this.#transact(async (wallet) => {
                 const [capabilities, mwaAuthorizationResult] = await Promise.all([
                     wallet.getCapabilities(),
                     wallet.authorize({
@@ -331,21 +338,23 @@ export class LocalSolanaMobileWalletAdapterWallet
                 ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts);
-                const authorization = {
+                return {
                     ...mwaAuthorizationResult,
                     accounts,
                     chain: selectedChain,
                     capabilities: capabilities,
                 };
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                Promise.all([
-                    this.#handleWalletCapabilitiesResult(capabilities),
-                    this.#authorizationCache.set(authorization),
-                    this.#handleAuthorizationResult(authorization),
-                ]);
-
-                return authorization;
             });
+            if (this.#connectionGeneration !== connectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
+            await Promise.all([
+                this.#handleWalletCapabilitiesResult(authorization.capabilities),
+                this.#authorizationCache.set(authorization),
+                this.#handleAuthorizationResult(authorization),
+            ]);
+
+            return authorization;
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
         }
@@ -831,7 +840,11 @@ export class RemoteSolanaMobileWalletAdapterWallet
 
     #performAuthorization = async (signInPayload?: SignInPayload) => {
         try {
+            const connectionGeneration = this.#connectionGeneration;
             const cachedAuthorizationResult = await this.#authorizationCache.get();
+            if (this.#connectionGeneration !== connectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.#handleAuthorizationResult(cachedAuthorizationResult);
@@ -839,7 +852,10 @@ export class RemoteSolanaMobileWalletAdapterWallet
             }
             if (this.#session) this.#session = undefined;
             const selectedChain = await this.#chainSelector.select(this.#chains);
-            return await this.#transact(async (wallet) => {
+            if (this.#connectionGeneration !== connectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
+            const authorizationResult = await this.#transact(async (wallet) => {
                 const [capabilities, mwaAuthorizationResult] = await Promise.all([
                     wallet.getCapabilities(),
                     wallet.authorize({
@@ -850,21 +866,23 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts);
-                const authorizationResult = {
+                return {
                     ...mwaAuthorizationResult,
                     accounts,
                     chain: selectedChain,
                     capabilities: capabilities,
                 };
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                Promise.all([
-                    this.#handleWalletCapabilitiesResult(capabilities),
-                    this.#authorizationCache.set(authorizationResult),
-                    this.#handleAuthorizationResult(authorizationResult),
-                ]);
-
-                return authorizationResult;
             });
+            if (this.#connectionGeneration !== connectionGeneration) {
+                await new Promise(() => {}); // Never resolve.
+            }
+            await Promise.all([
+                this.#handleWalletCapabilitiesResult(authorizationResult.capabilities),
+                this.#authorizationCache.set(authorizationResult),
+                this.#handleAuthorizationResult(authorizationResult),
+            ]);
+
+            return authorizationResult;
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
         }
