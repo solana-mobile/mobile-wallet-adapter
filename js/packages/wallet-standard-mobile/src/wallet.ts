@@ -443,14 +443,17 @@ export class LocalSolanaMobileWalletAdapterWallet
             // wallet association (transact). In case the user manually cancels
             // the wallet association, cancel the connection after a timeout.
             let associating = true;
+            let timedOut = false;
             let timeout = undefined;
             const useWebSocket = await isLocalWebSocketAvailable();
+            if (!useWebSocket && !this.#nostrRelay) {
+                await checkLocalNetworkAccessPermission();
+                if (this.#connectionGeneration !== currentConnectionGeneration) {
+                    await new Promise(() => {}); // Never resolve.
+                }
+            }
             const result = await Promise.race([
                 (async () => {
-                    if (!useWebSocket && !this.#nostrRelay) {
-                        await checkLocalNetworkAccessPermission();
-                    }
-                })().then(async () => {
                     // Begin local connection, show loading spinner while we connect
                     loadingSpinner.init();
                     const { wallet, close } =
@@ -462,6 +465,10 @@ export class LocalSolanaMobileWalletAdapterWallet
                               })
                             : await startScenario(config);
                     associating = false;
+                    if (timedOut) {
+                        close();
+                        return undefined as TReturn;
+                    }
                     loadingSpinner.addEventListener('close', (event) => {
                         if (event) close();
                     });
@@ -470,11 +477,12 @@ export class LocalSolanaMobileWalletAdapterWallet
                     loadingSpinner.close();
                     close();
                     return result;
-                }),
+                })(),
                 new Promise((_, reject) => {
                     timeout = setTimeout(() => {
                         if (associating) {
                             // only timeout during association
+                            timedOut = true;
                             reject(
                                 new SolanaMobileWalletAdapterError(
                                     SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
