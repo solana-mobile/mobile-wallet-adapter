@@ -139,8 +139,9 @@ These features are mandatory and must be implemented by wallet endpoints. Dapp e
 
 These features are optional, wallet endpoints may choose to implement these features. Dapp endpoints can check if a wallet supports these features by calling [`get_capabilities`](#get_capabilities).  
 
-- `solana:signInWithSolana`, an optional extension to the [`authorize`](#authorize) method. 
 - [`solana:cloneAuthorization`](#clone_authorization)
+- `solana:signInWithSolana`, an optional extension to the [`authorize`](#authorize) method. 
+- [`solana:signOffchainMessages`](#sign_offchain_messages)
 
 ### Deprecated Features
 
@@ -954,6 +955,69 @@ where:
 The wallet endpoint should present the provided messages for approval. If approved, the wallet endpoint should sign the messages with the private key for the authorized account address, and return the signed messages to the dapp endpoint. The signatures should be appended to the message, in the same order as `addresses`.
 
 This method should not be used for transaction signing. The wallet endpoint should additionally check that the payloads to be signed are not a transaction message. If any payloads in the request can be successfully parsed as a Solana transaction message, the wallet should immediately reject the request and return `ERROR_INVALID_PAYLOADS` and appropriately indicate the invalid payloads as described above.
+
+#### sign_offchain_messages
+
+##### JSON-RPC method specification
+
+###### Method
+{: .no_toc }
+
+```
+sign_offchain_messages
+```
+
+###### Params
+{: .no_toc }
+
+```
+{
+    “payloads”: ["<offchain_message>", ...],
+}
+```
+
+where:
+
+- `payloads`: one or more base64url-encoded full off-chain message byte string paylaods to sign.  
+
+###### Result
+{: .no_toc }
+
+```
+{
+    "signed_payloads": ["<signed_offchain_message>"],
+}
+```
+
+where:
+
+- `signed_offchain_message`: a base64 encoded full [signed off-chain message envelope](https://docs.anza.xyz/proposals/off-chain-message-signing#envelope). A missing signature in a partially-signed envelope is represented by 64 zero bytes.
+
+###### Errors
+{: .no_toc }
+
+- `-32602` (Invalid params) if the params object does not match the format defined above
+- `-32601` (Method not found) if `sign_offchain_messages` is not supported by this wallet endpoint
+- `ERROR_AUTHORIZATION_FAILED` if the current session is in the unauthorized state, either because [`authorize`](#authorize) has not been invoked for the current session, or because the current session's authorization has been revoked by the wallet endpoint
+- `ERROR_INVALID_PAYLOADS`
+
+  ```
+  “data”: {
+      “valid”: [<message_valid>, ...],
+  }
+  ```
+
+  if any message does not represent a valid message for signing, where:
+
+  - `message_valid`: an array of booleans with the same length as `messages` indicating which are valid
+- `ERROR_NOT_SIGNED` if the wallet endpoint declined to sign these messages for any reason
+- `ERROR_TOO_MANY_PAYLOADS` if the wallet endpoint is unable to sign all messages due to exceeding implementation limits. These limits may be available via [`get_capabilities`](#get_capabilities).
+
+##### Description
+
+The wallet endpoint should validate and present the provided messages for approval, adhering to the UX guidelines provided by the [Off-chain message Signing specification](https://docs.anza.xyz/proposals/off-chain-message-signing). If approved, the wallet endpoint should sign the messages as described in the OCMS specification and return the signed message envelopes to the dapp endpoint. 
+
+The wallet endpoint should check that the provided messages to be signed are valid off-chain messages for the specified message format version. If the payloads in the request cannot be successfully parsed as a Solana off-chain messages, the wallet should immediately reject the request and return `ERROR_INVALID_PAYLOADS`.
 
 #### clone_authorization
 
