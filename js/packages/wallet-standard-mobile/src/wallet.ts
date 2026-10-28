@@ -88,7 +88,6 @@ const DEFAULT_FEATURES = [
     SolanaSignMessage,
     SolanaSignIn,
 ] as const;
-const WALLET_ASSOCIATION_TIMEOUT = 30_000;
 
 function areTransactionVersionsEqual(
     a: readonly SolanaTransactionVersion[] | undefined,
@@ -161,6 +160,8 @@ export class LocalSolanaMobileWalletAdapterWallet
      * 'generation' don't continue to do work and throw exceptions.
      */
     #connectionGeneration = 0;
+    /** Aborted by `disconnect()` to close any Local Network Access dialog still on screen. */
+    #connectionAbortController = new AbortController();
     #chains: IdentifierArray = [];
     #chainSelector: ChainSelector;
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
@@ -429,6 +430,8 @@ export class LocalSolanaMobileWalletAdapterWallet
         this.#authorizationCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         this.#connecting = false;
         this.#connectionGeneration++;
+        this.#connectionAbortController.abort();
+        this.#connectionAbortController = new AbortController();
         this.#authorization = undefined;
         this.#emit('change', { accounts: this.accounts });
     };
@@ -437,56 +440,35 @@ export class LocalSolanaMobileWalletAdapterWallet
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
+        const { signal } = this.#connectionAbortController;
         const loadingSpinner = new EmbeddedLoadingSpinner();
         try {
             // check that we have permissions for local app connections, then run
-            // wallet association (transact). In case the user manually cancels
-            // the wallet association, cancel the connection after a timeout.
-            let associating = true;
-            let timeout = undefined;
+            // wallet association (transact).
             const useWebSocket = await isLocalWebSocketAvailable();
-            const result = await Promise.race([
-                (async () => {
-                    if (!useWebSocket && !this.#nostrRelay) {
-                        await checkLocalNetworkAccessPermission();
-                    }
-                })().then(async () => {
-                    // Begin local connection, show loading spinner while we connect
-                    loadingSpinner.init();
-                    const { wallet, close } =
-                        !useWebSocket && this.#nostrRelay
-                            ? await startNostrScenario({
-                                  ...config,
-                                  connectionType: 'local' as const,
-                                  relayDomain: this.#nostrRelay,
-                              })
-                            : await startScenario(config);
-                    associating = false;
-                    loadingSpinner.addEventListener('close', (event) => {
-                        if (event) close();
-                    });
-                    loadingSpinner.open();
-                    const result = await callback(await wallet);
-                    loadingSpinner.close();
-                    close();
-                    return result;
-                }),
-                new Promise((_, reject) => {
-                    timeout = setTimeout(() => {
-                        if (associating) {
-                            // only timeout during association
-                            reject(
-                                new SolanaMobileWalletAdapterError(
-                                    SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
-                                    'Wallet connection timed out',
-                                    { event: undefined },
-                                ),
-                            );
-                        }
-                    }, WALLET_ASSOCIATION_TIMEOUT);
-                }) as Promise<TReturn>,
-            ]);
-            clearTimeout(timeout);
+            if (!useWebSocket && !this.#nostrRelay) {
+                await checkLocalNetworkAccessPermission(signal);
+                if (this.#connectionGeneration !== currentConnectionGeneration) {
+                    await new Promise(() => {}); // Never resolve.
+                }
+            }
+            // Begin local connection, show loading spinner while we connect
+            loadingSpinner.init();
+            const { wallet, close } =
+                !useWebSocket && this.#nostrRelay
+                    ? await startNostrScenario({
+                          ...config,
+                          connectionType: 'local' as const,
+                          relayDomain: this.#nostrRelay,
+                      })
+                    : await startScenario(config);
+            loadingSpinner.addEventListener('close', (event) => {
+                if (event) close();
+            });
+            loadingSpinner.open();
+            const result = await callback(await wallet);
+            loadingSpinner.close();
+            close();
             return result;
         } catch (e) {
             loadingSpinner.close();
