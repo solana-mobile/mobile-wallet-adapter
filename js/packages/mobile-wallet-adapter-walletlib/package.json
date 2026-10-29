@@ -37,7 +37,7 @@
         "bootstrap": "pnpm example && pnpm install && pnpm example pods"
     },
     "devDependencies": {
-        "@solana/web3.js": "^1.99.0",
+        "@solana/web3.js": "^3.1.1",
         "@types/react": "^19.3.0",
         "@types/react-native": "^0.73.0",
         "@wallet-standard/core": "^1.1.2",
