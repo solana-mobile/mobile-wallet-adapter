@@ -126,11 +126,36 @@ describe('EmbeddedModal', () => {
 
         const root = await openAndRender(modal);
 
-        expect(root.activeElement).toBe(root.querySelector('[role="dialog"]'));
+        expect(root.activeElement).toBe(root.querySelector('button'));
 
         modal.close();
 
         expect(document.activeElement).toBe(trigger);
+    });
+
+    it('focuses the dialog itself when it has no buttons', async () => {
+        const spinner = new EmbeddedLoadingSpinner();
+
+        spinner.init();
+        const root = await openAndRender(spinner);
+
+        expect(root.activeElement).toBe(root.querySelector('[role="dialog"]'));
+    });
+
+    it('restores focus to a trigger inside an open shadow root', async () => {
+        const host = document.createElement('div');
+        const trigger = document.createElement('button');
+        const modal = new ErrorModal();
+
+        document.body.appendChild(host);
+        host.attachShadow({ mode: 'open' }).appendChild(trigger);
+        trigger.focus();
+        modal.initWithError(new Error('Unexpected'));
+        await openAndRender(modal);
+
+        modal.close();
+
+        expect(host.shadowRoot!.activeElement).toBe(trigger);
     });
 
     it('stops notifying removed close listeners', () => {

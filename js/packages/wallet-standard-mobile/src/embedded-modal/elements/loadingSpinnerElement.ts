@@ -13,9 +13,6 @@ export class LoadingSpinnerElement extends EmbeddedModalElement {
             :host {
                 --spinner-color: #ffffff;
             }
-            .indicator:focus {
-                outline: none;
-            }
             .indicator {
                 display: flex;
                 justify-content: center;

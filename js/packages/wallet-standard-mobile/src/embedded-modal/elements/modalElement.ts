@@ -27,9 +27,6 @@ export class EmbeddedModalElement extends LitElement {
 
     static get styles(): CSSResultGroup {
         return css`
-            .container:focus {
-                outline: none;
-            }
             .container {
                 display: flex;
                 justify-content: center;
@@ -117,10 +114,14 @@ export class EmbeddedModalElement extends LitElement {
         loadFont();
         document.addEventListener('keydown', this.#onKeyDown);
         window.addEventListener('load', this.dismiss);
-        // Move focus into the dialog so keyboard and screen reader users land in it.
-        this.#previouslyFocused = document.activeElement;
+        let focused = document.activeElement;
+        while (focused?.shadowRoot?.activeElement) focused = focused.shadowRoot.activeElement;
+        this.#previouslyFocused = focused;
+        // Focus the first button, or the dialog when it has none, so keyboard users see where they are.
         this.updateComplete.then(() => {
-            if (this.isConnected) this.renderRoot.querySelector<HTMLElement>('[role="dialog"]')?.focus();
+            if (!this.isConnected) return;
+            const root = this.renderRoot;
+            (root.querySelector<HTMLElement>('button') ?? root.querySelector<HTMLElement>('[role="dialog"]'))?.focus();
         });
     }
 
