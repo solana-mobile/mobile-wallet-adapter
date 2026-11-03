@@ -63,7 +63,8 @@
     "pnpm": {
         "overrides": {
             "@solana-mobile/mobile-wallet-adapter-protocol": "file:../../js/packages/mobile-wallet-adapter-protocol",
-            "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "file:../../js/packages/mobile-wallet-adapter-protocol-web3js"
+            "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "file:../../js/packages/mobile-wallet-adapter-protocol-web3js",
+            "jayson@<5.0.0": "^5.0.0"
         }
     }
 }
