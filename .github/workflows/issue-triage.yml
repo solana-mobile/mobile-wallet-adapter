@@ -260,14 +260,13 @@ jobs:
             ## Actions per verdict
             The form applies `needs-triage`; your job is to remove it (only if
             present — backlog issues may not have it) and move the issue into
-            exactly one state. Ensure each label exists first (idempotent):
-            `gh label create "<name>" --color <hex> --description "<desc>" --force`.
-            Change the issue's labels ONLY with these exact forms (never
-            replace the whole label list):
+            exactly one state. All labels already exist (the bootstrap workflow
+            creates them). Change the issue's labels ONLY with these exact
+            commands, character for character (any other form is denied):
               add: `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=<name>'`
               remove (only needs-triage, needs-info, needs-test-app-repro,
               ready-for-engineering):
-              `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/<name> -X DELETE`.
+              `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/<name> -X DELETE`
             Whenever the platform is identifiable (not "Not sure / other"), ALSO
             add the routing label `platform: android`, `platform: kotlin`,
             `platform: javascript`, or `platform: react-native` — orthogonal to
@@ -332,14 +331,17 @@ jobs:
             (using the verdict enum value). The nightly sweep and your own
             re-checks find your prior comment by this marker.
 
+            Write the comment body to `${{ github.workspace }}/triage-comment.md`,
+            then run exactly one of these commands, character for character:
             Prior verdict comment id: `${{ steps.verdict.outputs.id }}`
-            - If it is a number, UPDATE that comment in place (write the new
-              body to a file and
-              `gh api --method PATCH repos/${{ github.repository }}/issues/comments/${{ steps.verdict.outputs.id }} -F body=@<file>`)
+            - If it is a number, UPDATE that comment in place
+              (`gh api --method PATCH repos/${{ github.repository }}/issues/comments/${{ steps.verdict.outputs.id }} -F body=@${{ github.workspace }}/triage-comment.md`)
               rather than posting a new one, and reconcile labels to the new
               verdict.
             - If it is `none`, post a new comment
-              (`gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments -F body=@<file>`).
+              (`gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments -F body=@${{ github.workspace }}/triage-comment.md`).
+            To close, run exactly
+            `gh issue close ${{ github.event.issue.number }} --reason "not planned"`.
 
             Do not reopen a closed issue. When in doubt, prefer needs_more_info
             over any close.
@@ -349,4 +351,4 @@ jobs:
             --model claude-sonnet-5
             --effort low
             --max-turns 20
-            --allowedTools "Write,Bash(gh issue view ${{ github.event.issue.number }}:*),Bash(gh issue close ${{ github.event.issue.number }} --reason \"not planned\":*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments:*),Bash(gh label create:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-triage -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-info -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-test-app-repro -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/ready-for-engineering -X DELETE),Bash(gh api --method PATCH repos/${{ github.repository }}/issues/comments/${{ steps.verdict.outputs.id }}:*)"
+            --allowedTools "Write,Bash(gh issue view ${{ github.event.issue.number }}:*),Bash(gh issue close ${{ github.event.issue.number }} --reason \"not planned\"),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments -F body=@${{ github.workspace }}/triage-comment.md),Bash(gh api --method PATCH repos/${{ github.repository }}/issues/comments/${{ steps.verdict.outputs.id }} -F body=@${{ github.workspace }}/triage-comment.md),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=needs-info'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=needs-test-app-repro'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=ready-for-engineering'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=question'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=enhancement'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=platform: android'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=platform: kotlin'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=platform: javascript'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels -f 'labels[]=platform: react-native'),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-triage -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-info -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-test-app-repro -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/ready-for-engineering -X DELETE)"
