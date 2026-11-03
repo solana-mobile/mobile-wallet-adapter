@@ -107,8 +107,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - api-level: 36
-            recipe_uuid: 149d2d90-910e-4473-b13f-444feb92cfa2 # Pixel 8, Android 16 ARM (API 36), same as solana-dapp-store
+          - api-level: 34
+            recipe_uuid: 3990323a-1e9a-49df-ad87-6947f7fc166e # Pixel, Android 14 (API 34)
 
     steps:
       # Setup
