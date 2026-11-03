@@ -339,7 +339,7 @@ jobs:
               rather than posting a new one, and reconcile labels to the new
               verdict.
             - If it is `none`, post a new comment
-              (`gh issue comment ${{ github.event.issue.number }} --body-file <file>`).
+              (`gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments -F body=@<file>`).
 
             Do not reopen a closed issue. When in doubt, prefer needs_more_info
             over any close.
@@ -349,4 +349,4 @@ jobs:
             --model claude-sonnet-5
             --effort low
             --max-turns 20
-            --allowedTools "Write,Bash(gh issue view ${{ github.event.issue.number }}:*),Bash(gh issue close ${{ github.event.issue.number }} --reason \"not planned\":*),Bash(gh issue comment ${{ github.event.issue.number }}:*),Bash(gh label create:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-triage -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-info -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-test-app-repro -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/ready-for-engineering -X DELETE),Bash(gh api --method PATCH repos/${{ github.repository }}/issues/comments/${{ steps.verdict.outputs.id }}:*)"
+            --allowedTools "Write,Bash(gh issue view ${{ github.event.issue.number }}:*),Bash(gh issue close ${{ github.event.issue.number }} --reason \"not planned\":*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments:*),Bash(gh label create:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-triage -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-info -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/needs-test-app-repro -X DELETE),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/ready-for-engineering -X DELETE),Bash(gh api --method PATCH repos/${{ github.repository }}/issues/comments/${{ steps.verdict.outputs.id }}:*)"
