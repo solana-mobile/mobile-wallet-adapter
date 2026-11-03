@@ -1,0 +1,259 @@
+/* Palette from wallets.solanamobile.com. */
+:root {
+    --bg: #101618;
+    --bg-elevated: #1a2226;
+    --fg: #f6f6f5;
+    --fg-muted: #99b3be;
+    --fg-subtle: rgba(246, 246, 245, 0.65);
+    --border: rgba(246, 246, 245, 0.08);
+    --border-strong: rgba(246, 246, 245, 0.16);
+    --accent: #0099ff;
+    --accent-deep: #0f87ff;
+    --accent-soft: rgba(0, 153, 255, 0.08);
+    --mint: #cfe6e4;
+    --error: #ff8a80;
+    --radius-card: 16px;
+    --radius-pill: 30px;
+
+    color-scheme: dark;
+    font-family: 'Inter Variable', system-ui, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+}
+
+main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    margin: 4px 0 0;
+    color: var(--fg-muted);
+}
+
+.status {
+    margin: 0;
+    color: var(--fg-subtle);
+    font-size: 14px;
+}
+
+.card {
+    padding: 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.card h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+.hint {
+    margin: 0;
+    color: var(--fg-subtle);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+button {
+    min-height: 44px;
+    white-space: nowrap;
+    padding: 0 20px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background-color 150ms ease,
+        border-color 150ms ease;
+}
+
+button:hover:not(:disabled) {
+    border-color: var(--mint);
+}
+
+button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+button.primary:hover:not(:disabled) {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+}
+
+button.quiet {
+    border-color: transparent;
+    color: var(--fg-muted);
+}
+
+button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.account {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.account code {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.balance {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--fg);
+    font: inherit;
+    resize: vertical;
+}
+
+textarea::placeholder {
+    color: var(--fg-subtle);
+}
+
+.actions {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.actions li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+}
+
+.actions li button {
+    flex-shrink: 0;
+}
+
+.action-title {
+    margin: 0 0 4px;
+    font-weight: 500;
+}
+
+.log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+.log li {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--bg);
+    word-break: break-all;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.log li.ok {
+    border-left: 3px solid var(--mint);
+}
+
+.log li.error {
+    border-left: 3px solid var(--error);
+    color: var(--error);
+}
+
+.log li.empty {
+    color: var(--fg-subtle);
+}
+
+a {
+    color: var(--accent);
+}
+
+footer {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding-top: 8px;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    .actions li {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .row button {
+        flex: 1 1 auto;
+    }
+}
