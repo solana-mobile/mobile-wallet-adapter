@@ -32,7 +32,7 @@ jobs:
           for label in "needs-info" "needs-test-app-repro"; do
             for num in $(gh issue list --label "$label" --state open --json number -q '.[].number'); do
               last=$(gh api "repos/${GH_REPO}/issues/$num/comments" \
-                --jq '[.[]|select(.body|contains("claude-triage-verdict"))]|last|.created_at')
+                --jq '[.[]|select(.user.login == "github-actions[bot]" and (.body|contains("claude-triage-verdict")))]|last|.updated_at // empty')
               [ -z "$last" ] && continue
               age=$(( ( $(date +%s) - $(date -d "$last" +%s) ) / 86400 ))
               if [ "$age" -ge 7 ]; then
