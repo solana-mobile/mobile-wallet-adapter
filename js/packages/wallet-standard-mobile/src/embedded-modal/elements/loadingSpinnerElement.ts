@@ -13,6 +13,9 @@ export class LoadingSpinnerElement extends EmbeddedModalElement {
             :host {
                 --spinner-color: #ffffff;
             }
+            .indicator:focus {
+                outline: none;
+            }
             .indicator {
                 display: flex;
                 justify-content: center;
@@ -96,7 +99,7 @@ export class LoadingSpinnerElement extends EmbeddedModalElement {
 
     render() {
         return html`
-            <div class="indicator" role="dialog" aria-modal="true" aria-label="Connecting to wallet">
+            <div class="indicator" role="dialog" aria-modal="true" aria-label="Connecting to wallet" tabindex="-1">
                 <div class="backdrop" @click=${this.dismiss}></div>
                 <div class="container">
                     <div class="animation"></div>

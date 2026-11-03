@@ -116,6 +116,23 @@ describe('EmbeddedModal', () => {
         expect(document.body.children).toHaveLength(0);
     });
 
+    it('moves focus into the dialog on open and restores it on close', async () => {
+        const trigger = document.createElement('button');
+        const modal = new ErrorModal();
+
+        document.body.appendChild(trigger);
+        trigger.focus();
+        modal.initWithError(new Error('Unexpected'));
+
+        const root = await openAndRender(modal);
+
+        expect(root.activeElement).toBe(root.querySelector('[role="dialog"]'));
+
+        modal.close();
+
+        expect(document.activeElement).toBe(trigger);
+    });
+
     it('stops notifying removed close listeners', () => {
         const modal = new EmbeddedLoadingSpinner();
         const closeListener = vi.fn();

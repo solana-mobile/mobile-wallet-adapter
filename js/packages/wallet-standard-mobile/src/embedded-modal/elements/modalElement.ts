@@ -27,6 +27,9 @@ export class EmbeddedModalElement extends LitElement {
 
     static get styles(): CSSResultGroup {
         return css`
+            .container:focus {
+                outline: none;
+            }
             .container {
                 display: flex;
                 justify-content: center;
@@ -107,16 +110,27 @@ export class EmbeddedModalElement extends LitElement {
         if (event.key === 'Escape') this.dismiss(event);
     };
 
+    #previouslyFocused: Element | null = null;
+
     connectedCallback() {
         super.connectedCallback();
         loadFont();
         document.addEventListener('keydown', this.#onKeyDown);
         window.addEventListener('load', this.dismiss);
+        // Move focus into the dialog so keyboard and screen reader users land in it.
+        this.#previouslyFocused = document.activeElement;
+        this.updateComplete.then(() => {
+            if (this.isConnected) this.renderRoot.querySelector<HTMLElement>('[role="dialog"]')?.focus();
+        });
     }
 
     disconnectedCallback() {
         document.removeEventListener('keydown', this.#onKeyDown);
         window.removeEventListener('load', this.dismiss);
+        if (this.#previouslyFocused instanceof HTMLElement && this.#previouslyFocused.isConnected) {
+            this.#previouslyFocused.focus();
+        }
+        this.#previouslyFocused = null;
         super.disconnectedCallback();
     }
 
@@ -126,7 +140,7 @@ export class EmbeddedModalElement extends LitElement {
 
     render() {
         return html`
-            <div class="container" role="dialog" aria-modal="true" aria-labelledby="title">
+            <div class="container" role="dialog" aria-modal="true" aria-labelledby="title" tabindex="-1">
                 <div class="backdrop" @click=${this.dismiss}></div>
                 <div class="card">
                     <div>
