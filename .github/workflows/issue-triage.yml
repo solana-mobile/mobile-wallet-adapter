@@ -317,9 +317,9 @@ jobs:
 
             Before commenting, look for a prior verdict comment:
               `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --jq '[.[]|select(.body|contains("claude-triage-verdict"))]|last|.id'`
-            - If an id is returned, UPDATE that comment in place (write the new
-              body to a file and
-              `gh api --method PATCH repos/${{ github.repository }}/issues/comments/<id> -F body=@<file>`)
+            - If an id is returned, UPDATE your last comment on this issue in
+              place (write the new body to a file and
+              `gh issue comment ${{ github.event.issue.number }} --edit-last --body-file <file>`)
               rather than posting a new one, and reconcile labels to the new
               verdict.
             - If none exists, post a new comment
@@ -333,4 +333,4 @@ jobs:
             --model claude-sonnet-5
             --effort low
             --max-turns 20
-            --allowedTools "Write,Bash(gh issue view ${{ github.event.issue.number }}:*),Bash(gh issue edit ${{ github.event.issue.number }}:*),Bash(gh issue close ${{ github.event.issue.number }} --reason \"not planned\":*),Bash(gh issue comment ${{ github.event.issue.number }}:*),Bash(gh label:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments:*),Bash(gh api --method PATCH repos/${{ github.repository }}/issues/comments/*)"
+            --allowedTools "Write,Bash(gh issue view ${{ github.event.issue.number }}:*),Bash(gh issue edit ${{ github.event.issue.number }}:*),Bash(gh issue close ${{ github.event.issue.number }} --reason \"not planned\":*),Bash(gh issue comment ${{ github.event.issue.number }}:*),Bash(gh label:*),Bash(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments:*)"
