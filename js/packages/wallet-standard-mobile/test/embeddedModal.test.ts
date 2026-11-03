@@ -29,7 +29,7 @@ import EmbeddedLoadingSpinner from '../src/embedded-modal/loadingSpinner.js';
 import LocalConnectionModal from '../src/embedded-modal/localConnectionModal.js';
 import LoopbackPermissionBlockedModal from '../src/embedded-modal/loopbackBlockedModal.js';
 import LoopbackPermissionModal from '../src/embedded-modal/loopbackPermissionModal.js';
-import EmbeddedModal from '../src/embedded-modal/modal.js';
+import type EmbeddedModal from '../src/embedded-modal/modal.js';
 import RemoteConnectionModal from '../src/embedded-modal/remoteConnectionModal.js';
 
 afterEach(() => {
@@ -42,266 +42,292 @@ afterEach(() => {
 
 describe('EmbeddedModal', () => {
     it('no-ops open and close before initialization', () => {
-        const modal = new TestModal();
+        const modal = new ErrorModal();
 
         expect(() => modal.open()).not.toThrow();
         expect(() => modal.close()).not.toThrow();
+        expect(document.body.children).toHaveLength(0);
     });
 
-    it('injects modal content, opens, closes, and removes close listeners', async () => {
-        const modal = new TestModal();
-        const closeListener = vi.fn();
-
-        const removeListener = modal.addEventListener('close', closeListener);
-
-        await modal.init();
-
-        const dom = getDom(modal);
-        const root = getRoot(dom);
-
-        expect(document.body.children).toHaveLength(1);
-        expect(dom.getElementById('test-modal-content')).not.toBeNull();
-        expect(dom.getElementById('mobile-wallet-adapter-embedded-modal-styles')?.textContent).toContain(
-            '.test-modal-content',
-        );
-        expect(root.style.display).toBe('none');
-
-        modal.open();
-
-        expect(root.style.display).toBe('flex');
-
-        const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-
-        document.dispatchEvent(escapeEvent);
-
-        expect(root.style.display).toBe('none');
-        expect(closeListener).toHaveBeenCalledWith(escapeEvent);
-
-        removeListener();
-        modal.close();
-
-        expect(closeListener).toHaveBeenCalledTimes(1);
-    });
-
-    it('reuses an existing embedded modal root when one is already present', async () => {
-        const existingRoot = document.createElement('div');
-        const modal = new TestModal();
-
-        existingRoot.id = 'mobile-wallet-adapter-embedded-root-ui';
-        document.body.appendChild(existingRoot);
-
-        await modal.init();
-
-        expect(existingRoot.style.display).toBe('');
-        expect(document.body.children).toHaveLength(1);
-
-        modal.open();
-        expect(existingRoot.style.display).toBe('flex');
-
-        modal.close();
-        expect(existingRoot.style.display).toBe('none');
-    });
-
-    it('closes when the backdrop is clicked', async () => {
-        const modal = new TestModal();
+    it('adds the element on open and removes it on close', async () => {
+        const modal = new ErrorModal();
         const closeListener = vi.fn();
 
         modal.addEventListener('close', closeListener);
-        await modal.init();
-        modal.open();
+        modal.initWithError(new Error('Unexpected'));
 
-        const backdrop = getDom(modal).querySelector('[data-modal-close]');
+        expect(document.body.children).toHaveLength(0);
 
-        backdrop?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        const root = await openAndRender(modal);
 
-        expect(getRoot(getDom(modal)).style.display).toBe('none');
-        expect(closeListener).toHaveBeenCalledWith(expect.any(MouseEvent));
+        expect(document.body.children).toHaveLength(1);
+        expect(root.querySelector('[role="dialog"]')?.getAttribute('aria-labelledby')).toBe('title');
+        expect(root.getElementById('title')).not.toBeNull();
+
+        modal.close();
+
+        expect(document.body.children).toHaveLength(0);
+        expect(closeListener).toHaveBeenCalledWith(undefined);
+    });
+
+    it('closes with the triggering event on Escape, ignoring other keys', async () => {
+        const modal = new ErrorModal();
+        const closeListener = vi.fn();
+
+        modal.addEventListener('close', closeListener);
+        modal.initWithError(new Error('Unexpected'));
+        await openAndRender(modal);
+
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        expect(closeListener).not.toHaveBeenCalled();
+
+        const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+        document.dispatchEvent(escapeEvent);
+
+        expect(document.body.children).toHaveLength(0);
+        expect(closeListener).toHaveBeenCalledWith(escapeEvent);
+
+        // Listeners are detached once the element leaves the page.
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        expect(closeListener).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes with the triggering event on backdrop click, close button click, and page load', async () => {
+        const modal = new ErrorModal();
+        const closeListener = vi.fn();
+
+        modal.addEventListener('close', closeListener);
+        modal.initWithError(new Error('Unexpected'));
+
+        let root = await openAndRender(modal);
+        root.querySelector<HTMLElement>('.backdrop')!.click();
+        expect(closeListener).toHaveBeenLastCalledWith(expect.any(MouseEvent));
+
+        root = await openAndRender(modal);
+        root.querySelector<HTMLElement>('.close')!.click();
+        expect(closeListener).toHaveBeenLastCalledWith(expect.any(MouseEvent));
+
+        await openAndRender(modal);
+        const loadEvent = new Event('load');
+        window.dispatchEvent(loadEvent);
+        expect(closeListener).toHaveBeenLastCalledWith(loadEvent);
+
+        expect(closeListener).toHaveBeenCalledTimes(3);
+        expect(document.body.children).toHaveLength(0);
+    });
+
+    it('stops notifying removed close listeners', () => {
+        const modal = new EmbeddedLoadingSpinner();
+        const closeListener = vi.fn();
+
+        const removeListener = modal.addEventListener('close', closeListener);
+        modal.init();
+        removeListener();
+        modal.close();
+
+        expect(closeListener).not.toHaveBeenCalled();
+    });
+
+    it('loads the font stylesheet once', async () => {
+        const first = new ErrorModal();
+        const second = new ErrorModal();
+
+        first.initWithError(new Error('first'));
+        second.initWithError(new Error('second'));
+        await openAndRender(first);
+        await openAndRender(second);
+
+        expect(document.head.querySelectorAll('#mobile-wallet-adapter-embedded-modal-font')).toHaveLength(1);
     });
 });
 
 describe('EmbeddedLoadingSpinner', () => {
-    it('no-ops open and close before initialization', () => {
-        const spinner = new EmbeddedLoadingSpinner();
-
-        expect(() => spinner.open()).not.toThrow();
-        expect(() => spinner.close()).not.toThrow();
-    });
-
-    it('injects, opens, closes, and handles escape key closure', async () => {
+    it('renders without a card and closes on backdrop click', async () => {
         const spinner = new EmbeddedLoadingSpinner();
         const closeListener = vi.fn();
 
         spinner.addEventListener('close', closeListener);
+        spinner.init();
+        spinner.init();
 
-        await spinner.init();
-        await spinner.init();
-        spinner.open();
-
-        const root = getRoot(getDom(spinner));
+        const root = await openAndRender(spinner);
 
         expect(document.body.children).toHaveLength(1);
-        expect(root.style.display).toBe('flex');
+        expect(root.querySelector('.card')).toBeNull();
+        expect(root.querySelector('.animation')).not.toBeNull();
 
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-        expect(root.style.display).toBe('flex');
-        expect(closeListener).not.toHaveBeenCalled();
+        root.querySelector<HTMLElement>('.backdrop')!.click();
 
-        getDom(spinner)
-            .querySelector('[data-modal-close]')
-            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-        expect(root.style.display).toBe('none');
+        expect(document.body.children).toHaveLength(0);
         expect(closeListener).toHaveBeenCalledWith(expect.any(MouseEvent));
-
-        spinner.open();
-
-        const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-
-        document.dispatchEvent(escapeEvent);
-
-        expect(root.style.display).toBe('none');
-        expect(closeListener).toHaveBeenCalledWith(escapeEvent);
-    });
-
-    it('removes programmatic close listeners', async () => {
-        const spinner = new EmbeddedLoadingSpinner();
-        const closeListener = vi.fn();
-
-        const removeListener = spinner.addEventListener('close', closeListener);
-
-        await spinner.init();
-        removeListener();
-        spinner.close();
-
-        expect(closeListener).not.toHaveBeenCalled();
     });
 });
 
-describe('concrete embedded modals', () => {
-    it('renders wallet-not-found, browser-not-supported, and generic error messages', () => {
-        const walletNotFoundModal = new ErrorModal();
+describe('ErrorModal', () => {
+    it('shows the wallet-not-found message with a find-a-wallet action', async () => {
+        const modal = new ErrorModal();
+        const location = { href: '' };
 
-        walletNotFoundModal.initWithError(createMwaError('ERROR_WALLET_NOT_FOUND'));
+        vi.stubGlobal('location', location);
+        modal.initWithError(createMwaError('ERROR_WALLET_NOT_FOUND'));
+        const root = await openAndRender(modal);
 
-        expect(getDom(walletNotFoundModal).getElementById('mobile-wallet-adapter-error-message')?.textContent).toBe(
+        expect(root.querySelector('.subtitle')?.textContent).toBe(
             'To use mobile wallet adapter, you must have a compatible mobile wallet application installed on your device.',
         );
 
-        document.body.replaceChildren();
+        root.querySelector<HTMLElement>('.action')!.click();
 
-        const browserUnsupportedModal = new ErrorModal();
+        expect(window.location.href).toBe('https://solanamobile.com/wallets');
+    });
 
-        browserUnsupportedModal.initWithError(createMwaError('ERROR_BROWSER_NOT_SUPPORTED'));
+    it('shows the browser-not-supported message without an action', async () => {
+        const modal = new ErrorModal();
 
-        expect(getDom(browserUnsupportedModal).getElementById('mobile-wallet-adapter-error-message')?.textContent).toBe(
+        modal.initWithError(createMwaError('ERROR_BROWSER_NOT_SUPPORTED'));
+        const root = await openAndRender(modal);
+
+        expect(root.querySelector('.subtitle')?.textContent).toBe(
             'This browser appears to be incompatible with mobile wallet adapter. Open this page in a compatible mobile browser app and try again.',
         );
-        expect(
-            getDom(browserUnsupportedModal).getElementById('mobile-wallet-adapter-error-action')?.style.display,
-        ).toBe('none');
-
-        document.body.replaceChildren();
-
-        const genericErrorModal = new ErrorModal();
-
-        genericErrorModal.initWithError(new Error('Unexpected'));
-
-        expect(getDom(genericErrorModal).getElementById('mobile-wallet-adapter-error-message')?.textContent).toBe(
-            'An unexpected error occurred: Unexpected',
-        );
+        expect(root.querySelector('.action')).toBeNull();
     });
 
-    it('runs the local connection callback when the launch button is clicked', async () => {
+    it('renders unexpected error messages as text', async () => {
+        const modal = new ErrorModal();
+
+        modal.initWithError(new Error('<img src=x onerror=alert(1)>'));
+        const root = await openAndRender(modal);
+
+        expect(root.querySelector('.subtitle')?.textContent).toBe(
+            'An unexpected error occurred: <img src=x onerror=alert(1)>',
+        );
+        expect(root.querySelector('img')).toBeNull();
+        expect(root.querySelector('.action')).toBeNull();
+    });
+});
+
+describe('LocalConnectionModal', () => {
+    it('closes without an event and runs the callback once when Connect Wallet is tapped', async () => {
         const callback = vi.fn().mockResolvedValue(undefined);
+        const closeListener = vi.fn();
         const modal = new LocalConnectionModal();
 
+        modal.addEventListener('close', closeListener);
         modal.initWithCallback(callback);
-        modal.addEventListener('close', vi.fn());
+        const root = await openAndRender(modal);
 
-        getDom(modal)
-            .getElementById('mobile-wallet-adapter-launch-action')
-            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(root.querySelector('.close')).toBeNull();
 
-        await Promise.resolve();
+        const button = root.querySelector<HTMLElement>('.action')!;
+        button.click();
+        button.click();
 
         expect(callback).toHaveBeenCalledTimes(1);
+        expect(closeListener).toHaveBeenCalledTimes(1);
+        expect(closeListener).toHaveBeenCalledWith(undefined);
+        expect(document.body.children).toHaveLength(0);
     });
+});
 
-    it('requests local network permission from the loopback permission modal launch action', async () => {
+describe('LoopbackPermissionModal', () => {
+    it('requests local network permission once, then closes without an event', async () => {
         const fetchMock = vi.fn().mockRejectedValue(new Error('ignored'));
         const closeListener = vi.fn();
         const modal = new LoopbackPermissionModal();
 
         vi.stubGlobal('fetch', fetchMock);
-
         modal.addEventListener('close', closeListener);
-        await modal.init();
+        modal.init();
+        const root = await openAndRender(modal);
 
-        getDom(modal)
-            .getElementById('mobile-wallet-adapter-launch-action')
-            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(root.querySelector('.close')).toBeNull();
+        expect(root.querySelector('.permission-prompt-mock')).not.toBeNull();
 
-        await Promise.resolve();
-        await Promise.resolve();
+        const button = root.querySelector<HTMLElement>('.action')!;
+        button.click();
+        button.click();
 
+        await vi.waitFor(() => expect(closeListener).toHaveBeenCalledWith(undefined));
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(fetchMock).toHaveBeenCalledWith('http://localhost');
         expect(closeListener).toHaveBeenCalledTimes(1);
     });
+});
 
-    it('renders app and browser-specific blocked permission instructions', async () => {
-        mockGetIsPwaLaunchedAsApp.mockReturnValueOnce(true);
+describe('LoopbackPermissionBlockedModal', () => {
+    it.each([
+        [true, 'Long press the app icon on your home screen to open site settings'],
+        [false, 'Tap the lock or settings icon in the address bar to open site settings'],
+    ])('shows the site settings instruction when launched as an app is %s', async (isPwa, instruction) => {
+        mockGetIsPwaLaunchedAsApp.mockReturnValueOnce(isPwa);
 
-        const appModal = new LoopbackPermissionBlockedModal();
-        const closeListener = vi.fn();
+        const modal = new LoopbackPermissionBlockedModal();
+        modal.init();
+        const root = await openAndRender(modal);
 
-        appModal.addEventListener('close', closeListener);
-        await appModal.init();
-
-        expect(getDom(appModal).textContent).toContain(
-            'Long press the app icon on your home screen to open site settings',
-        );
-
-        getDom(appModal)
-            .getElementById('mobile-wallet-adapter-launch-action')
-            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-        expect(closeListener).toHaveBeenCalledWith(expect.any(MouseEvent));
-
-        document.body.replaceChildren();
-        mockGetIsPwaLaunchedAsApp.mockReturnValueOnce(false);
-
-        const browserModal = new LoopbackPermissionBlockedModal();
-
-        await browserModal.init();
-
-        expect(getDom(browserModal).textContent).toContain(
-            'Tap the lock or settings icon in the address bar to open site settings',
-        );
+        expect(root.querySelector('.details-collapsible-content')?.textContent).toContain(instruction);
     });
 
-    it('populates and replaces the remote connection QR code', async () => {
+    it('closes with the triggering event when Got it is tapped', async () => {
+        mockGetIsPwaLaunchedAsApp.mockReturnValueOnce(false);
+
+        const modal = new LoopbackPermissionBlockedModal();
+        const closeListener = vi.fn();
+
+        modal.addEventListener('close', closeListener);
+        modal.init();
+        const root = await openAndRender(modal);
+
+        root.querySelector<HTMLElement>('.action')!.click();
+
+        expect(closeListener).toHaveBeenCalledWith(expect.any(MouseEvent));
+        expect(document.body.children).toHaveLength(0);
+    });
+});
+
+describe('RemoteConnectionModal', () => {
+    it('shows a placeholder until the QR code is ready, then replaces it on update', async () => {
         const firstCanvas = document.createElement('canvas');
         const secondCanvas = document.createElement('canvas');
         const modal = new RemoteConnectionModal();
 
         mockQrCodeToCanvas.mockResolvedValueOnce(firstCanvas).mockResolvedValueOnce(secondCanvas);
 
-        await modal.initWithQR('solana-wallet:/first');
+        modal.init();
+        let root = await openAndRender(modal);
 
-        const dom = getDom(modal);
-        const qrContainer = dom.getElementById('mobile-wallet-adapter-embedded-modal-qr-code-container');
+        expect(root.querySelector('.qr-placeholder')).not.toBeNull();
+        expect(root.querySelector('.close')).not.toBeNull();
+
+        await modal.populateQRCode('solana-wallet:/first');
+        root = await rendered(modal);
 
         expect(mockQrCodeToCanvas).toHaveBeenCalledWith('solana-wallet:/first', { margin: 0, width: 200 });
-        expect(qrContainer?.firstElementChild).toBe(firstCanvas);
-        expect(dom.getElementById('mobile-wallet-adapter-embedded-modal-qr-placeholder')).toBeNull();
+        expect(root.querySelector('.qr-code-container')?.firstElementChild).toBe(firstCanvas);
+        expect(root.querySelector('.qr-placeholder')).toBeNull();
 
         await modal.populateQRCode('solana-wallet:/second');
+        root = await rendered(modal);
 
-        expect(mockQrCodeToCanvas).toHaveBeenCalledWith('solana-wallet:/second', { margin: 0, width: 200 });
-        expect(qrContainer?.firstElementChild).toBe(secondCanvas);
+        expect(root.querySelector('.qr-code-container')?.firstElementChild).toBe(secondCanvas);
+        expect(root.contains(firstCanvas)).toBe(false);
     });
 
-    it('logs when the remote connection QR container is missing', async () => {
+    it('populates the QR code from initWithQR', async () => {
+        const canvas = document.createElement('canvas');
+        const modal = new RemoteConnectionModal();
+
+        mockQrCodeToCanvas.mockResolvedValueOnce(canvas);
+
+        await modal.initWithQR('solana-wallet:/init');
+        const root = await openAndRender(modal);
+
+        expect(root.querySelector('.qr-code-container')?.firstElementChild).toBe(canvas);
+    });
+
+    it('logs when the QR code is populated before initialization', async () => {
         const modal = new RemoteConnectionModal();
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
@@ -312,11 +338,6 @@ describe('concrete embedded modals', () => {
     });
 });
 
-class TestModal extends EmbeddedModal {
-    protected contentStyles = '.test-modal-content { color: red; }';
-    protected contentHtml = '<div id="test-modal-content" class="test-modal-content">Test modal</div>';
-}
-
 function createMwaError(code: 'ERROR_BROWSER_NOT_SUPPORTED' | 'ERROR_WALLET_NOT_FOUND') {
     return {
         code,
@@ -325,22 +346,20 @@ function createMwaError(code: 'ERROR_BROWSER_NOT_SUPPORTED' | 'ERROR_WALLET_NOT_
     } as Error;
 }
 
-function getDom(modal: unknown): ShadowRoot {
-    const dom = (modal as { dom?: ShadowRoot | null }).dom;
+async function rendered(modal: EmbeddedModal): Promise<ShadowRoot> {
+    const element = (modal as unknown as { element: (HTMLElement & { updateComplete: Promise<boolean> }) | null })
+        .element;
 
-    if (!dom) {
-        throw new Error('Expected modal DOM to be initialized');
+    if (!element) {
+        throw new Error('Expected modal element to be initialized');
     }
 
-    return dom;
+    await element.updateComplete;
+    // The shadow root is closed, so it is only reachable through Lit's renderRoot.
+    return (element as unknown as { renderRoot: ShadowRoot }).renderRoot;
 }
 
-function getRoot(dom: ShadowRoot): HTMLElement {
-    const root = dom.getElementById('mobile-wallet-adapter-embedded-root-ui');
-
-    if (!root) {
-        throw new Error('Expected modal root to be initialized');
-    }
-
-    return root;
+async function openAndRender(modal: EmbeddedModal): Promise<ShadowRoot> {
+    modal.open();
+    return rendered(modal);
 }
