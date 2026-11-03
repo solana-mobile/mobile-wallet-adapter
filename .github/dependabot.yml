@@ -5,9 +5,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       github-actions:
         update-types:
           - "minor"
@@ -18,9 +26,17 @@ updates:
     directory: "/android"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       gradle-android:
         update-types:
           - "minor"
@@ -31,48 +47,95 @@ updates:
     directory: "/js/packages/mobile-wallet-adapter-protocol/android"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       gradle-js-packages-mobile-wallet-adapter-protocol-android:
         update-types:
           - "minor"
           - "patch"
+    # Keep this module buildable by RN 0.74+ apps (AGP 8.x, Kotlin 1.9+).
+    ignore:
+      # AGP 8.x can't run on Gradle 9.6+.
+      - dependency-name: "gradle-wrapper"
+        versions:
+          - ">=9.6"
+      # 2.2.0+ pulls kotlin-stdlib 2.4, unreadable by RN 0.85's Kotlin 2.1.
+      - dependency-name: "com.solanamobile:mobile-wallet-adapter-clientlib"
+        versions:
+          - ">=2.2.0"
+      # 1.10+ pulls kotlin-stdlib 2.x metadata, unreadable by RN 0.74's Kotlin 1.9.
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-coroutines-android"
+        versions:
+          - ">1.9.0"
 
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter sample for React Native (Android)
     directory: "/examples/example-react-native-app/android"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       gradle-examples-example-react-native-app-android:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Gradle 9.4+ bundles Kotlin 2.3+, unreadable by RN 0.85's gradle plugin (Kotlin 2.1).
+      # Lift when this app moves to RN 0.87+.
+      - dependency-name: "gradle-wrapper"
+        versions:
+          - ">=9.4"
 
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter sample for Kotlin
     directory: "/examples/example-clientlib-ktx-app"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       gradle-examples-example-clientlib-ktx-app:
         update-types:
           - "minor"
           - "patch"
 
   # Mobile Wallet Adapter TypeScript examples
-  - cooldown:
-      default-days: 5
-    directories:
+  - directories:
       - "/examples/example-react-native-app"
       - "/examples/example-react-native-wallet"
       - "/examples/example-web-app"
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       babel:
         patterns:
           - "@babel/*"
@@ -135,13 +198,19 @@ updates:
     package-ecosystem: "npm"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
 
   # Mobile Wallet Adapter JavaScript SDK
-  - cooldown:
-      default-days: 5
-    directories:
+  - directories:
       - "/js"
     groups:
+      # All security fixes for this entry land in one PR.
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
       babel:
         patterns:
           - "@babel/*"
@@ -193,3 +262,6 @@ updates:
     package-ecosystem: "npm"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
