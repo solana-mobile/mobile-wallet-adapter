@@ -107,8 +107,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - api-level: 34
-            recipe_uuid: 9074ccc1-7aba-4c9b-b615-e69ef389738c # Generic Android 14 (API 34)
+          - api-level: 36
+            recipe_uuid: 149d2d90-910e-4473-b13f-444feb92cfa2 # Pixel 8, Android 16 ARM (API 36), same as solana-dapp-store
 
     steps:
       # Setup
@@ -116,7 +116,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.9.16"
+          python-version: "3.12" # gmsaas >= 1.16 requires Python >= 3.10
           architecture: "x64"
       - name: set up JDK 17
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
