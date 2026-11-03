@@ -7,9 +7,7 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
@@ -30,9 +28,7 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
@@ -53,9 +49,7 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
@@ -90,9 +84,7 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
@@ -119,9 +111,7 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
 
     # One grouped PR for minor + patch bumps; majors land individually.
     groups:
@@ -210,9 +200,7 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
 
   # Mobile Wallet Adapter JavaScript SDK
   - directories:
@@ -276,6 +264,4 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 2
-    # Don't rebase open PRs every time main moves.
-    rebase-strategy: "disabled"
+    open-pull-requests-limit: 10
