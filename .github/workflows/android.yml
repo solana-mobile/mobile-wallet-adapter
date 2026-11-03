@@ -108,7 +108,7 @@ jobs:
       matrix:
         include:
           - api-level: 34
-            recipe_uuid: 9074ccc1-7aba-4c9b-b615-e69ef389738c # Generic Android 14 (API 34)
+            recipe_uuid: 3990323a-1e9a-49df-ad87-6947f7fc166e # Pixel, Android 14 (API 34)
 
     steps:
       # Setup
@@ -116,7 +116,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.9.16"
+          python-version: "3.12" # gmsaas >= 1.16 requires Python >= 3.10
           architecture: "x64"
       - name: set up JDK 17
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
