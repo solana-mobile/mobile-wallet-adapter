@@ -68,6 +68,20 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Keep this module buildable by RN 0.74+ apps (AGP 8.x, Kotlin 1.9+).
+    ignore:
+      # AGP 8.x can't run on Gradle 9.6+.
+      - dependency-name: "gradle-wrapper"
+        versions:
+          - ">=9.6"
+      # 2.2.0+ pulls kotlin-stdlib 2.4, unreadable by RN 0.85's Kotlin 2.1.
+      - dependency-name: "com.solanamobile:mobile-wallet-adapter-clientlib"
+        versions:
+          - ">=2.2.0"
+      # 1.10+ pulls kotlin-stdlib 2.x metadata, unreadable by RN 0.74's Kotlin 1.9.
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-coroutines-android"
+        versions:
+          - ">1.9.0"
 
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter sample for React Native (Android)
@@ -91,6 +105,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Gradle 9.4+ bundles Kotlin 2.3+, unreadable by RN 0.85's gradle plugin (Kotlin 2.1).
+      # Lift when this app moves to RN 0.87+.
+      - dependency-name: "gradle-wrapper"
+        versions:
+          - ">=9.4"
 
   - package-ecosystem: "gradle"
     # Mobile Wallet Adapter sample for Kotlin
