@@ -78,7 +78,9 @@ export async function confirmSignature(
     } = {},
 ) {
     const deadline = Date.now() + timeoutMs;
+    const timedOut = (cause?: unknown) => new Error('Timed out waiting for confirmation', { cause });
     for (;;) {
+        if (Date.now() >= deadline) throw timedOut();
         // Abort the poll's requests when the deadline passes, so a stalled request can't hold the action.
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), Math.max(0, deadline - Date.now()));
@@ -86,6 +88,8 @@ export async function confirmSignature(
             const { value } = await rpc<{
                 value: ({ err: unknown; confirmationStatus?: string } | null)[];
             }>(url, 'getSignatureStatuses', [[signature]], controller.signal);
+            // A status that arrives after the deadline doesn't count.
+            if (Date.now() >= deadline) throw timedOut();
             const status = value[0];
             if (status?.err) throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
             if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') return;
@@ -100,10 +104,10 @@ export async function confirmSignature(
                     throw new Error(`Transaction expired: block height ${blockHeight} passed ${lastValidBlockHeight}`);
                 }
             }
-            if (Date.now() >= deadline) throw new Error('Timed out waiting for confirmation');
-            await new Promise((resolve) => setTimeout(resolve, pollMs));
+            // Never wait past the deadline; the next iteration then times out before polling again.
+            await new Promise((resolve) => setTimeout(resolve, Math.min(pollMs, Math.max(0, deadline - Date.now()))));
         } catch (error) {
-            if (controller.signal.aborted) throw new Error('Timed out waiting for confirmation', { cause: error });
+            if (controller.signal.aborted) throw timedOut(error);
             throw error;
         } finally {
             clearTimeout(timer);

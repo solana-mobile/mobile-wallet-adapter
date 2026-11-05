@@ -64,6 +64,18 @@ describe('confirmSignature', () => {
         ).rejects.toThrow('Timed out waiting for confirmation');
     });
 
+    it('does not wait past the deadline between polls, or accept a later status', async () => {
+        const statuses = [null, { err: null, confirmationStatus: 'confirmed' }];
+        const fetchMock = stubRpc(() => ({ value: [statuses.shift()] }));
+        const startedAt = Date.now();
+
+        await expect(confirmSignature('http://rpc.test', 'sig', { timeoutMs: 20, pollMs: 1_000 })).rejects.toThrow(
+            'Timed out waiting for confirmation',
+        );
+        expect(Date.now() - startedAt).toBeLessThan(500);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
     it('aborts a stalled status request at the deadline', async () => {
         const fetchMock = vi.fn(
             (_url: string, init: RequestInit) =>
