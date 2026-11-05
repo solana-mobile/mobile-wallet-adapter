@@ -3,19 +3,15 @@ import { base58Decode } from './base58.js';
 
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 const COMMITMENT = 'confirmed';
-// A stalled request must not keep an action busy forever (e.g. confirmation polling).
-const REQUEST_TIMEOUT_MS = 15_000;
 
 let nextRequestId = 1;
 
-async function rpc<T>(url: string, method: string, params: unknown[] = []): Promise<T> {
+async function rpc<T>(url: string, method: string, params: unknown[] = [], signal?: AbortSignal): Promise<T> {
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', id: nextRequestId++, method, params }),
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    }).catch((error: unknown) => {
-        throw new Error(`${method} failed`, { cause: error });
+        signal,
     });
     if (!response.ok) throw new Error(`${method} failed: HTTP ${response.status}`);
     const body = (await response.json()) as { result?: T; error?: { code?: number; message: string } };
@@ -64,8 +60,9 @@ export function sendTransaction(url: string, transaction: Uint8Array, minContext
 }
 
 /**
- * Polls until the signature is confirmed. Rejects if the transaction failed, or it can no longer land:
- * past `lastValidBlockHeight` when given (a transaction), otherwise after `timeoutMs` (an airdrop).
+ * Polls until the signature is confirmed. Rejects if the transaction failed, if its blockhash expired
+ * (past `lastValidBlockHeight`, when given), or if it isn't confirmed within `timeoutMs`. A request
+ * still in flight at the deadline is aborted.
  */
 export async function confirmSignature(
     url: string,
@@ -82,20 +79,34 @@ export async function confirmSignature(
 ) {
     const deadline = Date.now() + timeoutMs;
     for (;;) {
-        const { value } = await rpc<{
-            value: ({ err: unknown; confirmationStatus?: string } | null)[];
-        }>(url, 'getSignatureStatuses', [[signature]]);
-        const status = value[0];
-        if (status?.err) throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
-        if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') return;
-        if (lastValidBlockHeight !== undefined) {
-            const blockHeight = await rpc<number>(url, 'getBlockHeight', [{ commitment: COMMITMENT }]);
-            if (blockHeight > lastValidBlockHeight) {
-                throw new Error(`Transaction expired: block height ${blockHeight} passed ${lastValidBlockHeight}`);
+        // Abort the poll's requests when the deadline passes, so a stalled request can't hold the action.
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), Math.max(0, deadline - Date.now()));
+        try {
+            const { value } = await rpc<{
+                value: ({ err: unknown; confirmationStatus?: string } | null)[];
+            }>(url, 'getSignatureStatuses', [[signature]], controller.signal);
+            const status = value[0];
+            if (status?.err) throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+            if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') return;
+            if (lastValidBlockHeight !== undefined) {
+                const blockHeight = await rpc<number>(
+                    url,
+                    'getBlockHeight',
+                    [{ commitment: COMMITMENT }],
+                    controller.signal,
+                );
+                if (blockHeight > lastValidBlockHeight) {
+                    throw new Error(`Transaction expired: block height ${blockHeight} passed ${lastValidBlockHeight}`);
+                }
             }
-        } else if (Date.now() >= deadline) {
-            throw new Error('Timed out waiting for confirmation');
+            if (Date.now() >= deadline) throw new Error('Timed out waiting for confirmation');
+            await new Promise((resolve) => setTimeout(resolve, pollMs));
+        } catch (error) {
+            if (controller.signal.aborted) throw new Error('Timed out waiting for confirmation', { cause: error });
+            throw error;
+        } finally {
+            clearTimeout(timer);
         }
-        await new Promise((resolve) => setTimeout(resolve, pollMs));
     }
 }

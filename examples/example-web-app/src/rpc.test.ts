@@ -46,14 +46,37 @@ describe('confirmSignature', () => {
         );
     });
 
-    it('rejects once the blockhash has expired, not after the timeout', async () => {
+    it('rejects once the blockhash has expired', async () => {
         const heights = [99, 100, 101];
         const fetchMock = stubRpc((method) => (method === 'getBlockHeight' ? heights.shift() : { value: [null] }));
 
         await expect(
-            confirmSignature('http://rpc.test', 'sig', { lastValidBlockHeight: 100, timeoutMs: 0, pollMs: 0 }),
+            confirmSignature('http://rpc.test', 'sig', { lastValidBlockHeight: 100, timeoutMs: 1_000, pollMs: 0 }),
         ).rejects.toThrow('Transaction expired: block height 101 passed 100');
         expect(fetchMock).toHaveBeenCalledTimes(6);
+    });
+
+    it('rejects after the timeout for a transaction whose blockhash is still valid', async () => {
+        stubRpc((method) => (method === 'getBlockHeight' ? 1 : { value: [null] }));
+
+        await expect(
+            confirmSignature('http://rpc.test', 'sig', { lastValidBlockHeight: 100, timeoutMs: 0, pollMs: 0 }),
+        ).rejects.toThrow('Timed out waiting for confirmation');
+    });
+
+    it('aborts a stalled status request at the deadline', async () => {
+        const fetchMock = vi.fn(
+            (_url: string, init: RequestInit) =>
+                new Promise<Response>((_resolve, reject) => {
+                    init.signal!.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+                }),
+        );
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(confirmSignature('http://rpc.test', 'sig', { timeoutMs: 20, pollMs: 0 })).rejects.toThrow(
+            'Timed out waiting for confirmation',
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -64,21 +87,6 @@ describe('rpc errors', () => {
         await expect(getLatestBlockhash('http://rpc.test')).rejects.toThrow(
             'getLatestBlockhash failed: node is behind (-32005)',
         );
-    });
-
-    it('bounds every request with a timeout and names the method when it fails', async () => {
-        const timeout = new DOMException('signal timed out', 'TimeoutError');
-        const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
-            expect(init.signal).toBeInstanceOf(AbortSignal);
-            throw timeout;
-        });
-        vi.stubGlobal('fetch', fetchMock);
-
-        await expect(confirmSignature('http://rpc.test', 'sig', { lastValidBlockHeight: 100 })).rejects.toMatchObject({
-            message: 'getSignatureStatuses failed',
-            cause: timeout,
-        });
-        expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
     it('gives every request its own id', async () => {
