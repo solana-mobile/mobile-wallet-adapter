@@ -596,6 +596,21 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         expect(scenarioClose).toHaveBeenCalled();
     });
 
+    it('rejects connect on disconnect while the authorization cache write is pending', async () => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createLocalWallet();
+        authorizationCache.set.mockReturnValue(new Promise(() => {}));
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(authorizationCache.set).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+
+        await expect(connecting).rejects.toThrow('Connection cancelled because disconnect() was called');
+        expect(wallet.connected).toBe(false);
+    });
+
     it('rejects connect on disconnect while the wallet never joins', async () => {
         const scenarioClose = vi.fn();
         const { wallet } = createLocalWallet();
@@ -1531,6 +1546,24 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
 
         await expect(connecting).rejects.toThrow('Connection cancelled because disconnect() was called');
         expect(mockStartRemoteScenario).not.toHaveBeenCalled();
+    });
+
+    it('rejects remote connect on disconnect while the authorization cache write is pending', async () => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createRemoteWallet();
+        authorizationCache.set.mockReturnValue(new Promise(() => {}));
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(authorizationCache.set).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+
+        await expect(connecting).rejects.toThrow('Connection cancelled because disconnect() was called');
+        expect(wallet.connected).toBe(false);
     });
 
     it('never restores an authorization whose cache write lands after disconnect', async () => {
