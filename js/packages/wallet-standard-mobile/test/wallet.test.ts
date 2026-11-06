@@ -608,6 +608,7 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
 
         await expect(connecting).rejects.toThrow('Connection cancelled because disconnect() was called');
         expect(scenarioClose).toHaveBeenCalled();
+        expect(loadingSpinnerInstances[0].close).toHaveBeenCalled();
     });
 
     it('times out, closing the session, when the wallet never joins a local association over Nostr', async () => {
