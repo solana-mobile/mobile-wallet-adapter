@@ -527,6 +527,9 @@ export class LocalSolanaMobileWalletAdapterWallet
                 await checkLocalNetworkAccessPermission(signal);
                 if (this.#connectionGeneration !== currentConnectionGeneration) throw connectionCancelledError();
             }
+            if (cancelOnDisconnect && this.#connectionGeneration !== currentConnectionGeneration) {
+                throw connectionCancelledError();
+            }
             // Begin local connection, show loading spinner while we connect
             loadingSpinner.init();
             const overNostr = !useWebSocket && !!this.#nostrRelay;
@@ -543,7 +546,11 @@ export class LocalSolanaMobileWalletAdapterWallet
             });
             loadingSpinner.open();
             try {
-                return await callback(await (overNostr ? waitForLocalNostrWallet(wallet) : wallet));
+                const connectedWallet = await (overNostr ? waitForLocalNostrWallet(wallet) : wallet);
+                if (cancelOnDisconnect && this.#connectionGeneration !== currentConnectionGeneration) {
+                    throw connectionCancelledError();
+                }
+                return await callback(connectedWallet);
             } finally {
                 // Close even when a request fails or is declined, so the wallet isn't left waiting.
                 loadingSpinner.close();
@@ -1101,7 +1108,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
 
     #disconnect: StandardDisconnectMethod = async () => {
         this.#session?.close();
-        this.#authorizationCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+        if (this.#authorization) this.#droppedAuthTokens.add(this.#authorization.auth_token);
+        this.#authorizationCacheCleared = this.#authorizationCache.clear().catch(() => {});
         this.#connecting = false;
         this.#connectionGeneration++;
         this.#authorization = undefined;
