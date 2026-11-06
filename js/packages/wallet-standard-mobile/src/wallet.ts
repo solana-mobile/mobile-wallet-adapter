@@ -391,7 +391,8 @@ export class LocalSolanaMobileWalletAdapterWallet
             throwIfDisconnected();
             await Promise.all([
                 this.#handleWalletCapabilitiesResult(authorization.capabilities),
-                this.#authorizationCache.set(authorization),
+                // A failed cache write must not fail the connection; the authorization is still applied.
+                this.#authorizationCache.set(authorization).catch(() => {}),
                 this.#handleAuthorizationResult(authorization),
             ]);
             return authorization;
@@ -473,7 +474,8 @@ export class LocalSolanaMobileWalletAdapterWallet
         // A reauthorization that completes after disconnect() must not reconnect the app or re-cache it.
         if (this.#connectionGeneration !== generation) return;
         await Promise.all([
-            this.#authorizationCache.set(authorization),
+            // A failed cache write must not stop the signing request that triggered the reauthorization.
+            this.#authorizationCache.set(authorization).catch(() => {}),
             this.#handleAuthorizationResult(authorization),
         ]);
     };
@@ -744,7 +746,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
     #writeAuthorizationCache = (authorization: Authorization) => {
         const write = this.#authorizationCache.set(authorization).finally(() => this.#pendingCacheWrites.delete(write));
         this.#pendingCacheWrites.add(write);
-        return write;
+        // A failed cache write must not fail the request that made it; callers still wait for it to settle.
+        return write.catch(() => {});
     };
 
     get version() {

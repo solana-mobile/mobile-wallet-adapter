@@ -604,6 +604,28 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         );
     });
 
+    it('connects, and signs after reauthorizing, even when the authorization cache write fails', async () => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createLocalWallet();
+        authorizationCache.set.mockRejectedValue(new Error('storage full'));
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        await expect(wallet.features[StandardConnect].connect()).resolves.toMatchObject({
+            accounts: [expect.anything()],
+        });
+        expect(wallet.connected).toBe(true);
+
+        mobileWallet.signTransactions.mockResolvedValue({ signed_payloads: [encodeBytes(Uint8Array.of(7))] });
+        await expect(
+            getSignTransactionFeature(wallet).signTransaction({
+                account: wallet.accounts[0],
+                transaction: Uint8Array.of(1),
+            }),
+        ).resolves.toEqual([{ signedTransaction: Uint8Array.of(7) }]);
+        expect(authorizationCache.set).toHaveBeenCalledTimes(2);
+    });
+
     it('runs the wallet-not-found handler for local association failures', async () => {
         const onWalletNotFound = vi.fn<WalletNotFoundHandler>().mockResolvedValue(undefined);
         const { wallet } = createLocalWallet({ onWalletNotFound });
@@ -1472,6 +1494,32 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
 
         await expect(connecting).rejects.toThrow('Connection cancelled because disconnect() was called');
         expect(wallet.connected).toBe(false);
+    });
+
+    it('connects remotely, and signs after reauthorizing, even when the authorization cache write fails', async () => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createRemoteWallet();
+        authorizationCache.set.mockRejectedValue(new Error('storage full'));
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await expect(wallet.features[StandardConnect].connect()).resolves.toMatchObject({
+            accounts: [expect.anything()],
+        });
+        expect(wallet.connected).toBe(true);
+
+        mobileWallet.signTransactions.mockResolvedValue({ signed_payloads: [encodeBytes(Uint8Array.of(7))] });
+        await expect(
+            getSignTransactionFeature(wallet).signTransaction({
+                account: wallet.accounts[0],
+                transaction: Uint8Array.of(1),
+            }),
+        ).resolves.toEqual([{ signedTransaction: Uint8Array.of(7) }]);
+        expect(authorizationCache.set).toHaveBeenCalledTimes(2);
+        expect(wallet.connected).toBe(true);
     });
 
     it('closes the remote scenario when the wallet never connects', async () => {
