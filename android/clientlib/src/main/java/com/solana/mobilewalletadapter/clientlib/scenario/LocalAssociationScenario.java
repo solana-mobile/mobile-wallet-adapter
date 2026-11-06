@@ -82,7 +82,6 @@ public class LocalAssociationScenario extends Scenario {
 
         synchronized (mLock) {
             if (mState == State.CLOSED) {
-                // Closed before it was started, e.g. when the wallet returned before the dapp began waiting
                 final NotifyingCompletableFuture<MobileWalletAdapterClient> closedFuture = new NotifyingCompletableFuture<>();
                 closedFuture.completeExceptionally(new ConnectionFailedException("Scenario closed before it was started"));
                 return closedFuture;
@@ -106,8 +105,6 @@ public class LocalAssociationScenario extends Scenario {
     @Override
     public NotifyOnCompleteFuture<Void> close() {
         final NotifyingCompletableFuture<Void> future;
-        // Closed after releasing mLock: the WebSocket calls back into this scenario (taking mLock) while
-        // holding its own monitor, so closing it while holding mLock can deadlock.
         MobileWalletAdapterWebSocket webSocketToClose = null;
 
         synchronized (mLock) {
@@ -216,7 +213,6 @@ public class LocalAssociationScenario extends Scenario {
     private void doConnectionFailed() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
         if (mState == State.CLOSING) {
-            // close() was waiting for this attempt to end; the WebSocket won't report a close after failing
             mState = State.CLOSED;
             destroyResourcesOnClose();
             notifyCloseCompleted();

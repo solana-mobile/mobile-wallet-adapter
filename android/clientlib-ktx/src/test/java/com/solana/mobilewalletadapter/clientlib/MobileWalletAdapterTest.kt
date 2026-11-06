@@ -462,7 +462,6 @@ class MobileWalletAdapterTest {
 
     @Test
     fun `validate the request fails as a closed connection when the wallet is cancelled before start`() = runTest {
-        // The result arrives before associate() starts the real scenario, so close() runs first.
         val cancellingSender = mock<ActivityResultSender> {
             onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
                 val callback = invocation.arguments[1] as (Int) -> Unit
