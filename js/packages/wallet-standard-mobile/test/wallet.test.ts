@@ -596,6 +596,20 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         expect(scenarioClose).toHaveBeenCalled();
     });
 
+    it('rejects connect on disconnect while the wallet never joins', async () => {
+        const scenarioClose = vi.fn();
+        const { wallet } = createLocalWallet();
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({ close: scenarioClose, wallet: new Promise(() => {}) });
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mockStartScenario).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+
+        await expect(connecting).rejects.toThrow('Connection cancelled because disconnect() was called');
+        expect(scenarioClose).toHaveBeenCalled();
+    });
+
     it('times out, closing the session, when the wallet never joins a local association over Nostr', async () => {
         vi.useFakeTimers();
         try {

@@ -114,6 +114,18 @@ function waitForLocalNostrWallet<T>(wallet: Promise<T>): Promise<T> {
     ]).finally(() => clearTimeout(timer));
 }
 
+function rejectOnAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+    let onAbort: (() => void) | undefined;
+    return Promise.race([
+        promise,
+        new Promise<never>((_, reject) => {
+            onAbort = () => reject(signal.reason);
+            if (signal.aborted) onAbort();
+            else signal.addEventListener('abort', onAbort);
+        }),
+    ]).finally(() => onAbort && signal.removeEventListener('abort', onAbort));
+}
+
 function areTransactionVersionsEqual(
     a: readonly SolanaTransactionVersion[] | undefined,
     b: readonly SolanaTransactionVersion[] | undefined,
@@ -546,7 +558,8 @@ export class LocalSolanaMobileWalletAdapterWallet
             });
             loadingSpinner.open();
             try {
-                const connectedWallet = await (overNostr ? waitForLocalNostrWallet(wallet) : wallet);
+                const walletJoined = overNostr ? waitForLocalNostrWallet(wallet) : wallet;
+                const connectedWallet = await (cancelOnDisconnect ? rejectOnAbort(walletJoined, signal) : walletJoined);
                 if (cancelOnDisconnect && this.#connectionGeneration !== currentConnectionGeneration) {
                     throw connectionCancelledError();
                 }
