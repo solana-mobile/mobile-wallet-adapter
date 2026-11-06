@@ -99,8 +99,10 @@ function resolveConditions(node: ExportsNode, conditions: ReadonlySet<string>): 
     return null;
 }
 
-// Metro asserts `browser` alongside `react-native` when it bundles a React Native app.
-const METRO_CONDITIONS = new Set(['import', 'react-native', 'browser']);
+// An Android or iOS bundle from an app whose Metro config adds `browser` to `unstable_conditionNames`
+// (a common axios workaround). That condition applies to every platform, so native bundles assert
+// `browser` alongside the platform's `react-native`.
+const NATIVE_WITH_GLOBAL_BROWSER_CONDITIONS = new Set(['import', 'react-native', 'browser']);
 const BROWSER_CONDITIONS = new Set(['import', 'browser']);
 
 const packages = readdirSync(PACKAGES_ROOT)
@@ -119,9 +121,11 @@ const packages = readdirSync(PACKAGES_ROOT)
 
 describe.each(packages)('$name export conditions', ({ subpathConditions }) => {
     it.each(subpathConditions.filter(([, conditions]) => 'react-native' in conditions))(
-        '%s resolves to its react-native target in a React Native bundle',
+        '%s resolves to its react-native target in a native bundle that also asserts browser',
         (_subpath, conditions) => {
-            expect(resolveConditions(conditions, METRO_CONDITIONS)).toBe(conditions['react-native']);
+            expect(resolveConditions(conditions, NATIVE_WITH_GLOBAL_BROWSER_CONDITIONS)).toBe(
+                conditions['react-native'],
+            );
         },
     );
 
