@@ -1270,6 +1270,40 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         expect(authorizationCache.clear).toHaveBeenCalledTimes(2);
     });
 
+    it('never restores a token that a reauthorization replaced, after the session is lost', async () => {
+        const publicKey = Uint8Array.of(1, 2, 3);
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createRemoteWallet();
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+        // Authorized with token A ('auth-token').
+        await wallet.features[StandardConnect].connect();
+
+        // Reauthorizing for a signing request returns token B; writing B to the cache fails, so the
+        // cache still holds A. The session is then lost, and clearing the cache fails too.
+        mobileWallet.authorize.mockResolvedValueOnce(createMwaAuthorization(publicKey, { auth_token: 'token-2' }));
+        authorizationCache.set.mockRejectedValueOnce(new Error('storage write failed'));
+        authorizationCache.clear.mockRejectedValueOnce(new Error('storage unavailable'));
+        await expect(
+            getSignTransactionFeature(wallet).signTransaction({
+                account: wallet.accounts[0],
+                transaction: Uint8Array.of(1, 2, 3),
+            }),
+        ).rejects.toThrow('storage write failed');
+        expect(wallet.connected).toBe(false);
+
+        // The cache still returns token A.
+        authorizationCache.get.mockResolvedValue(createCachedAuthorization(publicKey));
+        await wallet.features[StandardConnect].connect();
+
+        expect(mockStartRemoteScenario).toHaveBeenCalledTimes(2);
+        expect(wallet.connected).toBe(true);
+    });
+
     it('keeps every dropped authorization invalid, not only the latest, after later sessions fail', async () => {
         const publicKey = Uint8Array.of(1, 2, 3);
         const mobileWallet = createMobileWallet();

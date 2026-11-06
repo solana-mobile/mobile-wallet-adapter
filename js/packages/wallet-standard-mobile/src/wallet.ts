@@ -707,7 +707,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
     #session: { close: () => void; wallet: MobileWallet } | undefined;
     // Settles when the last cache clear after a lost session does; cache lookups wait for it.
     #authorizationCacheCleared: Promise<void> = Promise.resolve();
-    // Auth tokens of every authorization dropped with a lost session, which the cache must never restore.
+    // Auth tokens the cache must never restore: every authorization dropped with a lost session, and every
+    // token a reauthorization replaced.
     #droppedAuthTokens = new Set<string>();
     // Cache writes still in flight; cache lookups wait for them so a late write can't land after the read.
     #pendingCacheWrites = new Set<Promise<void>>();
@@ -997,6 +998,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
         }
         // A disconnect() during reauthorization must not reconnect the app or re-cache the authorization.
         if (this.#connectionGeneration !== connectionGeneration) return;
+        // The wallet may issue a new token; the one it replaced must never come back from the cache.
+        if (authorization.auth_token !== authToken) this.#droppedAuthTokens.add(authToken);
         await Promise.all([
             this.#writeAuthorizationCache(authorization),
             this.#handleAuthorizationResult(authorization),
