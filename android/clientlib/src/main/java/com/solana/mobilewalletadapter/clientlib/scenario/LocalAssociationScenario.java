@@ -81,6 +81,11 @@ public class LocalAssociationScenario extends Scenario {
         final NotifyingCompletableFuture<MobileWalletAdapterClient> future;
 
         synchronized (mLock) {
+            if (mState == State.CLOSED) {
+                final NotifyingCompletableFuture<MobileWalletAdapterClient> closedFuture = new NotifyingCompletableFuture<>();
+                closedFuture.completeExceptionally(new ConnectionFailedException("Scenario closed before it was started"));
+                return closedFuture;
+            }
             if (mState != State.NOT_STARTED) {
                 throw new IllegalStateException("Scenario has already been started");
             }
@@ -100,6 +105,7 @@ public class LocalAssociationScenario extends Scenario {
     @Override
     public NotifyOnCompleteFuture<Void> close() {
         final NotifyingCompletableFuture<Void> future;
+        MobileWalletAdapterWebSocket webSocketToClose = null;
 
         synchronized (mLock) {
             switch (mState) {
@@ -115,7 +121,7 @@ public class LocalAssociationScenario extends Scenario {
 
                     if (mMobileWalletAdapterWebSocket != null) {
                         future = closeDeferredFuture();
-                        mMobileWalletAdapterWebSocket.close();
+                        webSocketToClose = mMobileWalletAdapterWebSocket;
                     } else {
                         // In the middle of a backoff - we can tear down immediately
                         mState = State.CLOSED;
@@ -127,12 +133,12 @@ public class LocalAssociationScenario extends Scenario {
                     mState = State.CLOSING;
                     notifySessionEstablishmentFailed("Scenario closed during session establishment");
                     future = closeDeferredFuture();
-                    mMobileWalletAdapterWebSocket.close();
+                    webSocketToClose = mMobileWalletAdapterWebSocket;
                     break;
                 case STARTED:
                     mState = State.CLOSING;
                     future = closeDeferredFuture();
-                    mMobileWalletAdapterWebSocket.close();
+                    webSocketToClose = mMobileWalletAdapterWebSocket;
                     break;
                 case CLOSING:
                     // Already closing - nothing to do here
@@ -145,6 +151,10 @@ public class LocalAssociationScenario extends Scenario {
                 default:
                     throw new IllegalStateException("Error: attempt to close in an unknown state");
             }
+        }
+
+        if (webSocketToClose != null) {
+            webSocketToClose.close();
         }
 
         return future;
@@ -202,7 +212,12 @@ public class LocalAssociationScenario extends Scenario {
     @GuardedBy("mLock")
     private void doConnectionFailed() {
         assert(mState == State.CONNECTING || mState == State.CLOSING);
-        if (mState == State.CLOSING) return;
+        if (mState == State.CLOSING) {
+            mState = State.CLOSED;
+            destroyResourcesOnClose();
+            notifyCloseCompleted();
+            return;
+        }
         if (++mConnectionAttempts < CONNECT_MAX_ATTEMPTS) {
             final int delay = CONNECT_BACKOFF_SCHEDULE_MS[
                     mConnectionAttempts < CONNECT_BACKOFF_SCHEDULE_MS.length ?

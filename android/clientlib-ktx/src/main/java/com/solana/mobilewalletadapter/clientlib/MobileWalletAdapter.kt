@@ -162,9 +162,7 @@ class MobileWalletAdapter(
                 withTimeout(ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
                     sender.startActivityForResult(intent) {
                         if (it == RESULT_CANCELED) {
-                            this.launch {
-                                throw InterruptedException()
-                            }
+                            scenario.close()
                         }
                         launch {
                             delay(5000L)
