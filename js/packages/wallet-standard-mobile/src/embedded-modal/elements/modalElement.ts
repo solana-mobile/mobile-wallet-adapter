@@ -21,10 +21,6 @@ function loadFont() {
  */
 export class EmbeddedModalElement extends LitElement {
     // Statics in these elements are getters, not fields, so the package stays tree-shakeable.
-    static get shadowRootOptions(): ShadowRootInit {
-        return { ...LitElement.shadowRootOptions, mode: 'closed' };
-    }
-
     static get styles(): CSSResultGroup {
         return css`
             .container {
