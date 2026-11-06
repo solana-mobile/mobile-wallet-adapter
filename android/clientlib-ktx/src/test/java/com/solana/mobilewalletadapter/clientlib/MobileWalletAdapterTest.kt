@@ -454,7 +454,7 @@ class MobileWalletAdapterTest {
         val result = withContext(Dispatchers.Default) { adapter.transact(cancellingSender) { } }
         val elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
 
-        assertTrue { result is TransactionResult.Failure }
+        assertTrue("$result") { (result as? TransactionResult.Failure)?.e is ExecutionException }
         assertTrue("took $elapsedMs ms") { elapsedMs < MobileWalletAdapter.ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS }
     }
 
