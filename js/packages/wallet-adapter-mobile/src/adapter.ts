@@ -347,6 +347,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                                 ? {
                                       skipPreflight: options.skipPreflight,
                                       maxRetries: options.maxRetries,
+                                      minContextSlot: options.minContextSlot,
                                   }
                                 : undefined,
                         })

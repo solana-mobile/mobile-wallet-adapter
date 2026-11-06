@@ -549,13 +549,18 @@ describe('adapter', () => {
         await flushPromises();
 
         await expect(
-            adapter.sendTransaction(transaction as never, {} as never, { maxRetries: 2, skipPreflight: true }),
+            adapter.sendTransaction(transaction as never, {} as never, {
+                maxRetries: 2,
+                minContextSlot: 123,
+                skipPreflight: true,
+            }),
         ).resolves.toBe(encodeAddress(Uint8Array.of(8, 8, 8)));
         expect(wallet.signAndSendImpl).toHaveBeenCalledWith({
             account,
             chain: 'solana:mainnet',
             options: {
                 maxRetries: 2,
+                minContextSlot: 123,
                 skipPreflight: true,
             },
             transaction: Uint8Array.of(7, 8, 9),

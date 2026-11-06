@@ -112,6 +112,22 @@ function getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
 }
 
+/**
+ * Maps Wallet Standard sign-and-send options onto the protocol's `options` object. The protocol has
+ * no preflight commitment (its `commitment` is what to confirm after sending), so
+ * `preflightCommitment` is not sent.
+ */
+function getProtocolSignAndSendOptions(options: SolanaSignAndSendTransactionOptions | undefined) {
+    const { commitment, maxRetries, minContextSlot, skipPreflight } = options ?? {};
+    const protocolOptions = {
+        commitment,
+        max_retries: maxRetries,
+        min_context_slot: minContextSlot,
+        skip_preflight: skipPreflight,
+    };
+    return Object.values(protocolOptions).some((value) => value != null) ? { options: protocolOptions } : null;
+}
+
 export interface SolanaMobileWalletAdapterWallet extends Wallet {
     url: string;
 }
@@ -563,7 +579,7 @@ export class LocalSolanaMobileWalletAdapterWallet
                     const base64Transaction = base64FromUint8Array(transaction);
                     const signatures = (
                         await wallet.signAndSendTransactions({
-                            ...options,
+                            ...getProtocolSignAndSendOptions(options),
                             payloads: [base64Transaction],
                         })
                     ).signatures.map(base64ToUint8Array);
@@ -1064,7 +1080,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 if (capabilities.supports_sign_and_send_transactions) {
                     const signatures = (
                         await wallet.signAndSendTransactions({
-                            ...options,
+                            ...getProtocolSignAndSendOptions(options),
                             payloads: [base64FromUint8Array(transaction)],
                         })
                     ).signatures.map(base64ToUint8Array);
