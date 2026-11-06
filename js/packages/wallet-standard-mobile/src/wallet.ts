@@ -384,6 +384,7 @@ export class LocalSolanaMobileWalletAdapterWallet
         try {
             // Each await below can span a disconnect(); after one, nothing from this attempt may be applied.
             const generation = this.#connectionGeneration;
+            const { signal } = this.#connectionAbortController;
             const throwIfDisconnected = () => {
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
             };
@@ -417,12 +418,21 @@ export class LocalSolanaMobileWalletAdapterWallet
             );
             // The user may approve after the app disconnected; that approval must not reconnect the app.
             throwIfDisconnected();
-            await Promise.all([
-                this.#handleWalletCapabilitiesResult(authorization.capabilities),
-                // A failed cache write must not fail the connection; the authorization is still applied.
-                this.#authorizationCache.set(authorization).catch(() => {}),
-                this.#handleAuthorizationResult(authorization),
-            ]);
+            try {
+                await rejectOnAbort(
+                    Promise.all([
+                        this.#handleWalletCapabilitiesResult(authorization.capabilities),
+                        // A failed cache write must not fail the connection; the authorization is still applied.
+                        this.#authorizationCache.set(authorization).catch(() => {}),
+                        this.#handleAuthorizationResult(authorization),
+                    ]),
+                    signal,
+                );
+            } catch (e) {
+                throwIfDisconnected();
+                throw e;
+            }
+            throwIfDisconnected();
             return authorization;
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
@@ -765,6 +775,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
      * 'generation' don't continue to do work and throw exceptions.
      */
     #connectionGeneration = 0;
+    #connectionAbortController = new AbortController();
     #chains: IdentifierArray = [];
     #chainSelector: ChainSelector;
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
@@ -929,6 +940,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
         try {
             // Each await below can span a disconnect(); after one, nothing from this attempt may be applied.
             const generation = this.#connectionGeneration;
+            const { signal } = this.#connectionAbortController;
             const throwIfDisconnected = () => {
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
             };
@@ -973,11 +985,20 @@ export class RemoteSolanaMobileWalletAdapterWallet
             // The user may approve after the app disconnected (disconnect() closed the session); that approval
             // must not reconnect the app.
             throwIfDisconnected();
-            await Promise.all([
-                this.#handleWalletCapabilitiesResult(authorizationResult.capabilities),
-                this.#writeAuthorizationCache(authorizationResult),
-                this.#handleAuthorizationResult(authorizationResult),
-            ]);
+            try {
+                await rejectOnAbort(
+                    Promise.all([
+                        this.#handleWalletCapabilitiesResult(authorizationResult.capabilities),
+                        this.#writeAuthorizationCache(authorizationResult),
+                        this.#handleAuthorizationResult(authorizationResult),
+                    ]),
+                    signal,
+                );
+            } catch (e) {
+                throwIfDisconnected();
+                throw e;
+            }
+            throwIfDisconnected();
             return authorizationResult;
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
@@ -1125,6 +1146,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
         this.#authorizationCacheCleared = this.#authorizationCache.clear().catch(() => {});
         this.#connecting = false;
         this.#connectionGeneration++;
+        this.#connectionAbortController.abort();
+        this.#connectionAbortController = new AbortController();
         this.#authorization = undefined;
         this.#session = undefined;
         this.#emit('change', { accounts: this.accounts });
