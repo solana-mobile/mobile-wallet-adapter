@@ -35,3 +35,18 @@ describe('buildMemoTransaction', () => {
         expect(offset).toBe(tx.length);
     });
 });
+
+describe('buildMemoTransaction v0', () => {
+    it('wraps the same message in the v0 prefix and an empty address table list', () => {
+        const feePayer = new Uint8Array(32).fill(7);
+        const blockhash = new Uint8Array(32).fill(9);
+
+        const legacy = buildMemoTransaction(feePayer, blockhash, 'gm');
+        const v0 = buildMemoTransaction(feePayer, blockhash, 'gm', 0);
+
+        expect(v0.slice(0, 65)).toEqual(legacy.slice(0, 65)); // signature section
+        expect(v0[65]).toBe(0x80);
+        expect(v0.slice(66, -1)).toEqual(legacy.slice(65));
+        expect(v0.at(-1)).toBe(0);
+    });
+});

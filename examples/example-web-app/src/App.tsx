@@ -23,21 +23,32 @@ import type {
     StandardEventsFeature,
 } from '@wallet-standard/features';
 import { StandardConnect, StandardDisconnect, StandardEvents } from '@wallet-standard/features';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { base58Encode } from './base58.js';
 import { CHAIN, config, EXPLORER_CLUSTER } from './config.js';
-import { buildMemoTransaction } from './memoTransaction.js';
-import { confirmSignature, getBalance, getLatestBlockhash, LAMPORTS_PER_SOL, requestAirdrop } from './rpc.js';
+import { describeError, walletCall, WalletError } from './errors.js';
+import { buildMemoTransaction, type TransactionVersion } from './memoTransaction.js';
+import {
+    confirmSignature,
+    getBalance,
+    getLatestBlockhash,
+    LAMPORTS_PER_SOL,
+    requestAirdrop,
+    sendTransaction,
+} from './rpc.js';
 import { useWallets } from './useWallets.js';
 
-type MwaFeatures = StandardConnectFeature &
-    StandardDisconnectFeature &
-    StandardEventsFeature &
-    SolanaSignMessageFeature &
-    SolanaSignInFeature &
-    SolanaSignTransactionFeature &
-    SolanaSignAndSendTransactionFeature;
+// Any Solana wallet can connect; the rest of its features are optional, as with wallet-adapter.
+type WalletFeatures = StandardConnectFeature &
+    Partial<
+        StandardDisconnectFeature &
+            StandardEventsFeature &
+            SolanaSignMessageFeature &
+            SolanaSignInFeature &
+            SolanaSignTransactionFeature &
+            SolanaSignAndSendTransactionFeature
+    >;
 
 const MWA_WALLET_NAMES: readonly string[] = [
     SolanaMobileWalletAdapterWalletName,
@@ -64,20 +75,40 @@ const formatSol = (lamports: number) =>
 
 export function App() {
     const wallets = useWallets();
-    const wallet = useMemo(() => wallets.find((w) => MWA_WALLET_NAMES.includes(w.name)), [wallets]);
-    const features = wallet?.features as MwaFeatures | undefined;
+    // Every registered Solana wallet that can connect, Mobile Wallet Adapter first.
+    const supportedWallets = useMemo(
+        () =>
+            wallets
+                .filter((w) => StandardConnect in w.features && w.chains.some((chain) => chain.startsWith('solana:')))
+                .sort((a, b) => Number(MWA_WALLET_NAMES.includes(b.name)) - Number(MWA_WALLET_NAMES.includes(a.name))),
+        [wallets],
+    );
+    const [selectedWalletName, setSelectedWalletName] = useState<string>();
+    const wallet = supportedWallets.find((w) => w.name === selectedWalletName) ?? supportedWallets[0];
+    const features = wallet?.features as WalletFeatures | undefined;
 
     const [accounts, setAccounts] = useState<readonly WalletAccount[]>([]);
     const [balance, setBalance] = useState<{ address: string; lamports: number }>();
     const [busy, setBusy] = useState<string>();
     const [log, setLog] = useState<LogEntry[]>([]);
+    // The latest outcome, shown where the user can see it, like the old app's snackbar.
+    const [toast, setToast] = useState<LogEntry>();
+    const nextLogId = useRef(0);
     const [message, setMessage] = useState('');
 
     const account = accounts[0];
 
     const append = useCallback((entry: Omit<LogEntry, 'id'>) => {
-        setLog((current) => [{ ...entry, id: (current[0]?.id ?? 0) + 1 }, ...current]);
+        const logEntry = { ...entry, id: ++nextLogId.current };
+        setLog((current) => [logEntry, ...current]);
+        setToast(logEntry);
     }, []);
+
+    useEffect(() => {
+        if (!toast) return;
+        const timeout = setTimeout(() => setToast(undefined), 10_000);
+        return () => clearTimeout(timeout);
+    }, [toast]);
 
     // Bumped after actions that move funds, to refetch the balance.
     const [balanceVersion, setBalanceVersion] = useState(0);
@@ -95,24 +126,43 @@ export function App() {
             cancelled = true;
         };
     }, [account, balanceVersion]);
+    // Refetch when the user comes back (e.g. from the wallet app) or the network returns. A failed fetch
+    // keeps showing the last known balance.
     useEffect(() => {
-        if (!features) return;
-        return features[StandardEvents].on('change', (properties) => {
+        window.addEventListener('focus', refreshBalance);
+        window.addEventListener('online', refreshBalance);
+        return () => {
+            window.removeEventListener('focus', refreshBalance);
+            window.removeEventListener('online', refreshBalance);
+        };
+    }, [refreshBalance]);
+    // Keyed on the wallet for the same reason as the restore below: `features` is a new object on every read.
+    useEffect(() => {
+        if (!wallet) return;
+        return (wallet.features as WalletFeatures)[StandardEvents]?.on('change', (properties) => {
             if (properties.accounts) setAccounts(properties.accounts);
         });
-    }, [features]);
+    }, [wallet]);
 
     // Restore a cached session on load. Only the on-device wallet supports a silent connect;
     // the remote wallet would open its QR code dialog instead.
+    // Keyed on the wallet, not `features`: the wallet's `features` getter returns a new object on every
+    // read, so depending on it re-ran this effect after every render and looped forever on Android.
     useEffect(() => {
-        if (!features || wallet?.name !== SolanaMobileWalletAdapterWalletName) return;
-        features[StandardConnect].connect({ silent: true })
+        if (wallet?.name !== SolanaMobileWalletAdapterWalletName) return;
+        (wallet.features as WalletFeatures)[StandardConnect].connect({ silent: true })
             .then(({ accounts: restored }) => {
+                if (!restored.length) return;
                 setAccounts(restored);
-                if (restored.length) append({ ok: true, text: 'Restored the previous session' });
+                append({ ok: true, text: 'Restored the previous session' });
             })
-            .catch(() => undefined);
-    }, [features, wallet, append]);
+            .catch((error: unknown) =>
+                append({
+                    ok: false,
+                    text: `Restore session ✗ ${describeError(new WalletError('WalletConnectionError', '', error))}`,
+                }),
+            );
+    }, [wallet, append]);
 
     const run = useCallback(
         (label: string, action: () => Promise<Outcome>) => {
@@ -120,9 +170,7 @@ export function App() {
             setBusy(label);
             action()
                 .then(({ text, href }) => append({ ok: true, text: `${label} ✓ ${text}`, href }))
-                .catch((error: unknown) =>
-                    append({ ok: false, text: `${label} ✗ ${error instanceof Error ? error.message : String(error)}` }),
-                )
+                .catch((error: unknown) => append({ ok: false, text: `${label} ✗ ${describeError(error)}` }))
                 .finally(() => setBusy(undefined));
         },
         [busy, append],
@@ -134,26 +182,48 @@ export function App() {
                 <Header />
                 <section className="card">
                     <p className="status" data-testid="wallet-status">
-                        Mobile Wallet Adapter isn't available in this browser. Open this page in Chrome on an Android
-                        device with a compatible wallet installed, or on a desktop browser with a relay configured.
+                        No Solana wallet was found. On Android, open this page in Chrome with a Mobile Wallet Adapter
+                        wallet installed. On a desktop browser, configure a relay for Mobile Wallet Adapter or install a
+                        wallet extension.
                     </p>
                 </section>
             </main>
         );
     }
 
-    const memoTransaction = async (feePayer: WalletAccount) =>
+    // Whether both the wallet and the account support `name`, as wallet-adapter checks before each call.
+    const supports = (name: keyof WalletFeatures, current: WalletAccount | undefined) =>
+        !!features[name] && !!current?.features.includes(name);
+
+    const requireFeature = <T,>(feature: T | undefined, name: keyof WalletFeatures, current: WalletAccount): T => {
+        if (!feature) throw new WalletError('WalletConfigError', `${wallet.name} does not support ${name}`);
+        if (!current.features.includes(name)) {
+            throw new WalletError('WalletAccountError', `${current.address} does not support ${name}`);
+        }
+        return feature;
+    };
+
+    // Like the old app: a v0 transaction when the wallet supports it, legacy otherwise.
+    const memoTransaction = (
+        feePayer: WalletAccount,
+        { blockhash }: { blockhash: Uint8Array },
+        supportedVersions: readonly TransactionVersion[],
+    ) =>
         buildMemoTransaction(
             feePayer.publicKey as Uint8Array,
-            await getLatestBlockhash(config.rpcUrl),
+            blockhash,
             message || 'Hello from the Mobile Wallet Adapter example',
+            supportedVersions.includes(0) ? 0 : 'legacy',
         );
 
     const connect = () =>
         run('Connect', async () => {
-            const { accounts: connected } = await features[StandardConnect].connect();
+            const { accounts: connected } = await walletCall('WalletConnectionError', () =>
+                features[StandardConnect].connect(),
+            );
+            if (!connected[0]) throw new WalletError('WalletAccountError', `${wallet.name} returned no accounts`);
             setAccounts(connected);
-            return { text: connected[0] ? connected[0].address : 'no accounts' };
+            return { text: connected[0].address };
         });
 
     const signIn = () =>
@@ -163,16 +233,23 @@ export function App() {
                 statement: 'Sign in to the Mobile Wallet Adapter example',
                 uri: window.location.origin,
             };
-            const [output] = await features[SolanaSignIn].signIn(input);
-            if (!output || !verifySignIn(input, output)) throw new Error('Sign-in verification failed');
+            const signInFeature = features[SolanaSignIn];
+            if (!signInFeature) throw new WalletError('WalletConfigError', `${wallet.name} does not support sign in`);
+            const [output] = await walletCall('WalletSignInError', () => signInFeature.signIn(input));
+            if (!output) throw new WalletError('WalletSignInError', `${wallet.name} returned no sign-in result`);
+            if (!verifySignIn(input, output)) throw new Error('Sign-in verification failed');
             setAccounts([output.account]);
             return { text: `verified ${output.account.address}` };
         });
 
     const disconnect = () =>
         run('Disconnect', async () => {
-            await features[StandardDisconnect].disconnect();
-            setAccounts([]);
+            try {
+                await walletCall('WalletDisconnectionError', async () => features[StandardDisconnect]?.disconnect());
+            } finally {
+                // Even if the wallet failed to disconnect, the app is done with this account.
+                setAccounts([]);
+            }
             return { text: 'done' };
         });
 
@@ -184,36 +261,61 @@ export function App() {
             return { text: `received ◎${formatSol(AIRDROP_LAMPORTS)}`, href: explorerTxUrl(signature) };
         });
 
+    // Signs and sends through the wallet; a wallet that can only sign gets its transaction sent over RPC.
     const recordMessage = (current: WalletAccount) =>
         run('Record message', async () => {
-            const [output] = await features[SolanaSignAndSendTransaction].signAndSendTransaction({
-                account: current,
-                chain: CHAIN,
-                transaction: await memoTransaction(current),
-            });
-            const signature = base58Encode(output!.signature);
-            await confirmSignature(config.rpcUrl, signature);
+            const latest = await getLatestBlockhash(config.rpcUrl);
+            const options = { preflightCommitment: 'confirmed' as const, minContextSlot: latest.slot };
+            let signature: string;
+            if (supports(SolanaSignAndSendTransaction, current)) {
+                const signAndSend = features[SolanaSignAndSendTransaction]!;
+                const [output] = await walletCall('WalletSendTransactionError', () =>
+                    signAndSend.signAndSendTransaction({
+                        account: current,
+                        chain: CHAIN,
+                        transaction: memoTransaction(current, latest, signAndSend.supportedTransactionVersions),
+                        options,
+                    }),
+                );
+                signature = base58Encode(output!.signature);
+            } else {
+                const sign = requireFeature(features[SolanaSignTransaction], SolanaSignTransaction, current);
+                const [output] = await walletCall('WalletSendTransactionError', () =>
+                    sign.signTransaction({
+                        account: current,
+                        chain: CHAIN,
+                        transaction: memoTransaction(current, latest, sign.supportedTransactionVersions),
+                        options,
+                    }),
+                );
+                signature = await sendTransaction(config.rpcUrl, output!.signedTransaction, latest.slot);
+            }
+            await confirmSignature(config.rpcUrl, signature, { lastValidBlockHeight: latest.lastValidBlockHeight });
             refreshBalance();
             return { text: signature, href: explorerTxUrl(signature) };
         });
 
     const signTransaction = (current: WalletAccount) =>
         run('Sign transaction', async () => {
-            const [output] = await features[SolanaSignTransaction].signTransaction({
-                account: current,
-                chain: CHAIN,
-                transaction: await memoTransaction(current),
-            });
+            const sign = requireFeature(features[SolanaSignTransaction], SolanaSignTransaction, current);
+            const latest = await getLatestBlockhash(config.rpcUrl);
+            const [output] = await walletCall('WalletSignTransactionError', () =>
+                sign.signTransaction({
+                    account: current,
+                    chain: CHAIN,
+                    transaction: memoTransaction(current, latest, sign.supportedTransactionVersions),
+                }),
+            );
             // The fee payer's signature is the first 64 bytes after the one-byte signature count.
             return { text: base58Encode(output!.signedTransaction.slice(1, 65)) };
         });
 
     const signMessage = (current: WalletAccount) =>
         run('Sign message', async () => {
-            const [output] = await features[SolanaSignMessage].signMessage({
-                account: current,
-                message: new TextEncoder().encode(message),
-            });
+            const sign = requireFeature(features[SolanaSignMessage], SolanaSignMessage, current);
+            const [output] = await walletCall('WalletSignMessageError', () =>
+                sign.signMessage({ account: current, message: new TextEncoder().encode(message) }),
+            );
             return { text: base58Encode(output!.signature) };
         });
 
@@ -229,13 +331,30 @@ export function App() {
                 <section className="card">
                     <h2>Connect a wallet</h2>
                     <p className="hint">
-                        Authorize this app with a mobile wallet to sign messages and transactions on devnet.
+                        Authorize this app with a wallet to sign messages and transactions on devnet.
                     </p>
+                    {supportedWallets.length > 1 && (
+                        <label className="wallet-select">
+                            Wallet
+                            <select
+                                data-testid="wallet-select"
+                                disabled={!!busy}
+                                value={wallet.name}
+                                onChange={(event) => setSelectedWalletName(event.target.value)}
+                            >
+                                {supportedWallets.map((w) => (
+                                    <option key={w.name} value={w.name}>
+                                        {w.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    )}
                     <div className="row">
                         <button className="primary" data-testid="connect" disabled={!!busy} onClick={connect}>
                             {busy === 'Connect' ? 'Connecting…' : 'Connect'}
                         </button>
-                        <button data-testid="sign-in" disabled={!!busy} onClick={signIn}>
+                        <button data-testid="sign-in" disabled={!!busy || !features[SolanaSignIn]} onClick={signIn}>
                             {busy === 'Sign in' ? 'Signing in…' : 'Sign in with Solana'}
                         </button>
                     </div>
@@ -246,7 +365,14 @@ export function App() {
                         <div className="account">
                             <div>
                                 <h2>Account</h2>
-                                <code data-testid="account-address">{account.address}</code>
+                                <a
+                                    className="address"
+                                    href={`https://explorer.solana.com/address/${account.address}?cluster=${EXPLORER_CLUSTER}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    <code data-testid="account-address">{account.address}</code>
+                                </a>
                             </div>
                             <p className="balance" data-testid="balance">
                                 ◎{balance?.address === account.address ? formatSol(balance.lamports) : '–'}
@@ -279,7 +405,13 @@ export function App() {
                                 label="Record message"
                                 buttonText="Record"
                                 busy={busy}
-                                disabled={!message}
+                                disabled={
+                                    !message ||
+                                    !(
+                                        supports(SolanaSignAndSendTransaction, account) ||
+                                        supports(SolanaSignTransaction, account)
+                                    )
+                                }
                                 onClick={() => recordMessage(account)}
                                 testId="record-message"
                             >
@@ -289,7 +421,7 @@ export function App() {
                                 label="Sign transaction"
                                 buttonText="Sign"
                                 busy={busy}
-                                disabled={!message}
+                                disabled={!message || !supports(SolanaSignTransaction, account)}
                                 onClick={() => signTransaction(account)}
                                 testId="sign-transaction"
                             >
@@ -299,7 +431,7 @@ export function App() {
                                 label="Sign message"
                                 buttonText="Sign"
                                 busy={busy}
-                                disabled={!message}
+                                disabled={!message || !supports(SolanaSignMessage, account)}
                                 onClick={() => signMessage(account)}
                                 testId="sign-message"
                             >
@@ -329,6 +461,24 @@ export function App() {
                     )}
                 </ol>
             </section>
+
+            {toast && (
+                <div
+                    className={`toast ${toast.ok ? 'ok' : 'error'}`}
+                    data-testid="toast"
+                    role={toast.ok ? 'status' : 'alert'}
+                >
+                    <span>{toast.text}</span>
+                    {toast.href && (
+                        <a href={toast.href} target="_blank" rel="noreferrer">
+                            View on explorer
+                        </a>
+                    )}
+                    <button className="quiet" aria-label="Dismiss" onClick={() => setToast(undefined)}>
+                        ×
+                    </button>
+                </div>
+            )}
 
             <footer>
                 <a href="https://github.com/solana-mobile/mobile-wallet-adapter" target="_blank" rel="noreferrer">

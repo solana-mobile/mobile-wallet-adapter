@@ -10,7 +10,7 @@ A small web app that uses Mobile Wallet Adapter through [Wallet Standard](https:
 - Sign a message off-chain.
 - Fund the account from the devnet faucet and show its balance.
 
-`src/main.tsx` registers MWA with `registerMwa`. `src/App.tsx` finds the MWA wallet in the Wallet Standard registry and calls its features directly.
+`src/main.tsx` registers MWA with `registerMwa`. `src/App.tsx` lists every Solana wallet in the Wallet Standard registry, Mobile Wallet Adapter first, and calls the chosen wallet's features directly. Actions a wallet does not support are disabled. Each outcome shows in a notification and in the activity log.
 
 On Android Chrome the app connects to a wallet on the same device. On a desktop browser it shows a QR code for a wallet to scan, which needs a relay: set `VITE_NOSTR_RELAY` (Nostr relay domain) or `VITE_REFLECTOR_HOST_AUTHORITY` (reflector host) at build time. The `?relay=`, `?reflector=` and `?rpc=` URL parameters override them for a single page load.
 

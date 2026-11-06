@@ -6,16 +6,22 @@ import { useSyncExternalStore } from 'react';
 const { get, on } = getWallets();
 
 let snapshot: readonly Wallet[] = get();
+const listeners = new Set<() => void>();
 
-function subscribe(callback: () => void): () => void {
-    // Catch up on wallets registered between module evaluation and the first subscription.
+function update() {
     snapshot = get();
-    const update = () => {
-        snapshot = get();
-        callback();
+    listeners.forEach((listener) => listener());
+}
+
+// Subscribed for the module's lifetime, so wallets registered before the first render are not missed.
+on('register', update);
+on('unregister', update);
+
+function subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
     };
-    const offs = [on('register', update), on('unregister', update)];
-    return () => offs.forEach((off) => off());
 }
 
 export function useWallets(): readonly Wallet[] {

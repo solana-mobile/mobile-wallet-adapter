@@ -20,15 +20,15 @@ const account: WalletAccount = {
     address: base58Encode(publicKey),
     publicKey,
     chains: ['solana:devnet'],
-    features: [],
+    features: ['solana:signAndSendTransaction', 'solana:signTransaction', 'solana:signMessage', 'solana:signIn'],
 };
 
-function createFakeWallet({ tamperSignIn = false } = {}) {
+function createFakeWallet({ name = SolanaMobileWalletAdapterRemoteWalletName, tamperSignIn = false } = {}) {
     let accounts: WalletAccount[] = [];
     const listeners = new Set<(properties: { accounts?: WalletAccount[] }) => void>();
     const wallet = {
         version: '1.0.0',
-        name: SolanaMobileWalletAdapterRemoteWalletName,
+        name,
         icon: 'data:image/svg+xml;base64,',
         chains: ['solana:devnet'],
         get accounts() {
@@ -98,7 +98,7 @@ function createFakeWallet({ tamperSignIn = false } = {}) {
 
 let container: HTMLDivElement;
 let root: Root;
-let unregister: (() => void) | undefined;
+const unregisters: (() => void)[] = [];
 
 beforeEach(() => {
     vi.stubGlobal(
@@ -107,9 +107,13 @@ beforeEach(() => {
             const { method } = JSON.parse(init.body as string);
             const results: Record<string, unknown> = {
                 getBalance: { value: 2_500_000_000 },
-                getLatestBlockhash: { value: { blockhash: base58Encode(new Uint8Array(32).fill(3)) } },
+                getLatestBlockhash: {
+                    context: { slot: 11 },
+                    value: { blockhash: base58Encode(new Uint8Array(32).fill(3)), lastValidBlockHeight: 500 },
+                },
                 getSignatureStatuses: { value: [{ err: null, confirmationStatus: 'confirmed' }] },
                 requestAirdrop: base58Encode(new Uint8Array(64).fill(5)),
+                sendTransaction: base58Encode(new Uint8Array(64).fill(6)),
             };
             return new Response(JSON.stringify({ result: results[method] }));
         }),
@@ -122,13 +126,12 @@ beforeEach(() => {
 afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    unregister?.();
-    unregister = undefined;
+    unregisters.splice(0).forEach((unregister) => unregister());
     vi.unstubAllGlobals();
 });
 
-async function render(wallet?: Wallet) {
-    if (wallet) unregister = getWallets().register(wallet);
+async function render(...wallets: Wallet[]) {
+    for (const wallet of wallets) unregisters.push(getWallets().register(wallet));
     await act(async () => root.render(<App />));
 }
 
@@ -153,10 +156,10 @@ async function logText() {
 }
 
 describe('App', () => {
-    it('explains when Mobile Wallet Adapter is unavailable', async () => {
+    it('explains when no wallet is available', async () => {
         await render();
 
-        expect(byTestId('wallet-status')?.textContent).toContain("Mobile Wallet Adapter isn't available");
+        expect(byTestId('wallet-status')?.textContent).toContain('No Solana wallet was found');
         expect(byTestId('connect')).toBeNull();
     });
 
@@ -260,5 +263,131 @@ describe('App', () => {
         await click('sign-in');
 
         expect(await logText()).toContain('Sign in ✗ Sign-in verification failed');
+        const toast = byTestId('toast');
+        expect(toast?.getAttribute('role')).toBe('alert');
+        expect(toast?.textContent).toContain('Sign in ✗ Sign-in verification failed');
+    });
+
+    it('lists every Solana wallet, Mobile Wallet Adapter first, and connects the chosen one', async () => {
+        const mwa = createFakeWallet();
+        const extension = createFakeWallet({ name: 'Extension Wallet' });
+        await render(extension, mwa);
+
+        const select = byTestId('wallet-select') as HTMLSelectElement;
+        expect([...select.options].map((option) => option.value)).toEqual([
+            SolanaMobileWalletAdapterRemoteWalletName,
+            'Extension Wallet',
+        ]);
+        expect(select.value).toBe(SolanaMobileWalletAdapterRemoteWalletName);
+
+        await act(async () => {
+            select.value = 'Extension Wallet';
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        await click('connect');
+
+        expect(extension.features['standard:connect'].connect).toHaveBeenCalledTimes(1);
+        expect(mwa.features['standard:connect'].connect).not.toHaveBeenCalled();
+        expect(byTestId('wallet-status')?.textContent).toBe('Extension Wallet · solana:devnet');
+    });
+
+    it('disables actions the wallet does not support', async () => {
+        const wallet = createFakeWallet();
+        const features = wallet.features as Record<string, unknown>;
+        delete features['solana:signIn'];
+        delete features['solana:signMessage'];
+        await render(wallet);
+
+        expect((byTestId('sign-in') as HTMLButtonElement).disabled).toBe(true);
+
+        await click('connect');
+        await typeMessage('gm');
+
+        expect((byTestId('sign-message') as HTMLButtonElement).disabled).toBe(true);
+        expect((byTestId('sign-transaction') as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it('disables actions the connected account does not support', async () => {
+        const wallet = createFakeWallet();
+        wallet.features['standard:connect'].connect.mockResolvedValueOnce({
+            accounts: [{ ...account, features: ['solana:signTransaction'] }],
+        });
+        await render(wallet);
+        await click('connect');
+        await typeMessage('gm');
+
+        expect((byTestId('sign-message') as HTMLButtonElement).disabled).toBe(true);
+        expect((byTestId('sign-transaction') as HTMLButtonElement).disabled).toBe(false);
+        // Can still record: signed by the wallet, sent over RPC.
+        expect((byTestId('record-message') as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it('records through RPC when the wallet can sign but not send', async () => {
+        const wallet = createFakeWallet();
+        delete (wallet.features as Record<string, unknown>)['solana:signAndSendTransaction'];
+        await render(wallet);
+        await click('connect');
+        await typeMessage('sign only');
+
+        await click('record-message');
+
+        const sent = base58Encode(new Uint8Array(64).fill(6));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain(`Record message ✓ ${sent}`));
+        const [[{ options }]] = wallet.features['solana:signTransaction'].signTransaction.mock.calls as unknown as [
+            [{ options: unknown }],
+        ];
+        expect(options).toEqual({ preflightCommitment: 'confirmed', minContextSlot: 11 });
+        const methods = vi.mocked(fetch).mock.calls.map(([, init]) => JSON.parse(init!.body as string).method);
+        expect(methods).toContain('sendTransaction');
+    });
+
+    it('passes the blockhash context slot to sign and send', async () => {
+        const wallet = createFakeWallet();
+        await render(wallet);
+        await click('connect');
+        await typeMessage('on chain');
+
+        await click('record-message');
+
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Record message ✓'));
+        const [[input]] = wallet.features['solana:signAndSendTransaction'].signAndSendTransaction.mock
+            .calls as unknown as [[{ options: unknown }]];
+        expect(input.options).toEqual({ preflightCommitment: 'confirmed', minContextSlot: 11 });
+    });
+
+    it('names wallet failures and never shows [object Object]', async () => {
+        const wallet = createFakeWallet();
+        wallet.features['standard:connect'].connect.mockRejectedValueOnce({ code: 4001 });
+        wallet.features['solana:signMessage'].signMessage.mockRejectedValueOnce(
+            new Error('declined', { cause: Object.assign(new Error('declined'), { code: -3 }) }),
+        );
+        await render(wallet);
+
+        await click('connect');
+        expect(await logText()).toContain('Connect ✗ WalletConnectionError: {"code":4001}');
+
+        await click('connect');
+        await typeMessage('gm');
+        await click('sign-message');
+
+        await vi.waitFor(() =>
+            expect(byTestId('log')?.textContent).toContain('Sign message ✗ WalletSignMessageError: declined (-3)'),
+        );
+        expect(byTestId('log')?.textContent).not.toContain('[object');
+    });
+
+    it('clears the account when the wallet fails to disconnect', async () => {
+        const wallet = createFakeWallet();
+        wallet.features['standard:disconnect'].disconnect.mockRejectedValueOnce(new Error('socket gone'));
+        await render(wallet);
+        await click('connect');
+
+        await click('disconnect');
+
+        expect(byTestId('account-address')).toBeNull();
+        expect(byTestId('connect')).not.toBeNull();
+        await vi.waitFor(() =>
+            expect(byTestId('log')?.textContent).toContain('Disconnect ✗ WalletDisconnectionError: socket gone'),
+        );
     });
 });

@@ -21,9 +21,18 @@ export function shortvec(length: number): number[] {
     }
 }
 
-export function buildMemoTransaction(feePayer: Uint8Array, recentBlockhash: Uint8Array, memo: string): Uint8Array {
+export type TransactionVersion = 'legacy' | 0;
+
+export function buildMemoTransaction(
+    feePayer: Uint8Array,
+    recentBlockhash: Uint8Array,
+    memo: string,
+    version: TransactionVersion = 'legacy',
+): Uint8Array {
     const data = new TextEncoder().encode(memo);
     const message = [
+        // A v0 message starts with its version prefix (0x80 | 0).
+        ...(version === 0 ? [0x80] : []),
         // Header: 1 required signature, 0 read-only signed accounts, 1 read-only unsigned account.
         1,
         0,
@@ -37,6 +46,8 @@ export function buildMemoTransaction(feePayer: Uint8Array, recentBlockhash: Uint
         ...shortvec(0), // no instruction accounts
         ...shortvec(data.length),
         ...data,
+        // A v0 message ends with its address table lookups; this one has none.
+        ...(version === 0 ? shortvec(0) : []),
     ];
     // One zeroed signature slot for the fee payer, then the message.
     return Uint8Array.from([...shortvec(1), ...new Array(64).fill(0), ...message]);

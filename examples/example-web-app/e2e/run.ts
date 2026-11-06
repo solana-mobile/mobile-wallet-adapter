@@ -166,7 +166,8 @@ async function main(): Promise<void> {
         const signTransactionEntry = await logEntry('Sign transaction');
         const [signRequest] = wallet.requests.filter((r) => r.method === 'sign_transactions').slice(-1);
         const transaction = Buffer.from((signRequest!.params.payloads as string[])[0]!, 'base64');
-        check('the memo transaction carries the message', transaction.toString('utf8').endsWith(message));
+        check('the memo transaction carries the message', transaction.toString('utf8').includes(message));
+        check('the wallet supports v0, so the app sent a v0 transaction', transaction[65] === 0x80);
         check(
             'the app shows the fee payer signature from the signed transaction',
             ed25519.verify(
