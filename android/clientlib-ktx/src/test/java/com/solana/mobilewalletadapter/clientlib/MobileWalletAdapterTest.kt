@@ -409,6 +409,7 @@ class MobileWalletAdapterTest {
     @Test
     fun `validate the request fails without waiting when the wallet is cancelled before connecting`() = runTest {
         // Like the real scenario: start() waits for the wallet to connect, and close() fails it.
+        val startPending = CountDownLatch(1)
         val closed = CountDownLatch(1)
         val scenarioProvider = mock<AssociationScenarioProvider> {
             on { provideAssociationScenario(any()) } doAnswer {
@@ -418,6 +419,7 @@ class MobileWalletAdapterTest {
                             on { get(any(), any()) } doAnswer { invocation ->
                                 val timeout = invocation.arguments[0] as Long
                                 val unit = invocation.arguments[1] as TimeUnit
+                                startPending.countDown()
                                 if (!closed.await(timeout, unit)) throw TimeoutException()
                                 throw ExecutionException(RuntimeException("Scenario closed while connecting"))
                             }
@@ -440,7 +442,7 @@ class MobileWalletAdapterTest {
         val cancellingSender = mock<ActivityResultSender> {
             onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
                 val callback = invocation.arguments[1] as (Int) -> Unit
-                thread { Thread.sleep(100); callback(Activity.RESULT_CANCELED) }
+                thread { startPending.await(); callback(Activity.RESULT_CANCELED) }
                 Unit
             }
         }
@@ -456,6 +458,22 @@ class MobileWalletAdapterTest {
 
         assertTrue("$result") { (result as? TransactionResult.Failure)?.e is ExecutionException }
         assertTrue("took $elapsedMs ms") { elapsedMs < MobileWalletAdapter.ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS }
+    }
+
+    @Test
+    fun `validate the request fails as a closed connection when the wallet is cancelled before start`() = runTest {
+        // The result arrives before associate() starts the real scenario, so close() runs first.
+        val cancellingSender = mock<ActivityResultSender> {
+            onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
+                val callback = invocation.arguments[1] as (Int) -> Unit
+                callback(Activity.RESULT_CANCELED)
+            }
+        }
+        val adapter = MobileWalletAdapter(connectionIdentity = creds, ioDispatcher = Dispatchers.IO)
+
+        val result = withContext(Dispatchers.Default) { adapter.transact(cancellingSender) { } }
+
+        assertTrue("$result") { (result as? TransactionResult.Failure)?.e is ExecutionException }
     }
 
     @Test
