@@ -11,14 +11,14 @@
     "exports": {
         ".": {
             "types": "./lib/types/index.d.ts",
-            "browser": "./lib/esm/index.browser.js",
             "react-native": "./lib/esm/index.native.js",
+            "browser": "./lib/esm/index.browser.js",
             "default": "./lib/esm/index.js"
         },
         "./encoding": {
             "types": "./lib/types/encoding.d.ts",
-            "browser": "./lib/esm/encoding.browser.js",
             "react-native": "./lib/esm/encoding.native.js",
+            "browser": "./lib/esm/encoding.browser.js",
             "default": "./lib/esm/encoding.js"
         }
     },
