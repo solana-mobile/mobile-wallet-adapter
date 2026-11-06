@@ -273,7 +273,7 @@ describe('LocalConnectionModal', () => {
 });
 
 describe('LoopbackPermissionModal', () => {
-    it('requests local network permission once, then closes without an event', async () => {
+    it('requests local network permission on every tap and stays open', async () => {
         const fetchMock = vi.fn().mockRejectedValue(new Error('ignored'));
         const closeListener = vi.fn();
         const modal = new LoopbackPermissionModal();
@@ -290,11 +290,10 @@ describe('LoopbackPermissionModal', () => {
         button.click();
         button.click();
 
-        await vi.waitFor(() => expect(closeListener).toHaveBeenCalledWith(undefined));
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
+        // Each tap prompts again, e.g. after the user dismissed the browser's prompt.
+        await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
         expect(fetchMock).toHaveBeenCalledWith('http://localhost');
-        expect(closeListener).toHaveBeenCalledTimes(1);
+        expect(closeListener).not.toHaveBeenCalled();
     });
 });
 
