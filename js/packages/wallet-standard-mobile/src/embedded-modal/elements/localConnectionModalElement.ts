@@ -34,6 +34,8 @@ export class LocalConnectionModalElement extends EmbeddedModalElement {
     /** Called when the user taps "Connect Wallet". */
     onConnect?: () => void;
 
+    protected closable = false;
+
     protected renderContent() {
         return html`
             <svg class="icon" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
