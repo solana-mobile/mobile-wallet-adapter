@@ -7,8 +7,8 @@
     "license": "Apache-2.0",
     "exports": {
         "types": "./lib/types/index.d.ts",
-        "browser": "./lib/esm/index.browser.js",
         "react-native": "./lib/esm/index.native.js",
+        "browser": "./lib/esm/index.browser.js",
         "default": "./lib/esm/index.js"
     },
     "browser": {

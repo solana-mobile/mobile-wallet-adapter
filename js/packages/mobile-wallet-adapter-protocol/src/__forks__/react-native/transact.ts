@@ -50,6 +50,10 @@ function getErrorMessage(e: ReactNativeError): string {
 }
 
 function handleError(e: unknown): never {
+    // Already mapped by the request handler; mapping again would lose the protocol error type.
+    if (e instanceof SolanaMobileWalletAdapterError || e instanceof SolanaMobileWalletAdapterProtocolError) {
+        throw e;
+    }
     if (e instanceof Error) {
         const reactNativeError: ReactNativeError = e;
         switch (reactNativeError.code) {
@@ -86,7 +90,7 @@ export async function transact<TReturn>(
         didSuccessfullyConnect = true;
         const wallet = createMobileWalletProxy(sessionProperties.protocol_version, async (method, params) => {
             try {
-                return SolanaMobileWalletAdapter.invoke(method, params);
+                return await SolanaMobileWalletAdapter.invoke(method, params);
             } catch (e) {
                 return handleError(e);
             }

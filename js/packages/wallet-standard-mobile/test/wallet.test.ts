@@ -347,12 +347,18 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
             getSignAndSendFeature(wallet).signAndSendTransaction({
                 account: wallet.accounts[0],
                 chain: SOLANA_MAINNET_CHAIN,
-                options: { minContextSlot: 123 },
+                options: {
+                    commitment: 'confirmed',
+                    maxRetries: 3,
+                    minContextSlot: 123,
+                    preflightCommitment: 'processed',
+                    skipPreflight: true,
+                },
                 transaction: Uint8Array.of(4, 5, 6),
             }),
         ).resolves.toEqual([{ signature: Uint8Array.of(10, 11, 12) }]);
         expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
-            minContextSlot: 123,
+            options: { commitment: 'confirmed', max_retries: 3, min_context_slot: 123, skip_preflight: true },
             payloads: [encodeBytes(Uint8Array.of(4, 5, 6))],
         });
 
@@ -1038,9 +1044,17 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
             }),
         ).resolves.toEqual([{ signature: Uint8Array.of(44, 45, 46) }]);
         expect(mobileWallet.signAndSendTransactions).toHaveBeenCalledWith({
-            minContextSlot: 123,
+            options: { min_context_slot: 123 },
             payloads: [encodeBytes(Uint8Array.of(4, 5, 6))],
         });
+
+        await getSignAndSendFeature(wallet).signAndSendTransaction({
+            account: wallet.accounts[0],
+            chain: SOLANA_MAINNET_CHAIN,
+            options: {},
+            transaction: Uint8Array.of(4, 5, 6),
+        });
+        expect(mobileWallet.signAndSendTransactions.mock.lastCall?.[0]).not.toHaveProperty('options');
 
         await expect(
             wallet.features[SolanaSignMessage].signMessage({

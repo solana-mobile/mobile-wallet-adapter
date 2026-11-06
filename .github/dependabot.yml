@@ -181,6 +181,7 @@ updates:
           - "@wallet-standard/*"
     # @react-native/babel-preset requires Babel 7.
     # @react-native/eslint-config does not support ESLint 10 yet.
+    # @solana/web3.js stays on the 1.x line.
     # typescript-eslint does not support TypeScript 7 yet.
     ignore:
       - dependency-name: "@babel/*"
@@ -189,6 +190,9 @@ updates:
       - dependency-name: "@eslint/*"
         update-types:
           - "version-update:semver-major"
+      - dependency-name: "@solana/web3.js"
+        versions:
+          - ">=2"
       - dependency-name: "eslint"
         update-types:
           - "version-update:semver-major"
@@ -254,8 +258,12 @@ updates:
         patterns:
           - "@solana/wallet-standard-*"
           - "@wallet-standard/*"
+    # @solana/web3.js stays on the 1.x line.
     # typescript-eslint does not support TypeScript 7 yet.
     ignore:
+      - dependency-name: "@solana/web3.js"
+        versions:
+          - ">=2"
       - dependency-name: "typescript"
         versions:
           - ">=7"
