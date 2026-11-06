@@ -165,12 +165,17 @@ export function App() {
     }, [wallet, append]);
 
     const run = useCallback(
-        (label: string, action: () => Promise<Outcome>) => {
+        (
+            label: string,
+            action: () => Promise<Outcome>,
+            // The old app's wording for a failure, where it had one.
+            failureText = (description: string) => `${label} ✗ ${description}`,
+        ) => {
             if (busy) return;
             setBusy(label);
             action()
-                .then(({ text, href }) => append({ ok: true, text: `${label} ✓ ${text}`, href }))
-                .catch((error: unknown) => append({ ok: false, text: `${label} ✗ ${describeError(error)}` }))
+                .then(({ text, href }) => append({ ok: true, text, href }))
+                .catch((error: unknown) => append({ ok: false, text: failureText(describeError(error)) }))
                 .finally(() => setBusy(undefined));
         },
         [busy, append],
@@ -223,7 +228,7 @@ export function App() {
             );
             if (!connected[0]) throw new WalletError('WalletAccountError', `${wallet.name} returned no accounts`);
             setAccounts(connected);
-            return { text: connected[0].address };
+            return { text: `Connect ✓ ${connected[0].address}` };
         });
 
     const signIn = () =>
@@ -234,12 +239,12 @@ export function App() {
                 uri: window.location.origin,
             };
             const signInFeature = features[SolanaSignIn];
-            if (!signInFeature) throw new WalletError('WalletConfigError', `${wallet.name} does not support sign in`);
+            if (!signInFeature) throw new Error('Sign In not available, wallet does not support sign in');
             const [output] = await walletCall('WalletSignInError', () => signInFeature.signIn(input));
             if (!output) throw new WalletError('WalletSignInError', `${wallet.name} returned no sign-in result`);
-            if (!verifySignIn(input, output)) throw new Error('Sign-in verification failed');
+            if (!verifySignIn(input, output)) throw new Error('Sign In verification failed!');
             setAccounts([output.account]);
-            return { text: `verified ${output.account.address}` };
+            return { text: `Sign in ✓ verified ${output.account.address}` };
         });
 
     const disconnect = () =>
@@ -250,74 +255,91 @@ export function App() {
                 // Even if the wallet failed to disconnect, the app is done with this account.
                 setAccounts([]);
             }
-            return { text: 'done' };
+            return { text: 'Disconnect ✓ done' };
         });
 
     const fundAccount = (current: WalletAccount) =>
-        run('Fund account', async () => {
-            const signature = await requestAirdrop(config.rpcUrl, current.address, AIRDROP_LAMPORTS);
-            await confirmSignature(config.rpcUrl, signature);
-            refreshBalance();
-            return { text: `received ◎${formatSol(AIRDROP_LAMPORTS)}`, href: explorerTxUrl(signature) };
-        });
+        run(
+            'Fund account',
+            async () => {
+                const signature = await requestAirdrop(config.rpcUrl, current.address, AIRDROP_LAMPORTS);
+                await confirmSignature(config.rpcUrl, signature);
+                refreshBalance();
+                return { text: 'Funding successful', href: explorerTxUrl(signature) };
+            },
+            (description) => `Failed to fund account: ${description}`,
+        );
 
     // Signs and sends through the wallet; a wallet that can only sign gets its transaction sent over RPC.
     const recordMessage = (current: WalletAccount) =>
-        run('Record message', async () => {
-            const latest = await getLatestBlockhash(config.rpcUrl);
-            const options = { preflightCommitment: 'confirmed' as const, minContextSlot: latest.slot };
-            let signature: string;
-            if (supports(SolanaSignAndSendTransaction, current)) {
-                const signAndSend = features[SolanaSignAndSendTransaction]!;
-                const [output] = await walletCall('WalletSendTransactionError', () =>
-                    signAndSend.signAndSendTransaction({
-                        account: current,
-                        chain: CHAIN,
-                        transaction: memoTransaction(current, latest, signAndSend.supportedTransactionVersions),
-                        options,
-                    }),
-                );
-                signature = base58Encode(output!.signature);
-            } else {
+        run(
+            'Record message',
+            async () => {
+                const latest = await getLatestBlockhash(config.rpcUrl);
+                const options = { preflightCommitment: 'confirmed' as const, minContextSlot: latest.slot };
+                let signature: string;
+                if (supports(SolanaSignAndSendTransaction, current)) {
+                    const signAndSend = features[SolanaSignAndSendTransaction]!;
+                    const [output] = await walletCall('WalletSendTransactionError', () =>
+                        signAndSend.signAndSendTransaction({
+                            account: current,
+                            chain: CHAIN,
+                            transaction: memoTransaction(current, latest, signAndSend.supportedTransactionVersions),
+                            options,
+                        }),
+                    );
+                    signature = base58Encode(output!.signature);
+                } else {
+                    const sign = requireFeature(features[SolanaSignTransaction], SolanaSignTransaction, current);
+                    const [output] = await walletCall('WalletSendTransactionError', () =>
+                        sign.signTransaction({
+                            account: current,
+                            chain: CHAIN,
+                            transaction: memoTransaction(current, latest, sign.supportedTransactionVersions),
+                            options,
+                        }),
+                    );
+                    signature = await sendTransaction(config.rpcUrl, output!.signedTransaction, latest.slot);
+                }
+                await confirmSignature(config.rpcUrl, signature, { lastValidBlockHeight: latest.lastValidBlockHeight });
+                refreshBalance();
+                return { text: 'Message recorded', href: explorerTxUrl(signature) };
+            },
+            (description) => `Failed to record message: ${description}`,
+        );
+
+    const signTransaction = (current: WalletAccount) =>
+        run(
+            'Sign transaction',
+            async () => {
                 const sign = requireFeature(features[SolanaSignTransaction], SolanaSignTransaction, current);
-                const [output] = await walletCall('WalletSendTransactionError', () =>
+                const latest = await getLatestBlockhash(config.rpcUrl);
+                const [output] = await walletCall('WalletSignTransactionError', () =>
                     sign.signTransaction({
                         account: current,
                         chain: CHAIN,
                         transaction: memoTransaction(current, latest, sign.supportedTransactionVersions),
-                        options,
                     }),
                 );
-                signature = await sendTransaction(config.rpcUrl, output!.signedTransaction, latest.slot);
-            }
-            await confirmSignature(config.rpcUrl, signature, { lastValidBlockHeight: latest.lastValidBlockHeight });
-            refreshBalance();
-            return { text: signature, href: explorerTxUrl(signature) };
-        });
-
-    const signTransaction = (current: WalletAccount) =>
-        run('Sign transaction', async () => {
-            const sign = requireFeature(features[SolanaSignTransaction], SolanaSignTransaction, current);
-            const latest = await getLatestBlockhash(config.rpcUrl);
-            const [output] = await walletCall('WalletSignTransactionError', () =>
-                sign.signTransaction({
-                    account: current,
-                    chain: CHAIN,
-                    transaction: memoTransaction(current, latest, sign.supportedTransactionVersions),
-                }),
-            );
-            // The fee payer's signature is the first 64 bytes after the one-byte signature count.
-            return { text: base58Encode(output!.signedTransaction.slice(1, 65)) };
-        });
+                // The fee payer's signature is the first 64 bytes after the one-byte signature count.
+                return { text: `Transaction signed: ${base58Encode(output!.signedTransaction.slice(1, 65))}` };
+            },
+            // Wallet errors read `Name: message`, as the old app's wallet error handler showed them.
+            (description) => description,
+        );
 
     const signMessage = (current: WalletAccount) =>
-        run('Sign message', async () => {
-            const sign = requireFeature(features[SolanaSignMessage], SolanaSignMessage, current);
-            const [output] = await walletCall('WalletSignMessageError', () =>
-                sign.signMessage({ account: current, message: new TextEncoder().encode(message) }),
-            );
-            return { text: base58Encode(output!.signature) };
-        });
+        run(
+            'Sign message',
+            async () => {
+                const sign = requireFeature(features[SolanaSignMessage], SolanaSignMessage, current);
+                const [output] = await walletCall('WalletSignMessageError', () =>
+                    sign.signMessage({ account: current, message: new TextEncoder().encode(message) }),
+                );
+                return { text: `Message signed: ${base58Encode(output!.signature)}` };
+            },
+            (description) => description,
+        );
 
     return (
         <main>

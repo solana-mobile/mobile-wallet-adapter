@@ -144,7 +144,7 @@ async function main(): Promise<void> {
 
         console.log('fund account');
         ab('click', '[data-testid=fund-account]');
-        await logEntry('Fund account ✓');
+        await logEntry('Funding successful');
         check('the airdrop went to the connected account', rpc.airdrops.at(-1) === wallet.address);
         await until('the new balance', () => text('balance') === '◎0.1');
         check('the balance refreshes after funding', true);
@@ -154,7 +154,7 @@ async function main(): Promise<void> {
 
         console.log('sign message');
         ab('click', '[data-testid=sign-message]');
-        const signMessageEntry = await logEntry('Sign message');
+        const signMessageEntry = await logEntry('Message signed: ');
         const messageSignature = base58Decode(signMessageEntry.split(' ').at(-1)!);
         check(
             'the message signature verifies against the account',
@@ -163,7 +163,7 @@ async function main(): Promise<void> {
 
         console.log('sign transaction');
         ab('click', '[data-testid=sign-transaction]');
-        const signTransactionEntry = await logEntry('Sign transaction');
+        const signTransactionEntry = await logEntry('Transaction signed: ');
         const [signRequest] = wallet.requests.filter((r) => r.method === 'sign_transactions').slice(-1);
         const transaction = Buffer.from((signRequest!.params.payloads as string[])[0]!, 'base64');
         check('the memo transaction carries the message', transaction.toString('utf8').includes(message));
@@ -179,12 +179,12 @@ async function main(): Promise<void> {
 
         console.log('record message');
         ab('click', '[data-testid=record-message]');
-        const recordEntry = await logEntry('Record message');
-        check('sign and send returns a signature', /^Record message ✓ \w{80,90}$/.test(recordEntry));
+        const recordEntry = await logEntry('Message recorded');
+        check('the app reports the recorded message', recordEntry === 'Message recorded');
         check(
-            'the explorer link points at that signature',
-            evalInPage<string>(`document.querySelector('[data-testid=log] li a').href`).includes(
-                recordEntry.split(' ').at(-1)!,
+            'the explorer link points at the sign-and-send signature',
+            /\/tx\/\w{80,90}\?cluster=devnet$/.test(
+                evalInPage<string>(`document.querySelector('[data-testid=log] li a').href`),
             ),
         );
 

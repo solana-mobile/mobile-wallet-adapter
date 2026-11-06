@@ -209,7 +209,7 @@ describe('App', () => {
         const [[input]] = wallet.features['solana:signMessage'].signMessage.mock.calls;
         expect(new TextDecoder().decode(input.message)).toBe('gm from the test');
         const signature = base58Encode(ed25519.sign(input.message, secretKey));
-        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain(`Sign message ✓ ${signature}`));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain(`Message signed: ${signature}`));
     });
 
     it('signs a memo transaction carrying the message', async () => {
@@ -220,7 +220,7 @@ describe('App', () => {
 
         await click('sign-transaction');
 
-        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Sign transaction ✓'));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Transaction signed: '));
         const [[{ transaction }]] = wallet.features['solana:signTransaction'].signTransaction.mock.calls;
         expect(new TextDecoder().decode(transaction.slice(-9))).toBe('memo text');
         expect(transaction.slice(69, 101)).toEqual(publicKey); // fee payer
@@ -233,7 +233,7 @@ describe('App', () => {
 
         await click('record-message');
 
-        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Record message ✓'));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Message recorded'));
         expect(container.querySelector('.log a')?.getAttribute('href')).toMatch(
             /^https:\/\/explorer\.solana\.com\/tx\/\w+\?cluster=devnet$/,
         );
@@ -245,7 +245,7 @@ describe('App', () => {
 
         await click('fund-account');
 
-        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Fund account ✓ received ◎0.1'));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Funding successful'));
     });
 
     it('verifies a sign-in', async () => {
@@ -262,10 +262,10 @@ describe('App', () => {
 
         await click('sign-in');
 
-        expect(await logText()).toContain('Sign in ✗ Sign-in verification failed');
+        expect(await logText()).toContain('Sign in ✗ Sign In verification failed!');
         const toast = byTestId('toast');
         expect(toast?.getAttribute('role')).toBe('alert');
-        expect(toast?.textContent).toContain('Sign in ✗ Sign-in verification failed');
+        expect(toast?.textContent).toContain('Sign in ✗ Sign In verification failed!');
     });
 
     it('lists every Solana wallet, Mobile Wallet Adapter first, and connects the chosen one', async () => {
@@ -332,7 +332,8 @@ describe('App', () => {
         await click('record-message');
 
         const sent = base58Encode(new Uint8Array(64).fill(6));
-        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain(`Record message ✓ ${sent}`));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Message recorded'));
+        expect(container.querySelector('.log a')?.getAttribute('href')).toContain(sent);
         const [[{ options }]] = wallet.features['solana:signTransaction'].signTransaction.mock.calls as unknown as [
             [{ options: unknown }],
         ];
@@ -349,7 +350,7 @@ describe('App', () => {
 
         await click('record-message');
 
-        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Record message ✓'));
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('Message recorded'));
         const [[input]] = wallet.features['solana:signAndSendTransaction'].signAndSendTransaction.mock
             .calls as unknown as [[{ options: unknown }]];
         expect(input.options).toEqual({ preflightCommitment: 'confirmed', minContextSlot: 11 });
@@ -370,9 +371,7 @@ describe('App', () => {
         await typeMessage('gm');
         await click('sign-message');
 
-        await vi.waitFor(() =>
-            expect(byTestId('log')?.textContent).toContain('Sign message ✗ WalletSignMessageError: declined (-3)'),
-        );
+        await vi.waitFor(() => expect(byTestId('log')?.textContent).toContain('WalletSignMessageError: declined (-3)'));
         expect(byTestId('log')?.textContent).not.toContain('[object');
     });
 
