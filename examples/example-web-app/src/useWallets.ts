@@ -8,6 +8,7 @@ const { get, on } = getWallets();
 let snapshot: readonly Wallet[] = get();
 const listeners = new Set<() => void>();
 
+/** Refreshes the snapshot and notifies every subscribed component. */
 function update() {
     snapshot = get();
     listeners.forEach((listener) => listener());
@@ -17,6 +18,7 @@ function update() {
 on('register', update);
 on('unregister', update);
 
+/** `useSyncExternalStore` subscription: adds the listener and returns its removal. */
 function subscribe(listener: () => void): () => void {
     listeners.add(listener);
     return () => {
@@ -24,6 +26,7 @@ function subscribe(listener: () => void): () => void {
     };
 }
 
+/** Every wallet in the Wallet Standard registry, updated as wallets register and unregister. */
 export function useWallets(): readonly Wallet[] {
     return useSyncExternalStore(subscribe, () => snapshot);
 }

@@ -23,6 +23,7 @@ export function shortvec(length: number): number[] {
 
 export type TransactionVersion = 'legacy' | 0;
 
+/** An unsigned memo transaction paid by `feePayer`, as a legacy or v0 message, with an empty signature slot. */
 export function buildMemoTransaction(
     feePayer: Uint8Array,
     recentBlockhash: Uint8Array,

@@ -6,6 +6,7 @@ const COMMITMENT = 'confirmed';
 
 let nextRequestId = 1;
 
+/** Sends one JSON-RPC request; rejects on an HTTP error or a JSON-RPC error (with its code), or when `signal` aborts. */
 async function rpc<T>(url: string, method: string, params: unknown[] = [], signal?: AbortSignal): Promise<T> {
     const response = await fetch(url, {
         method: 'POST',
@@ -30,6 +31,7 @@ export interface LatestBlockhash {
     slot: number;
 }
 
+/** The latest blockhash, the block height it expires after, and the slot it was read at. */
 export async function getLatestBlockhash(url: string): Promise<LatestBlockhash> {
     const { context, value } = await rpc<{
         context: { slot: number };
@@ -42,11 +44,13 @@ export async function getLatestBlockhash(url: string): Promise<LatestBlockhash> 
     };
 }
 
+/** The account's balance in lamports. */
 export async function getBalance(url: string, address: string): Promise<number> {
     const { value } = await rpc<{ value: number }>(url, 'getBalance', [address, { commitment: COMMITMENT }]);
     return value;
 }
 
+/** Requests a devnet airdrop to `address`; resolves with the airdrop transaction's signature. */
 export function requestAirdrop(url: string, address: string, lamports: number): Promise<string> {
     return rpc<string>(url, 'requestAirdrop', [address, lamports]);
 }

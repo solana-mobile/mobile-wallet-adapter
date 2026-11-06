@@ -39,6 +39,7 @@ interface JsonRpcRequest {
 const toBase64 = (bytes: Uint8Array) => Buffer.from(bytes).toString('base64');
 const fromBase64 = (base64: string) => new Uint8Array(Buffer.from(base64, 'base64'));
 
+/** Concatenates byte arrays. */
 function concat(...arrays: Uint8Array[]): Uint8Array {
     const out = new Uint8Array(arrays.reduce((n, a) => n + a.length, 0));
     let offset = 0;
@@ -49,11 +50,13 @@ function concat(...arrays: Uint8Array[]): Uint8Array {
     return out;
 }
 
+/** A Nostr event's id: the SHA-256 of its NIP-01 serialization. */
 function eventId(event: Omit<NostrEvent, 'id' | 'sig'>): string {
     const serialized = JSON.stringify([0, event.pubkey, event.created_at, event.kind, event.tags, event.content]);
     return bytesToHex(sha256(new TextEncoder().encode(serialized)));
 }
 
+/** Builds a Nostr event of the MWA kind and signs it with `privateKey`. */
 function signEvent(content: string, tags: string[][], privateKey: Uint8Array): NostrEvent {
     const unsigned = {
         pubkey: bytesToHex(secp256k1Schnorr.getPublicKey(privateKey)),
@@ -66,6 +69,7 @@ function signEvent(content: string, tags: string[][], privateKey: Uint8Array): N
     return { ...unsigned, id, sig: bytesToHex(secp256k1Schnorr.sign(hexToBytes(id), privateKey)) };
 }
 
+/** Whether a Nostr event's id and Schnorr signature are valid. */
 function verifyEvent(event: NostrEvent): boolean {
     try {
         return (

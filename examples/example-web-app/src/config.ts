@@ -16,6 +16,7 @@ export const CHAIN = 'solana:devnet';
 export const EXPLORER_CLUSTER = 'devnet';
 const DEFAULT_RPC_URL = 'https://api.devnet.solana.com';
 
+/** The relay, reflector and RPC settings: URL parameters first, then build-time env, then defaults. */
 export function readConfig(search: string, env: Record<string, string | undefined>): ExampleConfig {
     const params = new URLSearchParams(search);
     return {

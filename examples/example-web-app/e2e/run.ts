@@ -25,6 +25,7 @@ const VITE = fileURLToPath(new URL('../node_modules/.bin/vite', import.meta.url)
 const APP_ORIGIN = 'http://localhost:3002';
 const SESSION = 'mwa-example-e2e';
 
+/** Runs an agent-browser command in the test session and returns its output. */
 function ab(...args: string[]): string {
     return execFileSync(AGENT_BROWSER, ['--session', SESSION, ...args], {
         encoding: 'utf8',
@@ -32,6 +33,7 @@ function ab(...args: string[]): string {
     }).trim();
 }
 
+/** Evaluates `expression` in the page and returns its result; throws if the evaluation fails. */
 function evalInPage<T>(expression: string): T {
     const envelope = JSON.parse(ab('eval', '--json', expression)) as {
         success: boolean;
@@ -46,6 +48,7 @@ const text = (testId: string) =>
     evalInPage<string | null>(`document.querySelector('[data-testid=${testId}]')?.textContent ?? null`);
 const exists = (testId: string) => text(testId) !== null;
 
+/** Polls `probe` until it returns a value; throws after `timeoutMs`. */
 async function until<T>(
     label: string,
     probe: () => T | false | undefined | null | Promise<T | false | undefined | null>,
@@ -74,12 +77,14 @@ function logEntry(prefix: string): Promise<string> {
 }
 
 let passed = 0;
+/** Records a passing check; throws (failing the run) if `condition` is false. */
 function check(label: string, condition: boolean): void {
     if (!condition) throw new Error(`Check failed: ${label}`);
     passed += 1;
     console.log(`  ✓ ${label}`);
 }
 
+/** Starts the relay, RPC stub and app, then drives every flow in Chrome against the fake wallet. */
 async function main(): Promise<void> {
     const relay = await startRelay();
     const rpc = await startRpcStub();

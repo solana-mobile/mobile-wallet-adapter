@@ -1,6 +1,7 @@
 /** Minimal base58 (Bitcoin alphabet) for addresses, blockhashes and signatures. */
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
+/** Encodes bytes as base58; each leading zero byte becomes a leading '1'. */
 export function base58Encode(bytes: Uint8Array): string {
     let value = 0n;
     for (const byte of bytes) value = value * 256n + BigInt(byte);
@@ -16,6 +17,7 @@ export function base58Encode(bytes: Uint8Array): string {
     return out;
 }
 
+/** Decodes base58 to bytes; each leading '1' becomes a zero byte. Throws on a character outside the alphabet. */
 export function base58Decode(encoded: string): Uint8Array {
     let value = 0n;
     for (const char of encoded) {

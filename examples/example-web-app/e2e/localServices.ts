@@ -27,6 +27,7 @@ interface Event {
     tags: string[][];
 }
 
+/** Whether an event matches a relay subscription filter (kinds, and #d and #p tags). */
 function matches(filter: Filter, event: Event): boolean {
     const tag = (name: string) => event.tags.filter(([key]) => key === name).map(([, value]) => value);
     if (filter.kinds && !filter.kinds.includes(event.kind)) return false;
@@ -35,6 +36,7 @@ function matches(filter: Filter, event: Event): boolean {
     return true;
 }
 
+/** Starts the server on a free local port and resolves with that port. */
 function listen(server: Server): Promise<number> {
     return new Promise((resolve) => {
         server.listen(0, '127.0.0.1', () => {

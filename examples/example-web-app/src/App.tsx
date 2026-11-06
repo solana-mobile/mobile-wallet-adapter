@@ -68,11 +68,14 @@ interface Outcome {
     href?: string;
 }
 
+/** The Solana Explorer link for a devnet transaction. */
 const explorerTxUrl = (signature: string) => `https://explorer.solana.com/tx/${signature}?cluster=${EXPLORER_CLUSTER}`;
 
+/** Lamports as SOL, with up to 4 decimals. */
 const formatSol = (lamports: number) =>
     new Intl.NumberFormat(undefined, { maximumFractionDigits: 4 }).format(lamports / LAMPORTS_PER_SOL);
 
+/** The example dapp: wallet selection, the account, and the Mobile Wallet Adapter actions. */
 export function App() {
     const wallets = useWallets();
     // Every registered Solana wallet that can connect, Mobile Wallet Adapter first.
@@ -98,6 +101,7 @@ export function App() {
 
     const account = accounts[0];
 
+    /** Adds an outcome to the activity log and shows it as the toast. */
     const append = useCallback((entry: Omit<LogEntry, 'id'>) => {
         const logEntry = { ...entry, id: ++nextLogId.current };
         setLog((current) => [logEntry, ...current]);
@@ -112,6 +116,7 @@ export function App() {
 
     // Bumped after actions that move funds, to refetch the balance.
     const [balanceVersion, setBalanceVersion] = useState(0);
+    /** Refetches the balance, after actions that move funds. */
     const refreshBalance = useCallback(() => setBalanceVersion((version) => version + 1), []);
     useEffect(() => {
         if (!account) return;
@@ -196,7 +201,7 @@ export function App() {
         );
     }
 
-    // Whether both the wallet and the account support `name`, as wallet-adapter checks before each call.
+    /** Whether both the wallet and the account support `name`, as wallet-adapter checks before each call. */
     const supports = (name: keyof WalletFeatures, current: WalletAccount | undefined) =>
         !!features[name] && !!current?.features.includes(name);
 
@@ -208,7 +213,7 @@ export function App() {
         return feature;
     };
 
-    // Like the old app: a v0 transaction when the wallet supports it, legacy otherwise.
+    /** The memo transaction for `feePayer`: v0 when the wallet supports it, legacy otherwise, like the old app. */
     const memoTransaction = (
         feePayer: WalletAccount,
         { blockhash }: { blockhash: Uint8Array },
@@ -221,6 +226,7 @@ export function App() {
             supportedVersions.includes(0) ? 0 : 'legacy',
         );
 
+    /** Connects the selected wallet; fails if it returns no accounts. */
     const connect = () =>
         run('Connect', async () => {
             const { accounts: connected } = await walletCall('WalletConnectionError', () =>
@@ -231,6 +237,7 @@ export function App() {
             return { text: `Connect ✓ ${connected[0].address}` };
         });
 
+    /** Signs in with Solana, then verifies the signed message and its signature. */
     const signIn = () =>
         run('Sign in', async () => {
             const input: SolanaSignInInput = {
@@ -247,6 +254,7 @@ export function App() {
             return { text: `Sign in ✓ verified ${output.account.address}` };
         });
 
+    /** Disconnects; the account is cleared even if the wallet fails to disconnect. */
     const disconnect = () =>
         run('Disconnect', async () => {
             try {
@@ -258,6 +266,7 @@ export function App() {
             return { text: 'Disconnect ✓ done' };
         });
 
+    /** Airdrops 0.1 devnet SOL to the account and waits for confirmation. */
     const fundAccount = (current: WalletAccount) =>
         run(
             'Fund account',
@@ -270,7 +279,7 @@ export function App() {
             (description) => `Failed to fund account: ${description}`,
         );
 
-    // Signs and sends through the wallet; a wallet that can only sign gets its transaction sent over RPC.
+    /** Records the message on chain: signed and sent by the wallet, or signed by it and sent over RPC. */
     const recordMessage = (current: WalletAccount) =>
         run(
             'Record message',
@@ -308,6 +317,7 @@ export function App() {
             (description) => `Failed to record message: ${description}`,
         );
 
+    /** Signs the memo transaction without sending it and shows the fee payer signature. */
     const signTransaction = (current: WalletAccount) =>
         run(
             'Sign transaction',
@@ -328,6 +338,7 @@ export function App() {
             (description) => description,
         );
 
+    /** Signs the message text off-chain. */
     const signMessage = (current: WalletAccount) =>
         run(
             'Sign message',
@@ -514,6 +525,7 @@ export function App() {
     );
 }
 
+/** The page header. */
 function Header() {
     return (
         <header>
@@ -523,6 +535,7 @@ function Header() {
     );
 }
 
+/** One message action: what it does, and its button. */
 function Action({
     busy,
     buttonText,
