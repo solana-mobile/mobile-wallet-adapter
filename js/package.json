@@ -12,7 +12,7 @@
         "format:fix": "prettier . --write",
         "lint:check": "eslint . --ext .cjs,.cts,.js,.mjs,.mts,.ts,.tsx",
         "lint:fix": "eslint . --ext .cjs,.cts,.js,.mjs,.mts,.ts,.tsx --fix",
-        "publish-packages": "pnpm build && pnpm changeset publish --access public --no-git-checks",
+        "publish-packages": "pnpm build && pnpm changeset publish",
         "test": "vitest",
         "test:coverage": "vitest run --coverage.enabled"
     },
