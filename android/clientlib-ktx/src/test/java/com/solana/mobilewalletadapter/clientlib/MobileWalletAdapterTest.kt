@@ -1,5 +1,6 @@
 package com.solana.mobilewalletadapter.clientlib
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClient
@@ -7,9 +8,11 @@ import com.solana.mobilewalletadapter.clientlib.protocol.MobileWalletAdapterClie
 import com.solana.mobilewalletadapter.common.protocol.SessionProperties
 import com.solana.mobilewalletadapter.common.util.NotifyingCompletableFuture
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,7 +24,11 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.concurrent.thread
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -397,6 +404,58 @@ class MobileWalletAdapterTest {
         assertTrue { result2 is TransactionResult.Success<Unit> }
         assertTrue { (result2 as TransactionResult.Success<Unit>).authResult.authToken == sampleReauthResult.authToken }
         assertTrue { intentUri?.scheme == "solana-wallet" }
+    }
+
+    @Test
+    fun `validate the request fails without waiting when the wallet is cancelled before connecting`() = runTest {
+        // Like the real scenario: start() waits for the wallet to connect, and close() fails it.
+        val closed = CountDownLatch(1)
+        val scenarioProvider = mock<AssociationScenarioProvider> {
+            on { provideAssociationScenario(any()) } doAnswer {
+                mock {
+                    on { start() } doAnswer {
+                        mock<NotifyingCompletableFuture<MobileWalletAdapterClient>> {
+                            on { get(any(), any()) } doAnswer { invocation ->
+                                val timeout = invocation.arguments[0] as Long
+                                val unit = invocation.arguments[1] as TimeUnit
+                                if (!closed.await(timeout, unit)) throw TimeoutException()
+                                throw ExecutionException(RuntimeException("Scenario closed while connecting"))
+                            }
+                        }
+                    }
+                    on { session } doAnswer {
+                        mock {
+                            on { encodedAssociationPublicKey } doAnswer { byteArrayOf() }
+                            on { sessionProperties } doAnswer { SessionProperties(SessionProperties.ProtocolVersion.V1) }
+                        }
+                    }
+                    on { close() } doAnswer {
+                        closed.countDown()
+                        NotifyingCompletableFuture<Void>().apply { complete(null) }
+                    }
+                }
+            }
+        }
+        // As on a device, the wallet's result arrives after startActivityForResult has returned.
+        val cancellingSender = mock<ActivityResultSender> {
+            onBlocking { startActivityForResult(any(), any()) } doAnswer { invocation ->
+                val callback = invocation.arguments[1] as (Int) -> Unit
+                thread { Thread.sleep(100); callback(Activity.RESULT_CANCELED) }
+                Unit
+            }
+        }
+        val adapter = MobileWalletAdapter(
+            connectionIdentity = creds,
+            scenarioProvider = scenarioProvider,
+            ioDispatcher = Dispatchers.IO
+        )
+
+        val startedAt = System.nanoTime()
+        val result = withContext(Dispatchers.Default) { adapter.transact(cancellingSender) { } }
+        val elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
+
+        assertTrue { result is TransactionResult.Failure }
+        assertTrue("took $elapsedMs ms") { elapsedMs < MobileWalletAdapter.ASSOCIATION_CONNECT_DISCONNECT_TIMEOUT_MS }
     }
 
     @Test

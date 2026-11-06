@@ -162,9 +162,9 @@ class MobileWalletAdapter(
                 withTimeout(ASSOCIATION_SEND_INTENT_TIMEOUT_MS) {
                     sender.startActivityForResult(intent) {
                         if (it == RESULT_CANCELED) {
-                            this.launch {
-                                throw InterruptedException()
-                            }
+                            // The wallet closed without completing the request; stop waiting for it. This runs after
+                            // the enclosing scope has completed, so close directly rather than launching a coroutine.
+                            scenario.close()
                         }
                         launch {
                             delay(5000L)
