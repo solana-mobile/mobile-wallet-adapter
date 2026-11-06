@@ -20,7 +20,8 @@ import type { WalletAccount } from '@wallet-standard/base';
 import { StandardConnect, StandardDisconnect, StandardEvents } from '@wallet-standard/features';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const { mockStartRemoteScenario, mockStartScenario } = vi.hoisted(() => ({
+const { mockStartNostrScenario, mockStartRemoteScenario, mockStartScenario } = vi.hoisted(() => ({
+    mockStartNostrScenario: vi.fn(),
     mockStartRemoteScenario: vi.fn(),
     mockStartScenario: vi.fn(),
 }));
@@ -104,6 +105,7 @@ vi.mock('@solana-mobile/mobile-wallet-adapter-protocol', async () => {
         ...actual,
         startRemoteScenario: mockStartRemoteScenario,
         startScenario: mockStartScenario,
+        startNostrScenario: mockStartNostrScenario,
     };
 });
 
@@ -143,6 +145,7 @@ afterEach(() => {
     mockCheckLocalNetworkAccessPermission.mockReset();
     mockStartRemoteScenario.mockReset();
     mockStartScenario.mockReset();
+    mockStartNostrScenario.mockReset();
     resetLoadingSpinnerMocks();
     resetRemoteModalMocks();
     vi.restoreAllMocks();
@@ -563,6 +566,42 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
 
         expect(authorizationCache.set).not.toHaveBeenCalled();
         expect(wallet.connected).toBe(false);
+    });
+
+    it('times out, closing the session, when the wallet never joins a local association over Nostr', async () => {
+        vi.useFakeTimers();
+        try {
+            const scenarioClose = vi.fn();
+            const { wallet } = createLocalWallet({ nostrRelay: 'relay.example.com' });
+            mockStartNostrScenario.mockResolvedValue({ close: scenarioClose, wallet: new Promise(() => undefined) });
+
+            const connecting = wallet.features[StandardConnect].connect();
+            const settled = vi.fn();
+            connecting.then(settled, settled);
+            await vi.advanceTimersByTimeAsync(29_000);
+            expect(settled).not.toHaveBeenCalled();
+
+            const timedOut = expect(connecting).rejects.toThrow('Timed out waiting for the wallet to connect');
+            await vi.advanceTimersByTimeAsync(1_000);
+            await timedOut;
+            expect(scenarioClose).toHaveBeenCalled();
+            expect(mockStartScenario).not.toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('connects over Nostr when the wallet joins in time', async () => {
+        const mobileWallet = createMobileWallet();
+        const { wallet } = createLocalWallet({ nostrRelay: 'relay.example.com' });
+        mockStartNostrScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        await expect(wallet.features[StandardConnect].connect()).resolves.toMatchObject({
+            accounts: [expect.anything()],
+        });
+        expect(mockStartNostrScenario).toHaveBeenCalledWith(
+            expect.objectContaining({ connectionType: 'local', relayDomain: 'relay.example.com' }),
+        );
     });
 
     it('runs the wallet-not-found handler for local association failures', async () => {
@@ -1597,9 +1636,11 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
 
 function createLocalWallet({
     cachedAuthorization,
+    nostrRelay,
     onWalletNotFound = vi.fn<WalletNotFoundHandler>().mockResolvedValue(undefined),
 }: {
     cachedAuthorization?: Authorization;
+    nostrRelay?: string;
     onWalletNotFound?: WalletNotFoundHandler;
 } = {}) {
     const authorizationCache = createAuthorizationCache(cachedAuthorization);
@@ -1615,6 +1656,7 @@ function createLocalWallet({
         authorizationCache,
         chains: [SOLANA_MAINNET_CHAIN],
         chainSelector,
+        nostrRelay,
         onWalletNotFound,
     });
 

@@ -88,6 +88,31 @@ const DEFAULT_FEATURES = [
     SolanaSignMessage,
     SolanaSignIn,
 ] as const;
+const LOCAL_NOSTR_WALLET_CONNECTION_TIMEOUT = 30_000;
+
+/**
+ * Waits for the wallet to join a local association made over a Nostr relay. Over localhost, the protocol
+ * stops retrying after 30 s when the wallet's server never appears; over Nostr the relay connects whether
+ * or not the wallet ever joins, so that timeout never fires. Fails the same way after the same time.
+ */
+function waitForLocalNostrWallet<T>(wallet: Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    return Promise.race([
+        wallet,
+        new Promise<never>((_, reject) => {
+            timer = setTimeout(
+                () =>
+                    reject(
+                        new SolanaMobileWalletAdapterError(
+                            SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_TIMEOUT,
+                            'Timed out waiting for the wallet to connect',
+                        ),
+                    ),
+                LOCAL_NOSTR_WALLET_CONNECTION_TIMEOUT,
+            );
+        }),
+    ]).finally(() => clearTimeout(timer));
+}
 
 function areTransactionVersionsEqual(
     a: readonly SolanaTransactionVersion[] | undefined,
@@ -486,8 +511,9 @@ export class LocalSolanaMobileWalletAdapterWallet
             }
             // Begin local connection, show loading spinner while we connect
             loadingSpinner.init();
+            const overNostr = !useWebSocket && !!this.#nostrRelay;
             const { wallet, close } =
-                !useWebSocket && this.#nostrRelay
+                overNostr && this.#nostrRelay
                     ? await startNostrScenario({
                           ...config,
                           connectionType: 'local' as const,
@@ -499,7 +525,7 @@ export class LocalSolanaMobileWalletAdapterWallet
             });
             loadingSpinner.open();
             try {
-                return await callback(await wallet);
+                return await callback(await (overNostr ? waitForLocalNostrWallet(wallet) : wallet));
             } finally {
                 // Close even when a request fails or is declined, so the wallet isn't left waiting.
                 loadingSpinner.close();
