@@ -66,6 +66,45 @@ function collectManifestTargets(manifest: Manifest): string[] {
     return Array.from(new Set(targets));
 }
 
+/**
+ * Returns each subpath's condition map. An exports field is either one condition map (for `.`) or an
+ * object keyed by subpaths (`.`, `./encoding`).
+ */
+function collectSubpathConditions(exports: ExportsNode | undefined): [string, Record<string, ExportsNode>][] {
+    if (exports == null || typeof exports !== 'object' || Array.isArray(exports)) {
+        return [];
+    }
+    const isSubpathMap = Object.keys(exports).some((key) => key.startsWith('.'));
+    const subpaths = isSubpathMap ? Object.entries(exports) : [['.', exports] as const];
+    return subpaths.filter(
+        (entry): entry is [string, Record<string, ExportsNode>] =>
+            entry[1] != null && typeof entry[1] === 'object' && !Array.isArray(entry[1]),
+    );
+}
+
+/**
+ * Resolves a condition map the way Node and Metro do: the first key, in the order the package
+ * declares them, that is `default` or one of the active conditions wins. The order of the active
+ * conditions themselves does not matter.
+ */
+function resolveConditions(node: ExportsNode, conditions: ReadonlySet<string>): string | null {
+    if (typeof node === 'string' || node == null || Array.isArray(node)) {
+        return typeof node === 'string' ? node : null;
+    }
+    for (const [condition, target] of Object.entries(node)) {
+        if (condition === 'default' || conditions.has(condition)) {
+            return resolveConditions(target, conditions);
+        }
+    }
+    return null;
+}
+
+// An Android or iOS bundle from an app whose Metro config adds `browser` to `unstable_conditionNames`
+// (a common axios workaround). That condition applies to every platform, so native bundles assert
+// `browser` alongside the platform's `react-native`.
+const NATIVE_WITH_GLOBAL_BROWSER_CONDITIONS = new Set(['import', 'react-native', 'browser']);
+const BROWSER_CONDITIONS = new Set(['import', 'browser']);
+
 const packages = readdirSync(PACKAGES_ROOT)
     .map((dirname) => path.join(PACKAGES_ROOT, dirname))
     .filter((packageRoot) => existsSync(path.join(packageRoot, 'package.json')))
@@ -75,9 +114,28 @@ const packages = readdirSync(PACKAGES_ROOT)
             hasBeenBuilt: existsSync(path.join(packageRoot, 'lib')),
             name: manifest.name,
             packageRoot,
+            subpathConditions: collectSubpathConditions(manifest.exports),
             targets: collectManifestTargets(manifest),
         };
     });
+
+describe.each(packages)('$name export conditions', ({ subpathConditions }) => {
+    it.each(subpathConditions.filter(([, conditions]) => 'react-native' in conditions))(
+        '%s resolves to its react-native target in a native bundle that also asserts browser',
+        (_subpath, conditions) => {
+            expect(resolveConditions(conditions, NATIVE_WITH_GLOBAL_BROWSER_CONDITIONS)).toBe(
+                conditions['react-native'],
+            );
+        },
+    );
+
+    it.each(subpathConditions.filter(([, conditions]) => 'browser' in conditions))(
+        '%s resolves to its browser target in a browser bundle',
+        (_subpath, conditions) => {
+            expect(resolveConditions(conditions, BROWSER_CONDITIONS)).toBe(conditions.browser);
+        },
+    );
+});
 
 describe.each(packages)('$name manifest targets', ({ hasBeenBuilt, packageRoot, targets }) => {
     it('declares at least one target', () => {

@@ -360,6 +360,32 @@ describe('adapter', () => {
         expect(wallet.connectImpl).toHaveBeenCalledWith({ silent: true });
     });
 
+    it('resolves connect only after the wallet connection completes', async () => {
+        const pendingConnect = createDeferred<void>();
+        const { adapter, wallet } = createLocalAdapter();
+        const onSettled = vi.fn();
+
+        wallet.connectImpl.mockImplementation(async () => pendingConnect.promise);
+
+        const connect = adapter.connect().then(onSettled);
+        await flushPromises();
+        expect(onSettled).not.toHaveBeenCalled();
+
+        pendingConnect.resolve();
+        await connect;
+        expect(onSettled).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(['connect', 'autoConnect'] as const)('rejects %s when the wallet connection fails', async (method) => {
+        const { adapter, wallet } = createLocalAdapter();
+
+        wallet.connectImpl.mockRejectedValue(new Error('declined'));
+
+        await expect(adapter[method]()).rejects.toEqual(
+            expect.objectContaining({ message: 'declined', name: new WalletConnectionError().name }),
+        );
+    });
+
     it('passes the adapter instance to the local onWalletNotFound handler', async () => {
         const onWalletNotFound = createLocalWalletNotFoundHandler();
         const { adapter } = createLocalAdapter({ onWalletNotFound });
@@ -549,13 +575,18 @@ describe('adapter', () => {
         await flushPromises();
 
         await expect(
-            adapter.sendTransaction(transaction as never, {} as never, { maxRetries: 2, skipPreflight: true }),
+            adapter.sendTransaction(transaction as never, {} as never, {
+                maxRetries: 2,
+                minContextSlot: 123,
+                skipPreflight: true,
+            }),
         ).resolves.toBe(encodeAddress(Uint8Array.of(8, 8, 8)));
         expect(wallet.signAndSendImpl).toHaveBeenCalledWith({
             account,
             chain: 'solana:mainnet',
             options: {
                 maxRetries: 2,
+                minContextSlot: 123,
                 skipPreflight: true,
             },
             transaction: Uint8Array.of(7, 8, 9),
@@ -593,6 +624,51 @@ describe('adapter', () => {
             account,
             transaction: Uint8Array.of(1, 2, 3),
         });
+    });
+
+    // The wallet adds the signatures, so a legacy transaction must serialize without them.
+    const UNSIGNED_LEGACY_SERIALIZE_OPTIONS = { requireAllSignatures: false, verifySignatures: false };
+
+    it('serializes legacy transactions for signTransaction without requiring signatures', async () => {
+        const account = createWalletAccount(11);
+        const legacyTransaction = { serialize: vi.fn(() => Uint8Array.of(1, 2, 3)) };
+        const versionedTransaction = { serialize: vi.fn(() => Uint8Array.of(4, 5, 6)), version: 0 };
+        const { adapter, wallet } = createLocalAdapter();
+
+        wallet.emitAccounts([account]);
+        wallet.signTransactionImpl.mockResolvedValue([
+            { signedTransaction: Uint8Array.of(1) },
+            { signedTransaction: Uint8Array.of(1) },
+        ]);
+        vi.spyOn(Transaction, 'from').mockReturnValue(legacyTransaction as never);
+        vi.spyOn(VersionedMessage, 'deserializeMessageVersion').mockReturnValue('legacy');
+        await flushPromises();
+
+        await adapter.signAllTransactions([legacyTransaction, versionedTransaction] as never);
+
+        expect(legacyTransaction.serialize).toHaveBeenCalledWith(UNSIGNED_LEGACY_SERIALIZE_OPTIONS);
+        expect(versionedTransaction.serialize).toHaveBeenCalledWith();
+        expect(wallet.signTransactionImpl).toHaveBeenCalledWith(
+            { account, transaction: Uint8Array.of(1, 2, 3) },
+            { account, transaction: Uint8Array.of(4, 5, 6) },
+        );
+    });
+
+    it('serializes legacy transactions for signAndSendTransaction without requiring signatures', async () => {
+        const account = createWalletAccount(12);
+        const legacyTransaction = { serialize: vi.fn(() => Uint8Array.of(7, 8, 9)) };
+        const { adapter, wallet } = createLocalAdapter();
+
+        wallet.emitAccounts([account], 'mainnet-beta');
+        wallet.signAndSendImpl.mockResolvedValue([{ signature: Uint8Array.of(8, 8, 8) }]);
+        await flushPromises();
+
+        await adapter.sendTransaction(legacyTransaction as never, {} as never);
+
+        expect(legacyTransaction.serialize).toHaveBeenCalledWith(UNSIGNED_LEGACY_SERIALIZE_OPTIONS);
+        expect(wallet.signAndSendImpl).toHaveBeenCalledWith(
+            expect.objectContaining({ account, transaction: Uint8Array.of(7, 8, 9) }),
+        );
     });
 
     it('defaults unknown sendTransaction commitments to finalized', async () => {
