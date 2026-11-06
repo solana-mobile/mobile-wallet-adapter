@@ -107,13 +107,42 @@ export async function isLocalWebSocketAvailable(): Promise<boolean> {
 }
 
 /**
+ * Runs one modal step of the permission flow. If `signal` aborts first, `onAbort` runs, the modal closes
+ * and the step rejects with the abort reason. The abort listener is removed once the step settles, so a
+ * stale signal can't close a modal opened later (all embedded modals share one root).
+ */
+async function waitForModalStep<T>(
+    modal: { close(): void },
+    signal: AbortSignal | undefined,
+    step: (resolve: (value: T) => void, reject: (reason: unknown) => void) => void,
+    onAbort?: () => void,
+): Promise<T> {
+    let abortListener: (() => void) | undefined;
+    try {
+        return await new Promise<T>((resolve, reject) => {
+            if (signal) {
+                abortListener = () => {
+                    onAbort?.();
+                    modal.close();
+                    reject(signal.reason);
+                };
+                signal.addEventListener('abort', abortListener, { once: true });
+            }
+            step(resolve, reject);
+        });
+    } finally {
+        if (abortListener) signal?.removeEventListener('abort', abortListener);
+    }
+}
+
+/**
  * Ensures the Local Network Access permission is granted before local association,
  * walking the user through the permission prompt flow when the state is "prompt".
  * Resolves immediately when the permission is granted, irrelevant (Web Shell, loopback
  * origins), or unsupported by the browser. Throws a SolanaMobileWalletAdapterError when
  * the permission is denied or the user cancels.
  */
-export async function checkLocalNetworkAccessPermission(): Promise<void> {
+export async function checkLocalNetworkAccessPermission(signal?: AbortSignal): Promise<void> {
     if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
         // Solana Mobile Web Shell runs inside an Android WebView hosted by a
         // native app, not a regular mobile browser tab. The WebView currently
@@ -135,6 +164,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
         const lnaPermission: PermissionStatus = await navigator.permissions.query({
             name: 'loopback-network' as PermissionName,
         });
+        signal?.throwIfAborted();
         if (lnaPermission.state === 'granted') {
             // LNA permission already granted, continuing
             return;
@@ -149,32 +179,42 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
             );
         } else if (lnaPermission.state === 'prompt') {
             // Show permission explainer to user, and wait for the permission to change
+            // The explainer stays open until the permission changes, so a dismissed browser prompt can be retried.
             const modal = new LoopbackPermissionModal();
-            const updatedState = await new Promise((resolve, reject) => {
-                modal.addEventListener('close', (event) => {
-                    if (event) {
-                        reject(
-                            new SolanaMobileWalletAdapterError(
-                                SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
-                                'Wallet connection cancelled by user',
-                                { event },
-                            ),
-                        );
-                    }
-                });
-                lnaPermission.onchange = () => {
-                    lnaPermission.onchange = null; // cleanup
-                    resolve(lnaPermission.state);
-                };
-                modal.init();
-                modal.open();
-            });
+            const updatedState = await waitForModalStep<PermissionState>(
+                modal,
+                signal,
+                (resolve, reject) => {
+                    modal.addEventListener('close', (event) => {
+                        if (event) {
+                            lnaPermission.onchange = null;
+                            reject(
+                                new SolanaMobileWalletAdapterError(
+                                    SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
+                                    'Wallet connection cancelled by user',
+                                    { event },
+                                ),
+                            );
+                        }
+                    });
+                    lnaPermission.onchange = () => {
+                        lnaPermission.onchange = null; // cleanup
+                        modal.close();
+                        resolve(lnaPermission.state);
+                    };
+                    modal.init();
+                    modal.open();
+                },
+                () => {
+                    lnaPermission.onchange = null;
+                },
+            );
 
             if (updatedState === 'granted') {
                 // User has granted the permission, now we need another click to continue
                 // Note: this is required to avoid being blocked by the browsers pop-up blocker
                 const modal = new LocalConnectionModal();
-                await new Promise((resolve, reject) => {
+                await waitForModalStep<void>(modal, signal, (resolve, reject) => {
                     modal.addEventListener('close', (event) => {
                         if (event) {
                             reject(
@@ -187,14 +227,14 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                         }
                     });
                     modal.initWithCallback(async () => {
-                        resolve(true);
+                        resolve();
                     });
                     modal.open();
                 });
                 return;
             } else {
                 // recurse, to avoid duplicating above logic
-                return await checkLocalNetworkAccessPermission();
+                return await checkLocalNetworkAccessPermission(signal);
             }
         }
 

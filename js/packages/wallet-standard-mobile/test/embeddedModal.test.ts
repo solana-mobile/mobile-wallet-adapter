@@ -259,7 +259,8 @@ describe('LocalConnectionModal', () => {
         modal.initWithCallback(callback);
         const root = await openAndRender(modal);
 
-        expect(root.querySelector('.close')).toBeNull();
+        // A visible way out besides tapping the backdrop.
+        expect(root.querySelector('.close')).not.toBeNull();
 
         const button = root.querySelector<HTMLElement>('.action')!;
         button.click();
@@ -273,7 +274,7 @@ describe('LocalConnectionModal', () => {
 });
 
 describe('LoopbackPermissionModal', () => {
-    it('requests local network permission once, then closes without an event', async () => {
+    it('requests local network permission on every tap and stays open, with a close button', async () => {
         const fetchMock = vi.fn().mockRejectedValue(new Error('ignored'));
         const closeListener = vi.fn();
         const modal = new LoopbackPermissionModal();
@@ -283,18 +284,18 @@ describe('LoopbackPermissionModal', () => {
         modal.init();
         const root = await openAndRender(modal);
 
-        expect(root.querySelector('.close')).toBeNull();
+        // It stays open until the permission changes, so it needs a visible way out.
+        expect(root.querySelector('.close')).not.toBeNull();
         expect(root.querySelector('.permission-prompt-mock')).not.toBeNull();
 
         const button = root.querySelector<HTMLElement>('.action')!;
         button.click();
         button.click();
 
-        await vi.waitFor(() => expect(closeListener).toHaveBeenCalledWith(undefined));
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
+        // Each tap prompts again, e.g. after the user dismissed the browser's prompt.
+        await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
         expect(fetchMock).toHaveBeenCalledWith('http://localhost');
-        expect(closeListener).toHaveBeenCalledTimes(1);
+        expect(closeListener).not.toHaveBeenCalled();
     });
 });
 

@@ -46,8 +46,6 @@ export class LoopbackPermissionModalElement extends EmbeddedModalElement {
     /** Called when the user taps "Continue to Allow". */
     onContinue?: () => void;
 
-    protected closable = false;
-
     protected renderContent() {
         return html`
             <div id="title" class="title">Allow connections to your wallet</div>
