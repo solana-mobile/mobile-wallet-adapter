@@ -226,6 +226,40 @@ describe('react-native transact fork', () => {
         expect(nativeModule.endSession).toHaveBeenCalledTimes(1);
     });
 
+    it('maps a native rejection through the real wallet proxy and propagates it unchanged', async () => {
+        const nativeModule = createNativeModule();
+        nativeModule.invoke.mockRejectedValue(
+            Object.assign(new Error('not signed'), {
+                code: 'JSON_RPC_ERROR',
+                userInfo: { jsonRpcErrorCode: -3 },
+            }),
+        );
+
+        const { transact } = await importReactNativeTransact({ mockProxy: false, nativeModule });
+
+        let errorSeenInCallback: unknown;
+        const result = transact(async (wallet) => {
+            try {
+                return await wallet.signMessages({ addresses: [], payloads: [] });
+            } catch (e) {
+                errorSeenInCallback = e;
+                throw e;
+            }
+        });
+
+        const rejection = await result.catch((e: unknown) => e);
+        expect(rejection).toBe(errorSeenInCallback);
+        expect(rejection).toEqual(
+            expect.objectContaining({
+                code: -3,
+                jsonRpcMessageId: 0,
+                name: 'SolanaMobileWalletAdapterProtocolError',
+            }),
+        );
+        expect(nativeModule.invoke).toHaveBeenCalledWith('sign_messages', expect.anything());
+        expect(nativeModule.endSession).toHaveBeenCalledTimes(1);
+    });
+
     it('throws the platform compatibility error on non-Android platforms', async () => {
         const { transact } = await importReactNativeTransact({
             nativeModule: null,
@@ -260,9 +294,11 @@ function createNativeModule() {
 }
 
 async function importReactNativeTransact({
+    mockProxy = true,
     nativeModule = createNativeModule(),
     platformOS = 'android',
 }: {
+    mockProxy?: boolean;
     nativeModule?: NativeModuleMock | null;
     platformOS?: string;
 } = {}) {
@@ -280,9 +316,11 @@ async function importReactNativeTransact({
     vi.doMock('../src/codegenSpec/NativeSolanaMobileWalletAdapter.js', () => ({
         default: nativeModule,
     }));
-    vi.doMock('../src/createMobileWalletProxy.js', () => ({
-        createMobileWalletProxy: mockCreateMobileWalletProxy,
-    }));
+    if (mockProxy) {
+        vi.doMock('../src/createMobileWalletProxy.js', () => ({
+            createMobileWalletProxy: mockCreateMobileWalletProxy,
+        }));
+    }
 
     const module = await import('../src/__forks__/react-native/transact.js');
     return {
