@@ -1,29 +1,18 @@
-import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
-import nextTypescript from 'eslint-config-next/typescript';
+import js from '@eslint/js';
+import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import tseslint from 'typescript-eslint';
 
-const eslintConfig = [
+export default tseslint.config(
+    { ignores: ['node_modules/**', 'out/**'] },
+    js.configs.recommended,
+    ...tseslint.configs.recommended,
+    reactHooks.configs.flat.recommended,
     {
-        ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**', 'out/**'],
-    },
-    ...nextCoreWebVitals,
-    ...nextTypescript,
-    {
-        files: ['**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}'],
-        plugins: {
-            'simple-import-sort': simpleImportSort,
-        },
+        plugins: { 'simple-import-sort': simpleImportSort },
         rules: {
-            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+            '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
             'simple-import-sort/imports': 'error',
         },
     },
-    {
-        files: ['next.config.js'],
-        rules: {
-            '@typescript-eslint/no-require-imports': 'off',
-        },
-    },
-];
-
-export default eslintConfig;
+);
