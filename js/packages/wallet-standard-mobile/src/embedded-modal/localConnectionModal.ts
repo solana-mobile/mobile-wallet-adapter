@@ -44,9 +44,6 @@ const ErrorDialogHtml = `
 `;
 
 const css = `
-.mobile-wallet-adapter-embedded-modal-close {
-    display: none;
-}
 .mobile-wallet-adapter-embedded-modal-content {
     text-align: center;
     min-width: 300px;

@@ -24,12 +24,16 @@ const {
     };
     type MockLocalConnectionModalInstance = MockModalInstance & {
         callback: (() => Promise<void>) | undefined;
+        close: ReturnType<typeof vi.fn>;
         initWithCallback: ReturnType<typeof vi.fn>;
+    };
+    type MockPermissionModalInstance = MockModalInstance & {
+        close: ReturnType<typeof vi.fn>;
     };
 
     const blockedModalInstances: MockModalInstance[] = [];
     const localConnectionModalInstances: MockLocalConnectionModalInstance[] = [];
-    const permissionModalInstances: MockModalInstance[] = [];
+    const permissionModalInstances: MockPermissionModalInstance[] = [];
 
     class LoopbackPermissionBlockedModalMock {
         addEventListener = vi.fn((_: string, listener: ModalEventListener) => {
@@ -49,6 +53,7 @@ const {
             this.closeListener = listener;
         });
         callback: (() => Promise<void>) | undefined;
+        close = vi.fn();
         closeListener: ModalEventListener | undefined;
         init = vi.fn();
         initWithCallback = vi.fn((callback: () => Promise<void>) => {
@@ -65,6 +70,7 @@ const {
         addEventListener = vi.fn((_: string, listener: ModalEventListener) => {
             this.closeListener = listener;
         });
+        close = vi.fn();
         closeListener: ModalEventListener | undefined;
         init = vi.fn();
         open = vi.fn();
@@ -224,6 +230,61 @@ describe('getIsSupported helpers', () => {
         expect(localConnectionModalInstances).toHaveLength(0);
     });
 
+    it('closes the permission explainer when aborted', async () => {
+        const controller = new AbortController();
+        const permission = createPermissionStatus('prompt');
+
+        installBrowserGlobals({ permissionQuery: vi.fn().mockResolvedValue(permission) });
+
+        const permissionPromise = checkLocalNetworkAccessPermission(controller.signal);
+        await vi.waitFor(() => expect(permissionModalInstances).toHaveLength(1));
+        controller.abort();
+
+        await expect(permissionPromise).rejects.toThrow();
+        expect(permissionModalInstances[0].close).toHaveBeenCalledTimes(1);
+        expect(permission.onchange).toBeNull();
+        expect(localConnectionModalInstances).toHaveLength(0);
+    });
+
+    it('closes the "Ready to connect!" modal when aborted', async () => {
+        const controller = new AbortController();
+        const permission = createPermissionStatus('prompt');
+
+        installBrowserGlobals({ permissionQuery: vi.fn().mockResolvedValue(permission) });
+
+        const permissionPromise = checkLocalNetworkAccessPermission(controller.signal);
+        await vi.waitFor(() => expect(permissionModalInstances).toHaveLength(1));
+        permission.state = 'granted';
+        permission.onchange?.(new Event('change'));
+        await vi.waitFor(() => expect(localConnectionModalInstances).toHaveLength(1));
+        controller.abort();
+
+        await expect(permissionPromise).rejects.toThrow();
+        expect(localConnectionModalInstances[0].close).toHaveBeenCalledTimes(1);
+    });
+
+    it('removes its abort listeners once the flow settles', async () => {
+        const controller = new AbortController();
+        const permission = createPermissionStatus('prompt');
+
+        installBrowserGlobals({ permissionQuery: vi.fn().mockResolvedValue(permission) });
+
+        const permissionPromise = checkLocalNetworkAccessPermission(controller.signal);
+        await vi.waitFor(() => expect(permissionModalInstances).toHaveLength(1));
+        permission.state = 'granted';
+        permission.onchange?.(new Event('change'));
+        await vi.waitFor(() => expect(localConnectionModalInstances).toHaveLength(1));
+        await localConnectionModalInstances[0].callback?.();
+        await expect(permissionPromise).resolves.toBeUndefined();
+
+        // A later abort (e.g. a disconnect) must not close a modal that another flow has opened since.
+        const permissionModalCloses = permissionModalInstances[0].close.mock.calls.length;
+        controller.abort();
+
+        expect(permissionModalInstances[0].close).toHaveBeenCalledTimes(permissionModalCloses);
+        expect(localConnectionModalInstances[0].close).not.toHaveBeenCalled();
+    });
+
     it('covers the prompt flow completing after permission is granted', async () => {
         const permission = createPermissionStatus('prompt');
 
@@ -237,6 +298,9 @@ describe('getIsSupported helpers', () => {
             expect(permissionModalInstances).toHaveLength(1);
         });
 
+        // The explainer stays open until the browser prompt is answered.
+        expect(permissionModalInstances[0].close).not.toHaveBeenCalled();
+
         permission.state = 'granted';
         permission.onchange?.(new Event('change'));
 
@@ -244,6 +308,7 @@ describe('getIsSupported helpers', () => {
             expect(localConnectionModalInstances).toHaveLength(1);
         });
 
+        expect(permissionModalInstances[0].close).toHaveBeenCalledTimes(1);
         expect(permission.onchange).toBeNull();
         expect(permissionModalInstances[0].init).toHaveBeenCalledTimes(1);
         expect(permissionModalInstances[0].open).toHaveBeenCalledTimes(1);

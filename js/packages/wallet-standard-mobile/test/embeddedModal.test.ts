@@ -227,7 +227,7 @@ describe('concrete embedded modals', () => {
         expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('requests local network permission from the loopback permission modal launch action', async () => {
+    it('requests local network permission on every launch action click and stays open', async () => {
         const fetchMock = vi.fn().mockRejectedValue(new Error('ignored'));
         const closeListener = vi.fn();
         const modal = new LoopbackPermissionModal();
@@ -245,7 +245,13 @@ describe('concrete embedded modals', () => {
         await Promise.resolve();
 
         expect(fetchMock).toHaveBeenCalledWith('http://localhost');
-        expect(closeListener).toHaveBeenCalledTimes(1);
+        expect(closeListener).not.toHaveBeenCalled();
+
+        getDom(modal)
+            .getElementById('mobile-wallet-adapter-launch-action')
+            ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
     it('renders app and browser-specific blocked permission instructions', async () => {

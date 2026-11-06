@@ -12,6 +12,8 @@ import {
 import {
     SolanaMobileWalletAdapterError,
     SolanaMobileWalletAdapterErrorCode,
+    SolanaMobileWalletAdapterProtocolError,
+    SolanaMobileWalletAdapterProtocolErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { base58FromUint8Array } from '@solana-mobile/mobile-wallet-adapter-protocol/encoding';
 import type { WalletAccount } from '@wallet-standard/base';
@@ -428,20 +430,149 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
         expect(mockStartScenario).not.toHaveBeenCalled();
     });
 
-    it('rejects connect when local association times out', async () => {
+    it('does not time out connect while the permission flow waits on the user', async () => {
         vi.useFakeTimers();
+        try {
+            const mobileWallet = createMobileWallet();
+            const { wallet } = createLocalWallet();
+            let grantPermission!: () => void;
+
+            mockCheckLocalNetworkAccessPermission.mockReturnValue(
+                new Promise<void>((resolve) => (grantPermission = resolve)),
+            );
+            mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+            const connectPromise = wallet.features[StandardConnect].connect();
+            await vi.advanceTimersByTimeAsync(60_000);
+            grantPermission();
+
+            await expect(connectPromise).resolves.toMatchObject({ accounts: [expect.anything()] });
+            expect(mobileWallet.authorize).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('does not launch the wallet when disconnect runs while the permission flow is pending', async () => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createLocalWallet();
+        let grantPermission!: () => void;
+
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(
+            new Promise<void>((resolve) => (grantPermission = resolve)),
+        );
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+
+        void wallet.features[StandardConnect].connect().catch(() => {});
+        await vi.waitFor(() => expect(mockCheckLocalNetworkAccessPermission).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        grantPermission();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mockStartScenario).not.toHaveBeenCalled();
+        expect(mobileWallet.authorize).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+    });
+
+    it('aborts the permission flow on disconnect', async () => {
         const { wallet } = createLocalWallet();
 
+        mockCheckLocalNetworkAccessPermission.mockReturnValue(new Promise(() => undefined));
+
+        void wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mockCheckLocalNetworkAccessPermission).toHaveBeenCalledTimes(1));
+        const [signal] = mockCheckLocalNetworkAccessPermission.mock.calls[0] as [AbortSignal];
+        expect(signal.aborted).toBe(false);
+
+        await wallet.features[StandardDisconnect].disconnect();
+
+        expect(signal.aborted).toBe(true);
+    });
+
+    it('rejects connect, without caching, when disconnect runs while the wallet is authorizing', async () => {
+        let resolveAuthorize!: (authorization: ReturnType<typeof createMwaAuthorization>) => void;
+        const mobileWallet = createMobileWallet();
+        mobileWallet.authorize.mockReturnValue(new Promise((resolve) => (resolveAuthorize = resolve)));
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createLocalWallet();
+
         mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
-        mockStartScenario.mockReturnValue(new Promise(() => undefined));
+        mockStartScenario.mockResolvedValue({ close: scenarioClose, wallet: Promise.resolve(mobileWallet) });
 
-        const connectPromise = wallet.features[StandardConnect].connect();
-        const expectation = expect(connectPromise).rejects.toThrow('Wallet connection timed out');
-        await vi.advanceTimersByTimeAsync(30000);
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mobileWallet.authorize).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveAuthorize(createMwaAuthorization(Uint8Array.of(1, 2, 3)));
 
-        await expectation;
+        await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
         expect(loadingSpinnerInstances[0].close).toHaveBeenCalledTimes(1);
-        vi.useRealTimers();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+    });
+
+    it('rejects connect without opening the wallet when disconnect runs during chain selection', async () => {
+        let resolveSelect!: (chain: typeof SOLANA_MAINNET_CHAIN) => void;
+        const { authorizationCache, chainSelector, wallet } = createLocalWallet();
+
+        chainSelector.select.mockReturnValue(new Promise((resolve) => (resolveSelect = resolve)));
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(chainSelector.select).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveSelect(SOLANA_MAINNET_CHAIN);
+
+        await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+        expect(mockStartScenario).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
+    });
+
+    it.each([
+        ['an interactive', undefined],
+        ['a silent', { silent: true }],
+    ])(
+        'rejects %s connect without restoring the cache when disconnect runs during the cache read',
+        async (_kind, input) => {
+            let resolveGet!: (authorization: Authorization) => void;
+            const { authorizationCache, wallet } = createLocalWallet();
+
+            authorizationCache.get.mockReturnValue(new Promise((resolve) => (resolveGet = resolve)));
+
+            const connecting = wallet.features[StandardConnect].connect(input);
+            await vi.waitFor(() => expect(authorizationCache.get).toHaveBeenCalled());
+            await wallet.features[StandardDisconnect].disconnect();
+            resolveGet(createCachedAuthorization(Uint8Array.of(1, 2, 3)));
+
+            await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+            expect(wallet.accounts).toEqual([]);
+            expect(wallet.connected).toBe(false);
+        },
+    );
+
+    it('does not reconnect or re-cache when disconnect runs during a reauthorization', async () => {
+        let resolveReauthorize!: (authorization: ReturnType<typeof createMwaAuthorization>) => void;
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createLocalWallet();
+
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({ close: vi.fn(), wallet: Promise.resolve(mobileWallet) });
+        await wallet.features[StandardConnect].connect();
+        const account = wallet.accounts[0];
+        authorizationCache.set.mockClear();
+
+        mobileWallet.authorize.mockReturnValueOnce(new Promise((resolve) => (resolveReauthorize = resolve)));
+        mobileWallet.signTransactions.mockResolvedValue({ signed_payloads: [encodeBytes(Uint8Array.of(1))] });
+        const signing = getSignTransactionFeature(wallet).signTransaction({ account, transaction: Uint8Array.of(1) });
+        await vi.waitFor(() => expect(mobileWallet.authorize).toHaveBeenCalledTimes(2));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveReauthorize(createMwaAuthorization(Uint8Array.of(1, 2, 3)));
+        await signing.catch(() => {});
+
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
+        expect(wallet.accounts).toEqual([]);
     });
 
     it('runs the wallet-not-found handler for local association failures', async () => {
@@ -666,6 +797,27 @@ describe('LocalSolanaMobileWalletAdapterWallet', () => {
             expect(authorizationCache.clear).toHaveBeenCalledTimes(1);
         });
         expect(wallet.connected).toBe(false);
+    });
+
+    it('closes the local session when the wallet declines the request', async () => {
+        const mobileWallet = createMobileWallet();
+        const scenarioClose = vi.fn();
+        const { wallet } = createLocalWallet();
+
+        mobileWallet.authorize.mockRejectedValue(
+            new SolanaMobileWalletAdapterProtocolError(
+                1,
+                SolanaMobileWalletAdapterProtocolErrorCode.ERROR_AUTHORIZATION_FAILED,
+                'declined',
+            ),
+        );
+        mockCheckLocalNetworkAccessPermission.mockResolvedValue(undefined);
+        mockStartScenario.mockResolvedValue({ close: scenarioClose, wallet: Promise.resolve(mobileWallet) });
+
+        await expect(wallet.features[StandardConnect].connect()).rejects.toThrow('declined');
+
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(loadingSpinnerInstances[0].close).toHaveBeenCalled();
     });
 
     it('advertises the transaction versions reported by the local wallet, including v1', async () => {
@@ -963,6 +1115,296 @@ describe('RemoteSolanaMobileWalletAdapterWallet', () => {
         );
         expect(remoteModalInstances[0].close).toHaveBeenCalledTimes(1);
         expect(onWalletNotFound).toHaveBeenCalledWith(wallet);
+    });
+
+    it('closes the remote session when authorization is declined, and opens a new one on the next connect', async () => {
+        const mobileWallet = createMobileWallet();
+        const scenarioClose = vi.fn();
+        const { wallet } = createRemoteWallet();
+
+        mobileWallet.authorize.mockRejectedValueOnce(
+            new SolanaMobileWalletAdapterProtocolError(
+                1,
+                SolanaMobileWalletAdapterProtocolErrorCode.ERROR_AUTHORIZATION_FAILED,
+                'declined',
+            ),
+        );
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: scenarioClose,
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        await expect(wallet.features[StandardConnect].connect()).rejects.toThrow('declined');
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(wallet.connected).toBe(false);
+
+        await wallet.features[StandardConnect].connect();
+        expect(mockStartRemoteScenario).toHaveBeenCalledTimes(2);
+        expect(wallet.connected).toBe(true);
+    });
+
+    it('keeps the remote session open when signing is declined, and closes it when the connection drops', async () => {
+        const mobileWallet = createMobileWallet();
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createRemoteWallet();
+        const changeListener = vi.fn();
+        wallet.features[StandardEvents].on('change', changeListener);
+        const sign = () =>
+            getSignTransactionFeature(wallet).signTransaction({
+                account: wallet.accounts[0],
+                transaction: Uint8Array.of(1, 2, 3),
+            });
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: scenarioClose,
+            wallet: Promise.resolve(mobileWallet),
+        });
+        await wallet.features[StandardConnect].connect();
+
+        mobileWallet.signTransactions.mockRejectedValueOnce(
+            new SolanaMobileWalletAdapterProtocolError(
+                2,
+                SolanaMobileWalletAdapterProtocolErrorCode.ERROR_NOT_SIGNED,
+                'declined',
+            ),
+        );
+        await expect(sign()).rejects.toThrow('declined');
+        expect(scenarioClose).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(true);
+
+        mobileWallet.signTransactions.mockRejectedValueOnce(
+            new SolanaMobileWalletAdapterError(SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED, 'dropped', {
+                closeEvent: new CloseEvent('close'),
+            }),
+        );
+        await expect(sign()).rejects.toThrow('dropped');
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(wallet.connected).toBe(false);
+        expect(wallet.accounts).toEqual([]);
+        expect(authorizationCache.clear).toHaveBeenCalledTimes(1);
+        expect(changeListener).toHaveBeenLastCalledWith({ accounts: [] });
+
+        // The next connect opens a new session rather than returning cached accounts without one.
+        await wallet.features[StandardConnect].connect();
+        expect(mockStartRemoteScenario).toHaveBeenCalledTimes(2);
+        expect(wallet.connected).toBe(true);
+    });
+
+    it('settles the cache clear after a lost remote session before rejecting or reading the cache again', async () => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createRemoteWallet();
+        let finishClear!: () => void;
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+        await wallet.features[StandardConnect].connect();
+
+        // Until the asynchronous clear settles, the cache still holds the old authorization.
+        authorizationCache.get.mockResolvedValue(createCachedAuthorization(Uint8Array.of(1, 2, 3)));
+        authorizationCache.clear.mockReturnValueOnce(new Promise<void>((resolve) => (finishClear = resolve)));
+        mobileWallet.signTransactions.mockRejectedValueOnce(
+            new SolanaMobileWalletAdapterError(SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED, 'dropped', {
+                closeEvent: new CloseEvent('close'),
+            }),
+        );
+        const signing = getSignTransactionFeature(wallet).signTransaction({
+            account: wallet.accounts[0],
+            transaction: Uint8Array.of(1, 2, 3),
+        });
+        const signingSettled = vi.fn();
+        signing.catch(signingSettled);
+        await vi.waitFor(() => expect(authorizationCache.clear).toHaveBeenCalledTimes(1));
+        const lookupsBeforeClear = authorizationCache.get.mock.calls.length;
+
+        const reconnecting = wallet.features[StandardConnect].connect();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(signingSettled).not.toHaveBeenCalled();
+        expect(authorizationCache.get).toHaveBeenCalledTimes(lookupsBeforeClear);
+
+        authorizationCache.get.mockResolvedValue(undefined);
+        finishClear();
+        await expect(signing).rejects.toThrow('dropped');
+        await reconnecting;
+        expect(mockStartRemoteScenario).toHaveBeenCalledTimes(2);
+        expect(wallet.connected).toBe(true);
+    });
+
+    it.each([
+        ['the cache clear fails', () => Promise.reject(new Error('storage unavailable'))],
+        ['a late cache write restores it after the clear', () => Promise.resolve()],
+    ])('never restores the authorization dropped with a lost remote session when %s', async (_case, clear) => {
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createRemoteWallet();
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+        await wallet.features[StandardConnect].connect();
+
+        authorizationCache.clear.mockImplementationOnce(clear);
+        mobileWallet.signTransactions.mockRejectedValueOnce(
+            new SolanaMobileWalletAdapterError(SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED, 'dropped', {
+                closeEvent: new CloseEvent('close'),
+            }),
+        );
+        await expect(
+            getSignTransactionFeature(wallet).signTransaction({
+                account: wallet.accounts[0],
+                transaction: Uint8Array.of(1, 2, 3),
+            }),
+        ).rejects.toThrow('dropped');
+
+        // The cache still returns the dropped authorization (same auth token).
+        authorizationCache.get.mockResolvedValue(createCachedAuthorization(Uint8Array.of(1, 2, 3)));
+        await wallet.features[StandardConnect].connect();
+
+        expect(mockStartRemoteScenario).toHaveBeenCalledTimes(2);
+        expect(wallet.connected).toBe(true);
+        expect(authorizationCache.clear).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps every dropped authorization invalid, not only the latest, after later sessions fail', async () => {
+        const publicKey = Uint8Array.of(1, 2, 3);
+        const mobileWallet = createMobileWallet();
+        const { authorizationCache, wallet } = createRemoteWallet();
+        const dropSession = () => {
+            mobileWallet.signTransactions.mockRejectedValueOnce(
+                new SolanaMobileWalletAdapterError(SolanaMobileWalletAdapterErrorCode.ERROR_SESSION_CLOSED, 'dropped', {
+                    closeEvent: new CloseEvent('close'),
+                }),
+            );
+            return expect(
+                getSignTransactionFeature(wallet).signTransaction({
+                    account: wallet.accounts[0],
+                    transaction: Uint8Array.of(1, 2, 3),
+                }),
+            ).rejects.toThrow('dropped');
+        };
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: vi.fn(),
+            wallet: Promise.resolve(mobileWallet),
+        });
+        // The first authorization ('auth-token') is dropped with its session.
+        await wallet.features[StandardConnect].connect();
+        await dropSession();
+
+        // A second authorization with a new token, then its session fails too.
+        mobileWallet.authorize.mockResolvedValue(createMwaAuthorization(publicKey, { auth_token: 'token-2' }));
+        await wallet.features[StandardConnect].connect();
+        await dropSession();
+
+        // The cache now returns the first dropped authorization (e.g. its clear failed earlier).
+        authorizationCache.get.mockResolvedValue(createCachedAuthorization(publicKey));
+        await wallet.features[StandardConnect].connect();
+
+        expect(mockStartRemoteScenario).toHaveBeenCalledTimes(3);
+        expect(wallet.connected).toBe(true);
+    });
+
+    it('rejects connect, without caching, when disconnect runs while the remote wallet is authorizing', async () => {
+        let resolveAuthorize!: (authorization: ReturnType<typeof createMwaAuthorization>) => void;
+        const mobileWallet = createMobileWallet();
+        mobileWallet.authorize.mockReturnValue(new Promise((resolve) => (resolveAuthorize = resolve)));
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createRemoteWallet();
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: scenarioClose,
+            wallet: Promise.resolve(mobileWallet),
+        });
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(mobileWallet.authorize).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveAuthorize(createMwaAuthorization(Uint8Array.of(1, 2, 3)));
+
+        await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+    });
+
+    it('closes the session it opened when disconnect runs while the QR code waits for the wallet', async () => {
+        let connectWallet!: (wallet: ReturnType<typeof createMobileWallet>) => void;
+        const mobileWallet = createMobileWallet();
+        const scenarioClose = vi.fn();
+        const { authorizationCache, wallet } = createRemoteWallet();
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: scenarioClose,
+            wallet: new Promise((resolve) => (connectWallet = resolve)),
+        });
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(remoteModalInstances[0]?.populateQRCode).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+        expect(scenarioClose).not.toHaveBeenCalled(); // No session yet, so disconnect() had nothing to close.
+        connectWallet(mobileWallet);
+
+        await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
+    });
+
+    it('rejects connect without opening the remote wallet when disconnect runs during chain selection', async () => {
+        let resolveSelect!: (chain: typeof SOLANA_MAINNET_CHAIN) => void;
+        const { authorizationCache, chainSelector, wallet } = createRemoteWallet();
+
+        chainSelector.select.mockReturnValue(new Promise((resolve) => (resolveSelect = resolve)));
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(chainSelector.select).toHaveBeenCalledTimes(1));
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveSelect(SOLANA_MAINNET_CHAIN);
+
+        await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+        expect(mockStartRemoteScenario).not.toHaveBeenCalled();
+        expect(authorizationCache.set).not.toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
+    });
+
+    it('rejects connect without restoring the cache when disconnect runs during the remote cache read', async () => {
+        let resolveGet!: (authorization: Authorization) => void;
+        const { authorizationCache, wallet } = createRemoteWallet();
+
+        authorizationCache.get.mockReturnValue(new Promise((resolve) => (resolveGet = resolve)));
+
+        const connecting = wallet.features[StandardConnect].connect();
+        await vi.waitFor(() => expect(authorizationCache.get).toHaveBeenCalled());
+        await wallet.features[StandardDisconnect].disconnect();
+        resolveGet(createCachedAuthorization(Uint8Array.of(1, 2, 3)));
+
+        await expect(connecting).rejects.toThrow('The connection was cancelled by disconnect()');
+        expect(wallet.accounts).toEqual([]);
+        expect(wallet.connected).toBe(false);
+    });
+
+    it('closes the remote scenario when the wallet never connects', async () => {
+        const scenarioClose = vi.fn();
+        const { wallet } = createRemoteWallet();
+
+        mockStartRemoteScenario.mockResolvedValue({
+            associationUrl: new URL('https://example.test/associate'),
+            close: scenarioClose,
+            wallet: Promise.reject(new Error('association failed')),
+        });
+
+        await expect(wallet.features[StandardConnect].connect()).rejects.toThrow('association failed');
+        expect(scenarioClose).toHaveBeenCalledTimes(1);
+        expect(remoteModalInstances[0].close).toHaveBeenCalled();
+        expect(wallet.connected).toBe(false);
     });
 
     it('disconnects remote authorization when reauthorization fails', async () => {

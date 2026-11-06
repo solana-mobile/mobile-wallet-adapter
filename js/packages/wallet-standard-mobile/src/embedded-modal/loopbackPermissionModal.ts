@@ -11,17 +11,15 @@ export default class LoopbackPermissionModal extends EmbeddedModal {
 
     #prepareLaunchAction() {
         const launchButton = this.dom?.getElementById('mobile-wallet-adapter-launch-action');
-        const listener = async () => {
-            launchButton?.removeEventListener('click', listener);
+        // Stays open until the permission state changes, so a dismissed browser prompt can be retried.
+        launchButton?.addEventListener('click', async () => {
             try {
                 // Trigger LNA permission prompting
                 await fetch('http://localhost');
             } catch {
                 /* Ignore errors from fetch */
             }
-            this.close();
-        };
-        launchButton?.addEventListener('click', listener);
+        });
     }
 }
 
@@ -53,9 +51,6 @@ const ErrorDialogHtml = `
 `;
 
 const css = `
-.mobile-wallet-adapter-embedded-modal-close {
-    display: none;
-}
 .mobile-wallet-adapter-embedded-modal-content {
     text-align: center;
 }

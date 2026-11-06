@@ -88,7 +88,6 @@ const DEFAULT_FEATURES = [
     SolanaSignMessage,
     SolanaSignIn,
 ] as const;
-const WALLET_ASSOCIATION_TIMEOUT = 30_000;
 
 function areTransactionVersionsEqual(
     a: readonly SolanaTransactionVersion[] | undefined,
@@ -110,6 +109,18 @@ function getSupportedTransactionVersions(
 
 function getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
+}
+
+/**
+ * Rejects work that a `disconnect()` made obsolete. Rejecting rather than never settling lets callers'
+ * cleanup run: wallet-adapter's `StandardWalletAdapter` only clears `connecting` in `connect()`'s `finally`.
+ */
+function connectionCancelledError() {
+    return new SolanaMobileWalletAdapterError(
+        SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
+        'The connection was cancelled by disconnect()',
+        { event: undefined },
+    );
 }
 
 export interface SolanaMobileWalletAdapterWallet extends Wallet {
@@ -166,6 +177,8 @@ export class LocalSolanaMobileWalletAdapterWallet
     #optionalFeatures: SolanaSignAndSendTransactionFeature | SolanaSignTransactionFeature;
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     #nostrRelay: string | undefined;
+    /** Aborted by `disconnect()` to close any Local Network Access dialog still on screen. */
+    #connectionAbortController = new AbortController();
 
     get version() {
         return this.#version;
@@ -292,7 +305,10 @@ export class LocalSolanaMobileWalletAdapterWallet
         this.#connecting = true;
         try {
             if (silent) {
+                const connectionGeneration = this.#connectionGeneration;
                 const cachedAuthorization = await this.#authorizationCache.get();
+                // A disconnect() during the cache read must not restore the cached authorization.
+                if (this.#connectionGeneration !== connectionGeneration) throw connectionCancelledError();
                 if (cachedAuthorization) {
                     await this.#handleWalletCapabilitiesResult(cachedAuthorization.capabilities);
                     await this.#handleAuthorizationResult(cachedAuthorization);
@@ -313,14 +329,21 @@ export class LocalSolanaMobileWalletAdapterWallet
 
     #performAuthorization = async (signInPayload?: SignInPayload) => {
         try {
+            // A disconnect() during any step below makes this authorization obsolete.
+            const connectionGeneration = this.#connectionGeneration;
+            const assertNotDisconnected = () => {
+                if (this.#connectionGeneration !== connectionGeneration) throw connectionCancelledError();
+            };
             const cachedAuthorizationResult = await this.#authorizationCache.get();
+            assertNotDisconnected();
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.#handleAuthorizationResult(cachedAuthorizationResult);
                 return cachedAuthorizationResult;
             }
             const selectedChain = await this.#chainSelector.select(this.#chains);
-            return await this.#transact(async (wallet) => {
+            assertNotDisconnected();
+            const authorization = await this.#transact(async (wallet) => {
                 const [capabilities, mwaAuthorizationResult] = await Promise.all([
                     wallet.getCapabilities(),
                     wallet.authorize({
@@ -331,21 +354,22 @@ export class LocalSolanaMobileWalletAdapterWallet
                 ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts);
-                const authorization = {
+                return {
                     ...mwaAuthorizationResult,
                     accounts,
                     chain: selectedChain,
                     capabilities: capabilities,
                 };
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                Promise.all([
-                    this.#handleWalletCapabilitiesResult(capabilities),
-                    this.#authorizationCache.set(authorization),
-                    this.#handleAuthorizationResult(authorization),
-                ]);
-
-                return authorization;
             });
+            // Cache and apply the authorization only if no disconnect() ran while the wallet was authorizing.
+            assertNotDisconnected();
+            await Promise.all([
+                this.#handleWalletCapabilitiesResult(authorization.capabilities),
+                this.#authorizationCache.set(authorization),
+                this.#handleAuthorizationResult(authorization),
+            ]);
+
+            return authorization;
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
         }
@@ -400,6 +424,8 @@ export class LocalSolanaMobileWalletAdapterWallet
     };
 
     #performReauthorization = async (wallet: MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
+        const connectionGeneration = this.#connectionGeneration;
+        let authorization: Authorization;
         try {
             const [capabilities, mwaAuthorizationResult] = await Promise.all([
                 this.#authorization?.capabilities ?? (await wallet.getCapabilities()),
@@ -411,24 +437,30 @@ export class LocalSolanaMobileWalletAdapterWallet
             ]);
 
             const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts);
-            const authorization = {
+            authorization = {
                 ...mwaAuthorizationResult,
                 accounts: accounts,
                 chain: chain,
                 capabilities: capabilities,
             };
-            // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-            Promise.all([this.#authorizationCache.set(authorization), this.#handleAuthorizationResult(authorization)]);
         } catch (e) {
             this.#disconnect();
             throw new Error(getErrorMessage(e), { cause: e });
         }
+        // A disconnect() during reauthorization must not reconnect the app or re-cache the authorization.
+        if (this.#connectionGeneration !== connectionGeneration) return;
+        await Promise.all([
+            this.#authorizationCache.set(authorization),
+            this.#handleAuthorizationResult(authorization),
+        ]);
     };
 
     #disconnect: StandardDisconnectMethod = async () => {
         this.#authorizationCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
         this.#connecting = false;
         this.#connectionGeneration++;
+        this.#connectionAbortController.abort();
+        this.#connectionAbortController = new AbortController();
         this.#authorization = undefined;
         this.#emit('change', { accounts: this.accounts });
     };
@@ -437,57 +469,41 @@ export class LocalSolanaMobileWalletAdapterWallet
         const walletUriBase = this.#authorization?.wallet_uri_base;
         const config = walletUriBase ? { baseUri: walletUriBase } : undefined;
         const currentConnectionGeneration = this.#connectionGeneration;
+        const { signal } = this.#connectionAbortController;
         const loadingSpinner = new EmbeddedLoadingSpinner();
         try {
-            // check that we have permissions for local app connections, then run
-            // wallet association (transact). In case the user manually cancels
-            // the wallet association, cancel the connection after a timeout.
-            let associating = true;
-            let timeout = undefined;
+            // Check that we have permission for local app connections, then run wallet association. No timer:
+            // the permission flow is bounded by the user answering or cancelling it, `startScenario` returns
+            // once the wallet launches (or throws ERROR_WALLET_NOT_FOUND), and the socket phase has the
+            // protocol's own connect timeout.
             const useWebSocket = await isLocalWebSocketAvailable();
-            const result = await Promise.race([
-                (async () => {
-                    if (!useWebSocket && !this.#nostrRelay) {
-                        await checkLocalNetworkAccessPermission();
-                    }
-                })().then(async () => {
-                    // Begin local connection, show loading spinner while we connect
-                    loadingSpinner.init();
-                    const { wallet, close } =
-                        !useWebSocket && this.#nostrRelay
-                            ? await startNostrScenario({
-                                  ...config,
-                                  connectionType: 'local' as const,
-                                  relayDomain: this.#nostrRelay,
-                              })
-                            : await startScenario(config);
-                    associating = false;
-                    loadingSpinner.addEventListener('close', (event) => {
-                        if (event) close();
-                    });
-                    loadingSpinner.open();
-                    const result = await callback(await wallet);
-                    loadingSpinner.close();
-                    close();
-                    return result;
-                }),
-                new Promise((_, reject) => {
-                    timeout = setTimeout(() => {
-                        if (associating) {
-                            // only timeout during association
-                            reject(
-                                new SolanaMobileWalletAdapterError(
-                                    SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
-                                    'Wallet connection timed out',
-                                    { event: undefined },
-                                ),
-                            );
-                        }
-                    }, WALLET_ASSOCIATION_TIMEOUT);
-                }) as Promise<TReturn>,
-            ]);
-            clearTimeout(timeout);
-            return result;
+            if (!useWebSocket && !this.#nostrRelay) {
+                await checkLocalNetworkAccessPermission(signal);
+                if (this.#connectionGeneration !== currentConnectionGeneration) {
+                    await new Promise(() => {}); // Never resolve.
+                }
+            }
+            // Begin local connection, show loading spinner while we connect
+            loadingSpinner.init();
+            const { wallet, close } =
+                !useWebSocket && this.#nostrRelay
+                    ? await startNostrScenario({
+                          ...config,
+                          connectionType: 'local' as const,
+                          relayDomain: this.#nostrRelay,
+                      })
+                    : await startScenario(config);
+            loadingSpinner.addEventListener('close', (event) => {
+                if (event) close();
+            });
+            loadingSpinner.open();
+            try {
+                return await callback(await wallet);
+            } finally {
+                // Close even when a request fails or is declined, so the wallet isn't left waiting.
+                loadingSpinner.close();
+                close();
+            }
         } catch (e) {
             loadingSpinner.close();
             if (this.#connectionGeneration !== currentConnectionGeneration) {
@@ -689,6 +705,18 @@ export class RemoteSolanaMobileWalletAdapterWallet
     #onWalletNotFound: (mobileWalletAdapter: SolanaMobileWalletAdapterWallet) => Promise<void>;
     #relay: { kind: 'reflector' | 'nostr'; domain: string };
     #session: { close: () => void; wallet: MobileWallet } | undefined;
+    // Settles when the last cache clear after a lost session does; cache lookups wait for it.
+    #authorizationCacheCleared: Promise<void> = Promise.resolve();
+    // Auth tokens of every authorization dropped with a lost session, which the cache must never restore.
+    #droppedAuthTokens = new Set<string>();
+    // Cache writes still in flight; cache lookups wait for them so a late write can't land after the read.
+    #pendingCacheWrites = new Set<Promise<void>>();
+
+    #writeAuthorizationCache = (authorization: Authorization) => {
+        const write = this.#authorizationCache.set(authorization).finally(() => this.#pendingCacheWrites.delete(write));
+        this.#pendingCacheWrites.add(write);
+        return write;
+    };
 
     get version() {
         return this.#version;
@@ -831,15 +859,31 @@ export class RemoteSolanaMobileWalletAdapterWallet
 
     #performAuthorization = async (signInPayload?: SignInPayload) => {
         try {
-            const cachedAuthorizationResult = await this.#authorizationCache.get();
+            // A disconnect() during any step below makes this authorization obsolete.
+            const connectionGeneration = this.#connectionGeneration;
+            const assertNotDisconnected = () => {
+                if (this.#connectionGeneration !== connectionGeneration) throw connectionCancelledError();
+            };
+            await this.#authorizationCacheCleared;
+            await Promise.allSettled([...this.#pendingCacheWrites]);
+            let cachedAuthorizationResult = await this.#authorizationCache.get();
+            assertNotDisconnected();
+            if (cachedAuthorizationResult && this.#droppedAuthTokens.has(cachedAuthorizationResult.auth_token)) {
+                // An authorization dropped with a lost session, back because its clear failed or a pending write
+                // landed after it. Never restore it; try to clear it again.
+                cachedAuthorizationResult = undefined;
+                await this.#authorizationCache.clear().catch(() => {});
+            }
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.#handleAuthorizationResult(cachedAuthorizationResult);
                 return cachedAuthorizationResult;
             }
-            if (this.#session) this.#session = undefined;
+            this.#session?.close();
+            this.#session = undefined;
             const selectedChain = await this.#chainSelector.select(this.#chains);
-            return await this.#transact(async (wallet) => {
+            assertNotDisconnected();
+            const authorizationResult = await this.#transact(async (wallet) => {
                 const [capabilities, mwaAuthorizationResult] = await Promise.all([
                     wallet.getCapabilities(),
                     wallet.authorize({
@@ -850,21 +894,28 @@ export class RemoteSolanaMobileWalletAdapterWallet
                 ]);
 
                 const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts);
-                const authorizationResult = {
+                return {
                     ...mwaAuthorizationResult,
                     accounts,
                     chain: selectedChain,
                     capabilities: capabilities,
                 };
-                // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-                Promise.all([
-                    this.#handleWalletCapabilitiesResult(capabilities),
-                    this.#authorizationCache.set(authorizationResult),
-                    this.#handleAuthorizationResult(authorizationResult),
-                ]);
-
-                return authorizationResult;
             });
+            if (this.#connectionGeneration !== connectionGeneration) {
+                // disconnect() may have run while the QR modal waited for the wallet, before `#transact` set
+                // the session, so it had nothing to close. Close the session this authorization opened.
+                // (Cast: TypeScript still narrows `#session` to the `undefined` assigned before `#transact`.)
+                (this.#session as { close: () => void } | undefined)?.close();
+                this.#session = undefined;
+                throw connectionCancelledError();
+            }
+            await Promise.all([
+                this.#handleWalletCapabilitiesResult(authorizationResult.capabilities),
+                this.#writeAuthorizationCache(authorizationResult),
+                this.#handleAuthorizationResult(authorizationResult),
+            ]);
+
+            return authorizationResult;
         } catch (e) {
             throw new Error(getErrorMessage(e), { cause: e });
         }
@@ -921,6 +972,8 @@ export class RemoteSolanaMobileWalletAdapterWallet
     };
 
     #performReauthorization = async (wallet: MobileWallet, authToken: AuthToken, chain: IdentifierString) => {
+        const connectionGeneration = this.#connectionGeneration;
+        let authorization: Authorization;
         try {
             const [capabilities, mwaAuthorizationResult] = await Promise.all([
                 this.#authorization?.capabilities ?? (await wallet.getCapabilities()),
@@ -932,17 +985,55 @@ export class RemoteSolanaMobileWalletAdapterWallet
             ]);
 
             const accounts = this.#accountsToWalletStandardAccounts(mwaAuthorizationResult.accounts);
-            const authorization = {
+            authorization = {
                 ...mwaAuthorizationResult,
                 accounts: accounts,
                 chain: chain,
                 capabilities: capabilities,
             };
-            // TODO: Evaluate whether there's any threat to not `awaiting` this expression
-            Promise.all([this.#authorizationCache.set(authorization), this.#handleAuthorizationResult(authorization)]);
         } catch (e) {
             this.#disconnect();
             throw new Error(getErrorMessage(e), { cause: e });
+        }
+        // A disconnect() during reauthorization must not reconnect the app or re-cache the authorization.
+        if (this.#connectionGeneration !== connectionGeneration) return;
+        await Promise.all([
+            this.#writeAuthorizationCache(authorization),
+            this.#handleAuthorizationResult(authorization),
+        ]);
+    };
+
+    /**
+     * Runs `callback` on the open session. A session that can't move forward is closed, so the wallet isn't
+     * left waiting on it: the connection failed, or the dapp still isn't authorized (e.g. authorization was
+     * declined). A wallet's error reply while authorized (e.g. a declined signing request) keeps it open.
+     */
+    #runInSession = async <TReturn>(
+        session: { close: () => void; wallet: MobileWallet },
+        callback: (wallet: MobileWallet) => TReturn,
+    ) => {
+        try {
+            return await callback(session.wallet);
+        } catch (e) {
+            const walletReplied = e instanceof Error && e.name === 'SolanaMobileWalletAdapterProtocolError';
+            // `#disconnect` may already have closed and cleared it.
+            if (this.#session === session && (!this.#authorization || !walletReplied)) {
+                session.close();
+                this.#session = undefined;
+                if (this.#authorization) {
+                    // The connection was lost. A remote authorization is only usable with its session, so drop
+                    // it too: otherwise the next connect() would return the cached accounts with no session.
+                    // (Not `#disconnect()`: that also bumps the connection generation, which makes the caller hang.)
+                    this.#droppedAuthTokens.add(this.#authorization.auth_token);
+                    this.#authorization = undefined;
+                    // A failed clear still leaves the in-memory authorization dropped and the change emitted.
+                    this.#authorizationCacheCleared = this.#authorizationCache.clear().catch(() => {});
+                    this.#emit('change', { accounts: this.accounts });
+                    // Settle the clear before the request rejects, so a reconnect can't read the stale entry.
+                    await this.#authorizationCacheCleared;
+                }
+            }
+            throw e;
         }
     };
 
@@ -963,7 +1054,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
         const modal = new RemoteConnectionModal();
 
         if (this.#session) {
-            return callback(this.#session.wallet);
+            return this.#runInSession(this.#session, callback);
         }
 
         try {
@@ -989,10 +1080,15 @@ export class RemoteSolanaMobileWalletAdapterWallet
             modal.populateQRCode(associationUrl.toString());
 
             // Wait for the wallet to be connected, then close the connection modal and proceed
-            this.#session = { close, wallet: await wallet };
+            // Close the scenario if the wallet never connects; closing the modal from code doesn't.
+            const connectedWallet = await wallet.catch((e: unknown) => {
+                close();
+                throw e;
+            });
+            this.#session = { close, wallet: connectedWallet };
             removeCloseListener();
             modal.close();
-            return await callback(this.#session.wallet);
+            return await this.#runInSession(this.#session, callback);
         } catch (e) {
             modal.close();
             if (this.#connectionGeneration !== currentConnectionGeneration) {

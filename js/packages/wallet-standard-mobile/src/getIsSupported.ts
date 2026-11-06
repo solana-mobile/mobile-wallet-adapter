@@ -113,7 +113,7 @@ export async function isLocalWebSocketAvailable(): Promise<boolean> {
  * origins), or unsupported by the browser. Throws a SolanaMobileWalletAdapterError when
  * the permission is denied or the user cancels.
  */
-export async function checkLocalNetworkAccessPermission(): Promise<void> {
+export async function checkLocalNetworkAccessPermission(signal?: AbortSignal): Promise<void> {
     if (typeof navigator !== 'undefined' && isSolanaMobileWebShell(navigator.userAgent)) {
         // Solana Mobile Web Shell runs inside an Android WebView hosted by a
         // native app, not a regular mobile browser tab. The WebView currently
@@ -135,6 +135,7 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
         const lnaPermission: PermissionStatus = await navigator.permissions.query({
             name: 'loopback-network' as PermissionName,
         });
+        signal?.throwIfAborted();
         if (lnaPermission.state === 'granted') {
             // LNA permission already granted, continuing
             return;
@@ -150,9 +151,12 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
         } else if (lnaPermission.state === 'prompt') {
             // Show permission explainer to user, and wait for the permission to change
             const modal = new LoopbackPermissionModal();
+            // Removed once this step settles, so a stale signal can't close a later modal (they share a root).
+            let onAbort: (() => void) | undefined;
             const updatedState = await new Promise((resolve, reject) => {
                 modal.addEventListener('close', (event) => {
                     if (event) {
+                        lnaPermission.onchange = null;
                         reject(
                             new SolanaMobileWalletAdapterError(
                                 SolanaMobileWalletAdapterErrorCode.ERROR_ASSOCIATION_CANCELLED,
@@ -164,16 +168,27 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                 });
                 lnaPermission.onchange = () => {
                     lnaPermission.onchange = null; // cleanup
+                    // The explainer stays open until the browser prompt is answered, so close it here.
+                    modal.close();
                     resolve(lnaPermission.state);
                 };
+                onAbort = () => {
+                    lnaPermission.onchange = null;
+                    modal.close();
+                    reject(signal?.reason);
+                };
+                signal?.addEventListener('abort', onAbort, { once: true });
                 modal.init();
                 modal.open();
+            }).finally(() => {
+                if (onAbort) signal?.removeEventListener('abort', onAbort);
             });
 
             if (updatedState === 'granted') {
                 // User has granted the permission, now we need another click to continue
                 // Note: this is required to avoid being blocked by the browsers pop-up blocker
                 const modal = new LocalConnectionModal();
+                let onConfirmAbort: (() => void) | undefined;
                 await new Promise((resolve, reject) => {
                     modal.addEventListener('close', (event) => {
                         if (event) {
@@ -186,15 +201,22 @@ export async function checkLocalNetworkAccessPermission(): Promise<void> {
                             );
                         }
                     });
+                    onConfirmAbort = () => {
+                        modal.close();
+                        reject(signal?.reason);
+                    };
+                    signal?.addEventListener('abort', onConfirmAbort, { once: true });
                     modal.initWithCallback(async () => {
                         resolve(true);
                     });
                     modal.open();
+                }).finally(() => {
+                    if (onConfirmAbort) signal?.removeEventListener('abort', onConfirmAbort);
                 });
                 return;
             } else {
                 // recurse, to avoid duplicating above logic
-                return await checkLocalNetworkAccessPermission();
+                return await checkLocalNetworkAccessPermission(signal);
             }
         }
 
