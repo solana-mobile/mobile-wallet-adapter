@@ -397,8 +397,7 @@ async function rendered(modal: EmbeddedModal): Promise<ShadowRoot> {
     }
 
     await element.updateComplete;
-    // The shadow root is closed, so it is only reachable through Lit's renderRoot.
-    return (element as unknown as { renderRoot: ShadowRoot }).renderRoot;
+    return element.shadowRoot!;
 }
 
 async function openAndRender(modal: EmbeddedModal): Promise<ShadowRoot> {
