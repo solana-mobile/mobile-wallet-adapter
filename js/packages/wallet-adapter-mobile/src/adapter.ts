@@ -81,6 +81,13 @@ function isVersionedTransaction(
     return 'version' in transaction;
 }
 
+// Serializes a transaction to send to the wallet for signing; a legacy one has no signatures yet.
+function serializeForSigning(transaction: LegacyTransaction | VersionedTransaction): Uint8Array {
+    return isVersionedTransaction(transaction)
+        ? transaction.serialize()
+        : transaction.serialize({ requireAllSignatures: false, verifySignatures: false });
+}
+
 function chainOrClusterToChainId(chain: Cluster | Chain): IdentifierString {
     switch (chain) {
         case 'mainnet-beta':
@@ -197,11 +204,11 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
     }
 
     async autoConnect(): Promise<void> {
-        this.#connect(true);
+        return await this.#connect(true);
     }
 
     async connect(): Promise<void> {
-        this.#connect();
+        return await this.#connect();
     }
 
     async #connect(autoConnect: boolean = false): Promise<void> {
@@ -341,7 +348,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
                     const [signature] = (
                         await this.#wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
                             account,
-                            transaction: transaction.serialize(),
+                            transaction: serializeForSigning(transaction),
                             chain: chain,
                             options: options
                                 ? {
@@ -407,7 +414,7 @@ abstract class BaseSolanaMobileWalletAdapter extends BaseSignInMessageSignerWall
             if (SolanaSignTransaction in this.#wallet.features) {
                 return this.#wallet.features[SolanaSignTransaction].signTransaction(
                     ...transactions.map((value) => {
-                        return { account, transaction: value.serialize() };
+                        return { account, transaction: serializeForSigning(value) };
                     }),
                 ).then((outputs) => {
                     return outputs.map((output: SolanaSignTransactionOutput) => {
