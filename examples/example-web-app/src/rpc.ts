@@ -3,6 +3,8 @@ import { base58Decode } from './base58.js';
 
 export const LAMPORTS_PER_SOL = 1_000_000_000;
 const COMMITMENT = 'confirmed';
+// A stalled request must not keep an action busy forever (e.g. confirmation polling).
+const REQUEST_TIMEOUT_MS = 15_000;
 
 let nextRequestId = 1;
 
@@ -11,6 +13,9 @@ async function rpc<T>(url: string, method: string, params: unknown[] = []): Prom
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', id: nextRequestId++, method, params }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    }).catch((error: unknown) => {
+        throw new Error(`${method} failed`, { cause: error });
     });
     if (!response.ok) throw new Error(`${method} failed: HTTP ${response.status}`);
     const body = (await response.json()) as { result?: T; error?: { code?: number; message: string } };

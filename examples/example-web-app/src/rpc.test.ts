@@ -66,6 +66,21 @@ describe('rpc errors', () => {
         );
     });
 
+    it('bounds every request with a timeout and names the method when it fails', async () => {
+        const timeout = new DOMException('signal timed out', 'TimeoutError');
+        const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+            expect(init.signal).toBeInstanceOf(AbortSignal);
+            throw timeout;
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(confirmSignature('http://rpc.test', 'sig', { lastValidBlockHeight: 100 })).rejects.toMatchObject({
+            message: 'getSignatureStatuses failed',
+            cause: timeout,
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
     it('gives every request its own id', async () => {
         const fetchMock = stubRpc(() => ({ context: { slot: 1 }, value: { blockhash: '1', lastValidBlockHeight: 1 } }));
 
