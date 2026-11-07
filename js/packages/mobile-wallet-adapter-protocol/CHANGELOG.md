@@ -1,5 +1,12 @@
 # @solana-mobile/mobile-wallet-adapter-protocol
 
+## 3.0.2
+
+### Patch Changes
+
+- 2bceaf0: Fix React Native apps resolving the browser build when their Metro config asserts the `browser` condition on every platform, for example by adding it to `resolver.unstable_conditionNames` (a common workaround for axios). Metro picks the first condition in the order a package declares them, and the `exports` maps declared `browser` before `react-native`, so those apps loaded the browser build on Android and failed with "The mobile wallet adapter protocol must be used in a secure context". `react-native` now comes first. Browser bundlers, and Expo's web bundles, don't assert `react-native` and still resolve the browser build. A web bundle built with `@react-native/metro-config`, which asserts `react-native` on every platform, now resolves the React Native build instead.
+- cde28e3: React Native: map a wallet request's rejection to `SolanaMobileWalletAdapterProtocolError` or `SolanaMobileWalletAdapterError` inside the `transact` callback, where it happens. Previously the native module's rejection skipped the mapping and the callback saw the raw React Native error, so code that branches on the protocol error (for example, falling back to `authorize` when `reauthorize` fails with `ERROR_AUTHORIZATION_FAILED`) never matched. An already-mapped error that the callback lets propagate now rejects `transact` unchanged instead of being wrapped again.
+
 ## 3.0.1
 
 ## 3.0.0
