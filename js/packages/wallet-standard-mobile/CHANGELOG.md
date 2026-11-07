@@ -1,5 +1,27 @@
 # @solana-mobile/wallet-standard-mobile
 
+## 0.7.1
+
+### Patch Changes
+
+- e336b15: Close the wallet session when a request fails, instead of leaving the wallet open and waiting. Previously a declined or failed request skipped the session close, so the user was stuck in the wallet.
+
+    - Local: the session now closes after every request, whether it succeeded, failed, or was declined.
+    - Remote: the session closes when it can't move forward: the connection failed, or the dapp still isn't authorized (e.g. the user declined authorization). A declined signing request while authorized keeps the session open, as before. Starting a new authorization now closes any previous session instead of dropping it.
+    - Remote: when a request finds that the connection was lost while authorized, the authorization is cleared along with the session, so the next connect starts a fresh session instead of returning cached accounts with no session. A connection that drops while no request is running is only noticed by the next request. Errors from the adapter's handling of a malformed signing response keep the session and authorization. Errors while handling a reauthorization response can clear both. A connection attempt that fails before the wallet connects now closes its scenario.
+
+- e336b15: Stop `connect` from failing with "Wallet connection timed out" while the user is still answering the Local Network Access permission dialogs. The permission explainer now stays open until the browser's prompt is answered, so a dismissed prompt can be retried. Calling `disconnect()` during the permission flow closes its dialogs, does not launch the wallet, and rejects the pending `connect()`.
+
+    A local association made over a Nostr relay now times out like one over localhost: if the wallet hasn't joined within 30 s of launching, the session is closed and the request fails with `ERROR_SESSION_TIMEOUT`, instead of waiting forever.
+
+- e336b15: A `disconnect()` during `connect()` now wins: an authorization the wallet approves afterwards is no longer cached or applied, so the app stays disconnected, including after a reload. This covers the cache read, chain selection, the wallet's approval screen, a silent connect, and reauthorization during a signing request. The interrupted `connect()` rejects with a cancellation error instead of staying pending, so wrappers such as wallet-adapter's `StandardWalletAdapter` reset their connecting state. For the remote wallet, a session that the wallet opens after a `disconnect()` during the QR code wait is closed without sending it any request.
+- 01fd175: The embedded modals (loading spinner, local connection, Local Network Access permission and blocked, remote connection QR code, and wallet not found) are now Lit custom elements. They look the same as before. Each modal is removed from the page when it closes instead of staying hidden in `document.body`, error messages render as text instead of HTML, and the dialogs have working accessible names. Their shadow roots are open, so page scripts and end-to-end tests can reach the dialog buttons. The React Native build does not import Lit. Adds `lit` as a dependency.
+- 2bceaf0: Fix React Native apps resolving the browser build when their Metro config asserts the `browser` condition on every platform, for example by adding it to `resolver.unstable_conditionNames` (a common workaround for axios). Metro picks the first condition in the order a package declares them, and the `exports` maps declared `browser` before `react-native`, so those apps loaded the browser build on Android and failed with "The mobile wallet adapter protocol must be used in a secure context". `react-native` now comes first. Browser bundlers, and Expo's web bundles, don't assert `react-native` and still resolve the browser build. A web bundle built with `@react-native/metro-config`, which asserts `react-native` on every platform, now resolves the React Native build instead.
+- 202a6a3: Send `signAndSendTransaction` options to the wallet the way the protocol defines them. `wallet-standard-mobile` spread the Wallet Standard options (`minContextSlot`, `commitment`, `skipPreflight`, `maxRetries`) in camelCase at the top level of the request, where wallets don't look for them, so they were ignored. They are now sent as the protocol's `options` object (`min_context_slot`, `commitment`, `skip_preflight`, `max_retries`), and no `options` object is sent when none are set. `preflightCommitment` has no protocol equivalent and is not sent. `wallet-adapter-mobile`'s `sendTransaction` now also forwards `minContextSlot`, which it dropped.
+- Updated dependencies [2bceaf0]
+- Updated dependencies [cde28e3]
+    - @solana-mobile/mobile-wallet-adapter-protocol@3.0.2
+
 ## 0.7.0
 
 ### Minor Changes
