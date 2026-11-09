@@ -233,6 +233,26 @@ export class LocalSolanaMobileWalletAdapterWallet
     #nostrRelay: string | undefined;
     /** Aborted by `disconnect()` to end a Local Network Access permission flow still on screen. */
     #connectionAbortController = new AbortController();
+    #authorizationCacheCleared: Promise<void> = Promise.resolve();
+    #droppedAuthTokens = new Set<string>();
+    #pendingCacheWrites = new Set<Promise<void>>();
+
+    #writeAuthorizationCache = (authorization: Authorization) => {
+        const write = this.#authorizationCache.set(authorization).finally(() => this.#pendingCacheWrites.delete(write));
+        this.#pendingCacheWrites.add(write);
+        return write.catch(() => {});
+    };
+
+    #readAuthorizationCache = async () => {
+        await this.#authorizationCacheCleared;
+        await Promise.allSettled([...this.#pendingCacheWrites]);
+        const cachedAuthorization = await this.#authorizationCache.get();
+        if (cachedAuthorization && this.#droppedAuthTokens.has(cachedAuthorization.auth_token)) {
+            await this.#authorizationCache.clear().catch(() => {});
+            return undefined;
+        }
+        return cachedAuthorization;
+    };
 
     get version() {
         return this.#version;
@@ -360,10 +380,11 @@ export class LocalSolanaMobileWalletAdapterWallet
         try {
             if (silent) {
                 const generation = this.#connectionGeneration;
-                const cachedAuthorization = await this.#authorizationCache.get();
+                const cachedAuthorization = await this.#readAuthorizationCache();
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
                 if (cachedAuthorization) {
                     await this.#handleWalletCapabilitiesResult(cachedAuthorization.capabilities);
+                    if (this.#connectionGeneration !== generation) throw connectionCancelledError();
                     await this.#handleAuthorizationResult(cachedAuthorization);
                 } else {
                     return { accounts: this.accounts };
@@ -388,7 +409,7 @@ export class LocalSolanaMobileWalletAdapterWallet
             const throwIfDisconnected = () => {
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
             };
-            const cachedAuthorizationResult = await this.#authorizationCache.get();
+            const cachedAuthorizationResult = await this.#readAuthorizationCache();
             throwIfDisconnected();
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
@@ -419,11 +440,11 @@ export class LocalSolanaMobileWalletAdapterWallet
             // The user may approve after the app disconnected; that approval must not reconnect the app.
             throwIfDisconnected();
             try {
+                await this.#handleWalletCapabilitiesResult(authorization.capabilities);
+                throwIfDisconnected();
                 await rejectOnAbort(
                     Promise.all([
-                        this.#handleWalletCapabilitiesResult(authorization.capabilities),
-                        // A failed cache write must not fail the connection; the authorization is still applied.
-                        this.#authorizationCache.set(authorization).catch(() => {}),
+                        this.#writeAuthorizationCache(authorization),
                         this.#handleAuthorizationResult(authorization),
                     ]),
                     signal,
@@ -512,14 +533,14 @@ export class LocalSolanaMobileWalletAdapterWallet
         // A reauthorization that completes after disconnect() must not reconnect the app or re-cache it.
         if (this.#connectionGeneration !== generation) return;
         await Promise.all([
-            // A failed cache write must not stop the signing request that triggered the reauthorization.
-            this.#authorizationCache.set(authorization).catch(() => {}),
+            this.#writeAuthorizationCache(authorization),
             this.#handleAuthorizationResult(authorization),
         ]);
     };
 
     #disconnect: StandardDisconnectMethod = async () => {
-        this.#authorizationCache.clear(); // TODO: Evaluate whether there's any threat to not `awaiting` this expression
+        if (this.#authorization) this.#droppedAuthTokens.add(this.#authorization.auth_token);
+        this.#authorizationCacheCleared = this.#authorizationCache.clear().catch(() => {});
         this.#connecting = false;
         this.#connectionGeneration++;
         // Ends any Local Network Access permission flow still on screen.
@@ -986,9 +1007,10 @@ export class RemoteSolanaMobileWalletAdapterWallet
             // must not reconnect the app.
             throwIfDisconnected();
             try {
+                await this.#handleWalletCapabilitiesResult(authorizationResult.capabilities);
+                throwIfDisconnected();
                 await rejectOnAbort(
                     Promise.all([
-                        this.#handleWalletCapabilitiesResult(authorizationResult.capabilities),
                         this.#writeAuthorizationCache(authorizationResult),
                         this.#handleAuthorizationResult(authorizationResult),
                     ]),
