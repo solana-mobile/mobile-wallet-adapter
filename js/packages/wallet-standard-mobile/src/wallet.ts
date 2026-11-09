@@ -355,7 +355,7 @@ export class LocalSolanaMobileWalletAdapterWallet
     }
 
     get cachedAuthorizationResult(): Promise<Authorization | undefined> {
-        return this.#authorizationCache.get();
+        return this.#readAuthorizationCache();
     }
 
     #on: StandardEventsOnMethod = (event, listener) => {
@@ -380,7 +380,11 @@ export class LocalSolanaMobileWalletAdapterWallet
         try {
             if (silent) {
                 const generation = this.#connectionGeneration;
-                const cachedAuthorization = await this.#readAuthorizationCache();
+                const { signal } = this.#connectionAbortController;
+                const cachedAuthorization = await rejectOnAbort(this.#readAuthorizationCache(), signal).catch((e) => {
+                    if (this.#connectionGeneration !== generation) throw connectionCancelledError();
+                    throw e;
+                });
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
                 if (cachedAuthorization) {
                     await this.#handleWalletCapabilitiesResult(cachedAuthorization.capabilities);
@@ -409,7 +413,10 @@ export class LocalSolanaMobileWalletAdapterWallet
             const throwIfDisconnected = () => {
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
             };
-            const cachedAuthorizationResult = await this.#readAuthorizationCache();
+            const cachedAuthorizationResult = await rejectOnAbort(this.#readAuthorizationCache(), signal).catch((e) => {
+                throwIfDisconnected();
+                throw e;
+            });
             throwIfDisconnected();
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
@@ -818,6 +825,17 @@ export class RemoteSolanaMobileWalletAdapterWallet
         return write.catch(() => {});
     };
 
+    #readAuthorizationCache = async () => {
+        await this.#authorizationCacheCleared;
+        await Promise.allSettled([...this.#pendingCacheWrites]);
+        const cachedAuthorization = await this.#authorizationCache.get();
+        if (cachedAuthorization && this.#droppedAuthTokens.has(cachedAuthorization.auth_token)) {
+            await this.#authorizationCache.clear().catch(() => {});
+            return undefined;
+        }
+        return cachedAuthorization;
+    };
+
     get version() {
         return this.#version;
     }
@@ -924,7 +942,7 @@ export class RemoteSolanaMobileWalletAdapterWallet
     }
 
     get cachedAuthorizationResult(): Promise<Authorization | undefined> {
-        return this.#authorizationCache.get();
+        return this.#readAuthorizationCache();
     }
 
     #on: StandardEventsOnMethod = (event, listener) => {
@@ -965,16 +983,11 @@ export class RemoteSolanaMobileWalletAdapterWallet
             const throwIfDisconnected = () => {
                 if (this.#connectionGeneration !== generation) throw connectionCancelledError();
             };
-            await this.#authorizationCacheCleared;
-            await Promise.allSettled([...this.#pendingCacheWrites]);
-            let cachedAuthorizationResult = await this.#authorizationCache.get();
+            const cachedAuthorizationResult = await rejectOnAbort(this.#readAuthorizationCache(), signal).catch((e) => {
+                throwIfDisconnected();
+                throw e;
+            });
             throwIfDisconnected();
-            if (cachedAuthorizationResult && this.#droppedAuthTokens.has(cachedAuthorizationResult.auth_token)) {
-                // An authorization dropped with a lost session, back because its clear failed or a pending write
-                // landed after it. Never restore it; try to clear it again.
-                cachedAuthorizationResult = undefined;
-                await this.#authorizationCache.clear().catch(() => {});
-            }
             if (cachedAuthorizationResult) {
                 // TODO: Evaluate whether there's any threat to not `awaiting` this expression
                 this.#handleAuthorizationResult(cachedAuthorizationResult);
