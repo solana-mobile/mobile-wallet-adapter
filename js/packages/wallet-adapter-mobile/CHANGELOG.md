@@ -1,5 +1,24 @@
 # @solana-mobile/wallet-adapter-mobile
 
+## 3.0.1
+
+### Patch Changes
+
+- 2bceaf0: Fix React Native apps resolving the browser build when their Metro config asserts the `browser` condition on every platform, for example by adding it to `resolver.unstable_conditionNames` (a common workaround for axios). Metro picks the first condition in the order a package declares them, and the `exports` maps declared `browser` before `react-native`, so those apps loaded the browser build on Android and failed with "The mobile wallet adapter protocol must be used in a secure context". `react-native` now comes first. Browser bundlers, and Expo's web bundles, don't assert `react-native` and still resolve the browser build. A web bundle built with `@react-native/metro-config`, which asserts `react-native` on every platform, now resolves the React Native build instead.
+- 202a6a3: Send `signAndSendTransaction` options to the wallet the way the protocol defines them. `wallet-standard-mobile` spread the Wallet Standard options (`minContextSlot`, `commitment`, `skipPreflight`, `maxRetries`) in camelCase at the top level of the request, where wallets don't look for them, so they were ignored. They are now sent as the protocol's `options` object (`min_context_slot`, `commitment`, `skip_preflight`, `max_retries`), and no `options` object is sent when none are set. `preflightCommitment` has no protocol equivalent and is not sent. `wallet-adapter-mobile`'s `sendTransaction` now also forwards `minContextSlot`, which it dropped.
+- 1d6776b: - `connect()` and `autoConnect()` now wait for the wallet connection. They reject with `WalletNotReadyError` when the adapter is not ready (for example, on an unsupported platform) and with `WalletConnectionError` when the wallet connection fails. Previously they resolved before the connection finished, and these errors surfaced only as unhandled rejections.
+    - `signTransaction`, `signAllTransactions` and `sendTransaction` no longer throw `Missing signature for public key` for an unsigned legacy transaction before the wallet opens. Legacy transactions are now serialized for the wallet without requiring signatures, since the wallet adds them; versioned transactions are unchanged.
+- Updated dependencies [e336b15]
+- Updated dependencies [e336b15]
+- Updated dependencies [e336b15]
+- Updated dependencies [01fd175]
+- Updated dependencies [2bceaf0]
+- Updated dependencies [cde28e3]
+- Updated dependencies [202a6a3]
+    - @solana-mobile/wallet-standard-mobile@0.7.1
+    - @solana-mobile/mobile-wallet-adapter-protocol@3.0.2
+    - @solana-mobile/mobile-wallet-adapter-protocol-web3js@3.0.2
+
 ## 3.0.0
 
 ### Major Changes
