@@ -380,6 +380,19 @@ public abstract class BaseScenario implements Scenario {
                 }
 
                 @Override
+                public void signOffchainMessages(@NonNull MobileWalletAdapterServer.SignOffchainMessagesRequest request) {
+                    final AuthRecord authRecord = getAuthorizationForSignRequest(request);
+                    if (authRecord == null) {
+                        return;
+                    }
+
+                    mIoHandler.post(() -> mCallbacks.onSignOffchainMessagesRequest(new SignOffchainMessagesRequest(
+                            request, authRecord.identity.getName(), authRecord.identity.getUri(),
+                            authRecord.identity.getRelativeIconUri(), authRecord.scope,
+                            authRecord.getAuthorizedAccounts(), authRecord.chain)));
+                }
+
+                @Override
                 public void signAndSendTransactions(
                         @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request) {
                     final AuthRecord authRecord = getAuthorizationForSignRequest(request);

@@ -77,6 +77,35 @@ class MainActivityTest {
     }
 
     @Test
+    fun authorizeAndSignOffchainMessage_isSuccessful() {
+        // given
+        val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        // when
+        onView(withId(R.id.btn_authorize)).perform(click())
+
+        handleWalletDisambiguationIfNecessary(uiDevice)
+
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
+
+        // back in dApp, click sign
+        onView(withId(R.id.btn_sign_offchain_message)).perform(click())
+
+        handleWalletDisambiguationIfNecessary(uiDevice)
+
+        waitForWalletButton(uiDevice, walletAuthorizeButton)
+            .clickAndWait(newWindow(), WINDOW_CHANGE_TIMEOUT)
+
+        waitForWalletComplete(uiDevice)
+
+        // then
+        onView(withText(R.string.msg_request_succeeded)).check(matches(isDisplayed()))
+    }
+
+    @Test
     fun combinedAuthorizeAndSignTx1_isSuccessful() {
         // given
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())

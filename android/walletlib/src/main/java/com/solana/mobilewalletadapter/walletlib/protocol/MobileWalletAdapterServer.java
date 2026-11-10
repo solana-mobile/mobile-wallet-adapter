@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.solana.mobilewalletadapter.common.ProtocolContract;
+import com.solana.mobilewalletadapter.common.ocms.OffchainMessage;
 import com.solana.mobilewalletadapter.common.signin.SignInWithSolana;
 import com.solana.mobilewalletadapter.common.util.Identifier;
 import com.solana.mobilewalletadapter.common.util.JsonPack;
@@ -49,6 +50,7 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
         void signTransactions(@NonNull SignTransactionsRequest request);
         void signMessages(@NonNull SignMessagesRequest request);
         void signAndSendTransactions(@NonNull SignAndSendTransactionsRequest request);
+        void signOffchainMessages(@NonNull SignOffchainMessagesRequest request);
     }
 
     public MobileWalletAdapterServer(@NonNull MobileWalletAdapterConfig config,
@@ -86,6 +88,9 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                     break;
                 case ProtocolContract.METHOD_SIGN_MESSAGES:
                     handleSignMessages(id, params);
+                    break;
+                case ProtocolContract.METHOD_SIGN_OFFCHAIN_MESSAGES:
+                    handleSignOffchainMessages(id, params);
                     break;
                 case ProtocolContract.METHOD_SIGN_AND_SEND_TRANSACTIONS:
                     handleSignAndSendTransactions(id, params);
@@ -510,7 +515,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result.put(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, mConfig.maxMessagesPerSigningRequest);
             }
             result.put(ProtocolContract.RESULT_SUPPORTED_TRANSACTION_VERSIONS, new JSONArray(mConfig.supportedTransactionVersions));
-            result.put(ProtocolContract.RESULT_SUPPORTED_FEATURES, new JSONArray(mConfig.optionalFeatures));
+            final JSONArray supportedFeatures = new JSONArray(mConfig.optionalFeatures);
+            // walletlib always handles sign_offchain_messages, so every wallet using it supports the feature
+            if (!Arrays.asList(mConfig.optionalFeatures).contains(ProtocolContract.FEATURE_ID_SIGN_OFFCHAIN_MESSAGES)) {
+                supportedFeatures.put(ProtocolContract.FEATURE_ID_SIGN_OFFCHAIN_MESSAGES);
+            }
+            result.put(ProtocolContract.RESULT_SUPPORTED_FEATURES, supportedFeatures);
 
             // retained for backwards compatibility
             result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS, mConfig.supportsSignAndSendTransactions);
@@ -831,6 +841,35 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
             return "SignMessagesRequest{" +
                     "addresses=" + Arrays.toString(addresses) +
                     ", super=" + super.toString() +
+                    '}';
+        }
+    }
+
+    // =============================================================================================
+    // sign_offchain_messages
+    // =============================================================================================
+
+    private void handleSignOffchainMessages(@Nullable Object id,
+                                            @Nullable Object params)
+            throws IOException {
+        final SignOffchainMessagesRequest request = prepareSignPayloadsRequest(id, params,
+                SigningType.Transaction, (o, payloads) -> new SignOffchainMessagesRequest(id, payloads));
+        if (request != null) {
+            mMethodHandlers.signOffchainMessages(request);
+        }
+    }
+
+    public static class SignOffchainMessagesRequest extends SignRequest<SignedPayloadsResult> {
+        protected SignOffchainMessagesRequest(@Nullable Object id,
+                                              @NonNull byte[][] payloads) {
+            super(id, payloads);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "SignTransactionsRequest{" +
+                    "super=" + super.toString() +
                     '}';
         }
     }
