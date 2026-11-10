@@ -130,7 +130,7 @@ public class ProtocolContract {
     // Optional Features
     public static final String FEATURE_ID_CLONE_AUTHORIZATION = "solana:cloneAuthorization";
     public static final String FEATURE_ID_SIGN_IN_WITH_SOLANA = "solana:signInWithSolana";
-    public static final String FEATURE_ID_SIGN_OFFCHAIN_MESSAGES = "solana:signOffChainMessages";
+    public static final String FEATURE_ID_SIGN_OFFCHAIN_MESSAGES = "solana:signOffchainMessages";
     public static final String FEATURE_ID_SIGN_TRANSACTIONS = "solana:signTransactions";
 
     private ProtocolContract() {}
