@@ -844,23 +844,41 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     // sign_transactions
     // =============================================================================================
 
+    /**
+     * Builds the params object shared by all sign methods: the payloads array and, when provided,
+     * the addresses array.
+     *
+     * @throws IllegalArgumentException with {@code emptyPayloadMessage} if any payload is null or
+     *         empty
+     */
+    @NonNull
+    private static JSONObject createSignPayloadsParams(@NonNull @Size(min = 1) byte[][] payloads,
+                                                       @Nullable byte[][] addresses,
+                                                       @NonNull String emptyPayloadMessage) {
+        for (byte[] p : payloads) {
+            if (p == null || p.length == 0) {
+                throw new IllegalArgumentException(emptyPayloadMessage);
+            }
+        }
+
+        final JSONObject params = new JSONObject();
+        try {
+            params.put(ProtocolContract.PARAMETER_PAYLOADS, JsonPack.packByteArraysToBase64PayloadsArray(payloads));
+            if (addresses != null) {
+                params.put(ProtocolContract.PARAMETER_ADDRESSES, JsonPack.packByteArraysToBase64PayloadsArray(addresses));
+            }
+        } catch (JSONException e) {
+            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
+        }
+        return params;
+    }
+
     @Deprecated(since = "2.0.0", forRemoval = true)
     @NonNull
     public SignPayloadsFuture signTransactions(@NonNull @Size(min = 1) byte[][] transactions)
             throws IOException {
-        for (byte[] t : transactions) {
-            if (t == null || t.length == 0) {
-                throw new IllegalArgumentException("transactions must not be null or empty");
-            }
-        }
-
-        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
-        final JSONObject signPayloads = new JSONObject();
-        try {
-            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
-        }
+        final JSONObject signPayloads = createSignPayloadsParams(transactions, null,
+                "transactions must not be null or empty");
 
         return new SignPayloadsFuture(
                 methodCall(ProtocolContract.METHOD_SIGN_TRANSACTIONS, signPayloads, mClientTimeoutMs),
@@ -881,21 +899,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public SignPayloadsFuture signMessages(@NonNull @Size(min = 1) byte[][] messages,
                                            @NonNull @Size(min = 1) byte[][] addresses)
             throws IOException {
-        for (byte[] m : messages) {
-            if (m == null || m.length == 0) {
-                throw new IllegalArgumentException("messages must not be null or empty");
-            }
-        }
-
-        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(messages);
-        final JSONArray addressesArr = JsonPack.packByteArraysToBase64PayloadsArray(addresses);
-        final JSONObject signPayloads = new JSONObject();
-        try {
-            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
-            signPayloads.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
-        }
+        final JSONObject signPayloads = createSignPayloadsParams(messages, addresses,
+                "messages must not be null or empty");
 
         return new SignPayloadsFuture(
                 methodCall(ProtocolContract.METHOD_SIGN_MESSAGES, signPayloads, mClientTimeoutMs),
@@ -906,21 +911,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     public SignMessagesFuture signMessagesDetached(@NonNull @Size(min = 1) byte[][] messages,
                                                    @NonNull @Size(min = 1) byte[][] addresses)
             throws IOException {
-        for (byte[] m : messages) {
-            if (m == null || m.length == 0) {
-                throw new IllegalArgumentException("messages must not be null or empty");
-            }
-        }
-
-        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(messages);
-        final JSONArray addressesArr = JsonPack.packByteArraysToBase64PayloadsArray(addresses);
-        final JSONObject signPayloads = new JSONObject();
-        try {
-            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
-            signPayloads.put(ProtocolContract.PARAMETER_ADDRESSES, addressesArr);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
-        }
+        final JSONObject signPayloads = createSignPayloadsParams(messages, addresses,
+                "messages must not be null or empty");
 
         return new SignMessagesFuture(
                 methodCall(ProtocolContract.METHOD_SIGN_MESSAGES, signPayloads, mClientTimeoutMs),
@@ -1077,16 +1069,9 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
                                                                  @Nullable Integer maxRetries,
                                                                  @Nullable Boolean waitForCommitmentToSendNextTransaction)
             throws IOException {
-        for (byte[] t : transactions) {
-            if (t == null || t.length == 0) {
-                throw new IllegalArgumentException("transactions must be null or empty");
-            }
-        }
-
-        final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(transactions);
-        final JSONObject signAndSendTransactions = new JSONObject();
+        final JSONObject signAndSendTransactions = createSignPayloadsParams(transactions, null,
+                "transactions must be null or empty");
         try {
-            signAndSendTransactions.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
             final JSONObject options = new JSONObject();
             options.putOpt(ProtocolContract.PARAMETER_OPTIONS_COMMITMENT, commitment);
             if (minContextSlot != null) {
