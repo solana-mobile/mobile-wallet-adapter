@@ -1052,13 +1052,8 @@ public class MobileWalletAdapterClient extends JsonRpc20Client {
     @NonNull
     public SignPayloadsFuture signOffchainMessages(@NonNull @Size(min=1) byte[][] messages)
             throws IOException {
-        final JSONObject signPayloads = new JSONObject();
-        try {
-            final JSONArray payloadsArr = JsonPack.packByteArraysToBase64PayloadsArray(messages);
-            signPayloads.put(ProtocolContract.PARAMETER_PAYLOADS, payloadsArr);
-        } catch (JSONException e) {
-            throw new UnsupportedOperationException("Failed to create signing payload JSON params", e);
-        }
+        final JSONObject signPayloads = createSignPayloadsParams(messages, null,
+                "messages must not be null or empty");
 
         return new SignPayloadsFuture(
                 methodCall(ProtocolContract.METHOD_SIGN_OFFCHAIN_MESSAGES, signPayloads, mClientTimeoutMs),

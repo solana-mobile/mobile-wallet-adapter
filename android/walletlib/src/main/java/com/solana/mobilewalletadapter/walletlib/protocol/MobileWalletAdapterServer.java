@@ -847,29 +847,11 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
     private void handleSignOffchainMessages(@Nullable Object id,
                                             @Nullable Object params)
             throws IOException {
-        if (!(params instanceof JSONObject)) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "params must be a JSONObject", null);
-            return;
+        final SignOffchainMessagesRequest request = prepareSignPayloadsRequest(id, params,
+                SigningType.Transaction, (o, payloads) -> new SignOffchainMessagesRequest(id, payloads));
+        if (request != null) {
+            mMethodHandlers.signOffchainMessages(request);
         }
-
-        final JSONObject o = (JSONObject) params;
-
-        final byte[][] payloads;
-        try {
-            payloads = unpackPayloadsArray(o);
-        } catch (IllegalArgumentException e) {
-            handleRpcError(id, ERROR_INVALID_PARAMS, "request contains an invalid payloads entry", null);
-            return;
-        }
-
-        if (checkExceedsSigningLimits(payloads.length, SigningType.Transaction)) {
-            handleRpcError(id, ProtocolContract.ERROR_TOO_MANY_PAYLOADS, "number of payloads provided for signing exceeds implementation limit", null);
-            return;
-        }
-
-        final SignOffchainMessagesRequest request = new SignOffchainMessagesRequest(id, payloads);
-        request.notifyOnComplete((f) -> mHandler.post(() -> onSignPayloadsComplete(f)));
-        mMethodHandlers.signOffchainMessages(request);
     }
 
     public static class SignOffchainMessagesRequest extends SignRequest<SignedPayloadsResult> {
