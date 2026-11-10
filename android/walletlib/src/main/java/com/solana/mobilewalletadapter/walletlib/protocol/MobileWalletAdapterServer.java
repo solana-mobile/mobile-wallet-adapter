@@ -515,7 +515,12 @@ public class MobileWalletAdapterServer extends JsonRpc20Server {
                 result.put(ProtocolContract.RESULT_MAX_MESSAGES_PER_REQUEST, mConfig.maxMessagesPerSigningRequest);
             }
             result.put(ProtocolContract.RESULT_SUPPORTED_TRANSACTION_VERSIONS, new JSONArray(mConfig.supportedTransactionVersions));
-            result.put(ProtocolContract.RESULT_SUPPORTED_FEATURES, new JSONArray(mConfig.optionalFeatures));
+            final JSONArray supportedFeatures = new JSONArray(mConfig.optionalFeatures);
+            // walletlib always handles sign_offchain_messages, so every wallet using it supports the feature
+            if (!Arrays.asList(mConfig.optionalFeatures).contains(ProtocolContract.FEATURE_ID_SIGN_OFFCHAIN_MESSAGES)) {
+                supportedFeatures.put(ProtocolContract.FEATURE_ID_SIGN_OFFCHAIN_MESSAGES);
+            }
+            result.put(ProtocolContract.RESULT_SUPPORTED_FEATURES, supportedFeatures);
 
             // retained for backwards compatibility
             result.put(ProtocolContract.RESULT_SUPPORTS_SIGN_AND_SEND_TRANSACTIONS, mConfig.supportsSignAndSendTransactions);
