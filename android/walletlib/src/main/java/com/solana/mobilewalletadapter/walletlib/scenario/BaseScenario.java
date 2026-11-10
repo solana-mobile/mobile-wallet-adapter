@@ -328,8 +328,13 @@ public abstract class BaseScenario implements Scenario {
                     }
                 }
 
-                @Override
-                public void signTransactions(@NonNull MobileWalletAdapterServer.SignTransactionsRequest request) {
+                /**
+                 * Returns the active authorization for a privileged sign request, or null after
+                 * completing the request with {@link MobileWalletAdapterServer.AuthorizationNotValidException}.
+                 */
+                @Nullable
+                private AuthRecord getAuthorizationForSignRequest(
+                        @NonNull MobileWalletAdapterServer.SignRequest<?> request) {
                     final AuthRecord authRecord;
                     synchronized (mLock) {
                         authRecord = mActiveAuthorization;
@@ -337,6 +342,15 @@ public abstract class BaseScenario implements Scenario {
                     if (authRecord == null || authRecord.isRevoked()) {
                         mIoHandler.post(() -> request.completeExceptionally(
                                 new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
+                        return null;
+                    }
+                    return authRecord;
+                }
+
+                @Override
+                public void signTransactions(@NonNull MobileWalletAdapterServer.SignTransactionsRequest request) {
+                    final AuthRecord authRecord = getAuthorizationForSignRequest(request);
+                    if (authRecord == null) {
                         return;
                     }
 
@@ -348,13 +362,8 @@ public abstract class BaseScenario implements Scenario {
 
                 @Override
                 public void signMessages(@NonNull MobileWalletAdapterServer.SignMessagesRequest request) {
-                    final AuthRecord authRecord;
-                    synchronized (mLock) {
-                        authRecord = mActiveAuthorization;
-                    }
-                    if (authRecord == null || authRecord.isRevoked()) {
-                        mIoHandler.post(() -> request.completeExceptionally(
-                                new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
+                    final AuthRecord authRecord = getAuthorizationForSignRequest(request);
+                    if (authRecord == null) {
                         return;
                     }
 
@@ -373,13 +382,8 @@ public abstract class BaseScenario implements Scenario {
                 @Override
                 public void signAndSendTransactions(
                         @NonNull MobileWalletAdapterServer.SignAndSendTransactionsRequest request) {
-                    final AuthRecord authRecord;
-                    synchronized (mLock) {
-                        authRecord = mActiveAuthorization;
-                    }
-                    if (authRecord == null || authRecord.isRevoked()) {
-                        mIoHandler.post(() -> request.completeExceptionally(
-                                new MobileWalletAdapterServer.AuthorizationNotValidException("Session not authorized for privileged requests")));
+                    final AuthRecord authRecord = getAuthorizationForSignRequest(request);
+                    if (authRecord == null) {
                         return;
                     }
 
