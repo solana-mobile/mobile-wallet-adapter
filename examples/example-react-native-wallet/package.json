@@ -26,8 +26,8 @@
         "react-native-extra-dimensions-android": "^1.2.5",
         "react-native-get-random-values": "^2.1.0",
         "react-native-modal": "^13.0.1",
-        "react-native-paper": "^5.15.3",
-        "react-native-safe-area-context": "^5.11.0",
+        "react-native-paper": "^5.15.4",
+        "react-native-safe-area-context": "^5.11.1",
         "react-native-url-polyfill": "^4.0.0"
     },
     "devDependencies": {
