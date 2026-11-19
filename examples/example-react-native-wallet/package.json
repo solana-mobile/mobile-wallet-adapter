@@ -18,7 +18,7 @@
         "@solana-mobile/mobile-wallet-adapter-protocol": "file:../../js/packages/mobile-wallet-adapter-protocol",
         "@solana-mobile/mobile-wallet-adapter-walletlib": "file:../../js/packages/mobile-wallet-adapter-walletlib",
         "@solana/wallet-standard-util": "^1.1.1",
-        "@solana/web3.js": "^1.95.4",
+        "@solana/web3.js": "^1.99.0",
         "fast-text-encoding": "^1.0.6",
         "localstorage-polyfill": "^1.0.1",
         "react": "19.2.7",
